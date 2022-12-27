@@ -1,0 +1,275 @@
+//
+// Created by Stephan on 2022/6/14.
+//
+#include "BaseLib.h"
+#include <string>
+#include <algorithm>
+#include <iomanip>
+
+using namespace std;
+
+namespace BaseLibrarySpace {
+    INT64 Buffer::getBufferSize() const {
+        buffer->seekg(0, ios::end);
+        INT64 size = buffer->tellg();
+        buffer->seekg(0, ios::beg);
+        return size;
+    }
+
+    vector<pair<array<INT64, 2>, string> > Buffer::saveItem;
+
+    UINT8 Buffer::getUINT8() {
+        buffer->seekg(offset, ios::beg);
+        offset += 1;
+        char value{};
+        buffer->read(&value, 1);
+        return (UINT16)value;
+    }
+
+    UINT16 Buffer::getUINT16() {
+        buffer->seekg(offset, ios::beg);
+        offset += 2;
+        char value[2]{};
+        buffer->read(value, 2);
+        return *(UINT16*)value;
+    }
+
+    UINT32 Buffer::getUINT32() {
+        buffer->seekg(offset, ios::beg);
+        offset += 4;
+        char value[4]{};
+        buffer->read(value, 4);
+        return *(UINT32*)value;
+    }
+
+    UINT64 Buffer::getUINT64() {
+        buffer->seekg(offset, ios::beg);
+        offset += 8;
+        char value[8]{};
+        buffer->read(value, 8);
+        return *(UINT64*)value;
+    }
+
+    INT8 Buffer::getINT8() {
+        buffer->seekg(offset, ios::beg);
+        offset += 1;
+        char value{};
+        buffer->read(&value, 1);
+        return (INT16)value;
+    }
+
+    INT16 Buffer::getINT16() {
+        buffer->seekg(offset, ios::beg);
+        offset += 2;
+        char value[2]{};
+        buffer->read(value, 2);
+        return *(INT16*)value;
+    }
+
+    INT32 Buffer::getINT24() {
+        buffer->seekg(offset, ios::beg);
+        offset += 3;
+        char value[4]{};
+        buffer->read(value, 4);
+        value[3] = 0;
+        return *(INT32*)value;
+    }
+
+    INT32 Buffer::getINT32() {
+        buffer->seekg(offset, ios::beg);
+        offset += 4;
+        char value[4]{};
+        buffer->read(value, 4);
+        return *(INT32*)value;
+    }
+
+    INT64 Buffer::getINT64() {
+        buffer->seekg(offset, ios::beg);
+        offset += 8;
+        char value[8]{};
+        buffer->read(value, 8);
+        return *(INT64*)value;
+    }
+
+    EFI_GUID Buffer::getGUID() {
+        buffer->seekg(offset, ios::beg);
+        offset += 16;
+        char value[16]{};
+        buffer->read(value, 16);
+        EFI_GUID guid = *(EFI_GUID*)value;
+        return guid;
+    }
+
+    UINT8* Buffer::getBytes(int n) {
+        buffer->seekg(offset, ios::beg);
+        offset += n;
+        char* value = new char[n];
+        buffer->read(value, n);
+        return (UINT8*)value;
+    }
+
+    INT8* Buffer::getString(int n)
+    {
+        buffer->seekg(offset, ios::beg);
+        offset += n;
+        char* value = new char[n + 1];
+        buffer->read(value, n);
+        value[n] = 0;
+        return value;
+    }
+
+    void Buffer::setOffset(INT64 off) {
+        offset = off;
+    }
+
+    INT64 Buffer::getOffset() const {
+        return offset;
+    }
+
+    INT64 Buffer::getRemainingSize() const {
+        return getBufferSize() - offset;
+    }
+
+    Buffer::Buffer():buffer(nullptr),offset(0) {}
+
+    Buffer::Buffer(ifstream* inFile) {
+        buffer = inFile;
+        offset = 0;
+    }
+
+    Buffer::~Buffer() {
+        buffer->close();
+        delete buffer;
+    }
+
+    void Buffer::Align(INT64& address, INT64 RelativeAddress, INT64 alignment) {
+        address -= RelativeAddress;
+        address += alignment - 1;
+        address = (INT64)(address / alignment);
+        address = (INT64)(address * alignment);
+        address += RelativeAddress;
+    }
+
+    void Buffer::prepareBufferToSave(INT64 offset, INT64 size, const string& name) {
+        array<INT64, 2> temp {offset, size};
+        auto tempPair = make_pair(temp, name);
+        saveItem.push_back(tempPair);
+    }
+
+    INT64 Buffer::adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length) {
+        return length - (FullLength - offset);
+    }
+
+    void Buffer::saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const {
+        buffer->seekg(beginOffset, ios::beg);
+        char* value = new char[bufferSize];
+        buffer->read(value, bufferSize);
+
+        ofstream outFile(filename, ios::out | ios::binary);
+        outFile.write(value, bufferSize);
+        outFile.close();
+        delete[] value;
+        buffer->seekg(offset, ios::beg);
+    }
+
+    GUID::GUID(const GUID& guid) {
+        GuidData = guid.GuidData;
+    }
+
+    GUID::GUID(const EFI_GUID& cGuid) {
+        GuidData = cGuid;
+    }
+
+    ostream& operator<<(ostream& out, const GUID* guid) {
+        out << hex
+            << setfill('0')
+            << setw(8)
+            << guid->GuidData.Data1 << "-"
+            << setw(4)
+            << guid->GuidData.Data2 << "-"
+            << setw(4)
+            << guid->GuidData.Data3 << "-";
+        for (int i = 0; i < 8; ++i) {
+            if (i == 2) {
+                out << "-";
+            }
+            out << setw(2)
+                << (UINT16)guid->GuidData.Data4[i];
+        }
+        return out;
+    }
+
+    bool GUID::operator==(const GUID& guid) {
+        if (this->GuidData.Data1 != guid.GuidData.Data1) {
+            return false;
+        }
+        if (this->GuidData.Data2 != guid.GuidData.Data2) {
+            return false;
+        }
+        if (this->GuidData.Data3 != guid.GuidData.Data3) {
+            return false;
+        }
+        for (int i = 0; i < 8; ++i) {
+            if (this->GuidData.Data4[i] != guid.GuidData.Data4[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool GUID::operator!=(const GUID& guid) {
+        if (*this == guid) {
+            return false;
+        }
+        return true;
+    }
+
+    GUID::GUID(const char* buffer) {
+        string str = buffer;
+        char* endptr;
+        string tempStr[5];
+        const char* split = "-";
+        string strs = str + split;
+        size_t pos = strs.find(split);
+
+        for (auto& i : tempStr)
+        {
+            string temp = strs.substr(0, pos);
+            i = temp;
+            strs = strs.substr(pos + 1, strs.size());
+            pos = strs.find(split);
+        }
+
+        GuidData.Data1 = strtoul(tempStr[0].data(), &endptr, 16);
+        GuidData.Data2 = strtoul(tempStr[1].data(), &endptr, 16);
+        GuidData.Data3 = strtoul(tempStr[2].data(), &endptr, 16);
+        GuidData.Data4[0] = strtoul(tempStr[3].substr(0, 2).data(), &endptr, 16);
+        GuidData.Data4[1] = strtoul(tempStr[3].substr(2, 2).data(), &endptr, 16);
+        for (int i = 0; i < 6; ++i) {
+            GuidData.Data4[i + 2] = strtoul(tempStr[4].substr(i * 2, 2).data(), &endptr, 16);
+        }
+    }
+
+    GUID& GUID::operator=(const GUID& guid) {
+        if (this != &guid) {
+            this->GuidData = guid.GuidData;
+        }
+        return *this;
+    }
+
+    CapsuleException::CapsuleException() : message("Error.") {}
+
+    CapsuleException::CapsuleException(const string& str) : message("Error : " + str) {}
+
+    const char* CapsuleException::what() const noexcept {
+        return message.c_str();
+    }
+
+    CapsuleError::CapsuleError() : message("Error.") {}
+
+    CapsuleError::CapsuleError(const string& str) : message(str) {}
+
+    const char* CapsuleError::what() const noexcept {
+        return message.c_str();
+    }
+}

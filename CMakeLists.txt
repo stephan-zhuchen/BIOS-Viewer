@@ -14,6 +14,14 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
+        include/PiFirmwareFile.h
+        include/PiFirmwareVolume.h
+        include/SymbolDefinition.h
+        lib/BaseLib.h
+        lib/BaseLib.cpp
+        lib/UefiLib.h
+        lib/UefiLib.cpp
+        UefiDecode.cpp
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
