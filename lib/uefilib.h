@@ -1,111 +1,122 @@
 #pragma once
 
+#include <QString>
 #include "BaseLib.h"
 #include "../include/SymbolDefinition.h"
 #include "../include/PiFirmwareFile.h"
 #include "../include/PiFirmwareVolume.h"
 
-using namespace BaseLibrarySpace;
-
 namespace UefiSpace {
+    using namespace BaseLibrarySpace;
 
-    class FirmwareVolume
-    {
-    public:
-        FirmwareVolume();
+    enum class VolumeType {
+        FirmwareVolume,
+        FfsFile,
+        CommonSection
     };
 
-    class FirmwareVolumeHeaderClass
-    {
-    private:
-        EFI_FIRMWARE_VOLUME_HEADER FirmwareVolumeHeader;
-//        UInt8* ZeroVector{};
-//        GUID*  FileSystemGuid{};
-//        Int64  FvLength{};
-//        string Signature{};
-//        UInt32 Attributes{};
-//        UInt16 HeaderLength{};
-//        UInt16 Checksum{};
-//        UInt16 ExtHeaderOffset{};
-//        UInt8  Reserved{};
-//        UInt8  Revision{};
-//        UInt32 NumBlocks{};
-//        UInt32 Length{};
+    class Volume {
     public:
-        FirmwareVolumeHeaderClass() = delete;
-        FirmwareVolumeHeaderClass(EFI_FIRMWARE_VOLUME_HEADER fv);
-        GUID getFvGuid() const;
+        UINT8* data;   // initialized from heap
+        INT64  size;
+        INT64  offsetFromBegin;
+        bool   isCompressed{false};
+        const char* ErrorMsg = "offset larger than size!";
+        QString InfoStr;
+    public:
+        VolumeType Type;
+        Volume() = default;
+        Volume(UINT8* fv, INT64 length, INT64 offset=0);
+        virtual ~Volume();
+
+        EFI_GUID getGUID(INT64 offset);
+        UINT8  getUINT8(INT64 offset);
+        UINT16 getUINT16(INT64 offset);
+        UINT32 getUINT32(INT64 offset);
+        UINT64 getUINT64(INT64 offset);
+        INT8   getINT8(INT64 offset);
+        INT16  getINT16(INT64 offset);
+        INT32  getINT24(INT64 offset);
+        INT32  getINT32(INT64 offset);
+        INT64  getINT64(INT64 offset);
+        UINT8* getBytes(INT64 offset, INT64 length);
+        INT64  getSize() const;
+        virtual void setInfoStr();
     };
 
-//    class EFI_FFS_FILE_HEADER
-//    {
-//    private:
-//        GUID*  FfsGuid{};
-//        UInt16 IntegrityCheck{};
-//        UInt8  Type{};
-//        UInt8  Attributes{};
-//        UInt8* Size{};
-//        UInt8  State{};
-//        Int64  ExtendedSize{};
-//        bool   isExtended{false};
-//    public:
-//        EFI_FFS_FILE_HEADER();
-//    };
+    class CommonSection: public Volume {
+    public:
+        EFI_COMMON_SECTION_HEADER CommonHeader;
+        UINT32                    ExtendedSize;
+        //EFI_COMPRESSION_SECTION
+        UINT32                    UncompressedLength;
+        UINT8                     CompressionType;
+        //EFI_FREEFORM_SUBTYPE_GUID_SECTION
+        EFI_GUID                  SubTypeGuid;
+        //EFI_GUID_DEFINED_SECTION
+        EFI_GUID                  SectionDefinitionGuid;
+        UINT16                    DataOffset;
+        UINT16                    Attributes;
+        //EFI_USER_INTERFACE_SECTION
+        CHAR16                    *FileNameString{nullptr};
+        //EFI_VERSION_SECTION
+        UINT16                    BuildNumber;
+        CHAR16                    *VersionString{nullptr};
 
-//    class EFI_COMMON_SECTION_HEADER
-//    {
-//        UInt8* Size{};
-//        UInt8  Type{};
-//        UInt32 ExtendedSize;
-//        bool   isExtended{false};
-//    public:
-//        EFI_COMMON_SECTION_HEADER();
-//    };
+        bool                      isExtend{false};
+        UINT32                    decompressedSize{0};
+        vector<Volume*>           ChildFile;
+    public:
+        CommonSection()=delete;
+        CommonSection(UINT8* file, INT64 offset);
+        CommonSection(UINT8* file, INT64 length, INT64 offset);
+        ~CommonSection();
+        void SelfDecode();
+        void DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize);
+        void DecodeChildFile();
+        void setInfoStr() override;
+        INT64 getHeaderSize() const;
+        static INT64 getSectionSize(UINT8* file);
+    };
 
-//    class EFI_COMPRESSION_SECTION
-//    {
-//    private:
-//        EFI_COMMON_SECTION_HEADER CommonHeader{};
-//        UInt32                    UncompressedLength{};
-//        UInt8                     CompressionType{};
-//    public:
-//        EFI_COMPRESSION_SECTION();
-//    };
+    class FfsFile: public Volume {
+    public:
+        EFI_FFS_FILE_HEADER  FfsHeader;
+        EFI_FFS_FILE_HEADER2 FfsExtHeader;
+        bool   isExtended{false};
+        vector<CommonSection*> Sections;
+    public:
+        FfsFile() = delete;
+        FfsFile(UINT8* file, INT64 length, INT64 offset, bool isExt);
+        ~FfsFile();
 
-//    class EFI_FREEFORM_SUBTYPE_GUID_SECTION
-//    {
-//    private:
-//        EFI_COMMON_SECTION_HEADER CommonHeader{};
-//        GUID*                     SubTypeGuid{};
-//    public:
-//        EFI_FREEFORM_SUBTYPE_GUID_SECTION();
-//    };
+        UINT8 getType() const;
+//        INT64 getSize() const override;
+        INT64 getHeaderSize() const;
+        void decodeSections();
+        void setInfoStr() override;
+    };
 
-//    class EFI_GUID_DEFINED_SECTION
-//    {
-//    private:
-//        EFI_COMMON_SECTION_HEADER CommonHeader{};
-//        GUID*                     SectionDefinitionGuid{};
-//        UInt16                    DataOffset{};
-//        UInt16                    Attributes{};
-//    public:
-//        EFI_GUID_DEFINED_SECTION();
-//    };
+    class FirmwareVolume: public Volume {
+    public:
+        EFI_FIRMWARE_VOLUME_HEADER     FirmwareVolumeHeader;
+        EFI_FIRMWARE_VOLUME_EXT_HEADER FirmwareVolumeExtHeader;
+        INT64                          FirmwareVolumeSize;
+        vector<FfsFile*>               FfsFiles;
+        Volume                         *freeSpace{nullptr};
+        bool                           isExt{false};
+        bool                           isEmpty{false};
+        bool                           isNv{false};
+    public:
+        FirmwareVolume() = delete;
+        FirmwareVolume(UINT8* fv, INT64 length, INT64 offset);
+        ~FirmwareVolume();
 
-//    class EFI_USER_INTERFACE_SECTION
-//    {
-//        EFI_COMMON_SECTION_HEADER CommonHeader{};
-//        string                    FileNameString{};
-//    };
+        GUID getFvGuid(bool returnExt=true) const;
+        void decodeFfs();
+        void setInfoStr() override;
 
-//    class EFI_VERSION_SECTION
-//    {
-//    private:
-//        EFI_COMMON_SECTION_HEADER CommonHeader{};
-//        UInt16                    BuildNumber{};
-//        string                    VersionString{};
-//    public:
-//        EFI_VERSION_SECTION();
-//    };
+        static bool isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER* address);
+    };
 
 }

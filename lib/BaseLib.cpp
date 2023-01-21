@@ -160,6 +160,36 @@ namespace BaseLibrarySpace {
         return length - (FullLength - offset);
     }
 
+    string Buffer::charToString(INT8* address, INT64 length, bool hasZeroEnding) {
+        INT8 *cStr;
+        if (hasZeroEnding)
+            cStr = new INT8[length];
+        else
+            cStr = new INT8[length + 1];
+        for (int var = 0; var < length; ++var) {
+            cStr[var] = *(INT8*)(address + var);
+        }
+        cStr[length] = 0x0;
+        return string(cStr);
+    }
+
+    string Buffer::wstringToString(CHAR16* wcharAddress) {
+        UINT8* charAddress;
+        CHAR16* temp = wcharAddress;
+        INT64 charSize = 1;
+        while (*temp != 0) {
+            charSize += 1;
+            temp += 1;
+        }
+        charAddress = new UINT8[charSize];
+        for (int var = 0; var < charSize; ++var) {
+            charAddress[var] = (UINT8)*(wcharAddress + var);
+        }
+        string str = (INT8*)charAddress;
+        delete[] charAddress;
+        return str;
+    }
+
     void Buffer::saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const {
         buffer->seekg(beginOffset, ios::beg);
         char* value = new char[bufferSize];
@@ -178,6 +208,30 @@ namespace BaseLibrarySpace {
 
     GUID::GUID(const EFI_GUID& cGuid) {
         GuidData = cGuid;
+    }
+
+    string GUID::str(bool upper) const {
+        stringstream ss;
+        if (upper) {
+            ss << uppercase;
+        }
+        ss << hex
+           << setfill('0')
+           << setw(8)
+           << this->GuidData.Data1 << "-"
+           << setw(4)
+           << this->GuidData.Data2 << "-"
+           << setw(4)
+           << this->GuidData.Data3 << "-";
+        for (int i = 0; i < 8; ++i) {
+            if (i == 2) {
+                ss << "-";
+            }
+            ss << setw(2)
+                << (UINT16)this->GuidData.Data4[i];
+        }
+        return ss.str();
+
     }
 
     ostream& operator<<(ostream& out, const GUID* guid) {
@@ -254,6 +308,11 @@ namespace BaseLibrarySpace {
         if (this != &guid) {
             this->GuidData = guid.GuidData;
         }
+        return *this;
+    }
+
+    GUID& GUID::operator=(const EFI_GUID& guid) {
+        this->GuidData = guid;
         return *this;
     }
 

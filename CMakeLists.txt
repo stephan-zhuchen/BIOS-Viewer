@@ -9,22 +9,65 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_PREFIX_PATH "D:/Qt/6.3.1/msvc2019_64/lib/cmake")
+
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-set(PROJECT_SOURCES
-        main.cpp
+set(LZMA_SDK
+        lib/LzmaDecompress/Sdk/C/7zTypes.h
+        lib/LzmaDecompress/Sdk/C/7zVersion.h
+        lib/LzmaDecompress/Sdk/C/Bra.h
+        lib/LzmaDecompress/Sdk/C/Compiler.h
+        lib/LzmaDecompress/Sdk/C/CpuArch.h
+        lib/LzmaDecompress/Sdk/C/LzFind.h
+        lib/LzmaDecompress/Sdk/C/LzHash.h
+        lib/LzmaDecompress/Sdk/C/LzmaDec.h
+        lib/LzmaDecompress/Sdk/C/Precomp.h
+        lib/LzmaDecompress/Sdk/C/LzmaDec.cpp
+        lib/LzmaDecompress/LzmaDecompress.cpp
+        lib/LzmaDecompress/LzmaDecompressLibInternal.h
+)
+
+set(UEFI_DECOMPRESS
+        lib/BaseUefiDecompress/UefiDecompressLib.h
+        lib/BaseUefiDecompress/BaseUefiDecompressLibInternals.h
+        lib/BaseUefiDecompress/BaseUefiDecompressLib.cpp
+)
+
+set(INCLUDE_FILE
+        include/Base.h
         include/PiFirmwareFile.h
         include/PiFirmwareVolume.h
         include/SymbolDefinition.h
+        include/GuidDefinition.h
+        include/BaseMemoryLib.h
+        include/BaseMemoryLib.cpp
+)
+
+link_directories(D:/Code/BiosViewer/lib/LzmaDecompress/Sdk/C)
+
+set(PROJECT_SOURCES
+        main.cpp
+        lib/GuidDefinition.cpp
         lib/BaseLib.h
         lib/BaseLib.cpp
         lib/UefiLib.h
         lib/UefiLib.cpp
+        lib/Model.h
+        lib/Model.cpp
+        lib/QHexView/qhexview.cpp
+        lib/QHexView/qhexview.h
         UefiDecode.cpp
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        HexViewDialog.h HexViewDialog.cpp HexViewDialog.ui
+#        HexViewWindow.h HexViewWindow.cpp HexViewWindow.ui
+#        hexviewwidget.h hexviewwidget.cpp hexviewwidget.ui
+        ${INCLUDE_FILE}
+        ${LZMA_SDK}
+        ${UEFI_DECOMPRESS}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

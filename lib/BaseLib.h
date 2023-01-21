@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sstream>
 #include <array>
 #include <utility>
 #include <exception>
@@ -21,12 +22,14 @@ namespace BaseLibrarySpace {
         EFI_GUID GuidData{};
         GUID() = delete;
         GUID(const GUID& guid);
-        explicit GUID(const char* buffer);
-        explicit GUID(const EFI_GUID& cGuid);
+        GUID(const char* buffer);
+        GUID(const EFI_GUID& cGuid);
+        string str(bool upper=false) const;
         friend ostream& operator<<(ostream& out, const GUID* guid);
         bool operator==(const GUID& guid);
         bool operator!=(const GUID& guid);
         GUID& operator=(const GUID& guid);
+        GUID& operator=(const EFI_GUID& guid);
     };
 
     class Buffer {
@@ -59,6 +62,8 @@ namespace BaseLibrarySpace {
         static void Align(INT64& address, INT64 RelativeAddress, INT64 alignment);
         static void prepareBufferToSave(INT64 offset, INT64 size, const string& name);
         static INT64 adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length);
+        static string charToString(INT8* address, INT64 length, bool hasZeroEnding=false);
+        static string wstringToString(CHAR16* wcharAddress);
         void saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const;
     };
 
