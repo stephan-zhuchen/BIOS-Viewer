@@ -57,8 +57,13 @@ SectionModel::SectionModel(CommonSection *section) {
         subtype = "Disposable";
         break;
     case EFI_SECTION_PE32:
-        name = "PE32 Image Section";
-        subtype = "PE32 image";
+        if (section->peCoffHeader->isPe32Plus){
+            name = "PE32+ Image Section";
+            subtype = "PE32+ image";
+        } else {
+            name = "PE32 Image Section";
+            subtype = "PE32 image";
+        }
         break;
     case EFI_SECTION_PIC:
         name = "PIC Section";
@@ -224,7 +229,7 @@ FvModel::FvModel(FirmwareVolume *fv) {
     if (fv->isEmpty) {
         name = "Padding";
         type = "Padding";
-        subtype = "Empty (0xFF)";
+        subtype = "Empty";
         rowData = QStringList() << name << type << subtype;
         return;
     }
@@ -255,7 +260,6 @@ FvModel::FvModel(FirmwareVolume *fv) {
 
     if (fv->freeSpace != nullptr) {
         DataModel *freeModel = new DataModel(fv->freeSpace, "Volume free space", "Free space");
-        cout << "Volume free space" << endl;
         volumeModelData.push_back(freeModel);
     }
 }

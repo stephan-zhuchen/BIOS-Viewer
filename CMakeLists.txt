@@ -37,8 +37,10 @@ set(UEFI_DECOMPRESS
 
 set(INCLUDE_FILE
         include/Base.h
+        include/PeImage.h
         include/PiFirmwareFile.h
         include/PiFirmwareVolume.h
+        include/PiDependency.h
         include/SymbolDefinition.h
         include/GuidDefinition.h
         include/BaseMemoryLib.h
@@ -56,6 +58,7 @@ set(PROJECT_SOURCES
         lib/UefiLib.cpp
         lib/Model.h
         lib/Model.cpp
+        lib/Section.cpp
         lib/QHexView/qhexview.cpp
         lib/QHexView/qhexview.h
         UefiDecode.cpp

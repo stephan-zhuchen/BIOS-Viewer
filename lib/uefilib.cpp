@@ -121,12 +121,14 @@ namespace UefiSpace {
     }
 
     CommonSection::~CommonSection() {
-        if (FileNameString != nullptr) {
+        if (FileNameString != nullptr)
             delete[] FileNameString;
-        }
-        if (VersionString != nullptr) {
+        if (VersionString != nullptr)
             delete[] VersionString;
-        }
+        if (peCoffHeader != nullptr)
+            delete peCoffHeader;
+        if (dependency != nullptr)
+            delete dependency;
         for(auto file:ChildFile) {
             delete file;
         }
@@ -229,6 +231,8 @@ namespace UefiSpace {
             }
             break;
         case EFI_SECTION_PE32:
+        case EFI_SECTION_TE:
+            peCoffHeader = new PeCoff(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize);
             break;
         case EFI_SECTION_USER_INTERFACE:
             FileNameString = (UINT16*)this->getBytes(offset, SectionSize - HeaderSize);
@@ -239,6 +243,11 @@ namespace UefiSpace {
             break;
         case EFI_SECTION_FIRMWARE_VOLUME_IMAGE:
             ChildFile.push_back(new FirmwareVolume(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize));
+            break;
+        case EFI_SECTION_DXE_DEPEX:
+        case EFI_SECTION_PEI_DEPEX:
+        case EFI_SECTION_MM_DEPEX:
+            dependency = new Depex(data + HeaderSize, SectionSize - HeaderSize);
             break;
         case EFI_SECTION_RAW:
             break;
@@ -286,7 +295,7 @@ namespace UefiSpace {
     }
 
     void CommonSection::setInfoStr() {
-        INT64 width = 18;
+        INT64 width = 20;
         stringstream ss;
         stringstream guidInfo;
         ss.setf(ios::left);
@@ -316,6 +325,45 @@ namespace UefiSpace {
                 ss << "Certificate type: RSA2048/SHA256";
             }
             break;
+        case EFI_SECTION_PE32:
+            UINT16 e_magic;
+            UINT32 peSignature;
+            UINT16 peOptionalSignature;
+            UINT16 SubSystem;
+            e_magic = peCoffHeader->dosHeader.e_magic;
+            peSignature = peCoffHeader->pe32Header.Signature;
+            peOptionalSignature = peCoffHeader->pe32Header.OptionalHeader.Magic;
+            SubSystem = peCoffHeader->pe32Header.OptionalHeader.Subsystem;
+
+            ss << setw(width) << "DOS signature:" << hex << uppercase << e_magic << "h (" << Buffer::charToString((INT8*)&e_magic, sizeof(UINT16), false) << ")\n"
+               << setw(width) << "PE signature:" << hex << uppercase << peSignature << "h (" << Buffer::charToString((INT8*)&peSignature, sizeof(UINT32), false) << ")\n"
+               << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
+               << setw(width) << "Number of sections:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.NumberOfSections << "h\n"
+               << setw(width) << "Characteristics:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.Characteristics << "h\n"
+               << setw(width) << "Optional header signature:" << hex << uppercase << peOptionalSignature << "h\n"
+               << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
+               << setw(width) << "EntryPoint Address:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.AddressOfEntryPoint << "h\n"
+               << setw(width) << "Base of code:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.BaseOfCode << "h\n"
+               << setw(width) << "Base of data:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.BaseOfData << "h\n";
+            if (peCoffHeader->isPe32Plus)
+                ss << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->pe32plusHeader.OptionalHeader.ImageBase << "h\n";
+            else
+                ss << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.ImageBase << "h\n";
+            break;
+        case EFI_SECTION_TE:
+            e_magic = peCoffHeader->teHeader.Signature;
+            SubSystem = peCoffHeader->teHeader.Subsystem;
+
+            ss << setw(width) << "TE signature:" << hex << uppercase << e_magic << "h (" << Buffer::charToString((INT8*)&e_magic, sizeof(UINT16), false) << ")\n"
+               << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
+               << setw(width) << "Number of sections:" << hex << uppercase << (UINT32)peCoffHeader->teHeader.NumberOfSections << "h\n"
+               << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
+               << setw(width) << "Stripped size:" << hex << uppercase << peCoffHeader->teHeader.StrippedSize << "h\n"
+               << setw(width) << "Base of code:" << hex << uppercase << peCoffHeader->teHeader.BaseOfCode << "h\n"
+               << setw(width) << "EntryPoint Address:" << hex << uppercase << peCoffHeader->teHeader.AddressOfEntryPoint << "h\n"
+               << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->teHeader.ImageBase << "h\n"
+               << setw(width) << "VirtualAddress:" << hex << uppercase << peCoffHeader->teHeader.DataDirectory->VirtualAddress << "h\n";
+            break;
         case EFI_SECTION_FREEFORM_SUBTYPE_GUID:
             ss << "Section GUID:\n" << GUID(SubTypeGuid).str(true) << "\n";
             break;
@@ -325,6 +373,13 @@ namespace UefiSpace {
         case EFI_SECTION_VERSION:
             ss << setw(width) << "BuildNumber:"   << hex << uppercase << BuildNumber << "h\n"
                << setw(width) << "Version:"       << Buffer::wstringToString(VersionString) << "\n";
+            break;
+        case EFI_SECTION_DXE_DEPEX:
+        case EFI_SECTION_PEI_DEPEX:
+        case EFI_SECTION_MM_DEPEX:
+            ss << "\n" << "Dependency:\n";
+            for (auto &depexStr : dependency->OrganizedDepexList)
+                ss << depexStr << "\n";
             break;
         default:
 
@@ -369,6 +424,24 @@ namespace UefiSpace {
         if (isExtended) {
             FfsExtHeader = *(EFI_FFS_FILE_HEADER2*)data;
         }
+
+        UINT8 headerSumValue = 0;
+//        UINT8 dataSumValue = 0;
+        if (isExtended) {
+            headerSumValue = Buffer::CaculateSum8((UINT8*)&FfsExtHeader, sizeof(EFI_FFS_FILE_HEADER2));
+            headerSumValue = headerSumValue + FfsExtHeader.State + FfsExtHeader.IntegrityCheck.Checksum.File;
+        } else {
+            headerSumValue = Buffer::CaculateSum8((UINT8*)&FfsHeader, sizeof(EFI_FFS_FILE_HEADER));
+            headerSumValue = headerSumValue + FfsHeader.State + FfsHeader.IntegrityCheck.Checksum.File;
+
+//            dataSumValue = Buffer::CaculateSum8((UINT8*)(data + sizeof(EFI_FFS_FILE_HEADER)), getSize() - sizeof(EFI_FFS_FILE_HEADER));
+//            dataSumValue -= FfsHeader.IntegrityCheck.Checksum.File;
+//            cout << "ffs dataSumValue = " << hex << (UINT32)dataSumValue << endl;
+        }
+        if (headerSumValue == 0)
+            headerChecksumValid = true;
+        if ((FfsHeader.Attributes | FFS_ATTRIB_CHECKSUM) == 0x0)
+            dataChecksumValid = true;
     }
 
     FfsFile::~FfsFile() {
@@ -396,6 +469,8 @@ namespace UefiSpace {
     }
 
     void FfsFile::decodeSections() {
+        if (!headerChecksumValid)
+            return;
         INT64 offset = sizeof(EFI_FFS_FILE_HEADER);
         if (isExtended) {
             offset = sizeof(EFI_FFS_FILE_HEADER2);
@@ -426,8 +501,8 @@ namespace UefiSpace {
            << setw(width) << "Header size:" << hex << uppercase << getHeaderSize() << "h\n"
            << setw(width) << "Body size:"   << hex << uppercase << getSize() - getHeaderSize() << "h\n"
            << setw(width) << "State:"       << hex << (UINT32)FfsHeader.State << "h\n"
-           << setw(width) << "Header Checksum:" << hex << uppercase << (UINT32)FfsHeader.IntegrityCheck.Checksum.Header << "h\n"
-           << setw(width) << "Data Checksum:"   << hex << uppercase << (UINT32)FfsHeader.IntegrityCheck.Checksum.File << "h\n";
+           << setw(width) << "Header Checksum:" << hex << uppercase << (UINT32)FfsHeader.IntegrityCheck.Checksum.Header << "h" << (headerChecksumValid ? ", valid":", not valid") << "\n"
+           << setw(width) << "Data Checksum:"   << hex << uppercase << (UINT32)FfsHeader.IntegrityCheck.Checksum.File << "h" << (headerChecksumValid ? ", valid":", not valid") << "\n";
 
         InfoStr = QString::fromStdString(ss.str());
     }
@@ -451,6 +526,10 @@ namespace UefiSpace {
         if (FirmwareVolumeHeader.FileSystemGuid == GuidDatabase::gEfiSystemNvDataFvGuid) {
             isNv = true;
         }
+
+        UINT16 sumValue = Buffer::CaculateSum16((UINT16*)&FirmwareVolumeHeader, sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof (UINT16));
+        if (sumValue == 0)
+            checksumValid = true;
     }
 
     FirmwareVolume::~FirmwareVolume() {
@@ -474,12 +553,8 @@ namespace UefiSpace {
     }
 
     void FirmwareVolume::decodeFfs() {
-        if (isEmpty) {
+        if (isEmpty || !checksumValid || isNv)
             return;
-        }
-        if (isNv) {
-            return;
-        }
         INT64 offset = FirmwareVolumeSize;
         while (offset < size) {
             bool isExtended = false;
@@ -543,12 +618,17 @@ namespace UefiSpace {
     }
 
     bool FirmwareVolume::isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER* address) {
+        if (address->Signature != 0x4856465F)
+            return false;
         UINT8* ZeroVector = address->ZeroVector;
         if ((*(UINT64*)ZeroVector != 0x0) || ((*((UINT64*)ZeroVector + 1) != 0x0)))
             return false;
-        if (address->FileSystemGuid.Data1 == 0xFFFFFFFF) {
+        if (address->FileSystemGuid.Data1 == 0xFFFFFFFF || address->FileSystemGuid.Data1 == 0x0) {
             return false;
         }
+        UINT16 sumValue = Buffer::CaculateSum16((UINT16*)address, sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof (UINT16));
+        if (sumValue != 0)
+            return false;
         return true;
     }
 }

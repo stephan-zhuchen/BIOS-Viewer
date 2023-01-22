@@ -1,4 +1,7 @@
+#include <QMessageBox>
 #include "mainwindow.h"
+#include "include/GuidDefinition.h"
+#include "./ui_mainwindow.h"
 
 void MainWindow::setFvData()
 {
@@ -19,8 +22,14 @@ void MainWindow::setFvData()
             delete fvHeader;
             EmptyVolumeLength += searchInterval;
             buffer->setOffset(offset + EmptyVolumeLength);
+            if (offset + EmptyVolumeLength >= bufferSize)
+                break;
             fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
-//            cout << "EmptyVolumeLength = 0x" << hex << EmptyVolumeLength << endl;
+//            cout << "EmptyVolumeLength = " << hex << EmptyVolumeLength << endl;
+        }
+        if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
+            ui->titleInfomation->setText("No Firmware Found!");
+            return;
         }
         if (EmptyVolumeLength != 0) {
             FvLength = EmptyVolumeLength;
@@ -33,8 +42,6 @@ void MainWindow::setFvData()
         FirmwareVolumeBuffer.push_back(fvData);
         FirmwareVolumeData.push_back(volume);
         offset += FvLength;
-//        if (offset > 0x70000)
-//            break;
     }
 }
 
@@ -45,5 +52,20 @@ void MainWindow::setFfsData() {
         FvModel* fvm = new FvModel(volume);
         FvModelData.push_back(fvm);
 //        break;
+    }
+}
+
+void MainWindow::getBiosID() {
+    for (size_t idx = FirmwareVolumeData.size(); idx > 0; --idx) {
+        FirmwareVolume *volume = FirmwareVolumeData.at(idx - 1);
+        for(auto file:volume->FfsFiles) {
+            if (file->FfsHeader.Name == GuidDatabase::gBiosIdGuid) {
+                CommonSection *sec = file->Sections.at(0);
+                CHAR16 *biosIdStr = (CHAR16*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
+                BiosID = QString::fromStdString(Buffer::wstringToString(biosIdStr));
+                ui->titleInfomation->setText(BiosID);
+                return;
+            }
+        }
     }
 }

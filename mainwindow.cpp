@@ -57,6 +57,7 @@ void MainWindow::OpenFile(std::string path)
 void MainWindow::parseBinaryInfo() {
     setFvData();
     setFfsData();
+    getBiosID();
     setTreeData();
 }
 

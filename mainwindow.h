@@ -31,6 +31,7 @@ public:
     void parseBinaryInfo();
     void setFvData();
     void setFfsData();
+    void getBiosID();
 
     // Tree Widget
     void initTree();
@@ -44,7 +45,6 @@ private slots:
     void showHexView();
 
     void on_OpenFile_triggered();
-
     void on_actionExit_triggered();
 
 private:
@@ -52,6 +52,7 @@ private:
     Buffer *buffer;
     QByteArray *hexViewData;
     QMenu *popMenu;
+    QString BiosID;
     QSettings setting{"./Setting.ini", QSettings::IniFormat};
 
     std::vector<UINT8*> FirmwareVolumeBuffer{};

@@ -170,7 +170,9 @@ namespace BaseLibrarySpace {
             cStr[var] = *(INT8*)(address + var);
         }
         cStr[length] = 0x0;
-        return string(cStr);
+        string result = cStr;
+        delete[] cStr;
+        return result;
     }
 
     string Buffer::wstringToString(CHAR16* wcharAddress) {
@@ -188,6 +190,30 @@ namespace BaseLibrarySpace {
         string str = (INT8*)charAddress;
         delete[] charAddress;
         return str;
+    }
+
+    UINT8 Buffer::CaculateSum8(UINT8 *Buffer, INT64 Size) {
+        UINT8 Sum = 0;
+        //
+        // Perform the byte sum for buffer
+        //
+        for (INT64 Index = 0; Index < Size; Index++) {
+          Sum = (UINT8) (Sum + Buffer[Index]);
+        }
+
+        return (UINT8) (0x100 - Sum);
+    }
+
+    UINT16 Buffer::CaculateSum16(UINT16 *Buffer, INT64 Size) {
+        UINT16  Sum = 0;
+        //
+        // Perform the word sum for buffer
+        //
+        for (INT64 Index = 0; Index < Size; Index++) {
+          Sum = (UINT16) (Sum + Buffer[Index]);
+        }
+
+        return (UINT16) (0x10000 - Sum);
     }
 
     void Buffer::saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const {

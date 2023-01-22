@@ -1,10 +1,12 @@
 #pragma once
 
 #include <QString>
+#include <stack>
 #include "BaseLib.h"
 #include "../include/SymbolDefinition.h"
 #include "../include/PiFirmwareFile.h"
 #include "../include/PiFirmwareVolume.h"
+#include "../include/PeImage.h"
 
 namespace UefiSpace {
     using namespace BaseLibrarySpace;
@@ -44,6 +46,32 @@ namespace UefiSpace {
         virtual void setInfoStr();
     };
 
+    class PeCoff : public Volume
+    {
+    public:
+        EFI_IMAGE_DOS_HEADER      dosHeader;
+        EFI_TE_IMAGE_HEADER       teHeader;
+        EFI_IMAGE_NT_HEADERS32    pe32Header;
+        EFI_IMAGE_NT_HEADERS64    pe32plusHeader;
+        bool                      isTE{false};
+        bool                      isPe32Plus{false};
+    public:
+        PeCoff()=delete;
+        PeCoff(UINT8* file, INT64 length, INT64 offset);
+
+        string getMachineType() const;
+        static string getSubsystemName(UINT16 subsystem);
+    };
+
+    class Depex : public Volume
+    {
+    public:
+        vector<string>            OrganizedDepexList;
+        Depex()=delete;
+        Depex(UINT8* file, INT64 length);
+        static string getOpcodeString(UINT8 op);
+    };
+
     class CommonSection: public Volume {
     public:
         EFI_COMMON_SECTION_HEADER CommonHeader;
@@ -66,6 +94,8 @@ namespace UefiSpace {
         bool                      isExtend{false};
         UINT32                    decompressedSize{0};
         vector<Volume*>           ChildFile;
+        PeCoff                    *peCoffHeader{nullptr};
+        Depex                     *dependency{nullptr};
     public:
         CommonSection()=delete;
         CommonSection(UINT8* file, INT64 offset);
@@ -74,6 +104,7 @@ namespace UefiSpace {
         void SelfDecode();
         void DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize);
         void DecodeChildFile();
+        void extracted(std::stringstream &ss);
         void setInfoStr() override;
         INT64 getHeaderSize() const;
         static INT64 getSectionSize(UINT8* file);
@@ -81,9 +112,11 @@ namespace UefiSpace {
 
     class FfsFile: public Volume {
     public:
-        EFI_FFS_FILE_HEADER  FfsHeader;
-        EFI_FFS_FILE_HEADER2 FfsExtHeader;
-        bool   isExtended{false};
+        EFI_FFS_FILE_HEADER    FfsHeader;
+        EFI_FFS_FILE_HEADER2   FfsExtHeader;
+        bool                   isExtended{false};
+        bool                   headerChecksumValid{false};
+        bool                   dataChecksumValid{false};
         vector<CommonSection*> Sections;
     public:
         FfsFile() = delete;
@@ -91,7 +124,6 @@ namespace UefiSpace {
         ~FfsFile();
 
         UINT8 getType() const;
-//        INT64 getSize() const override;
         INT64 getHeaderSize() const;
         void decodeSections();
         void setInfoStr() override;
@@ -107,6 +139,7 @@ namespace UefiSpace {
         bool                           isExt{false};
         bool                           isEmpty{false};
         bool                           isNv{false};
+        bool                           checksumValid{false};
     public:
         FirmwareVolume() = delete;
         FirmwareVolume(UINT8* fv, INT64 length, INT64 offset);
