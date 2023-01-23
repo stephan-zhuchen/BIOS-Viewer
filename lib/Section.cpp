@@ -103,7 +103,7 @@ namespace UefiSpace {
             if (Opcode == EFI_DEP_PUSH) {
                 EFI_GUID depexGuid = this->getGUID(offset);
                 offset += sizeof(EFI_GUID);
-                OrganizedDepexList.push_back(GuidDatabase::getNameFromGuid(depexGuid));
+                OrganizedDepexList.push_back(guidData->getNameFromGuid(depexGuid));
             } else if (Opcode == EFI_DEP_BEFORE || Opcode == EFI_DEP_AFTER || Opcode == EFI_DEP_TRUE || Opcode == EFI_DEP_FALSE) {
                 OrganizedDepexList.push_back(getOpcodeString(Opcode));
             } else if (Opcode == EFI_DEP_NOT) {

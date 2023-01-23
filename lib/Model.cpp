@@ -49,7 +49,7 @@ SectionModel::SectionModel(CommonSection *section) {
     case EFI_SECTION_GUID_DEFINED:
         EFI_GUID guid;
         guid = section->SectionDefinitionGuid;
-        name = QString::fromStdString(GuidDatabase::getNameFromGuid(guid));
+        name = QString::fromStdString(guidData->getNameFromGuid(guid));
         subtype = "GUID defined";
         break;
     case EFI_SECTION_DISPOSABLE:
@@ -96,7 +96,7 @@ SectionModel::SectionModel(CommonSection *section) {
         subtype = "Volume image";
         break;
     case EFI_SECTION_FREEFORM_SUBTYPE_GUID:
-        name = QString::fromStdString(GuidDatabase::getNameFromGuid(section->SubTypeGuid));
+        name = QString::fromStdString(guidData->getNameFromGuid(section->SubTypeGuid));
         subtype = "Freeform GUID";
         break;
     case EFI_SECTION_RAW:
@@ -146,7 +146,7 @@ SectionModel::~SectionModel() {
 
 FfsModel::FfsModel(FfsFile *ffs) {
     modelData = ffs;
-    name = QString::fromStdString(GuidDatabase::getNameFromGuid(ffs->FfsHeader.Name));
+    name = QString::fromStdString(guidData->getNameFromGuid(ffs->FfsHeader.Name));
     type = "File";
     switch (ffs->FfsHeader.Type) {
     case EFI_FV_FILETYPE_RAW:
@@ -240,13 +240,13 @@ FvModel::FvModel(FirmwareVolume *fv) {
         rowData = QStringList() << name << type << subtype;
         return;
     }
-    name = QString::fromStdString(GuidDatabase::getNameFromGuid(fv->getFvGuid().GuidData));
+    name = QString::fromStdString(guidData->getNameFromGuid(fv->getFvGuid().GuidData));
     type = "Volume";
 
     EFI_GUID guid = fv->getFvGuid(false).GuidData;
-    if (guid == EFI_GUID(EFI_FIRMWARE_FILE_SYSTEM2_GUID)) {
+    if (guid == GuidDatabase::gEfiFirmwareFileSystem2Guid) {
         subtype = "FFSv2";
-    } else if (guid == EFI_GUID(EFI_FIRMWARE_FILE_SYSTEM3_GUID)) {
+    } else if (guid == GuidDatabase::gEfiFirmwareFileSystem3Guid) {
         subtype = "FFSv3";
     }
 

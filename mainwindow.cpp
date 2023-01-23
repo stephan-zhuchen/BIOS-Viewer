@@ -2,6 +2,9 @@
 #include "mainwindow.h"
 #include "HexViewDialog.h"
 #include "./ui_mainwindow.h"
+#include "include/GuidDefinition.h"
+
+GuidDatabase *guidData;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -16,11 +19,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     this->connect(ui->treeWidget,SIGNAL(customContextMenuRequested(QPoint)),
                       this,SLOT(showTreeRightMenu(QPoint)));
+
+    guidData = new GuidDatabase;
 }
 
 MainWindow::~MainWindow()
 {
     cleanup();
+    delete guidData;
     delete ui;
 }
 
