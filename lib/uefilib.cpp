@@ -631,4 +631,103 @@ namespace UefiSpace {
             return false;
         return true;
     }
+
+    BiosImageVolume::BiosImageVolume(UINT8* fv, INT64 length):Volume(fv, length) {
+        FitTable = new FitTableClass(fv, length);
+    }
+
+    BiosImageVolume::~BiosImageVolume() {
+        cout << "~BiosImageVolume" << endl;
+        delete FitTable;
+        delete[] data;
+    }
+
+    void BiosImageVolume::setInfoStr() {
+        INT64 width = 15;
+        stringstream ss;
+        ss.setf(ios::left);
+
+        ss << setw(width) << "BIOS ID:" << BiosID << "\n";
+
+        InfoStr = QString::fromStdString(ss.str());
+    }
+
+    FitTableClass::FitTableClass(UINT8* fv, INT64 length) {
+        INT64 FitTableAddress = *(INT64*)(fv + length - DEFAULT_FIT_TABLE_POINTER_OFFSET) & 0xFFFFFF;
+        FitTableAddress = Buffer::adjustBufferAddress(0x1000000, FitTableAddress, length); // get the relative address of FIT table
+        FitHeader = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(fv + FitTableAddress);
+        UINT64 FitSignature = FitHeader.Address;
+        if (FitSignature == (UINT64)FIT_SIGNATURE) {
+            isValid = true;
+            FitEntryNum = *(UINT32*)(FitHeader.Size) & 0xFFFFFF;
+
+            for (INT64 index = 1; index < FitEntryNum; ++index) {
+                FIRMWARE_INTERFACE_TABLE_ENTRY FitEntry = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(fv + FitTableAddress + sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * index);
+                FitEntries.push_back(FitEntry);
+            }
+
+        } else
+            isValid = false;;
+    }
+
+    FitTableClass::~FitTableClass() {
+    }
+
+    string FitTableClass::getTypeName(UINT8 type) {
+        string typeName;
+        switch (type) {
+        case FIT_TABLE_TYPE_HEADER:
+            typeName = "Header";
+            break;
+        case FIT_TABLE_TYPE_MICROCODE:
+            typeName = "Microcode";
+            break;
+        case FIT_TABLE_TYPE_STARTUP_ACM:
+            typeName = "Startup ACM";
+            break;
+        case FIT_TABLE_TYPE_DIAGNST_ACM:
+            typeName = "Diagnst ACM";
+            break;
+        case FIT_TABLE_TYPE_PROT_BOOT_POLICY:
+            typeName = "Port Boot Policy";
+            break;
+        case FIT_TABLE_TYPE_BIOS_MODULE:
+            typeName = "BIOS Module";
+            break;
+        case FIT_TABLE_TYPE_TPM_POLICY:
+            typeName = "TPM Policy";
+            break;
+        case FIT_TABLE_TYPE_BIOS_POLICY:
+            typeName = "BIOS Policy";
+            break;
+        case FIT_TABLE_TYPE_TXT_POLICY:
+            typeName = "TXT Policy";
+            break;
+        case FIT_TABLE_TYPE_KEY_MANIFEST:
+            typeName = "Key Manifest";
+            break;
+        case FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST:
+            typeName = "Boot Policy Manifest";
+            break;
+        case FIT_TABLE_TYPE_BIOS_DATA_AREA:
+            typeName = "BIOS Data Area";
+            break;
+        case FIT_TABLE_TYPE_CSE_SECURE_BOOT:
+            typeName = "CSE Secure Boot";
+            break;
+        case FIT_TABLE_TYPE_VAB_PROVISION_TABLE:
+            typeName = "VAB Provision Table";
+            break;
+        case FIT_TABLE_TYPE_VAB_BOOT_IMAGE_MANIFEST:
+            typeName = "Boot Image Manifest";
+            break;
+        case FIT_TABLE_TYPE_VAB_BOOT_KEY_MANIFEST:
+            typeName = "Boot Key Manifest";
+            break;
+        default:
+            typeName = "Unkown";
+            break;
+        }
+        return typeName;
+    }
 }

@@ -38,6 +38,11 @@ QHexView::QHexView(QWidget *parent)
       fontSetting("Courier New", 12, QFont::Normal, false)
 {
   // default configs
+  if (setting.contains("HexFont") && setting.contains("HexFontSize")){
+      QString font = setting.value("HexFont").toString();
+      int fontsize = setting.value("HexFontSize").toInt();
+      fontSetting = QFont(font, fontsize, QFont::Normal, false);
+  }
   setFont(fontSetting); // default font
   this->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);

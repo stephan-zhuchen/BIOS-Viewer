@@ -1,32 +1,50 @@
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QMouseEvent>
+#include <QMimeData>
 #include "mainwindow.h"
 #include "HexViewDialog.h"
+#include "SettingsDialog.h"
+#include "InfoWindow.h"
 #include "./ui_mainwindow.h"
 #include "include/GuidDefinition.h"
 
-GuidDatabase *guidData;
+GuidDatabase *guidData = nullptr;
+UINT32       OpenedWindow = 0;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       buffer(nullptr),
       hexViewData(nullptr),
-      popMenu(new QMenu)
+      popMenu(new QMenu),
+      structureLabel(new QLabel("Structure:", this)),
+      infoLabel(new QLabel("Infomation:", this)),
+      BiosImage(nullptr),
+      BiosImageModel(nullptr)
+
 {
     ui->setupUi(this);
-    initTree();
+    ui->titleInfomation->clear();
+    ui->treeWidget->viewport()->installEventFilter(this);
+    initSettings();
 
-    ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     this->connect(ui->treeWidget,SIGNAL(customContextMenuRequested(QPoint)),
                       this,SLOT(showTreeRightMenu(QPoint)));
 
     guidData = new GuidDatabase;
+    OpenedWindow += 1;
 }
 
 MainWindow::~MainWindow()
 {
     cleanup();
-    delete guidData;
+    OpenedWindow -= 1;
+    cout << "OpenedWindow = " << OpenedWindow << endl;
+    if (guidData != nullptr && OpenedWindow == 0)
+        delete guidData;
+    delete structureLabel;
+    delete infoLabel;
     delete ui;
 }
 
@@ -51,6 +69,69 @@ void MainWindow::cleanup() {
 
     if (buffer != nullptr)
         delete buffer;
+
+    if (BiosImage != nullptr)
+        delete BiosImage;
+}
+
+void MainWindow::refresh() {
+    initSettings();
+    QTreeWidgetItem *ImageOverviewItem = ui->treeWidget->itemAt(0, 0);
+    ImageOverviewItem->setFont(MainWindow::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+    ImageOverviewItem->setFont(MainWindow::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+    ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event) {
+    INT32 width = ui->treeWidget->width();
+    ui->treeWidget->setColumnWidth(MainWindow::Name, width - 300);
+    ui->treeWidget->setColumnWidth(MainWindow::Type, 100);
+//    ui->treeWidget->setColumnWidth(MainWindow::SubType, 120);
+    ui->treeWidget->header()->setResizeContentsPrecision(QHeaderView::ResizeToContents);
+    ui->treeWidget->header()->setStretchLastSection(true);
+    infoLabel->setGeometry(ui->treeWidget->width() + 23, 80, 100, 20);
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
+    if (obj == ui->treeWidget->viewport()) {
+        //点击树的空白,取消选中
+        if (event->type() == QEvent::MouseButtonPress) {
+            QMouseEvent *e = (QMouseEvent *)event;
+            if (e->buttons() & Qt::LeftButton) {
+                QModelIndex index = ui->treeWidget->indexAt(e->pos());
+                if (!index.isValid()) {
+                    ui->treeWidget->setCurrentIndex(QModelIndex());
+                    ui->infoBrowser->clear();
+                    ui->AddressPanel->clear();
+                }
+            }
+        }
+    }
+    return QObject::eventFilter(obj, event);
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) //拖动文件到窗口，触发
+{
+    if(event->mimeData()->hasUrls())
+        event->acceptProposedAction(); //事件数据中存在路径，方向事件
+    else
+        event->ignore();
+}
+
+void MainWindow::dropEvent(QDropEvent* event) {
+    QUrl url = event->mimeData()->urls().first();
+    QFileInfo file(url.toLocalFile());
+    QString suffixs = "rom bin fd";
+    if( file.isFile() && suffixs.contains(file.suffix()))
+    {
+        QString fileName = file.filePath();
+        cleanup();
+        ui->treeWidget->clear();
+        ui->titleInfomation->clear();
+        ui->infoBrowser->clear();
+        ui->AddressPanel->clear();
+        OpenFile(fileName.toStdString());
+    }
 }
 
 void MainWindow::OpenFile(std::string path)
@@ -67,33 +148,18 @@ void MainWindow::parseBinaryInfo() {
     setTreeData();
 }
 
-void MainWindow::on_treeWidget_itemClicked(QTreeWidgetItem *item, int column)
-{
-    DataModel * itemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
-    Volume* volume = itemModel->modelData;
-    QPalette pal(ui->AddressPanel->palette());
-    if (volume->isCompressed) {
-        pal.setColor(QPalette::Base, Qt::cyan);
-    } else {
-        pal.setColor(QPalette::Base, Qt::white);
-    }
-    ui->AddressPanel->setPalette(pal);
-    setPanelInfo(volume->offsetFromBegin, volume->size);
-
-    volume->setInfoStr();
-    ui->infoBrowser->setText(volume->InfoStr);
-}
-
 void MainWindow::showTreeRightMenu(QPoint pos) {
     QMenu* menu = new QMenu;
     QAction* showHex = new QAction("Hex View");
     menu->addAction(showHex);
 
+    QModelIndex index = ui->treeWidget->indexAt(pos);
+    if (!index.isValid())
+        return;
     QTreeWidgetItem *item = ui->treeWidget->itemAt(pos);
     DataModel * itemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
     UINT8 *itemData = itemModel->modelData->data;
     hexViewData = new QByteArray((char*)itemData, itemModel->modelData->size);
-    cout << hexViewData->size() << endl;
 
     this->connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
     menu->move(ui->treeWidget->cursor().pos());
@@ -106,18 +172,54 @@ void MainWindow::showHexView() {
     hexDialog->exec();
 }
 
-void MainWindow::initTree() {
-    ui->treeWidget->clear();
-    ui->treeWidget->setStyleSheet("QTreeView::item{margin:2px;}");
+void MainWindow::initSettings() {
+    if (!setting.contains("Theme"))
+        setting.setValue("Theme", "Light");
+    if (!setting.contains("BiosViewerFontSize"))
+        setting.setValue("BiosViewerFontSize", 12);
+    if (!setting.contains("BiosViewerFont"))
+        setting.setValue("BiosViewerFont", "Microsoft YaHei UI");
+
+    if (!setting.contains("InfoFontSize"))
+        setting.setValue("InfoFontSize", 12);
+    if (!setting.contains("InfoFont"))
+        setting.setValue("InfoFont", "Fira Code");
+    if (!setting.contains("InfoLineSpacing"))
+        setting.setValue("InfoLineSpacing", "2");
+
+    if (!setting.contains("HexFontSize"))
+        setting.setValue("HexFontSize", 12);
+    if (!setting.contains("HexFont"))
+        setting.setValue("HexFont", "Courier");
+    if (!setting.contains("LineSpacing"))
+        setting.setValue("LineSpacing", "2");
+
+    ui->treeWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
+    ui->treeWidget->setStyleSheet(QString("QTreeView::item{margin:%1px;}").arg(setting.value("LineSpacing").toInt()));
+
+    ui->infoBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->infoBrowser->setStyleSheet(QString("QTextBrowser::item{margin:%1px;}").arg(setting.value("InfoLineSpacing").toInt()));
 
     ui->treeWidget->setColumnWidth(MainWindow::Name, 400);
     ui->treeWidget->setColumnWidth(MainWindow::Type, 100);
 //    ui->treeWidget->setColumnWidth(MainWindow::SubType, 120);
     ui->treeWidget->header()->setResizeContentsPrecision(QHeaderView::ResizeToContents);
     ui->treeWidget->header()->setStretchLastSection(true);
+
+    structureLabel->setFont(QFont("Microsoft YaHei UI", 10));
+    infoLabel->setFont(QFont("Microsoft YaHei UI", 10));
+    structureLabel->setGeometry(15, 80, 100, 20);
+    infoLabel->setGeometry(ui->treeWidget->width() + 23, 80, 100, 20);
 }
 
 void MainWindow::setTreeData() {
+    QTreeWidgetItem *ImageOverviewItem = new QTreeWidgetItem(BiosImageModel->getData());
+    ImageOverviewItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)BiosImageModel));
+    ImageOverviewItem->setFont(MainWindow::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+    ImageOverviewItem->setFont(MainWindow::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+    ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+    ui->treeWidget->addTopLevelItem(ImageOverviewItem);
+
     for (auto FvModel:FvModelData) {
         QTreeWidgetItem *fvItem = new QTreeWidgetItem(FvModel->getData());
         fvItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)FvModel));
@@ -127,6 +229,7 @@ void MainWindow::setTreeData() {
             addTreeItem(fvItem, FfsModel);
         }
     }
+    ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void MainWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData) {
@@ -166,13 +269,16 @@ void MainWindow::on_OpenFile_triggered()
 {
     QString lastPath = setting.value("LastFilePath").toString();
     QString fileName = QFileDialog::getOpenFileName(
-        this, tr("Open BIOS File"),
-        lastPath, tr("Capsule files(*.rom *.bin *.cap);;All files (*.*)"));
+        this, tr("Open Image File"),
+        lastPath, tr("Image files(*.rom *.bin *.fd);;All files (*.*)"));
     if (fileName.isEmpty()){
         return;
     }
     cleanup();
     ui->treeWidget->clear();
+    ui->titleInfomation->clear();
+    ui->infoBrowser->clear();
+    ui->AddressPanel->clear();
     QFileInfo fileinfo {fileName};
     setting.setValue("LastFilePath", fileinfo.path());
     OpenFile(fileName.toStdString());
@@ -182,5 +288,78 @@ void MainWindow::on_OpenFile_triggered()
 void MainWindow::on_actionExit_triggered()
 {
     this->close();
+}
+
+void MainWindow::on_actionSettings_triggered()
+{
+    SettingsDialog *settingDialog = new SettingsDialog;
+    settingDialog->setParentWidget(this);
+    settingDialog->exec();
+}
+
+
+void MainWindow::on_actionAboutQt_triggered()
+{
+    QMessageBox::aboutQt(this, tr("About Qt"));
+}
+
+
+void MainWindow::on_actionAboutBiosViewer_triggered()
+{
+    QString strText= QString("<html><head/><body><p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1"
+                             "</span></p><p>Internal Use Only</p><p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Chen, Zhu")
+                             .arg(__CapToolVersion__).arg(__DATE__);
+    QMessageBox::about(this, tr("About Capsule Tool"), strText);
+}
+
+void MainWindow::on_OpenInNewWindow_triggered()
+{
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString fileName = QFileDialog::getOpenFileName(
+        this, tr("Open Image File"),
+        lastPath, tr("Image files(*.rom *.bin *.fd);;All files (*.*)"));
+    if (fileName.isEmpty()){
+        return;
+    }
+    QFileInfo fileinfo {fileName};
+    setting.setValue("LastFilePath", fileinfo.path());
+
+    MainWindow *newWindow = new MainWindow;
+    newWindow->setAttribute(Qt::WA_DeleteOnClose);
+    newWindow->show();
+    newWindow->OpenFile(fileName.toStdString());
+}
+
+void MainWindow::on_treeWidget_itemSelectionChanged()
+{
+    QModelIndex index = ui->treeWidget->currentIndex();
+    if (!index.isValid())
+        return;
+    QTreeWidgetItem *item = ui->treeWidget->currentItem();
+    DataModel * itemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
+    Volume* volume = itemModel->modelData;
+    QPalette pal(ui->AddressPanel->palette());
+    if (volume->isCompressed) {
+        pal.setColor(QPalette::Base, Qt::cyan);
+    } else {
+        pal.setColor(QPalette::Base, Qt::white);
+    }
+    ui->AddressPanel->setPalette(pal);
+    setPanelInfo(volume->offsetFromBegin, volume->size);
+
+    volume->setInfoStr();
+    ui->infoBrowser->setText(volume->InfoStr);
+}
+
+
+void MainWindow::on_infoButton_clicked()
+{
+    InfoWindow *infoWindow = new InfoWindow;
+    if (BiosImage != nullptr) {
+        infoWindow->setBiosImage(BiosImage);
+        infoWindow->showFitTable();
+    }
+
+    infoWindow->show();
 }
 

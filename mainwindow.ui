@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1133</width>
-    <height>599</height>
+    <width>1140</width>
+    <height>650</height>
    </rect>
   </property>
   <property name="font">
@@ -82,31 +82,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QComboBox" name="itemBox">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>26</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="saveButton">
+       <widget class="QPushButton" name="infoButton">
         <property name="enabled">
          <bool>true</bool>
         </property>
@@ -134,7 +110,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Extract BIOS</string>
+         <string>Infomation</string>
         </property>
         <property name="checkable">
          <bool>false</bool>
@@ -165,56 +141,17 @@
        <number>6</number>
       </property>
       <item>
-       <widget class="QLabel" name="label">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Structure</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_2">
+       <spacer name="verticalSpacer_3">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Vertical</enum>
         </property>
         <property name="sizeType">
          <enum>QSizePolicy::Fixed</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>250</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Infomation</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
+          <width>20</width>
+          <height>16</height>
          </size>
         </property>
        </spacer>
@@ -236,14 +173,20 @@
         </property>
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
+          <horstretch>1</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
           <width>700</width>
-          <height>0</height>
+          <height>300</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>1200</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="font">
@@ -299,15 +242,18 @@
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QTextBrowser" name="infoBrowser">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="minimumSize">
            <size>
-            <width>300</width>
+            <width>400</width>
             <height>0</height>
            </size>
           </property>
@@ -327,7 +273,7 @@
            <enum>QFrame::Plain</enum>
           </property>
           <property name="lineWrapMode">
-           <enum>QTextEdit::NoWrap</enum>
+           <enum>QTextEdit::WidgetWidth</enum>
           </property>
          </widget>
         </item>
@@ -352,7 +298,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1133</width>
+     <width>1140</width>
      <height>21</height>
     </rect>
    </property>
@@ -364,13 +310,14 @@
     <addaction name="separator"/>
     <addaction name="OpenFile"/>
     <addaction name="OpenInNewWindow"/>
+    <addaction name="actionSettings"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
      <string>About</string>
     </property>
-    <addaction name="actionAboutCapsuleTool"/>
+    <addaction name="actionAboutBiosViewer"/>
     <addaction name="actionAboutQt"/>
    </widget>
    <addaction name="menu"/>
@@ -385,9 +332,9 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionAboutCapsuleTool">
+  <action name="actionAboutBiosViewer">
    <property name="text">
-    <string>About Capsule Tool</string>
+    <string>About BIOS Viewer</string>
    </property>
   </action>
   <action name="actionAboutQt">
@@ -409,6 +356,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+O</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+,</string>
    </property>
   </action>
  </widget>

@@ -10,6 +10,9 @@ void MainWindow::setFvData()
     buffer->setOffset(0);
     INT64 bufferSize = buffer->getBufferSize();
     INT64 offset = 0;
+    BiosImage = new BiosImageVolume(buffer->getBytes(bufferSize), bufferSize);
+    BiosImageModel = new DataModel(BiosImage, "Image Overview", "Image", "UEFI");
+    buffer->setOffset(0);
 
     while (offset < bufferSize) {
         buffer->setOffset(offset);
@@ -25,7 +28,6 @@ void MainWindow::setFvData()
             if (offset + EmptyVolumeLength >= bufferSize)
                 break;
             fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
-//            cout << "EmptyVolumeLength = " << hex << EmptyVolumeLength << endl;
         }
         if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
             ui->titleInfomation->setText("No Firmware Found!");
@@ -63,6 +65,7 @@ void MainWindow::getBiosID() {
                 CommonSection *sec = file->Sections.at(0);
                 CHAR16 *biosIdStr = (CHAR16*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
                 BiosID = QString::fromStdString(Buffer::wstringToString(biosIdStr));
+                BiosImage->BiosID = BiosID.toStdString();
                 ui->titleInfomation->setText(BiosID);
                 return;
             }

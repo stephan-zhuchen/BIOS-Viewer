@@ -11,6 +11,8 @@
 namespace UefiSpace {
     using namespace BaseLibrarySpace;
 
+    class FitTableClass;
+
     enum class VolumeType {
         FirmwareVolume,
         FfsFile,
@@ -150,6 +152,30 @@ namespace UefiSpace {
         void setInfoStr() override;
 
         static bool isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER* address);
+    };
+
+    class BiosImageVolume: public Volume {
+    public:
+        string BiosID;
+        FitTableClass *FitTable{nullptr};
+    public:
+        BiosImageVolume()=delete;
+        BiosImageVolume(UINT8* fv, INT64 length);
+        ~BiosImageVolume();
+
+        void setInfoStr() override;
+    };
+
+    class FitTableClass {
+    public:
+        FIRMWARE_INTERFACE_TABLE_ENTRY  FitHeader;
+        vector<FIRMWARE_INTERFACE_TABLE_ENTRY> FitEntries;
+        INT64 FitEntryNum{0};
+        bool  isValid{false};
+    public:
+        FitTableClass(UINT8* fv, INT64 length);
+        ~FitTableClass();
+        static string getTypeName(UINT8 type);
     };
 
 }

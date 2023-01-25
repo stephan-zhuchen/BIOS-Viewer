@@ -216,6 +216,10 @@ namespace BaseLibrarySpace {
         return (UINT16) (0x10000 - Sum);
     }
 
+    INT32 Buffer::getSizeFromUINT24(UINT8* address) {
+        return *(UINT32*)address & 0xFFFFFF;
+    }
+
     void Buffer::saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const {
         buffer->seekg(beginOffset, ios::beg);
         char* value = new char[bufferSize];

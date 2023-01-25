@@ -21,6 +21,10 @@ void DataModel::setText(QString txt) {
     text = txt;
 }
 
+QString DataModel::getName() const {
+    return name;
+}
+
 QString DataModel::getText() const {
     return text;
 }

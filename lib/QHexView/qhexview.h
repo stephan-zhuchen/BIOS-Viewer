@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QLabel>
 #include <QTimer>
+#include <QSettings>
 
 // config font and colors
 #define FONT "Courier"
@@ -68,6 +69,7 @@ private:
   QTimer * timer;
   QFont fontSetting;
   QWidget *parentWidget;
+  QSettings setting{"./Setting.ini", QSettings::IniFormat};
 
   QSize fullSize() const;
   void updatePositions();

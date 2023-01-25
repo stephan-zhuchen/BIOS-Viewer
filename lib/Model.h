@@ -20,6 +20,7 @@ public:
     DataModel(Volume* model, QString nm, QString typ, QString sbtyp = "", QString txt = "");
     ~DataModel();
     void    setText(QString txt);
+    QString getName() const;
     QString getText() const;
     QString getType() const;
     QString getSubType() const;
