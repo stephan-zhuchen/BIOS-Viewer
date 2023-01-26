@@ -1,6 +1,7 @@
 #include <iomanip>
 #include "UefiLib.h"
 #include "../include/Base.h"
+#include "../include/Microcode.h"
 #include "../include/GuidDefinition.h"
 #include "LzmaDecompress/LzmaDecompressLibInternal.h"
 #include "BaseUefiDecompress/UefiDecompressLib.h"
@@ -250,6 +251,16 @@ namespace UefiSpace {
             dependency = new Depex(data + HeaderSize, SectionSize - HeaderSize);
             break;
         case EFI_SECTION_RAW:
+            if (isAprioriRaw) {
+                INT64 index = 0;
+                INT64 RemainingSize = SectionSize - HeaderSize;
+                while (RemainingSize >= sizeof(EFI_GUID)) {
+                    EFI_GUID AprioriFileGuid = *(EFI_GUID*)(data + HeaderSize + index * sizeof(EFI_GUID));
+                    AprioriList.push_back(AprioriFileGuid);
+                    RemainingSize -= sizeof(EFI_GUID);
+                    index += 1;
+                }
+            }
             break;
         default:
             break;
@@ -381,8 +392,15 @@ namespace UefiSpace {
             for (auto &depexStr : dependency->OrganizedDepexList)
                 ss << depexStr << "\n";
             break;
+        case EFI_SECTION_RAW:
+            if (isAprioriRaw) {
+                ss << "Apriori List:\n";
+                for (auto ApriFile:AprioriList) {
+                    ss << guidData->getNameFromGuid(ApriFile) << "\n";
+                }
+            }
+            break;
         default:
-
             break;
         }
 
@@ -442,6 +460,9 @@ namespace UefiSpace {
             headerChecksumValid = true;
         if ((FfsHeader.Attributes | FFS_ATTRIB_CHECKSUM) == 0x0)
             dataChecksumValid = true;
+        if (FfsHeader.Name.Data1 == GuidDatabase::gPeiAprioriFileNameGuid.Data1 || FfsHeader.Name.Data1 == GuidDatabase::gAprioriGuid.Data1) {
+            isApriori = true;
+        }
     }
 
     FfsFile::~FfsFile() {
@@ -456,12 +477,6 @@ namespace UefiSpace {
         return FfsHeader.Type;
     }
 
-//    INT64 FfsFile::getSize() const{
-//        if (isExtended)
-//            return (INT64)FFS_FILE2_SIZE(&FfsExtHeader);
-//        return (INT64)FFS_FILE_SIZE(&FfsHeader);
-//    }
-
     INT64 FfsFile::getHeaderSize() const {
         if (isExtended)
             return sizeof(EFI_FFS_FILE_HEADER2);
@@ -474,6 +489,13 @@ namespace UefiSpace {
         INT64 offset = sizeof(EFI_FFS_FILE_HEADER);
         if (isExtended) {
             offset = sizeof(EFI_FFS_FILE_HEADER2);
+        }
+        if (isApriori) {
+            CommonSection *Sec = new CommonSection(data + offset, offsetFromBegin + offset);
+            Sec->isAprioriRaw = true;
+            Sec->SelfDecode();
+            Sections.push_back(Sec);
+            return;
         }
         while (offset < size) {
             EFI_COMMON_SECTION_HEADER *SecHeader = (EFI_COMMON_SECTION_HEADER*)(data + offset);
@@ -664,13 +686,20 @@ namespace UefiSpace {
             for (INT64 index = 1; index < FitEntryNum; ++index) {
                 FIRMWARE_INTERFACE_TABLE_ENTRY FitEntry = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(fv + FitTableAddress + sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * index);
                 FitEntries.push_back(FitEntry);
+                if (FitEntry.Type == FIT_TABLE_TYPE_MICROCODE) {
+                    UINT64 MicrocodeAddress = FitEntry.Address & 0xFFFFFF;
+                    UINT64 RelativeMicrocodeAddress = Buffer::adjustBufferAddress(0x1000000, MicrocodeAddress, length);
+                    MicrocodeHeaderClass *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, MicrocodeAddress);
+                    MicrocodeEntries.push_back(MicrocodeEntry);
+                }
             }
-
         } else
             isValid = false;;
     }
 
     FitTableClass::~FitTableClass() {
+        for (auto MicrocodeEntry:MicrocodeEntries)
+            delete MicrocodeEntry;
     }
 
     string FitTableClass::getTypeName(UINT8 type) {
@@ -729,5 +758,61 @@ namespace UefiSpace {
             break;
         }
         return typeName;
+    }
+
+    MicrocodeHeaderClass::MicrocodeHeaderClass(UINT8* fv, INT64 address):data(fv), offset(address) {
+        microcodeHeader = *(CPU_MICROCODE_HEADER*)fv;
+        if (microcodeHeader.HeaderVersion == 0xFFFFFFFF) {
+            isEmpty = true;
+            return;
+        }
+
+        UINT32 ExtendedTableLength = microcodeHeader.TotalSize - (microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
+        cout << "ExtendedTableLength = " << hex << ExtendedTableLength << endl;
+        if (ExtendedTableLength != 0) {
+            ExtendedTableHeader = (CPU_MICROCODE_EXTENDED_TABLE_HEADER *)(fv + microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
+            if ((ExtendedTableLength > sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) && ((ExtendedTableLength & 0x3) == 0)) {
+//                UINT32 CheckSum32 = Buffer::CaculateSum32((UINT32 *)ExtendedTableHeader, ExtendedTableLength);
+                UINT32 ExtendedTableCount = ExtendedTableHeader->ExtendedSignatureCount;
+                if (ExtendedTableCount <= (ExtendedTableLength - sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) / sizeof(CPU_MICROCODE_EXTENDED_TABLE)) {
+                    CPU_MICROCODE_EXTENDED_TABLE *ExtendedTable = (CPU_MICROCODE_EXTENDED_TABLE *)(ExtendedTableHeader + 1);
+                    for (INT32 Index = 0; Index < ExtendedTableCount; Index++) {
+                        ExtendedMicrocodeList.push_back(*ExtendedTable);
+                        ExtendedTable += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    MicrocodeHeaderClass::~MicrocodeHeaderClass() {}
+
+    void MicrocodeHeaderClass::setInfoStr() {
+        INT64 width = 20;
+        stringstream ss;
+        ss.setf(ios::left);
+
+        ss << "Microcode Info:" << "\n"
+           << setw(width) << "Offset:" << hex << uppercase << offset << "h\n";
+        if (!isEmpty) {
+            ss << setw(width) << "HeaderVersion:" << hex << uppercase << microcodeHeader.HeaderVersion << "h\n"
+               << setw(width) << "UpdateRevision:" << hex << uppercase << microcodeHeader.UpdateRevision << "h\n"
+               << setw(width) << "Date:" << hex << uppercase << microcodeHeader.Date.Bits.Year << "-" << microcodeHeader.Date.Bits.Month << "-" << microcodeHeader.Date.Bits.Day << "\n"
+               << setw(width) << "ProcessorSignature:" << hex << uppercase << microcodeHeader.ProcessorSignature.Uint32 << "h\n"
+               << setw(width) << "Checksum:" << hex << uppercase << microcodeHeader.Checksum << "h\n"
+               << setw(width) << "LoaderRevision:" << hex << uppercase << microcodeHeader.LoaderRevision << "h\n"
+               << setw(width) << "ProcessorFlags:" << hex << uppercase << microcodeHeader.ProcessorFlags << "h\n"
+               << setw(width) << "DataSize:" << hex << uppercase << microcodeHeader.DataSize << "h\n"
+               << setw(width) << "TotalSize:" << hex << uppercase << microcodeHeader.TotalSize << "h\n";
+        }
+
+        if (ExtendedMicrocodeList.size() != 0) {
+            for (auto ExtendedMicrocode:ExtendedMicrocodeList) {
+                ss << "\nExtended Microcode Info:" << "\n"
+                   << setw(width) << "ProcessorSignature:" << hex << uppercase << ExtendedMicrocode.ProcessorSignature.Uint32 << "h\n";
+            }
+        }
+
+        InfoStr = QString::fromStdString(ss.str());
     }
 }

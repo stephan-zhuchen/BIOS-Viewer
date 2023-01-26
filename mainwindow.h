@@ -11,7 +11,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __CapToolVersion__ "0.9.1"
+#define __BiosViewerVersion__ "0.9.2"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -32,6 +32,7 @@ public:
     void refresh();
 
     void OpenFile(std::string path);
+    void DoubleClickOpenFile(std::string path);
     void parseBinaryInfo();
     void setFvData();
     void setFfsData();
@@ -42,6 +43,7 @@ public:
     void setTreeData();
     void addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData);
     void setPanelInfo(INT64 offset, INT64 size);
+    void setOpenedFileName(QString name);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -63,21 +65,26 @@ private slots:
 
     void on_infoButton_clicked();
 
+    void on_actionSeperate_Binary_triggered();
+
+    void on_actionExtract_BIOS_triggered();
+
 private:
     Ui::MainWindow *ui;
-    Buffer *buffer;
-    QByteArray *hexViewData;
-    QMenu *popMenu;
-    QString BiosID;
-    QLabel *structureLabel;
-    QLabel *infoLabel;
-    QSettings setting{"./Setting.ini", QSettings::IniFormat};
+    Buffer         *buffer;
+    QByteArray     *hexViewData;
+    QMenu          *popMenu;
+    QString        BiosID;
+    QLabel         *structureLabel;
+    QLabel         *infoLabel;
+    QString        OpenedFileName;
+    QSettings      setting{"./Setting.ini", QSettings::IniFormat};
 
-    std::vector<UINT8*> FirmwareVolumeBuffer{};
+    std::vector<UINT8*>          FirmwareVolumeBuffer{};
     std::vector<FirmwareVolume*> FirmwareVolumeData{};
-    std::vector<FvModel*> FvModelData{};
-    BiosImageVolume *BiosImage;
-    DataModel *BiosImageModel;
+    std::vector<FvModel*>        FvModelData{};
+    BiosImageVolume              *BiosImage;
+    DataModel                    *BiosImageModel;
     enum treeColNum {Name=0, Type, SubType, Text};
 };
 

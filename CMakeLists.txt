@@ -45,6 +45,7 @@ set(INCLUDE_FILE
         include/GuidDefinition.h
         include/BaseMemoryLib.h
         include/BaseMemoryLib.cpp
+        include/Microcode.h
 )
 
 link_directories(D:/Code/BiosViewer/lib/LzmaDecompress/Sdk/C)
@@ -63,6 +64,7 @@ set(PROJECT_SOURCES
         lib/QHexView/qhexview.h
         UefiDecode.cpp
         mainwindow.cpp
+        BinaryTool.cpp
         mainwindow.h
         mainwindow.ui
         HexViewDialog.h HexViewDialog.cpp HexViewDialog.ui

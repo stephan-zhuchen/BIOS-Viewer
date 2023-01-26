@@ -65,7 +65,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="biosTab">
     <attribute name="title">
@@ -660,6 +660,19 @@
        <string>Courier New</string>
       </property>
      </item>
+    </widget>
+    <widget class="QCheckBox" name="checkBox">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>80</y>
+       <width>141</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Enable Editing</string>
+     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="otherTab">

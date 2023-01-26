@@ -1,4 +1,5 @@
 #include <iostream>
+#include <QKeyEvent>
 #include "InfoWindow.h"
 #include "lib/BaseLib.h"
 #include "ui_InfoWindow.h"
@@ -15,6 +16,9 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
     ui->tableWidget->horizontalHeader()->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->tableWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
+
+    ui->tabWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
+    ui->MicrocodeTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 }
 
 InfoWindow::~InfoWindow()
@@ -35,13 +39,6 @@ void InfoWindow::showFitTable() {
 
     ui->tableWidget->setColumnCount(6);
     ui->tableWidget->setRowCount(FitNum);
-//    std::cout << "tableWidget->width = " << std::dec << ui->tableWidget->width() << std::endl;
-//    int length = ui->tableWidget->width() / 6;
-//    ui->tableWidget->setColumnWidth(InfoWindow::Address, length * 1.5);
-//    ui->tableWidget->setColumnWidth(InfoWindow::Size, length);
-//    ui->tableWidget->setColumnWidth(InfoWindow::Version, length);
-//    ui->tableWidget->setColumnWidth(InfoWindow::C_V, length / 2);
-//    ui->tableWidget->setColumnWidth(InfoWindow::Checksum, length / 2);
 
     item = new QTableWidgetItem(FitSignature);
     ui->tableWidget->setItem(0, InfoWindow::Address, item);
@@ -81,10 +78,30 @@ void InfoWindow::showFitTable() {
         item = new QTableWidgetItem(QString::number(Entry.Checksum, 16).toUpper() + "h");
         ui->tableWidget->setItem(index + 1, InfoWindow::Checksum, item);
     }
+
+    showMicrocodeTable();
+}
+
+void InfoWindow::showMicrocodeTable() {
+    for (auto MicrocodeEntry:BiosImage->FitTable->MicrocodeEntries) {
+        QString ItemName = "Microcode";
+        if (MicrocodeEntry->isEmpty)
+            ItemName += " (Empty)";
+        else
+            ItemName = ItemName + "  " + QString::number(MicrocodeEntry->microcodeHeader.ProcessorSignature.Uint32, 16).toUpper();
+        QListWidgetItem *item2 = new QListWidgetItem(ItemName);
+        ui->microcodeListWidget->addItem(item2);
+    }
+
+    if (BiosImage->FitTable->MicrocodeEntries.size() != 0) {
+        ui->microcodeListWidget->setCurrentRow(0);
+        auto EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(0);
+        EntryHeader->setInfoStr();
+        ui->MicrocodeTextBrowser->setText(EntryHeader->InfoStr);
+    }
 }
 
 void InfoWindow::resizeEvent(QResizeEvent *event) {
-    std::cout << "ui->tableWidget->width = " << std::dec << ui->tableWidget->width() << std::endl;
     int length = ui->tableWidget->width() / 6;
 //    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->tableWidget->setColumnWidth(InfoWindow::Address, length * 1.5);
@@ -93,3 +110,17 @@ void InfoWindow::resizeEvent(QResizeEvent *event) {
     ui->tableWidget->setColumnWidth(InfoWindow::Type, length * 1.5);
     ui->tableWidget->setColumnWidth(InfoWindow::C_V, length / 2);
 }
+
+void InfoWindow::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Escape) {
+        this->close();
+    }
+}
+
+void InfoWindow::on_microcodeListWidget_itemClicked(QListWidgetItem *item) {
+    INT32 currentRow = ui->microcodeListWidget->currentRow();
+    auto EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(currentRow);
+    EntryHeader->setInfoStr();
+    ui->MicrocodeTextBrowser->setText(EntryHeader->InfoStr);
+}
+

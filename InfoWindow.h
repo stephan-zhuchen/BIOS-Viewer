@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QSettings>
 #include <QTableWidgetItem>
+#include <QListWidgetItem>
 #include "lib/UefiLib.h"
 
 using UefiSpace::BiosImageVolume;
@@ -22,9 +23,14 @@ public:
 
     void setBiosImage(BiosImageVolume *Image);
     void showFitTable();
+    void showMicrocodeTable();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+
+private slots:
+    void on_microcodeListWidget_itemClicked(QListWidgetItem *item);
 
 private:
     Ui::InfoWindow *ui;

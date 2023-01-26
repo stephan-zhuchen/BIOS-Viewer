@@ -241,6 +241,21 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
+         <widget class="QLineEdit" name="AddressPanel">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="frame">
+           <bool>false</bool>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QTextBrowser" name="infoBrowser">
           <property name="enabled">
            <bool>true</bool>
@@ -277,16 +292,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QLineEdit" name="AddressPanel">
-          <property name="frame">
-           <bool>false</bool>
-          </property>
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
        </layout>
       </item>
      </layout>
@@ -299,8 +304,13 @@
      <x>0</x>
      <y>0</y>
      <width>1140</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <widget class="QMenu" name="menu">
     <property name="title">
@@ -320,13 +330,27 @@
     <addaction name="actionAboutBiosViewer"/>
     <addaction name="actionAboutQt"/>
    </widget>
+   <widget class="QMenu" name="menuTool">
+    <property name="title">
+     <string>Tool</string>
+    </property>
+    <addaction name="actionExtract_BIOS"/>
+    <addaction name="actionSeperate_Binary"/>
+    <addaction name="actionLoad_GUID_Database"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menuTool"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="OpenFile">
    <property name="text">
     <string>Open</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -336,15 +360,30 @@
    <property name="text">
     <string>About BIOS Viewer</string>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
   </action>
   <action name="actionAboutQt">
    <property name="text">
     <string>About Qt</string>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
   </action>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>
@@ -354,6 +393,11 @@
    <property name="text">
     <string>Open in new window</string>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
    <property name="shortcut">
     <string>Ctrl+Shift+O</string>
    </property>
@@ -362,8 +406,28 @@
    <property name="text">
     <string>Settings</string>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
    <property name="shortcut">
     <string>Ctrl+,</string>
+   </property>
+  </action>
+  <action name="actionLoad_GUID_Database">
+   <property name="text">
+    <string>Load GUID Database</string>
+   </property>
+  </action>
+  <action name="actionSeperate_Binary">
+   <property name="text">
+    <string>Seperate Binary</string>
+   </property>
+  </action>
+  <action name="actionExtract_BIOS">
+   <property name="text">
+    <string>Extract BIOS</string>
    </property>
   </action>
  </widget>

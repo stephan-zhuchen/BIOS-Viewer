@@ -7,11 +7,13 @@
 #include "../include/PiFirmwareFile.h"
 #include "../include/PiFirmwareVolume.h"
 #include "../include/PeImage.h"
+#include "../include/Microcode.h"
 
 namespace UefiSpace {
     using namespace BaseLibrarySpace;
 
     class FitTableClass;
+    class MicrocodeHeaderClass;
 
     enum class VolumeType {
         FirmwareVolume,
@@ -98,6 +100,8 @@ namespace UefiSpace {
         vector<Volume*>           ChildFile;
         PeCoff                    *peCoffHeader{nullptr};
         Depex                     *dependency{nullptr};
+        bool                      isAprioriRaw{false};
+        vector<EFI_GUID>          AprioriList;
     public:
         CommonSection()=delete;
         CommonSection(UINT8* file, INT64 offset);
@@ -119,6 +123,7 @@ namespace UefiSpace {
         bool                   isExtended{false};
         bool                   headerChecksumValid{false};
         bool                   dataChecksumValid{false};
+        bool                   isApriori{false};
         vector<CommonSection*> Sections;
     public:
         FfsFile() = delete;
@@ -168,14 +173,33 @@ namespace UefiSpace {
 
     class FitTableClass {
     public:
-        FIRMWARE_INTERFACE_TABLE_ENTRY  FitHeader;
+        FIRMWARE_INTERFACE_TABLE_ENTRY         FitHeader;
         vector<FIRMWARE_INTERFACE_TABLE_ENTRY> FitEntries;
+        vector<MicrocodeHeaderClass*>          MicrocodeEntries;
         INT64 FitEntryNum{0};
         bool  isValid{false};
     public:
         FitTableClass(UINT8* fv, INT64 length);
         ~FitTableClass();
         static string getTypeName(UINT8 type);
+    };
+
+    class MicrocodeHeaderClass {
+    private:
+        UINT8* data;
+        INT64  size;
+        INT64  offset;
+    public:
+        bool    isEmpty{false};
+        QString InfoStr;
+        CPU_MICROCODE_HEADER                 microcodeHeader;
+        CPU_MICROCODE_EXTENDED_TABLE_HEADER  *ExtendedTableHeader;
+        vector<CPU_MICROCODE_EXTENDED_TABLE> ExtendedMicrocodeList;
+
+        MicrocodeHeaderClass()=delete;
+        MicrocodeHeaderClass(UINT8* fv, INT64 address);
+        ~MicrocodeHeaderClass();
+        void setInfoStr();
     };
 
 }

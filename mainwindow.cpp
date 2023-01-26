@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QMimeData>
+#include <QStyleFactory>
 #include "mainwindow.h"
 #include "HexViewDialog.h"
 #include "SettingsDialog.h"
@@ -22,11 +23,25 @@ MainWindow::MainWindow(QWidget *parent)
       infoLabel(new QLabel("Infomation:", this)),
       BiosImage(nullptr),
       BiosImageModel(nullptr)
-
 {
     ui->setupUi(this);
     ui->titleInfomation->clear();
+    ui->treeWidget->header()->setResizeContentsPrecision(QHeaderView::ResizeToContents);
+    ui->treeWidget->header()->setStretchLastSection(true);
     ui->treeWidget->viewport()->installEventFilter(this);
+    structureLabel->setFont(QFont("Microsoft YaHei UI", 10));
+    infoLabel->setFont(QFont("Microsoft YaHei UI", 10));
+    structureLabel->setGeometry(15, 80, 100, 20);
+    infoLabel->setGeometry(ui->treeWidget->width() + 23, 80, 100, 20);
+
+//    QColor color = QColor(Qt::gray);
+//    QPalette p = this->palette();
+//    p.setColor(QPalette::Window,color);
+//    this->setPalette(p);
+//    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
+    QApplication::setStyle(QStyleFactory::create("Fusion"));
+    qDebug() << QStyleFactory::keys();
+
     initSettings();
 
     this->connect(ui->treeWidget,SIGNAL(customContextMenuRequested(QPoint)),
@@ -38,7 +53,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    cleanup();
     OpenedWindow -= 1;
     cout << "OpenedWindow = " << OpenedWindow << endl;
     if (guidData != nullptr && OpenedWindow == 0)
@@ -46,6 +60,7 @@ MainWindow::~MainWindow()
     delete structureLabel;
     delete infoLabel;
     delete ui;
+    cleanup();
 }
 
 void MainWindow::cleanup() {
@@ -77,18 +92,17 @@ void MainWindow::cleanup() {
 void MainWindow::refresh() {
     initSettings();
     QTreeWidgetItem *ImageOverviewItem = ui->treeWidget->itemAt(0, 0);
-    ImageOverviewItem->setFont(MainWindow::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
-    ImageOverviewItem->setFont(MainWindow::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
-    ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+    if (ui->treeWidget->indexOfTopLevelItem(ImageOverviewItem) == -1)
+        return;
+    ImageOverviewItem->setFont(MainWindow::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 1, 700));
+    ImageOverviewItem->setFont(MainWindow::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 1, 700));
+    ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 1, 700));
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
     INT32 width = ui->treeWidget->width();
     ui->treeWidget->setColumnWidth(MainWindow::Name, width - 300);
     ui->treeWidget->setColumnWidth(MainWindow::Type, 100);
-//    ui->treeWidget->setColumnWidth(MainWindow::SubType, 120);
-    ui->treeWidget->header()->setResizeContentsPrecision(QHeaderView::ResizeToContents);
-    ui->treeWidget->header()->setStretchLastSection(true);
     infoLabel->setGeometry(ui->treeWidget->width() + 23, 80, 100, 20);
 }
 
@@ -124,21 +138,24 @@ void MainWindow::dropEvent(QDropEvent* event) {
     QString suffixs = "rom bin fd";
     if( file.isFile() && suffixs.contains(file.suffix()))
     {
-        QString fileName = file.filePath();
-        cleanup();
+        OpenedFileName = file.filePath();
         ui->treeWidget->clear();
         ui->titleInfomation->clear();
         ui->infoBrowser->clear();
         ui->AddressPanel->clear();
-        OpenFile(fileName.toStdString());
+        cleanup();
+        OpenFile(OpenedFileName.toStdString());
     }
 }
 
 void MainWindow::OpenFile(std::string path)
 {
     buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path, std::ios::in | std::ios::binary));
-
     parseBinaryInfo();
+}
+
+void MainWindow::DoubleClickOpenFile(std::string path) {
+    OpenFile(path);
 }
 
 void MainWindow::parseBinaryInfo() {
@@ -197,19 +214,11 @@ void MainWindow::initSettings() {
     ui->treeWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->treeWidget->setStyleSheet(QString("QTreeView::item{margin:%1px;}").arg(setting.value("LineSpacing").toInt()));
 
+    ui->treeWidget->header()->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
+    ui->treeWidget->header()->setStyleSheet(QString("QTreeView::item{margin:%1px;}").arg(setting.value("LineSpacing").toInt()));
+
     ui->infoBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
-    ui->infoBrowser->setStyleSheet(QString("QTextBrowser::item{margin:%1px;}").arg(setting.value("InfoLineSpacing").toInt()));
-
-    ui->treeWidget->setColumnWidth(MainWindow::Name, 400);
-    ui->treeWidget->setColumnWidth(MainWindow::Type, 100);
-//    ui->treeWidget->setColumnWidth(MainWindow::SubType, 120);
-    ui->treeWidget->header()->setResizeContentsPrecision(QHeaderView::ResizeToContents);
-    ui->treeWidget->header()->setStretchLastSection(true);
-
-    structureLabel->setFont(QFont("Microsoft YaHei UI", 10));
-    infoLabel->setFont(QFont("Microsoft YaHei UI", 10));
-    structureLabel->setGeometry(15, 80, 100, 20);
-    infoLabel->setGeometry(ui->treeWidget->width() + 23, 80, 100, 20);
+    ui->AddressPanel->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 }
 
 void MainWindow::setTreeData() {
@@ -253,16 +262,19 @@ void MainWindow::setPanelInfo(INT64 offset, INT64 size)
 {
     stringstream Info;
     Info.setf(ios::left);
-    Info << "Offset = 0x";
-    Info.width(25);
+    Info << "Offset: 0x";
+    Info.width(10);
     Info << hex << uppercase << offset;
 
-    Info << "Length = 0x";
-    Info.width(10);
+    Info << "Size: 0x";
     Info << hex << uppercase << size;
 
     QString panelInfo = QString::fromStdString(Info.str());
     ui->AddressPanel->setText(panelInfo);
+}
+
+void MainWindow::setOpenedFileName(QString name) {
+    this->OpenedFileName = name;
 }
 
 void MainWindow::on_OpenFile_triggered()
@@ -274,16 +286,17 @@ void MainWindow::on_OpenFile_triggered()
     if (fileName.isEmpty()){
         return;
     }
-    cleanup();
+    OpenedFileName = fileName;
+    cout << OpenedFileName.toStdString() << endl;
     ui->treeWidget->clear();
     ui->titleInfomation->clear();
     ui->infoBrowser->clear();
     ui->AddressPanel->clear();
+    cleanup();
     QFileInfo fileinfo {fileName};
     setting.setValue("LastFilePath", fileinfo.path());
     OpenFile(fileName.toStdString());
 }
-
 
 void MainWindow::on_actionExit_triggered()
 {
@@ -297,19 +310,17 @@ void MainWindow::on_actionSettings_triggered()
     settingDialog->exec();
 }
 
-
 void MainWindow::on_actionAboutQt_triggered()
 {
     QMessageBox::aboutQt(this, tr("About Qt"));
 }
 
-
 void MainWindow::on_actionAboutBiosViewer_triggered()
 {
     QString strText= QString("<html><head/><body><p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1"
                              "</span></p><p>Internal Use Only</p><p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Chen, Zhu")
-                             .arg(__CapToolVersion__).arg(__DATE__);
-    QMessageBox::about(this, tr("About Capsule Tool"), strText);
+                             .arg(__BiosViewerVersion__).arg(__DATE__);
+    QMessageBox::about(this, tr("About BIOS Viewer"), strText);
 }
 
 void MainWindow::on_OpenInNewWindow_triggered()
@@ -326,6 +337,7 @@ void MainWindow::on_OpenInNewWindow_triggered()
 
     MainWindow *newWindow = new MainWindow;
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
+    newWindow->setOpenedFileName(fileName);
     newWindow->show();
     newWindow->OpenFile(fileName.toStdString());
 }
@@ -362,4 +374,3 @@ void MainWindow::on_infoButton_clicked()
 
     infoWindow->show();
 }
-

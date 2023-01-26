@@ -231,9 +231,15 @@ FfsModel::~FfsModel() {
 FvModel::FvModel(FirmwareVolume *fv) {
     modelData = fv;
     if (fv->isEmpty) {
-        name = "Padding";
-        type = "Padding";
-        subtype = "Empty";
+        if (fv->size == 0x1000000) {
+            name = "IFWI Image";
+            type = "Image";
+            subtype = "Intel";
+        } else {
+            name = "Padding";
+            type = "Padding";
+            subtype = "Empty";
+        }
         rowData = QStringList() << name << type << subtype;
         return;
     }

@@ -216,8 +216,32 @@ namespace BaseLibrarySpace {
         return (UINT16) (0x10000 - Sum);
     }
 
+    UINT32 Buffer::CaculateSum32(UINT16 *Buffer, INT64 Size) {
+        UINT32  Sum;
+        UINTN   Count;
+        UINTN   Total;
+
+//        ASSERT (Buffer != nullptr);
+//        ASSERT (((UINTN)Buffer & 0x3) == 0);
+//        ASSERT ((Length & 0x3) == 0);
+//        ASSERT (Length <= (MAX_ADDRESS - ((UINTN)Buffer) + 1));
+
+        Total = Size / sizeof (*Buffer);
+        for (Sum = 0, Count = 0; Count < Total; Count++) {
+            Sum = Sum + *(Buffer + Count);
+        }
+
+        return Sum;
+    }
+
     INT32 Buffer::getSizeFromUINT24(UINT8* address) {
         return *(UINT32*)address & 0xFFFFFF;
+    }
+
+    void Buffer::saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size) {
+        ofstream outFile(filename, ios::out | ios::binary);
+        outFile.write((INT8*)(address + offset), size);
+        outFile.close();
     }
 
     void Buffer::saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const {
