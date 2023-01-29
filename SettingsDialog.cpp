@@ -9,6 +9,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui(new Ui::SettingsDialog)
 {
     ui->setupUi(this);
+    ui->tabWidget->setCurrentIndex(lastTabIndex);
     setAttribute(Qt::WA_DeleteOnClose);
 
     if (!setting.contains("Theme"))
@@ -32,6 +33,16 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     if (!setting.contains("LineSpacing"))
         setting.setValue("LineSpacing", "2");
 
+    Theme = setting.value("Theme").toString();
+    StructureFontSize = setting.value("BiosViewerFontSize").toString();
+    StructureFont = setting.value("BiosViewerFont").toString();
+    InfoFontSize = setting.value("InfoFontSize").toString();
+    InfoFont = setting.value("InfoFont").toString();
+    HexFontSize = setting.value("HexFontSize").toString();
+    HexFont = setting.value("HexFont").toString();
+    LineSpacing = setting.value("LineSpacing").toString();
+    InfoLineSpacing = setting.value("InfoLineSpacing").toString();
+
     ui->biosViewerThemeBox->setCurrentText(setting.value("Theme").toString());
     ui->biosViewerFontSizeBox->setCurrentText(setting.value("BiosViewerFontSize").toString());
     ui->biosViewerFontBox->setCurrentText(setting.value("BiosViewerFont").toString());
@@ -50,6 +61,8 @@ SettingsDialog::~SettingsDialog()
     delete ui;
 }
 
+int SettingsDialog::lastTabIndex = 0;
+
 void SettingsDialog::paintEvent(QPaintEvent *)
 {
 //    QPainter painter(this);
@@ -63,63 +76,64 @@ void SettingsDialog::paintEvent(QPaintEvent *)
 
 void SettingsDialog::on_hexFontSizeBox_activated(int index)
 {
-    QString FontSize = ui->hexFontSizeBox->currentText();
-    setting.setValue("HexFontSize", FontSize);
+    HexFontSize = ui->hexFontSizeBox->currentText();
 }
 
 void SettingsDialog::on_hexFontBox_activated(int index)
 {
-    QString FontFamily = ui->hexFontBox->currentText();
-    setting.setValue("HexFont", FontFamily);
+    HexFont = ui->hexFontBox->currentText();
 }
 
 void SettingsDialog::on_biosViewerThemeBox_activated(int index)
 {
-    QString theme = ui->biosViewerThemeBox->currentText();
-    setting.setValue("Theme", theme);
+    Theme = ui->biosViewerThemeBox->currentText();
 }
 
 void SettingsDialog::on_biosViewerFontSizeBox_activated(int index)
 {
-    QString biosViewerFontSize = ui->biosViewerFontSizeBox->currentText();
-    setting.setValue("BiosViewerFontSize", biosViewerFontSize);
+    StructureFontSize = ui->biosViewerFontSizeBox->currentText();
 }
 
 void SettingsDialog::on_biosViewerFontBox_activated(int index)
 {
-    QString biosViewerFont = ui->biosViewerFontBox->currentText();
-    setting.setValue("BiosViewerFont", biosViewerFont);
+    StructureFont = ui->biosViewerFontBox->currentText();
+}
+
+void SettingsDialog::on_lineSpacingBox_activated(int index)
+{
+    LineSpacing = ui->lineSpacingBox->currentText();
+}
+
+void SettingsDialog::on_infoFontSizeBox_activated(int index)
+{
+    InfoFontSize = ui->infoFontSizeBox->currentText();
+}
+
+void SettingsDialog::on_infoLineSpacingBox_activated(int index)
+{
+    InfoLineSpacing = ui->infoLineSpacingBox->currentText();
+}
+
+void SettingsDialog::on_infoFontBox_activated(int index)
+{
+    InfoFont = ui->infoFontBox->currentText();
 }
 
 void SettingsDialog::on_buttonBox_accepted()
 {
+    setting.setValue("BiosViewerFontSize", StructureFontSize);
+    setting.setValue("BiosViewerFont", StructureFont);
+    setting.setValue("InfoFontSize", InfoFontSize);
+    setting.setValue("InfoFont", InfoFont);
+    setting.setValue("HexFontSize", HexFontSize);
+    setting.setValue("HexFont", HexFont);
+    setting.setValue("LineSpacing", LineSpacing);
+    setting.setValue("InfoLineSpacing", InfoLineSpacing);
+    setting.setValue("Theme", Theme);
+    lastTabIndex = ui->tabWidget->currentIndex();
     parentWidget->refresh();
 }
 
 void SettingsDialog::setParentWidget(MainWindow *pWidget) {
     parentWidget = pWidget;
-}
-
-void SettingsDialog::on_lineSpacingBox_activated(int index)
-{
-    QString biosViewerFontSize = ui->lineSpacingBox->currentText();
-    setting.setValue("LineSpacing", biosViewerFontSize);
-}
-
-void SettingsDialog::on_infoFontSizeBox_activated(int index)
-{
-    QString infoFontSize = ui->infoFontSizeBox->currentText();
-    setting.setValue("InfoFontSize", infoFontSize);
-}
-
-void SettingsDialog::on_infoLineSpacingBox_activated(int index)
-{
-    QString infoLineSpacing = ui->infoLineSpacingBox->currentText();
-    setting.setValue("InfoLineSpacing", infoLineSpacing);
-}
-
-void SettingsDialog::on_infoFontBox_activated(int index)
-{
-    QString infoFont = ui->infoFontBox->currentText();
-    setting.setValue("InfoFont", infoFont);
 }

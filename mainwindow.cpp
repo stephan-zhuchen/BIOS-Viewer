@@ -3,6 +3,7 @@
 #include <QMouseEvent>
 #include <QMimeData>
 #include <QStyleFactory>
+#include <QInputDialog>
 #include "mainwindow.h"
 #include "HexViewDialog.h"
 #include "SettingsDialog.h"
@@ -248,8 +249,10 @@ void MainWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData) 
         DataModel * parentModel = parentItem->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
         if (parentModel->getType() == "Section") {
             parentItem->parent()->setText(MainWindow::Name, modelData->getText());
+            parentItem->parent()->data(MainWindow::Name, Qt::UserRole).value<DataModel*>()->setText(modelData->getText());
         } else {
             parentItem->setText(MainWindow::Name, modelData->getText());
+            parentItem->data(MainWindow::Name, Qt::UserRole).value<DataModel*>()->setText(modelData->getText());
         }
     }
     parentItem->addChild(Item);
@@ -363,7 +366,6 @@ void MainWindow::on_treeWidget_itemSelectionChanged()
     ui->infoBrowser->setText(volume->InfoStr);
 }
 
-
 void MainWindow::on_infoButton_clicked()
 {
     InfoWindow *infoWindow = new InfoWindow;
@@ -374,3 +376,4 @@ void MainWindow::on_infoButton_clicked()
 
     infoWindow->show();
 }
+

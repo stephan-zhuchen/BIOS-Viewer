@@ -70,6 +70,7 @@ set(PROJECT_SOURCES
         HexViewDialog.h HexViewDialog.cpp HexViewDialog.ui
         SettingsDialog.h SettingsDialog.cpp SettingsDialog.ui
         InfoWindow.h InfoWindow.cpp InfoWindow.ui
+        SearchDialog.h SearchDialog.cpp SearchDialog.ui
         ${INCLUDE_FILE}
         ${LZMA_SDK}
         ${UEFI_DECOMPRESS}

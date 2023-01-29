@@ -72,3 +72,13 @@ void MainWindow::getBiosID() {
         }
     }
 }
+
+void MainWindow::HighlightTreeItem(vector<INT32> rows) {
+    if (rows.size() == 0)
+        return;
+    QModelIndex itemIndex =  ui->treeWidget->model()->index(rows.at(0), 0, QModelIndex());
+    for (int var = 1; var < rows.size(); ++var) {
+        itemIndex = ui->treeWidget->model()->index(rows.at(var), 0, itemIndex);
+    }
+    ui->treeWidget->setCurrentIndex(itemIndex);
+}

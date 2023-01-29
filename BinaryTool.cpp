@@ -2,10 +2,14 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include "mainwindow.h"
+#include "SearchDialog.h"
 #include "./ui_mainwindow.h"
 
 void MainWindow::on_actionSeperate_Binary_triggered()
 {
+    if ( BiosImage == nullptr )
+      return;
+
     bool done;
     QString offset = QInputDialog::getText ( this, tr ( "Goto..." ),
                      tr ( "Offset (0x for hexadecimal):" ), QLineEdit::Normal,
@@ -54,4 +58,55 @@ void MainWindow::on_actionExtract_BIOS_triggered()
         return;
     }
     Buffer::saveBinary(BiosName.toStdString(), BiosImage->data, 0x1000000, 0x1000000);
+}
+
+void MainWindow::on_actionSearch_triggered()
+{
+    SearchDialog *settingDialog = new SearchDialog;
+    settingDialog->SetModelData(&FvModelData);
+    settingDialog->setParentWidget(this);
+    settingDialog->show();
+}
+
+void MainWindow::RecursiveSearchOffset(DataModel* model, INT64 offset, vector<INT32> &SearchRows) {
+    for (INT64 row = 0; row < (INT64)model->volumeModelData.size(); ++row) {
+        DataModel* childModel = model->volumeModelData.at(row);
+        if (!childModel->modelData->isCompressed && offset >= childModel->modelData->offsetFromBegin && offset < childModel->modelData->offsetFromBegin + childModel->modelData->size) {
+            SearchRows.push_back(row);
+            RecursiveSearchOffset(childModel, offset, SearchRows);
+        }
+    }
+}
+
+void MainWindow::on_actionGoto_triggered()
+{
+    if ( BiosImage == nullptr )
+      return;
+
+    bool done;
+    QString offset = QInputDialog::getText ( this, tr ( "Goto..." ),
+                     tr ( "Offset (0x for hexadecimal):" ), QLineEdit::Normal,
+                     nullptr, &done );
+
+    if ( done && offset[0] == '0' && offset[1] == 'x' ) {
+        INT64 SearchOffset = offset.toInt ( nullptr, 16 );
+        vector<INT32> SearchRows;
+        for (INT64 row = 0; (INT64)row < FvModelData.size(); ++row) {
+            DataModel *model = FvModelData.at(row);
+            if (SearchOffset >= model->modelData->offsetFromBegin && SearchOffset < model->modelData->offsetFromBegin + model->modelData->size) {
+                SearchRows.push_back(row + 1);
+                RecursiveSearchOffset(model, SearchOffset, SearchRows);
+            }
+        }
+        for (auto row:SearchRows) {
+            cout << row << " ";
+        }
+        cout << endl;
+        HighlightTreeItem(SearchRows);
+    }
+}
+
+void MainWindow::on_actionCollapse_triggered()
+{
+    ui->treeWidget->collapseAll();
 }

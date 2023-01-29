@@ -11,7 +11,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.9.2"
+#define __BiosViewerVersion__ "0.9.3"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -37,6 +37,7 @@ public:
     void setFvData();
     void setFfsData();
     void getBiosID();
+    void HighlightTreeItem(vector<INT32> rows);
 
     // Tree Widget
     void initSettings();
@@ -44,6 +45,7 @@ public:
     void addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData);
     void setPanelInfo(INT64 offset, INT64 size);
     void setOpenedFileName(QString name);
+    void RecursiveSearchOffset(DataModel* model, INT64 offset, vector<INT32> &SearchRows);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -62,12 +64,14 @@ private slots:
     void on_actionAboutBiosViewer_triggered();
     void on_OpenInNewWindow_triggered();
     void on_treeWidget_itemSelectionChanged();
-
     void on_infoButton_clicked();
-
     void on_actionSeperate_Binary_triggered();
-
     void on_actionExtract_BIOS_triggered();
+    void on_actionSearch_triggered();
+
+    void on_actionGoto_triggered();
+
+    void on_actionCollapse_triggered();
 
 private:
     Ui::MainWindow *ui;

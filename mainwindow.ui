@@ -304,7 +304,7 @@
      <x>0</x>
      <y>0</y>
      <width>1140</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
@@ -320,6 +320,7 @@
     <addaction name="separator"/>
     <addaction name="OpenFile"/>
     <addaction name="OpenInNewWindow"/>
+    <addaction name="separator"/>
     <addaction name="actionSettings"/>
     <addaction name="actionExit"/>
    </widget>
@@ -334,11 +335,21 @@
     <property name="title">
      <string>Tool</string>
     </property>
+    <addaction name="separator"/>
     <addaction name="actionExtract_BIOS"/>
     <addaction name="actionSeperate_Binary"/>
     <addaction name="actionLoad_GUID_Database"/>
    </widget>
+   <widget class="QMenu" name="menuShow">
+    <property name="title">
+     <string>Show</string>
+    </property>
+    <addaction name="actionSearch"/>
+    <addaction name="actionGoto"/>
+    <addaction name="actionCollapse"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menuShow"/>
    <addaction name="menuTool"/>
    <addaction name="menuAbout"/>
   </widget>
@@ -424,10 +435,40 @@
    <property name="text">
     <string>Seperate Binary</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionExtract_BIOS">
    <property name="text">
     <string>Extract BIOS</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionSearch">
+   <property name="text">
+    <string>Search</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionGoto">
+   <property name="text">
+    <string>Goto Offset</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
+   </property>
+  </action>
+  <action name="actionCollapse">
+   <property name="text">
+    <string>Collapse all</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
    </property>
   </action>
  </widget>
