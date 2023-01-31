@@ -17,6 +17,10 @@ DataModel::~DataModel() {
     }
 }
 
+void DataModel::setName(QString txt) {
+    name = txt;
+}
+
 void DataModel::setText(QString txt) {
     text = txt;
 }
@@ -41,7 +45,8 @@ QStringList DataModel::getData() const {
     return rowData;
 }
 
-SectionModel::SectionModel(CommonSection *section) {
+SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
+    parentModel = parent;
     modelData = section;
     type = "Section";
     text = "";
@@ -84,12 +89,18 @@ SectionModel::SectionModel(CommonSection *section) {
     case EFI_SECTION_VERSION:
         name = "Version Section";
         subtype = "Version";
-        text = QString::fromWCharArray((wchar_t*)section->VersionString);
+        text = QString::fromStdString(section->VersionString);
         break;
     case EFI_SECTION_USER_INTERFACE:
         name = "UI Section";
         subtype = "UI";
-        text = QString::fromWCharArray((wchar_t*)section->FileNameString);
+        text = QString::fromStdString(section->FileNameString);
+        if (text == "FmpDxe") {
+            cout << "FmpDxe" << endl;
+            parentModel->setName(text + " " + parentModel->getFmpDeviceName());
+        } else {
+            parentModel->setName(text);
+        }
         break;
     case EFI_SECTION_COMPATIBILITY16:
         name = "Compatibility16 Section";
@@ -130,12 +141,12 @@ SectionModel::SectionModel(CommonSection *section) {
             break;
         case VolumeType::FfsFile:
             FfsModel *ffsModel;
-            ffsModel = new FfsModel((FfsFile*)volume);
+            ffsModel = new FfsModel((FfsFile*)volume, this->parentModel->parentModel);
             volumeModelData.push_back(ffsModel);
             break;
         case VolumeType::CommonSection:
             SectionModel *secModel;
-            secModel = new SectionModel((CommonSection*)volume);
+            secModel = new SectionModel((CommonSection*)volume, this->parentModel);
             volumeModelData.push_back(secModel);
             break;
         default:
@@ -148,10 +159,12 @@ SectionModel::SectionModel(CommonSection *section) {
 SectionModel::~SectionModel() {
 }
 
-FfsModel::FfsModel(FfsFile *ffs) {
+FfsModel::FfsModel(FfsFile *ffs, FvModel *parent) {
+    parentModel = parent;
     modelData = ffs;
     name = QString::fromStdString(guidData->getNameFromGuid(ffs->FfsHeader.Name));
     type = "File";
+    text = "";
     switch (ffs->FfsHeader.Type) {
     case EFI_FV_FILETYPE_RAW:
         subtype = "Raw";
@@ -216,16 +229,43 @@ FfsModel::FfsModel(FfsFile *ffs) {
         break;
     }
 
-    text = "";
-    rowData = QStringList() << name << type << subtype;
-
     for (auto section:ffs->Sections) {
-        SectionModel *secModel = new SectionModel(section);
+        SectionModel *secModel = new SectionModel(section, this);
         volumeModelData.push_back(secModel);
     }
+
+    rowData = QStringList() << name << type << subtype;
 }
 
 FfsModel::~FfsModel() {
+}
+
+QString FfsModel::getFmpDeviceName() {
+    QString FmpName;
+    EFI_GUID FmpGuid = ((FfsFile*)modelData)->FfsHeader.Name;
+    switch (FmpGuid.Data1) {
+    case guidData->gFmpDeviceMonolithicDefaultGuid.Data1:
+        FmpName = "Monolithic";
+        break;
+    case guidData->gFmpDeviceBiosDefaultGuid.Data1:
+        FmpName = "Bios";
+        break;
+    case guidData->gFmpDeviceMeDefaultGuid.Data1:
+        FmpName = "Me";
+        break;
+    case guidData->gFmpDeviceEcDefaultGuid.Data1:
+        FmpName = "EC";
+        break;
+    case guidData->gFmpDeviceBtGAcmDefaultGuid.Data1:
+        FmpName = "BtgAcm";
+        break;
+    case guidData->gFmpDeviceMicrocodeDefaultGuid.Data1:
+        FmpName = "uCode";
+        break;
+    default:
+        break;
+    }
+    return FmpName;
 }
 
 FvModel::FvModel(FirmwareVolume *fv) {
@@ -264,7 +304,7 @@ FvModel::FvModel(FirmwareVolume *fv) {
     rowData = QStringList() << name << type << subtype;
 
     for(auto ffs:fv->FfsFiles) {
-        FfsModel *ffsmodel = new FfsModel(ffs);
+        FfsModel *ffsmodel = new FfsModel(ffs, this);
         volumeModelData.push_back(ffsmodel);
     }
 

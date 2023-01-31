@@ -40,8 +40,8 @@ MainWindow::MainWindow(QWidget *parent)
 //    p.setColor(QPalette::Window,color);
 //    this->setPalette(p);
 //    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
-    QApplication::setStyle(QStyleFactory::create("Fusion"));
-    qDebug() << QStyleFactory::keys();
+//    QApplication::setStyle(QStyleFactory::create("Fusion"));
+//    qDebug() << QStyleFactory::keys();
 
     initSettings();
 
@@ -192,7 +192,7 @@ void MainWindow::showHexView() {
 
 void MainWindow::initSettings() {
     if (!setting.contains("Theme"))
-        setting.setValue("Theme", "Light");
+        setting.setValue("Theme", "Default");
     if (!setting.contains("BiosViewerFontSize"))
         setting.setValue("BiosViewerFontSize", 12);
     if (!setting.contains("BiosViewerFont"))
@@ -220,6 +220,22 @@ void MainWindow::initSettings() {
 
     ui->infoBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AddressPanel->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+
+    if (setting.value("Theme").toString() == "Dark") {
+        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
+        if(styleFile.open(QIODevice::ReadOnly)) {
+            QString setStyleSheet(styleFile.readAll());
+            this->setStyleSheet(setStyleSheet);
+            styleFile.close();
+        }
+    } else if (setting.value("Theme").toString() == "Light") {
+        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
+        if(styleFile.open(QIODevice::ReadOnly)) {
+            QString setStyleSheet(styleFile.readAll());
+            this->setStyleSheet(setStyleSheet);
+            styleFile.close();
+        }
+    }
 }
 
 void MainWindow::setTreeData() {
@@ -245,16 +261,6 @@ void MainWindow::setTreeData() {
 void MainWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData) {
     QTreeWidgetItem *Item = new QTreeWidgetItem(modelData->getData());
     Item->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue(modelData));
-    if (modelData->getSubType() == "UI") {
-        DataModel * parentModel = parentItem->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
-        if (parentModel->getType() == "Section") {
-            parentItem->parent()->setText(MainWindow::Name, modelData->getText());
-            parentItem->parent()->data(MainWindow::Name, Qt::UserRole).value<DataModel*>()->setText(modelData->getText());
-        } else {
-            parentItem->setText(MainWindow::Name, modelData->getText());
-            parentItem->data(MainWindow::Name, Qt::UserRole).value<DataModel*>()->setText(modelData->getText());
-        }
-    }
     parentItem->addChild(Item);
     for (auto volumeModel:modelData->volumeModelData) {
         addTreeItem(Item, volumeModel);
@@ -356,8 +362,6 @@ void MainWindow::on_treeWidget_itemSelectionChanged()
     QPalette pal(ui->AddressPanel->palette());
     if (volume->isCompressed) {
         pal.setColor(QPalette::Base, Qt::cyan);
-    } else {
-        pal.setColor(QPalette::Base, Qt::white);
     }
     ui->AddressPanel->setPalette(pal);
     setPanelInfo(volume->offsetFromBegin, volume->size);

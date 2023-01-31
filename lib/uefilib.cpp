@@ -107,8 +107,9 @@ namespace UefiSpace {
 
     }
 
-    CommonSection::CommonSection(UINT8* file, INT64 offset):Volume(file, 0, offset) {
+    CommonSection::CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs):Volume(file, 0, offset) {
         Type = VolumeType::CommonSection;
+        ParentFFS = Ffs;
         CommonHeader = *(EFI_COMMON_SECTION_HEADER*)data;
         size = SECTION_SIZE(&CommonHeader);
         if (IS_SECTION2(&CommonHeader)) {
@@ -117,15 +118,12 @@ namespace UefiSpace {
         }
     }
 
-    CommonSection::CommonSection(UINT8* file, INT64 length, INT64 offset):Volume(file, length, offset) {
+    CommonSection::CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs):Volume(file, length, offset) {
         Type = VolumeType::CommonSection;
+        ParentFFS = Ffs;
     }
 
     CommonSection::~CommonSection() {
-        if (FileNameString != nullptr)
-            delete[] FileNameString;
-        if (VersionString != nullptr)
-            delete[] VersionString;
         if (peCoffHeader != nullptr)
             delete peCoffHeader;
         if (dependency != nullptr)
@@ -205,7 +203,7 @@ namespace UefiSpace {
                 DataOffset = HeaderSize;
                 offset = HeaderSize;
                 while (offset < SectionSize) {
-                    ChildFile.push_back(new CommonSection(data + offset, offsetFromBegin + offset));
+                    ChildFile.push_back(new CommonSection(data + offset, offsetFromBegin + offset, this->ParentFFS));
                     ChildSectionSize = CommonSection::getSectionSize(data + offset);
                     offset += ChildSectionSize;
                     Buffer::Align(offset, 0, 0x4);
@@ -236,11 +234,17 @@ namespace UefiSpace {
             peCoffHeader = new PeCoff(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize);
             break;
         case EFI_SECTION_USER_INTERFACE:
-            FileNameString = (UINT16*)this->getBytes(offset, SectionSize - HeaderSize);
+            UINT16* char16FileName;
+            char16FileName = (UINT16*)this->getBytes(offset, SectionSize - HeaderSize);
+            FileNameString = Buffer::wstringToString(char16FileName);
+            delete[] char16FileName;
             break;
         case EFI_SECTION_VERSION:
+            UINT16* char16VersionString;
             BuildNumber = this->getUINT16(offset);
-            VersionString = (UINT16*)this->getBytes(offset + 2, SectionSize - HeaderSize - 2);
+            char16VersionString = (UINT16*)this->getBytes(offset + 2, SectionSize - HeaderSize - 2);
+            VersionString = Buffer::wstringToString(char16VersionString);
+            delete[] char16VersionString;
             break;
         case EFI_SECTION_FIRMWARE_VOLUME_IMAGE:
             ChildFile.push_back(new FirmwareVolume(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize));
@@ -278,7 +282,7 @@ namespace UefiSpace {
                 EFI_COMMON_SECTION_HEADER2 *hdr2 = (EFI_COMMON_SECTION_HEADER2*)(DecompressedBuffer + offset);
                 SectionSize = SECTION2_SIZE(hdr2);
             }
-            auto DecompressedSection = new CommonSection(DecompressedBuffer + offset, SectionSize, offset);
+            auto DecompressedSection = new CommonSection(DecompressedBuffer + offset, SectionSize, offset, this->ParentFFS);
             DecompressedSection->isCompressed = true;
             ChildFile.push_back(DecompressedSection);
             offset += SectionSize;
@@ -379,11 +383,11 @@ namespace UefiSpace {
             ss << "Section GUID:\n" << GUID(SubTypeGuid).str(true) << "\n";
             break;
         case EFI_SECTION_USER_INTERFACE:
-            ss << setw(width) << "FileName:"      << Buffer::wstringToString(FileNameString) << "\n";
+            ss << setw(width) << "FileName:"      << FileNameString << "\n";
             break;
         case EFI_SECTION_VERSION:
             ss << setw(width) << "BuildNumber:"   << hex << uppercase << BuildNumber << "h\n"
-               << setw(width) << "Version:"       << Buffer::wstringToString(VersionString) << "\n";
+               << setw(width) << "Version:"       << VersionString << "\n";
             break;
         case EFI_SECTION_DXE_DEPEX:
         case EFI_SECTION_PEI_DEPEX:
@@ -491,7 +495,7 @@ namespace UefiSpace {
             offset = sizeof(EFI_FFS_FILE_HEADER2);
         }
         if (isApriori) {
-            CommonSection *Sec = new CommonSection(data + offset, offsetFromBegin + offset);
+            CommonSection *Sec = new CommonSection(data + offset, offsetFromBegin + offset, this);
             Sec->isAprioriRaw = true;
             Sec->SelfDecode();
             Sections.push_back(Sec);
@@ -503,7 +507,7 @@ namespace UefiSpace {
             if (SecSize == 0xFFFFFF) {
                 SecSize = this->getUINT32(offset + sizeof(EFI_COMMON_SECTION_HEADER));
             }
-            CommonSection *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset);
+            CommonSection *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this);
             Sec->SelfDecode();
             Sections.push_back(Sec);
             offset += SecSize;

@@ -1,0 +1,188 @@
+MainWindow, SettingsDialog, SearchDialog, InfoWindow, HexViewDialog {
+    background-color:rgb(64, 65, 66);
+}
+
+/* QScrollArea {
+  border: none;
+  background: none;
+} */
+
+/* 整个垂直滚动条区域样式 */
+QScrollBar:vertical {
+  border: none;
+  background: rgb(30, 30, 30);
+  width: 10px;
+  margin: 0px 0 0px 0;
+}
+
+/* 整个水平滚动条区域样式 */
+QScrollBar:horizontal {
+  border: none;
+  background: rgb(30, 30, 30);
+  height: 10px;
+  margin: 0px 0 0px 0;
+}
+
+/* 滑块区域样式 */
+QScrollBar::handle:vertical {
+  background: rgb(66, 66, 66);
+  min-height: 20px;
+  border-radius: 5px;
+  border: none;
+  /* margin: 0 1px 0 1px; */
+}
+
+QScrollBar::handle:horizontal {
+  background: rgb(66, 66, 66);
+  min-height: 20px;
+  border-radius: 5px;
+  border: none;
+}
+
+/* 鼠标滑过滑块样式 */
+QScrollBar::handle:vertical:hover,
+QScrollBar::handle:vertical:pressed {
+  background: rgb(79, 79, 79);
+  /* margin: 0 0 0 0; */
+}
+
+QScrollBar::handle:horizontal:hover,
+QScrollBar::handle:horizontal:pressed {
+  background: rgb(79, 79, 79);
+}
+
+/* 向下箭头样式 */
+QScrollBar::add-line:vertical {
+  border: none;
+  background: none;
+  height: 0px;
+  subcontrol-position: bottom;
+  subcontrol-origin: margin;
+}
+
+/* 向右箭头样式 */
+QScrollBar::add-line:horizontal {
+  border: none;
+  background: none;
+  height: 0px;
+  subcontrol-position: bottom;
+  subcontrol-origin: margin;
+}
+
+/* 向上箭头样式 */
+QScrollBar::sub-line:vertical {
+  border: none;
+  background: none;
+  height: 0px;
+  subcontrol-position: top;
+  subcontrol-origin: margin;
+}
+
+/* 向左箭头样式 */
+QScrollBar::sub-line:horizontal {
+  border: none;
+  background: none;
+  height: 0px;
+  subcontrol-position: top;
+  subcontrol-origin: margin;
+}
+
+/* 滚动条上面和下面区域样式 */
+QScrollBar::sub-page:vertical,
+QScrollBar::add-page:vertical {
+  background: none;
+  width: 0px;
+  height: 0px;
+}
+
+/* 滚动条左面和右面区域样式 */
+QScrollBar::sub-page:horizontal,
+QScrollBar::add-page:horizontal {
+  background: none;
+  width: 0px;
+  height: 0px;
+}
+
+QHeaderView::section {
+    color: white;
+    background-color: rgb(64, 64, 64);
+    border: 5px solid #f6f7fa;
+    border-radius:0px;
+    border-color: rgb(64, 64, 64);
+}
+
+QPushButton,QPushButton:pressed {
+    background-color: rgb(46, 47, 48);
+    color:rgb(255, 255, 255);
+    border: 1px solid rgb(128, 128, 128);
+    padding:2px 16px;
+    border-radius: 6px; }
+
+    QPushButton:hover {
+    background-color: rgb(128, 128, 128);
+}
+
+QTextEdit {
+    background-color:rgb(46, 47, 48);
+    color:rgb(255, 255, 255);
+}
+
+QLabel {
+    color:rgb(255, 255, 255);
+}
+
+QMenuBar {
+    background-color:rgb(64,64,64);
+    color:rgb(255, 255, 255);
+}
+QMenu {
+    background-color:rgb(64,64,64);
+    border: 1px solid rgb(128, 128, 128);
+}
+QMenu::item {
+    font-size: 10pt;
+    color: rgb(255,255,255);  /*字体颜色*/
+    background-color:rgb(64,64,64);
+    padding:6px 10px; /*设置菜单项文字上下和左右的内边距，效果就是菜单中的条目左右上下有了间隔*/
+}
+QMenu::item:selected {
+    background-color:rgb(128,128,128);/*选中的样式*/
+}
+QMenu::item:pressed {/*菜单项按下效果*/
+    background-color: rgb(128,128,128);
+}
+
+QMessageBox, QInputDialog {
+    background-color:rgb(64, 64, 64);
+    color:rgb(255, 255, 255);
+}
+
+QTabBar::tab{background-color:rgb(80, 80, 80);color:rgb(255, 255, 255);}
+QTabBar::tab:selected{background-color:rgb(128, 128, 128);}
+QTabBar::tab:hover{background-color:rgb(128, 128, 128);}
+QTabWidget::pane {background-color:rgb(64,64,64);}
+
+QComboBox {
+    background-color:rgb(64,64,64);
+    color:rgb(255,255,255);
+}
+QComboBox QAbstractItemView{
+    background:rgb(64,64,64);
+    border:1px solid rgba(228,228,228);
+    border-radius:0px 0px 5px 5px;
+    outline: 0px;  //去虚线
+}
+QComboBox QAbstractItemView::item{
+        height:36px;
+        color:rgb(64,64,64);
+        padding-left:9px;
+        background-color:#FFFFFF;
+}
+QComboBox QAbstractItemView::item:hover{ //悬浮
+  background-color:#409CE1;
+  color:#ffffff;
+}
+QComboBox QAbstractItemView::item:selected{//选中
+  background-color:#409CE1;
+  color:#ffffff;
+}

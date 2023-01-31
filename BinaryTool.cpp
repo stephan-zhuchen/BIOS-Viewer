@@ -63,6 +63,7 @@ void MainWindow::on_actionExtract_BIOS_triggered()
 void MainWindow::on_actionSearch_triggered()
 {
     SearchDialog *settingDialog = new SearchDialog;
+    settingDialog->setSearchMode(false);
     settingDialog->SetModelData(&FvModelData);
     settingDialog->setParentWidget(this);
     settingDialog->show();

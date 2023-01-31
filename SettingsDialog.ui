@@ -65,7 +65,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="biosTab">
     <attribute name="title">
@@ -100,9 +100,14 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>11</pointsize>
+       <pointsize>10</pointsize>
       </font>
      </property>
+     <item>
+      <property name="text">
+       <string>Default</string>
+      </property>
+     </item>
      <item>
       <property name="text">
        <string>Light</string>
@@ -111,11 +116,6 @@
      <item>
       <property name="text">
        <string>Dark</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>System</string>
       </property>
      </item>
     </widget>

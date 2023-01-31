@@ -14,6 +14,7 @@ namespace UefiSpace {
 
     class FitTableClass;
     class MicrocodeHeaderClass;
+    class FfsFile;
 
     enum class VolumeType {
         FirmwareVolume,
@@ -90,13 +91,14 @@ namespace UefiSpace {
         UINT16                    DataOffset;
         UINT16                    Attributes;
         //EFI_USER_INTERFACE_SECTION
-        CHAR16                    *FileNameString{nullptr};
+        string                    FileNameString;
         //EFI_VERSION_SECTION
         UINT16                    BuildNumber;
-        CHAR16                    *VersionString{nullptr};
+        string                    VersionString;
 
         bool                      isExtend{false};
         UINT32                    decompressedSize{0};
+        FfsFile                   *ParentFFS{nullptr};
         vector<Volume*>           ChildFile;
         PeCoff                    *peCoffHeader{nullptr};
         Depex                     *dependency{nullptr};
@@ -104,8 +106,8 @@ namespace UefiSpace {
         vector<EFI_GUID>          AprioriList;
     public:
         CommonSection()=delete;
-        CommonSection(UINT8* file, INT64 offset);
-        CommonSection(UINT8* file, INT64 length, INT64 offset);
+        CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs);
+        CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs);
         ~CommonSection();
         void SelfDecode();
         void DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize);

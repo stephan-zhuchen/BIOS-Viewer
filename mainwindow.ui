@@ -355,6 +355,10 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="OpenFile">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/open.svg</normaloff>:/open.svg</iconset>
+   </property>
    <property name="text">
     <string>Open</string>
    </property>
@@ -368,6 +372,10 @@
    </property>
   </action>
   <action name="actionAboutBiosViewer">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/info-circle.svg</normaloff>:/info-circle.svg</iconset>
+   </property>
    <property name="text">
     <string>About BIOS Viewer</string>
    </property>
@@ -378,6 +386,10 @@
    </property>
   </action>
   <action name="actionAboutQt">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/info-circle.svg</normaloff>:/info-circle.svg</iconset>
+   </property>
    <property name="text">
     <string>About Qt</string>
    </property>
@@ -388,6 +400,10 @@
    </property>
   </action>
   <action name="actionExit">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/x.svg</normaloff>:/x.svg</iconset>
+   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -401,6 +417,10 @@
    </property>
   </action>
   <action name="OpenInNewWindow">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/open.svg</normaloff>:/open.svg</iconset>
+   </property>
    <property name="text">
     <string>Open in new window</string>
    </property>
@@ -414,6 +434,10 @@
    </property>
   </action>
   <action name="actionSettings">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/gear.svg</normaloff>:/gear.svg</iconset>
+   </property>
    <property name="text">
     <string>Settings</string>
    </property>
@@ -430,48 +454,100 @@
    <property name="text">
     <string>Load GUID Database</string>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
   </action>
   <action name="actionSeperate_Binary">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/scissors.svg</normaloff>:/scissors.svg</iconset>
+   </property>
    <property name="text">
     <string>Seperate Binary</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionExtract_BIOS">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/scissors.svg</normaloff>:/scissors.svg</iconset>
+   </property>
    <property name="text">
     <string>Extract BIOS</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actionSearch">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/search.svg</normaloff>:/search.svg</iconset>
+   </property>
    <property name="text">
     <string>Search</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
    </property>
   </action>
   <action name="actionGoto">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/bookmark.svg</normaloff>:/bookmark.svg</iconset>
+   </property>
    <property name="text">
     <string>Goto Offset</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+G</string>
    </property>
   </action>
   <action name="actionCollapse">
+   <property name="icon">
+    <iconset resource="logo/Images.qrc">
+     <normaloff>:/arrows-collapse.svg</normaloff>:/arrows-collapse.svg</iconset>
+   </property>
    <property name="text">
     <string>Collapse all</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="logo/Images.qrc"/>
+ </resources>
  <connections/>
 </ui>

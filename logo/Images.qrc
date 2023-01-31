@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>open.svg</file>
+        <file>gear.svg</file>
+        <file>x-lg.svg</file>
+        <file>x.svg</file>
+        <file>info-circle.svg</file>
+        <file>file-earmark-font.svg</file>
+        <file>file-earmark-binary.svg</file>
+        <file>bookmark.svg</file>
+        <file>arrows-collapse.svg</file>
+        <file>search.svg</file>
+        <file>scissors.svg</file>
+    </qresource>
+    <qresource prefix="/sty">
+        <file>dark_mode.qss</file>
+        <file>light_mode.qss</file>
+    </qresource>
+</RCC>

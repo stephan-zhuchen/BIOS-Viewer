@@ -5,6 +5,9 @@
 
 using namespace UefiSpace;
 
+class FfsModel;
+class FvModel;
+
 class DataModel
 {
 protected:
@@ -19,6 +22,7 @@ public:
     DataModel()=default;
     DataModel(Volume* model, QString nm, QString typ, QString sbtyp = "", QString txt = "");
     ~DataModel();
+    void    setName(QString txt);
     void    setText(QString txt);
     QString getName() const;
     QString getText() const;
@@ -29,19 +33,20 @@ public:
 
 class SectionModel: public DataModel {
 public:
-//    vector<DataModel*> volumeModelData;
+    FfsModel *parentModel;
 public:
-    SectionModel(CommonSection *section);
+    SectionModel(CommonSection *section, FfsModel *parent);
     ~SectionModel();
 };
 
 
 class FfsModel: public DataModel {
 public:
-//    vector<DataModel*> SectionModelData;
+    FvModel *parentModel;
 public:
-    FfsModel(FfsFile *ffs);
+    FfsModel(FfsFile *ffs, FvModel *parent);
     ~FfsModel();
+    QString getFmpDeviceName();
 };
 
 class FvModel: public DataModel {

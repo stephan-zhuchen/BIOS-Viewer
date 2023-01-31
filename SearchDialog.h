@@ -18,10 +18,16 @@ public:
     explicit SearchDialog(QWidget *parent = nullptr);
     ~SearchDialog();
 
-    void setParentWidget(MainWindow *pWidget);
+    void setParentWidget(QWidget *pWidget);
     void SetModelData(vector<FvModel*> *fvModel);
+    void SetBinaryData(QByteArray *BinaryData);
     bool RecursiveSearch(DataModel *model, const QString &str, int depth, bool sameParent=false);
     void SearchFileText();
+    void SearchBinary();
+    bool SearchBinaryAscii(int *begin, int *length);
+    void setSearchMode(bool searchBinary);
+    static char UpperToLower(char s);
+    static char LowerToUpper(char s);
 
 private slots:
 
@@ -38,7 +44,10 @@ private:
     vector<FvModel*> *SearchModelData;
     vector<int>      SearchRows;
     vector<int>      PreviousItem;
+    QByteArray       *BinaryBuffer;
     static QString   SearchedString;
+    QSettings        setting{"./Setting.ini", QSettings::IniFormat};
+    bool             isBinary{false};
     bool             SearchAscii{false};
     bool             SearchText{false};
     bool             SearchFound{false};

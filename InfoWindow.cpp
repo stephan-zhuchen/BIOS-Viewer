@@ -1,5 +1,6 @@
 #include <iostream>
 #include <QKeyEvent>
+#include <QFile>
 #include "InfoWindow.h"
 #include "lib/BaseLib.h"
 #include "ui_InfoWindow.h"
@@ -20,6 +21,22 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->MicrocodeTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+
+    if (setting.value("Theme").toString() == "Dark") {
+        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
+        if(styleFile.open(QIODevice::ReadOnly)) {
+            QString setStyleSheet(styleFile.readAll());
+            this->setStyleSheet(setStyleSheet);
+            styleFile.close();
+        }
+    } else if (setting.value("Theme").toString() == "Light") {
+        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
+        if(styleFile.open(QIODevice::ReadOnly)) {
+            QString setStyleSheet(styleFile.readAll());
+            this->setStyleSheet(setStyleSheet);
+            styleFile.close();
+        }
+    }
 }
 
 InfoWindow::~InfoWindow()

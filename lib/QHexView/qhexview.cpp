@@ -9,6 +9,8 @@
 #include <QSize>
 #include <stdexcept>
 #include <QtGlobal>
+#include <QInputDialog>
+#include "../../SearchDialog.h"
 
 // valid character table ascii
 #define CHAR_VALID(caracter) \
@@ -103,7 +105,8 @@ void QHexView::showFromOffset(int offset)
     updatePositions();
 
     setCursorPos(offset * 2);
-    setSelected(offset, 1);
+    resetSelection(offset * 2);
+    setSelection(offset * 2 + 2);
 
     int cursorY = m_cursorPos / (2 * m_bytesPerLine);
 
@@ -272,6 +275,15 @@ void QHexView::keyPressEvent(QKeyEvent *event)
   if (event->key() == Qt::Key_Escape) {
       parentWidget->close();
   }
+  else if( (event ->modifiers()& Qt::ControlModifier) != 0 && event ->key() == Qt::Key_F ) {
+      qDebug() << "Ctrl + F";
+      actionSearch();
+  }
+  else if( (event ->modifiers()& Qt::ControlModifier) != 0 && event ->key() == Qt::Key_G ) {
+      qDebug() << "Ctrl + G";
+      actionGoto();
+  }
+
   if (!fileOpened)
     return;
   bool setVisible = false;
@@ -679,17 +691,6 @@ void QHexView::setSelection(int pos)
   }
 }
 
-void QHexView::setSelected(int offset, int length)
-{
-  viewport()->update();
-
-  m_selectInit = m_selectBegin = offset * 2;
-  m_selectEnd = m_selectBegin + length * 2;
-
-  int cursorY = m_cursorPos / (2 * m_bytesPerLine);
-  verticalScrollBar()->setValue(cursorY);
-}
-
 void QHexView::setCursorPos(int position)
 {
   qDebug("setCursorPos, position = %x", position);
@@ -784,6 +785,27 @@ int QHexView::getLineNum()
     if (m_pdata.size() % m_bytesPerLine)
         num += 1;
     return num;
+}
+
+void QHexView::actionGoto() {
+    bool done;
+    QString offset = QInputDialog::getText ( this, tr ( "Goto..." ),
+                     tr ( "Offset (0x for hexadecimal):" ), QLineEdit::Normal,
+                     nullptr, &done );
+
+    if ( done && offset[0] == '0' && offset[1] == 'x' )
+      showFromOffset ( offset.toInt ( nullptr, 16 ) );
+    else
+      showFromOffset ( offset.toInt ( nullptr ) );
+}
+
+void QHexView::actionSearch() {
+    SearchDialog *settingDialog = new SearchDialog;
+    settingDialog->setSearchMode(true);
+//    settingDialog->SetModelData(&FvModelData);
+    settingDialog->SetBinaryData(&m_pdata);
+    settingDialog->setParentWidget(this);
+    settingDialog->exec();
 }
 
 void QHexView::setParentWidget(QWidget *pWidget) {

@@ -85,13 +85,14 @@ private:
   bool isSelected(int index);
   void restartTimer();
   int  getLineNum();
+  void actionGoto();
+  void actionSearch();
 
 public slots:
   void loadFile(QString p_file);
   void loadFromBuffer(QByteArray buffer);
   void clear();
   void showFromOffset(int offset);
-  void setSelected(int offset, int length);
   std::size_t sizeFile();
   void setAddressLength();
 };

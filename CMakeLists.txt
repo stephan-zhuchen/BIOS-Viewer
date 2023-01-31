@@ -48,6 +48,8 @@ set(INCLUDE_FILE
         include/Microcode.h
 )
 
+set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
+
 link_directories(D:/Code/BiosViewer/lib/LzmaDecompress/Sdk/C)
 
 set(PROJECT_SOURCES
@@ -71,9 +73,13 @@ set(PROJECT_SOURCES
         SettingsDialog.h SettingsDialog.cpp SettingsDialog.ui
         InfoWindow.h InfoWindow.cpp InfoWindow.ui
         SearchDialog.h SearchDialog.cpp SearchDialog.ui
+        logo/Images.qrc
+        theme/light/lightstyle.qrc
+        theme/dark/darkstyle.qrc
         ${INCLUDE_FILE}
         ${LZMA_SDK}
         ${UEFI_DECOMPRESS}
+        ${app_icon_resource_windows}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

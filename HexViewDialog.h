@@ -24,6 +24,7 @@ public:
 private:
     Ui::HexViewDialog *ui;
     QVBoxLayout *m_layout;
+    QSettings setting{"./Setting.ini", QSettings::IniFormat};
 
     void loadFile();
 };

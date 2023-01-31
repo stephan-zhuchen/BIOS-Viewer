@@ -20,6 +20,22 @@ HexViewDialog::HexViewDialog(QWidget *parent) :
     QPalette p = this->palette();
     p.setColor(QPalette::Window,color);
     this->setPalette(p);
+
+//    if (setting.value("Theme").toString() == "Dark") {
+//        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
+//        if(styleFile.open(QIODevice::ReadOnly)) {
+//            QString setStyleSheet(styleFile.readAll());
+//            this->setStyleSheet(setStyleSheet);
+//            styleFile.close();
+//        }
+//    } else if (setting.value("Theme").toString() == "Light") {
+//        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
+//        if(styleFile.open(QIODevice::ReadOnly)) {
+//            QString setStyleSheet(styleFile.readAll());
+//            this->setStyleSheet(setStyleSheet);
+//            styleFile.close();
+//        }
+//    }
 }
 
 HexViewDialog::~HexViewDialog()

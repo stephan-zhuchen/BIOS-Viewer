@@ -12,6 +12,22 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui->SearchContent->selectAll();
     setAttribute(Qt::WA_DeleteOnClose);
     this->setWindowFlags(Qt::WindowStaysOnTopHint);
+
+    if (setting.value("Theme").toString() == "Dark") {
+        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
+        if(styleFile.open(QIODevice::ReadOnly)) {
+            QString setStyleSheet(styleFile.readAll());
+            this->setStyleSheet(setStyleSheet);
+            styleFile.close();
+        }
+    } else if (setting.value("Theme").toString() == "Light") {
+        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
+        if(styleFile.open(QIODevice::ReadOnly)) {
+            QString setStyleSheet(styleFile.readAll());
+            this->setStyleSheet(setStyleSheet);
+            styleFile.close();
+        }
+    }
 }
 
 SearchDialog::~SearchDialog()
@@ -23,12 +39,18 @@ SearchDialog::~SearchDialog()
 
 QString SearchDialog::SearchedString = "";
 
-void SearchDialog::setParentWidget(MainWindow *pWidget) {
-    parentWidget = pWidget;
+void SearchDialog::setParentWidget(QWidget *pWidget) {
+    parentWidget = (MainWindow*)pWidget;
 }
 
 void SearchDialog::SetModelData(vector<FvModel*> *fvModel) {
-    SearchModelData = fvModel;
+    if (!isBinary)
+        SearchModelData = fvModel;
+}
+
+void SearchDialog::SetBinaryData(QByteArray *BinaryData) {
+    if (isBinary)
+        BinaryBuffer = BinaryData;
 }
 
 bool SearchDialog::RecursiveSearch(DataModel *model, const QString &str, int depth, bool sameParent) {
@@ -96,6 +118,97 @@ void SearchDialog::SearchFileText() {
     parentWidget->HighlightTreeItem(SearchRows);
 }
 
+void SearchDialog::SearchBinary() {
+    int idx = BinaryBuffer->indexOf('x', 0x10);
+    cout << "idx = " << hex << idx << endl;
+}
+
+bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
+    bool Found = true;
+    bool wFound = true;
+    int matchIdx = -1;
+
+    // Search Lower case
+    while (true) {
+        matchIdx = BinaryBuffer->indexOf(SearchedString.at(0).toLatin1(), matchIdx + 1);
+        if (matchIdx == -1) {
+            break;
+        }
+        for (int strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
+            if (UpperToLower(BinaryBuffer->at(matchIdx + strIdx)) != SearchedString.at(strIdx).toLatin1()) {
+                Found = false;
+                break;
+            }
+        }
+        for (int strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
+            if (UpperToLower(BinaryBuffer->at(matchIdx + strIdx * 2)) != SearchedString.at(strIdx).toLatin1()) {
+                wFound = false;
+                break;
+            }
+        }
+        if (Found || wFound) {
+            cout << "Found" << endl;
+            *begin = matchIdx;
+            *length = SearchedString.size();
+            return true;
+        }
+    }
+
+    // Search Upper case
+    matchIdx = -1;
+    Found = true;
+    wFound = true;
+    while (true) {
+        matchIdx = BinaryBuffer->indexOf(SearchedString.at(0).toUpper().toLatin1(), matchIdx + 1);
+        if (matchIdx == -1) {
+            break;
+        }
+        for (int strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
+            if (LowerToUpper(BinaryBuffer->at(matchIdx + strIdx)) != SearchedString.at(strIdx).toUpper().toLatin1()) {
+                Found = false;
+                break;
+            }
+        }
+        for (int strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
+            if (LowerToUpper(BinaryBuffer->at(matchIdx + strIdx * 2)) != SearchedString.at(strIdx).toUpper().toLatin1()) {
+                wFound = false;
+                break;
+            }
+        }
+        if (Found || wFound) {
+            cout << "Found" << endl;
+            *begin = matchIdx;
+            *length = SearchedString.size();
+            return true;
+        }
+    }
+    return false;
+}
+
+void SearchDialog::setSearchMode(bool searchBinary) {
+    isBinary = searchBinary;
+    if (isBinary) {
+        ui->TextCheckbox->setCheckState(Qt::Unchecked);
+        ui->TextCheckbox->setDisabled(true);
+    } else {
+        ui->TextCheckbox->setCheckState(Qt::Checked);
+        ui->AsciiCheckbox->setCheckState(Qt::Unchecked);
+        ui->AsciiCheckbox->setDisabled(true);
+    }
+}
+
+char SearchDialog::UpperToLower(char s) {
+    if(s >= 65 && s <= 90)
+        s = s + 32;
+    return s;
+}
+
+char SearchDialog::LowerToUpper(char s) {
+    if(s >= 97 && s <= 122)
+        s = s - 32;
+    return s;
+}
+
 void SearchDialog::on_AsciiCheckbox_stateChanged(int state)
 {
     if (state == Qt::Checked)
@@ -133,8 +246,14 @@ void SearchDialog::on_SearchContent_textChanged(const QString &arg1)
 
 void SearchDialog::on_NextButton_clicked()
 {
-    if (SearchText == true) {
+    int beginOffset = 0;
+    int searchLength = 0;
+    if (!isBinary && SearchText) {
         SearchFileText();
+    } else if (isBinary && SearchAscii) {
+        SearchBinaryAscii(&beginOffset, &searchLength);
+    } else if (isBinary) {
+        SearchBinary();
     }
 }
 
