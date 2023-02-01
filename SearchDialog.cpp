@@ -1,13 +1,17 @@
 #include <QDebug>
+#include <QRegularExpression>
 #include "SearchDialog.h"
+#include "lib/QHexView/qhexview.h"
 #include "ui_SearchDialog.h"
 
 SearchDialog::SearchDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SearchDialog),
-    SearchModelData(nullptr)
+    SearchModelData(nullptr),
+    PreviousOffset(-1)
 {
     ui->setupUi(this);
+    ui->SearchContent->setAttribute(Qt::WA_InputMethodEnabled, false);
     ui->SearchContent->setText(SearchedString);
     ui->SearchContent->selectAll();
     setAttribute(Qt::WA_DeleteOnClose);
@@ -40,7 +44,7 @@ SearchDialog::~SearchDialog()
 QString SearchDialog::SearchedString = "";
 
 void SearchDialog::setParentWidget(QWidget *pWidget) {
-    parentWidget = (MainWindow*)pWidget;
+    parentWidget = pWidget;
 }
 
 void SearchDialog::SetModelData(vector<FvModel*> *fvModel) {
@@ -115,21 +119,58 @@ void SearchDialog::SearchFileText() {
     cout << endl;
     PreviousItem = SearchRows;
     SearchFound = false;
-    parentWidget->HighlightTreeItem(SearchRows);
+    ((MainWindow*)parentWidget)->HighlightTreeItem(SearchRows);
 }
 
-void SearchDialog::SearchBinary() {
-    int idx = BinaryBuffer->indexOf('x', 0x10);
-    cout << "idx = " << hex << idx << endl;
+bool SearchDialog::SearchBinary(int *begin, int *length) {
+    static QRegularExpression re("\\s");
+    QString number = SearchedString.remove(re);
+    if (number.size() % 2 == 1) {
+        number = "0" + number;
+    }
+    QStringList littleEndianNum;
+    QVector<char> searchNum;
+    for (int idx = 0; idx < number.size(); idx += 2) {
+        littleEndianNum.insert(0, number.mid(idx, 2));
+    }
+    for (int var = 0; var < littleEndianNum.size(); ++var) {
+        searchNum.push_back(littleEndianNum.at(var).toInt(nullptr, 16));
+        cout << hex << littleEndianNum.at(var).toInt(nullptr, 16) << endl;
+    }
+
+    // Search little endian binary
+    int matchIdx = PreviousOffset;
+    while (true) {
+        bool Found = true;
+        matchIdx = BinaryBuffer->indexOf(searchNum.at(0), matchIdx + 1);
+        if (matchIdx == -1) {
+            break;
+        }
+        for (int strIdx = 1; strIdx < searchNum.size(); ++strIdx) {
+            if (BinaryBuffer->at(matchIdx + strIdx) != searchNum.at(strIdx)) {
+                cout << (UINT16)BinaryBuffer->at(matchIdx + strIdx) << endl;
+                Found = false;
+                break;
+            }
+        }
+        if (Found) {
+            *begin = matchIdx;
+            *length = searchNum.size();
+            PreviousOffset = matchIdx;
+            cout << "matchIdx = " << hex << matchIdx << endl;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
-    bool Found = true;
-    bool wFound = true;
-    int matchIdx = -1;
+    int matchIdx = PreviousOffset;
 
     // Search Lower case
     while (true) {
+        bool Found = true;
+        bool wFound = true;
         matchIdx = BinaryBuffer->indexOf(SearchedString.at(0).toLatin1(), matchIdx + 1);
         if (matchIdx == -1) {
             break;
@@ -148,17 +189,19 @@ bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
         }
         if (Found || wFound) {
             cout << "Found" << endl;
+            cout << "matchIdx = " << hex << matchIdx << endl;
             *begin = matchIdx;
             *length = SearchedString.size();
+            PreviousOffset = matchIdx;
             return true;
         }
     }
 
     // Search Upper case
-    matchIdx = -1;
-    Found = true;
-    wFound = true;
+    matchIdx = PreviousOffset;
     while (true) {
+        bool Found = true;
+        bool wFound = true;
         matchIdx = BinaryBuffer->indexOf(SearchedString.at(0).toUpper().toLatin1(), matchIdx + 1);
         if (matchIdx == -1) {
             break;
@@ -177,8 +220,10 @@ bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
         }
         if (Found || wFound) {
             cout << "Found" << endl;
+            cout << "matchIdx = " << hex << matchIdx << endl;
             *begin = matchIdx;
             *length = SearchedString.size();
+            PreviousOffset = matchIdx;
             return true;
         }
     }
@@ -251,9 +296,11 @@ void SearchDialog::on_NextButton_clicked()
     if (!isBinary && SearchText) {
         SearchFileText();
     } else if (isBinary && SearchAscii) {
-        SearchBinaryAscii(&beginOffset, &searchLength);
+        if (SearchBinaryAscii(&beginOffset, &searchLength))
+            ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
     } else if (isBinary) {
-        SearchBinary();
+        if (SearchBinary(&beginOffset, &searchLength))
+            ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
     }
 }
 

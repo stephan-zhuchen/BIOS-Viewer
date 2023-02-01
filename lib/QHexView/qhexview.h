@@ -92,7 +92,7 @@ public slots:
   void loadFile(QString p_file);
   void loadFromBuffer(QByteArray buffer);
   void clear();
-  void showFromOffset(int offset);
+  void showFromOffset(int offset, int length=1);
   std::size_t sizeFile();
   void setAddressLength();
 };

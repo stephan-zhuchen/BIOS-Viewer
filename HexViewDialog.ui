@@ -16,6 +16,9 @@
   <property name="windowTitle">
    <string>Hex Viewer</string>
   </property>
+  <property name="locale">
+   <locale language="English" country="UnitedStates"/>
+  </property>
  </widget>
  <resources/>
  <connections/>

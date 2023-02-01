@@ -23,7 +23,7 @@ public:
     void SetBinaryData(QByteArray *BinaryData);
     bool RecursiveSearch(DataModel *model, const QString &str, int depth, bool sameParent=false);
     void SearchFileText();
-    void SearchBinary();
+    bool SearchBinary(int *begin, int *length);
     bool SearchBinaryAscii(int *begin, int *length);
     void setSearchMode(bool searchBinary);
     static char UpperToLower(char s);
@@ -40,10 +40,11 @@ private slots:
 
 private:
     Ui::SearchDialog *ui;
-    MainWindow       *parentWidget;
+    QWidget          *parentWidget;
     vector<FvModel*> *SearchModelData;
     vector<int>      SearchRows;
     vector<int>      PreviousItem;
+    int              PreviousOffset;
     QByteArray       *BinaryBuffer;
     static QString   SearchedString;
     QSettings        setting{"./Setting.ini", QSettings::IniFormat};

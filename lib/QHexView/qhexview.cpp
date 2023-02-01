@@ -98,21 +98,22 @@ void QHexView::loadFromBuffer(QByteArray buffer) {
 }
 
 // search and set offset
-void QHexView::showFromOffset(int offset)
+void QHexView::showFromOffset(int offset, int length)
 {
-  if (offset < m_pdata.size())
-  {
-    updatePositions();
+    if (offset + length < m_pdata.size())
+    {
+        startFromAscii = true;
+        updatePositions();
 
-    setCursorPos(offset * 2);
-    resetSelection(offset * 2);
-    setSelection(offset * 2 + 2);
+        setCursorPos(offset * 2);
+        resetSelection(offset * 2);
+        setSelection(offset * 2 + length * 2);
 
-    int cursorY = m_cursorPos / (2 * m_bytesPerLine);
+        int cursorY = m_cursorPos / (2 * m_bytesPerLine);
 
-    verticalScrollBar()->setValue(cursorY);
-    viewport()->update();
-  }
+        verticalScrollBar()->setValue(cursorY);
+        viewport()->update();
+    }
 }
 
 // clean all
