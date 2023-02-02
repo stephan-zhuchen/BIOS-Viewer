@@ -16,10 +16,16 @@
   <property name="windowTitle">
    <string>Hex Viewer</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="logo/Images.qrc">
+    <normaloff>:/hexagon.svg</normaloff>:/hexagon.svg</iconset>
+  </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
   </property>
  </widget>
- <resources/>
+ <resources>
+  <include location="logo/Images.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -6,18 +6,32 @@
 void MainWindow::setFvData()
 {
     using namespace std;
+    cout << "setFvData" << endl;
 
     buffer->setOffset(0);
     INT64 bufferSize = buffer->getBufferSize();
     INT64 offset = 0;
+    cout << "Before BiosImageVolume" << endl;
     BiosImage = new BiosImageVolume(buffer->getBytes(bufferSize), bufferSize);
+    cout << "After BiosImageVolume" << endl;
+
     BiosImageModel = new DataModel(BiosImage, "Image Overview", "Image", "UEFI");
+
     buffer->setOffset(0);
 
     while (offset < bufferSize) {
+        cout << "offset = " << hex << offset << endl;
         buffer->setOffset(offset);
+        if (bufferSize - offset < 0x40) {
+            pushDataToVector(offset, bufferSize - offset);
+            return;
+        }
         EFI_FIRMWARE_VOLUME_HEADER *fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
         INT64 FvLength = fvHeader->FvLength;
+        if (offset + FvLength > bufferSize) {
+            pushDataToVector(offset, bufferSize - offset);
+            return;
+        }
 
         INT64 searchInterval = 0x100;
         INT64 EmptyVolumeLength = 0;
@@ -25,36 +39,55 @@ void MainWindow::setFvData()
             delete fvHeader;
             EmptyVolumeLength += searchInterval;
             buffer->setOffset(offset + EmptyVolumeLength);
-            if (offset + EmptyVolumeLength >= bufferSize)
-                break;
+            if (offset + EmptyVolumeLength >= bufferSize) {
+                pushDataToVector(offset, bufferSize - offset);
+                return;
+            }
             fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
         }
+
         if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
             ui->titleInfomation->setText("No Firmware Found!");
             return;
         }
+
         if (EmptyVolumeLength != 0) {
             FvLength = EmptyVolumeLength;
         }
 
-        buffer->setOffset(offset);
         cout << "offset = 0x" << hex << offset << ", FvLength = 0x" << hex << FvLength << endl;
-        UINT8* fvData = buffer->getBytes(FvLength);  // heap memory
-        FirmwareVolume *volume = new FirmwareVolume(fvData, FvLength, offset);
-        FirmwareVolumeBuffer.push_back(fvData);
-        FirmwareVolumeData.push_back(volume);
+        pushDataToVector(offset, FvLength);
         offset += FvLength;
     }
 }
 
 void MainWindow::setFfsData() {
+    if (FirmwareVolumeData.size() == 1 && FirmwareVolumeData.at(0)->isEmpty) {
+        FirmwareVolumeData.clear();
+        BiosImageModel->setType("");
+        BiosImageModel->setSubtype("");
+    }
     for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
         FirmwareVolume *volume = FirmwareVolumeData.at(idx);
         volume->decodeFfs();
         FvModel* fvm = new FvModel(volume);
         FvModelData.push_back(fvm);
-//        break;
     }
+}
+
+void MainWindow::pushDataToVector(INT64 offset, INT64 length) {
+    buffer->setOffset(offset);
+    cout << "Remaining size = " << hex << buffer->getRemainingSize() << endl;
+    cout << "length = " << hex << length << endl;
+    UINT8* fvData = buffer->getBytes(length);  // heap memory
+    cout << "After getBytes" << endl;
+    FirmwareVolume *volume = new FirmwareVolume(fvData, length, offset);
+    cout << "After new FirmwareVolume" << endl;
+
+    FirmwareVolumeBuffer.push_back(fvData);
+    cout << "After push FirmwareVolumeBuffer" << endl;
+    FirmwareVolumeData.push_back(volume);
+    cout << "After push FirmwareVolumeData" << endl;
 }
 
 void MainWindow::getBiosID() {
@@ -62,6 +95,8 @@ void MainWindow::getBiosID() {
         FirmwareVolume *volume = FirmwareVolumeData.at(idx - 1);
         for(auto file:volume->FfsFiles) {
             if (file->FfsHeader.Name == GuidDatabase::gBiosIdGuid) {
+                if (file->Sections.size() == 0)
+                    return;
                 CommonSection *sec = file->Sections.at(0);
                 CHAR16 *biosIdStr = (CHAR16*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
                 BiosID = QString::fromStdString(Buffer::wstringToString(biosIdStr));

@@ -34,6 +34,8 @@ private slots:
     void on_infoLineSpacingBox_activated(int index);
     void on_infoFontBox_activated(int index);
 
+    void on_showPaddingBox_stateChanged(int state);
+
 private:
     Ui::SettingsDialog *ui;
     QSettings setting{"./Setting.ini", QSettings::IniFormat};
@@ -48,6 +50,7 @@ private:
     QString HexFont;
     QString LineSpacing;
     QString InfoLineSpacing;
+    QString ShowPaddingItem;
     static int lastTabIndex;
 };
 

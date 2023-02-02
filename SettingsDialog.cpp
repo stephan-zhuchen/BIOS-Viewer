@@ -33,6 +33,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     if (!setting.contains("LineSpacing"))
         setting.setValue("LineSpacing", "2");
 
+    if (!setting.contains("ShowPaddingItem"))
+        setting.setValue("ShowPaddingItem", "false");
+
     Theme = setting.value("Theme").toString();
     StructureFontSize = setting.value("BiosViewerFontSize").toString();
     StructureFont = setting.value("BiosViewerFont").toString();
@@ -54,6 +57,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->hexFontSizeBox->setCurrentText(setting.value("HexFontSize").toString());
     ui->hexFontBox->setCurrentText(setting.value("HexFont").toString());
     ui->lineSpacingBox->setCurrentText(setting.value("LineSpacing").toString());
+
+    if (setting.value("ShowPaddingItem") == "true")
+        ui->showPaddingBox->setCheckState(Qt::Checked);
+    else if (setting.value("ShowPaddingItem") == "false")
+        ui->showPaddingBox->setCheckState(Qt::Unchecked);
 
     if (setting.value("Theme").toString() == "Dark") {
         QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
@@ -146,10 +154,20 @@ void SettingsDialog::on_buttonBox_accepted()
     setting.setValue("LineSpacing", LineSpacing);
     setting.setValue("InfoLineSpacing", InfoLineSpacing);
     setting.setValue("Theme", Theme);
+    setting.setValue("ShowPaddingItem", ShowPaddingItem);
     lastTabIndex = ui->tabWidget->currentIndex();
     parentWidget->refresh();
 }
 
 void SettingsDialog::setParentWidget(MainWindow *pWidget) {
     parentWidget = pWidget;
+}
+
+void SettingsDialog::on_showPaddingBox_stateChanged(int state)
+{
+    if (state == Qt::Checked) {
+        ShowPaddingItem = "true";
+    } else if (state == Qt::Unchecked) {
+        ShowPaddingItem = "false";
+    }
 }

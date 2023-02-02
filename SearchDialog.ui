@@ -31,6 +31,10 @@
   <property name="windowTitle">
    <string>Search</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="logo/Images.qrc">
+    <normaloff>:/search.svg</normaloff>:/search.svg</iconset>
+  </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
   </property>
@@ -142,6 +146,8 @@
    </property>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="logo/Images.qrc"/>
+ </resources>
  <connections/>
 </ui>

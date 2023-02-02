@@ -52,6 +52,7 @@ private:
     bool             SearchAscii{false};
     bool             SearchText{false};
     bool             SearchFound{false};
+    QVector<QPair<int, int>>  HistoryResult;
 };
 
 #endif // SEARCHDIALOG_H

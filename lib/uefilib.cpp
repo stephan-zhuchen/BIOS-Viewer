@@ -103,6 +103,10 @@ namespace UefiSpace {
         return size;
     }
 
+    INT64 Volume::getHeaderSize() const {
+        return 0;
+    }
+
     void Volume::setInfoStr() {
 
     }
@@ -439,13 +443,19 @@ namespace UefiSpace {
         return headerSize;
     }
 
-    FfsFile::FfsFile(UINT8* file, INT64 length, INT64 offset, bool isExt):Volume(file, length, offset) {
+    FfsFile::FfsFile(UINT8* file, INT64 offset):Volume(file, 0, offset) {
         Type = VolumeType::FfsFile;
-        isExtended = isExt;
+
         FfsHeader = *(EFI_FFS_FILE_HEADER*)data;
-        if (isExtended) {
+        FfsSize = FFS_FILE_SIZE(&FfsHeader);
+
+        if (FfsSize == 0) {
+            isExtended = true;
             FfsExtHeader = *(EFI_FFS_FILE_HEADER2*)data;
+            FfsSize = (INT64)FfsExtHeader.ExtendedSize;
         }
+
+        size = FfsSize;
 
         UINT8 headerSumValue = 0;
 //        UINT8 dataSumValue = 0;
@@ -510,8 +520,12 @@ namespace UefiSpace {
             CommonSection *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this);
             Sec->SelfDecode();
             Sections.push_back(Sec);
-            offset += SecSize;
-            Buffer::Align(offset, 0, 0x4);
+            if (offset + SecSize > offset) {
+                offset += SecSize;
+                Buffer::Align(offset, 0, 0x4);
+            } else {
+                break;
+            }
         }
     }
 
@@ -534,17 +548,31 @@ namespace UefiSpace {
     }
 
     FirmwareVolume::FirmwareVolume(UINT8* fv, INT64 length, INT64 offset):Volume(fv, length, offset) {
+        if (length < 0x40) {
+            isCorrupted = true;
+            isEmpty = true;
+            return;
+        }
         if (!isValidFirmwareVolume((EFI_FIRMWARE_VOLUME_HEADER*)data)) {
             isEmpty = true;
         }
 
         Type = VolumeType::FirmwareVolume;
         FirmwareVolumeHeader = *(EFI_FIRMWARE_VOLUME_HEADER*)data;
+
+        if (FirmwareVolumeHeader.FvLength > length) {
+            isCorrupted = true;
+        }
+
         if (FirmwareVolumeHeader.ExtHeaderOffset == 0) {
             FirmwareVolumeSize = 0x48;
             isExt = false;
         } else {
             FirmwareVolumeSize = 0x78;
+            if (length < FirmwareVolumeHeader.ExtHeaderOffset) {
+                isCorrupted = true;
+                return;
+            }
             FirmwareVolumeExtHeader = *(EFI_FIRMWARE_VOLUME_EXT_HEADER*)(data + FirmwareVolumeHeader.ExtHeaderOffset);
             isExt = true;
         }
@@ -579,25 +607,17 @@ namespace UefiSpace {
     }
 
     void FirmwareVolume::decodeFfs() {
-        if (isEmpty || !checksumValid || isNv)
+        if (isEmpty || isCorrupted || !checksumValid || isNv)
             return;
         INT64 offset = FirmwareVolumeSize;
         while (offset < size) {
-            bool isExtended = false;
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
-
-            if (FfsSize == 0) {
-                isExtended = true;
-                EFI_FIRMWARE_VOLUME_EXT_HEADER ExtFfs = *(EFI_FIRMWARE_VOLUME_EXT_HEADER*)(data + offset);
-                FfsSize = (INT64)ExtFfs.ExtHeaderSize;
-            } else if (FfsSize == 0xFFFFFF) {
-                if (FfsHeader.State == 0xFF) {
-                    freeSpace = new Volume(data + offset, size - offset);
-                }
+            if (FfsSize == 0xFFFFFF && FfsHeader.State == 0xFF) {
+                freeSpace = new Volume(data + offset, size - offset);
                 break;
             }
-            FfsFile *Ffs = new FfsFile(data + offset, FfsSize, offsetFromBegin + offset, isExtended);
+            FfsFile *Ffs = new FfsFile(data + offset, offsetFromBegin + offset);
             switch (Ffs->getType()) {
             case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
             case EFI_FV_FILETYPE_FREEFORM:
@@ -613,10 +633,21 @@ namespace UefiSpace {
             default:
                 break;
             }
+
             FfsFiles.push_back(Ffs);
-            offset += FfsSize;
-            Buffer::Align(offset, 0, 0x8);
+            if (offset + Ffs->FfsSize > offset){
+                offset += Ffs->FfsSize;
+                Buffer::Align(offset, 0, 0x8);
+            } else {
+                freeSpace = new Volume(data + offset, size - offset);
+                break;
+            }
+
         }
+    }
+
+    INT64 FirmwareVolume::getHeaderSize() const {
+        return FirmwareVolumeSize;
     }
 
     void FirmwareVolume::setInfoStr() {
@@ -659,12 +690,18 @@ namespace UefiSpace {
     }
 
     BiosImageVolume::BiosImageVolume(UINT8* fv, INT64 length):Volume(fv, length) {
-        FitTable = new FitTableClass(fv, length);
+        try {
+            FitTable = new FitTableClass(fv, length);
+        } catch (...) {
+            cout << "No Fit Table" << endl;
+            FitTable = nullptr;
+        }
     }
 
     BiosImageVolume::~BiosImageVolume() {
         cout << "~BiosImageVolume" << endl;
-        delete FitTable;
+        if (FitTable != nullptr)
+            delete FitTable;
         delete[] data;
     }
 
@@ -681,6 +718,9 @@ namespace UefiSpace {
     FitTableClass::FitTableClass(UINT8* fv, INT64 length) {
         INT64 FitTableAddress = *(INT64*)(fv + length - DEFAULT_FIT_TABLE_POINTER_OFFSET) & 0xFFFFFF;
         FitTableAddress = Buffer::adjustBufferAddress(0x1000000, FitTableAddress, length); // get the relative address of FIT table
+        if (FitTableAddress > length || FitTableAddress < 0) {
+            throw exception("NO FIT table!");
+        }
         FitHeader = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(fv + FitTableAddress);
         UINT64 FitSignature = FitHeader.Address;
         if (FitSignature == (UINT64)FIT_SIGNATURE) {
@@ -697,8 +737,10 @@ namespace UefiSpace {
                     MicrocodeEntries.push_back(MicrocodeEntry);
                 }
             }
-        } else
-            isValid = false;;
+        } else {
+            isValid = false;
+            throw exception("NO FIT table!");
+        }
     }
 
     FitTableClass::~FitTableClass() {

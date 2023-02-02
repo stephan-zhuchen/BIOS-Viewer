@@ -11,6 +11,9 @@
         <file>arrows-collapse.svg</file>
         <file>search.svg</file>
         <file>scissors.svg</file>
+        <file>Hex.ico</file>
+        <file>hexagon.svg</file>
+        <file>box-arrow-up.svg</file>
     </qresource>
     <qresource prefix="/sty">
         <file>dark_mode.qss</file>

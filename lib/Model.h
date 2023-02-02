@@ -11,7 +11,7 @@ class FvModel;
 class DataModel
 {
 protected:
-    QStringList rowData;
+//    QStringList rowData;
     QString name;
     QString type;
     QString subtype;
@@ -23,6 +23,8 @@ public:
     DataModel(Volume* model, QString nm, QString typ, QString sbtyp = "", QString txt = "");
     ~DataModel();
     void    setName(QString txt);
+    void    setType(QString txt);
+    void    setSubtype(QString txt);
     void    setText(QString txt);
     QString getName() const;
     QString getText() const;

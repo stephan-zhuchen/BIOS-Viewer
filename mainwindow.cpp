@@ -18,7 +18,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       buffer(nullptr),
-      hexViewData(nullptr),
       popMenu(new QMenu),
       structureLabel(new QLabel("Structure:", this)),
       infoLabel(new QLabel("Infomation:", this)),
@@ -79,9 +78,6 @@ void MainWindow::cleanup() {
         delete[] fvBuffer;
     }
     FirmwareVolumeBuffer.clear();
-
-    if (hexViewData != nullptr)
-        delete hexViewData;
 
     if (buffer != nullptr)
         delete buffer;
@@ -164,30 +160,92 @@ void MainWindow::parseBinaryInfo() {
     setFfsData();
     getBiosID();
     setTreeData();
+    if (BiosImage->FitTable == nullptr)
+        ui->infoButton->setVisible(false);
+    else
+        ui->infoButton->setVisible(true);
 }
 
 void MainWindow::showTreeRightMenu(QPoint pos) {
-    QMenu* menu = new QMenu;
-    QAction* showHex = new QAction("Hex View");
-    menu->addAction(showHex);
-
     QModelIndex index = ui->treeWidget->indexAt(pos);
     if (!index.isValid())
         return;
     QTreeWidgetItem *item = ui->treeWidget->itemAt(pos);
-    DataModel * itemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
-    UINT8 *itemData = itemModel->modelData->data;
-    hexViewData = new QByteArray((char*)itemData, itemModel->modelData->size);
+    RightClickeditemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
 
+    QMenu* menu = new QMenu;
+    QAction* showHex = new QAction("Hex View");
+    showHex->setIcon(QIcon(":/hexagon.svg"));
+    menu->addAction(showHex);
     this->connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
+
+    if (RightClickeditemModel->getType() == "Volume" || RightClickeditemModel->getType() == "File" || RightClickeditemModel->getType() == "Section") {
+        QAction* showBodyHex = new QAction("Body Hex View");
+        QAction* extractVolume = new QAction("Extract " + RightClickeditemModel->getType());
+        QAction* extractBodyVolume = new QAction("Extract " + RightClickeditemModel->getType() + " Body");
+        showBodyHex->setIcon(QIcon(":/hexagon.svg"));
+        extractVolume->setIcon(QIcon(":/box-arrow-up.svg"));
+        extractBodyVolume->setIcon(QIcon(":/box-arrow-up.svg"));
+        menu->addAction(showBodyHex);
+        menu->addAction(extractVolume);
+        menu->addAction(extractBodyVolume);
+        this->connect(showBodyHex,SIGNAL(triggered(bool)),this,SLOT(showBodyHexView()));
+        this->connect(extractVolume,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
+        this->connect(extractBodyVolume,SIGNAL(triggered(bool)),this,SLOT(extractBodyVolume()));
+    }
+
     menu->move(ui->treeWidget->cursor().pos());
     menu->show();
 }
 
 void MainWindow::showHexView() {
     HexViewDialog *hexDialog = new HexViewDialog;
+    UINT8 *itemData = RightClickeditemModel->modelData->data;
+    QByteArray *hexViewData = new QByteArray((char*)itemData, RightClickeditemModel->modelData->size);
     hexDialog->m_hexview->loadFromBuffer(*hexViewData);
     hexDialog->exec();
+    delete hexViewData;
+}
+
+void MainWindow::showBodyHexView() {
+    HexViewDialog *hexDialog = new HexViewDialog;
+    UINT8 *itemData = RightClickeditemModel->modelData->data;
+    QByteArray *hexViewData = new QByteArray((char*)itemData, RightClickeditemModel->modelData->size);
+    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
+    QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
+    hexDialog->m_hexview->loadFromBuffer(BodyHexViewData);
+    hexDialog->exec();
+    delete hexViewData;
+}
+
+void MainWindow::extractVolume() {
+    QString filename = RightClickeditemModel->getName() + "_" + RightClickeditemModel->getType() + ".fd";
+    QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
+    QString DialogTitle = "Extract " + RightClickeditemModel->getType();
+    QString extractVolumeName = QFileDialog::getSaveFileName(this,
+                                                    DialogTitle,
+                                                    outputPath,
+                                                    tr("Files(*.rom *.bin *.fd);;All files (*.*)"));
+    if (extractVolumeName.isEmpty()) {
+        return;
+    }
+    Buffer::saveBinary(extractVolumeName.toStdString(), RightClickeditemModel->modelData->data, 0, RightClickeditemModel->modelData->size);
+}
+
+void MainWindow::extractBodyVolume() {
+    QString filename = RightClickeditemModel->getName() + "_" + RightClickeditemModel->getType() + "_body.fd";
+    QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
+    QString DialogTitle = "Extract " + RightClickeditemModel->getType() + " Body";
+    QString extractVolumeName = QFileDialog::getSaveFileName(this,
+                                                    DialogTitle,
+                                                    outputPath,
+                                                    tr("Files(*.rom *.bin *.fd);;All files (*.*)"));
+    if (extractVolumeName.isEmpty()) {
+        return;
+    }
+
+    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
+    Buffer::saveBinary(extractVolumeName.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
 }
 
 void MainWindow::initSettings() {
@@ -197,6 +255,8 @@ void MainWindow::initSettings() {
         setting.setValue("BiosViewerFontSize", 12);
     if (!setting.contains("BiosViewerFont"))
         setting.setValue("BiosViewerFont", "Microsoft YaHei UI");
+    if (!setting.contains("ShowPaddingItem"))
+        setting.setValue("ShowPaddingItem", "false");
 
     if (!setting.contains("InfoFontSize"))
         setting.setValue("InfoFontSize", 12);
@@ -246,24 +306,34 @@ void MainWindow::setTreeData() {
     ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
     ui->treeWidget->addTopLevelItem(ImageOverviewItem);
 
+    bool ShowPaddingData;
+    if (setting.value("ShowPaddingItem") == "false")
+        ShowPaddingData = false;
+    else
+        ShowPaddingData = true;
+
     for (auto FvModel:FvModelData) {
+        if (!ShowPaddingData && FvModel->getSubType() == "Empty")
+            continue;
         QTreeWidgetItem *fvItem = new QTreeWidgetItem(FvModel->getData());
         fvItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)FvModel));
         ui->treeWidget->addTopLevelItem(fvItem);
 
         for (auto FfsModel:FvModel->volumeModelData) {
-            addTreeItem(fvItem, FfsModel);
+            addTreeItem(fvItem, FfsModel, ShowPaddingData);
         }
     }
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-void MainWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData) {
+void MainWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData, bool ShowPadding) {
+    if (!ShowPadding && (modelData->getSubType() == "Pad" || modelData->getSubType() == "Empty"))
+        return;
     QTreeWidgetItem *Item = new QTreeWidgetItem(modelData->getData());
     Item->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue(modelData));
     parentItem->addChild(Item);
     for (auto volumeModel:modelData->volumeModelData) {
-        addTreeItem(Item, volumeModel);
+        addTreeItem(Item, volumeModel, ShowPadding);
     }
 }
 

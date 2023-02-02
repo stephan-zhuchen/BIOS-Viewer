@@ -28,6 +28,7 @@ namespace UefiSpace {
         INT64  size;
         INT64  offsetFromBegin;
         bool   isCompressed{false};
+        bool   isCorrupted{false};
         const char* ErrorMsg = "offset larger than size!";
         QString InfoStr;
     public:
@@ -48,6 +49,7 @@ namespace UefiSpace {
         INT64  getINT64(INT64 offset);
         UINT8* getBytes(INT64 offset, INT64 length);
         INT64  getSize() const;
+        virtual INT64 getHeaderSize() const;
         virtual void setInfoStr();
     };
 
@@ -114,7 +116,7 @@ namespace UefiSpace {
         void DecodeChildFile();
         void extracted(std::stringstream &ss);
         void setInfoStr() override;
-        INT64 getHeaderSize() const;
+        INT64 getHeaderSize() const override;
         static INT64 getSectionSize(UINT8* file);
     };
 
@@ -122,6 +124,7 @@ namespace UefiSpace {
     public:
         EFI_FFS_FILE_HEADER    FfsHeader;
         EFI_FFS_FILE_HEADER2   FfsExtHeader;
+        INT64                  FfsSize;
         bool                   isExtended{false};
         bool                   headerChecksumValid{false};
         bool                   dataChecksumValid{false};
@@ -129,11 +132,11 @@ namespace UefiSpace {
         vector<CommonSection*> Sections;
     public:
         FfsFile() = delete;
-        FfsFile(UINT8* file, INT64 length, INT64 offset, bool isExt);
+        FfsFile(UINT8* file, INT64 offset);
         ~FfsFile();
 
         UINT8 getType() const;
-        INT64 getHeaderSize() const;
+        INT64 getHeaderSize() const override;
         void decodeSections();
         void setInfoStr() override;
     };
@@ -156,6 +159,7 @@ namespace UefiSpace {
 
         GUID getFvGuid(bool returnExt=true) const;
         void decodeFfs();
+        INT64 getHeaderSize() const override;
         void setInfoStr() override;
 
         static bool isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER* address);

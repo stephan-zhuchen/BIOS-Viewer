@@ -150,6 +150,14 @@ namespace BaseLibrarySpace {
         address += RelativeAddress;
     }
 
+    void Buffer::UAlign(UINT64& address, UINT64 RelativeAddress, UINT64 alignment) {
+        address -= RelativeAddress;
+        address += alignment - 1;
+        address = (UINT64)(address / alignment);
+        address = (UINT64)(address * alignment);
+        address += RelativeAddress;
+    }
+
     void Buffer::prepareBufferToSave(INT64 offset, INT64 size, const string& name) {
         array<INT64, 2> temp {offset, size};
         auto tempPair = make_pair(temp, name);

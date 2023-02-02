@@ -7,9 +7,7 @@ DataModel::DataModel(Volume* model, QString nm, QString typ, QString sbtyp, QStr
     subtype(sbtyp),
     text(txt),
     modelData(model)
-{
-    rowData = QStringList() << name << type << subtype;
-}
+{}
 
 DataModel::~DataModel() {
     for (auto volumeModel:volumeModelData) {
@@ -19,6 +17,14 @@ DataModel::~DataModel() {
 
 void DataModel::setName(QString txt) {
     name = txt;
+}
+
+void DataModel::setType(QString txt) {
+    type = txt;
+}
+
+void DataModel::setSubtype(QString txt) {
+    subtype = txt;
 }
 
 void DataModel::setText(QString txt) {
@@ -42,7 +48,7 @@ QString DataModel::getSubType() const {
 }
 
 QStringList DataModel::getData() const {
-    return rowData;
+    return QStringList() << name << type << subtype;
 }
 
 SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
@@ -129,8 +135,6 @@ SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
     default:
         break;
     }
-
-    rowData = QStringList() << name << type << subtype;
 
     for (auto volume:section->ChildFile) {
         switch (volume->Type) {
@@ -233,8 +237,6 @@ FfsModel::FfsModel(FfsFile *ffs, FvModel *parent) {
         SectionModel *secModel = new SectionModel(section, this);
         volumeModelData.push_back(secModel);
     }
-
-    rowData = QStringList() << name << type << subtype;
 }
 
 FfsModel::~FfsModel() {
@@ -280,14 +282,12 @@ FvModel::FvModel(FirmwareVolume *fv) {
             type = "Padding";
             subtype = "Empty";
         }
-        rowData = QStringList() << name << type << subtype;
         return;
     }
     if (fv->isNv) {
         name = "Non Volatile Variable";
         type = "Volume";
         subtype = "NVRAM";
-        rowData = QStringList() << name << type << subtype;
         return;
     }
     name = QString::fromStdString(guidData->getNameFromGuid(fv->getFvGuid().GuidData));
@@ -301,7 +301,6 @@ FvModel::FvModel(FirmwareVolume *fv) {
     }
 
     text = "";
-    rowData = QStringList() << name << type << subtype;
 
     for(auto ffs:fv->FfsFiles) {
         FfsModel *ffsmodel = new FfsModel(ffs, this);
@@ -309,7 +308,7 @@ FvModel::FvModel(FirmwareVolume *fv) {
     }
 
     if (fv->freeSpace != nullptr) {
-        DataModel *freeModel = new DataModel(fv->freeSpace, "Volume free space", "Free space");
+        DataModel *freeModel = new DataModel(fv->freeSpace, "Volume free space", "Free space", "Empty");
         volumeModelData.push_back(freeModel);
     }
 }

@@ -60,6 +60,7 @@ namespace BaseLibrarySpace {
         INT64 getBufferSize() const;
         INT64 getRemainingSize() const;
         static void Align(INT64& address, INT64 RelativeAddress, INT64 alignment);
+        static void UAlign(UINT64& address, UINT64 RelativeAddress, UINT64 alignment);
         static void prepareBufferToSave(INT64 offset, INT64 size, const string& name);
         static INT64 adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length);
         static string charToString(INT8* address, INT64 length, bool hasZeroEnding=false);
