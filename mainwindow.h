@@ -11,7 +11,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.9.6"
+#define __BiosViewerVersion__ "0.9.7"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -58,6 +58,7 @@ private slots:
     void showTreeRightMenu(QPoint);
     void showHexView();
     void showBodyHexView();
+    void showNvHexView();
     void extractVolume();
     void extractBodyVolume();
 
@@ -72,10 +73,11 @@ private slots:
     void on_actionSeperate_Binary_triggered();
     void on_actionExtract_BIOS_triggered();
     void on_actionSearch_triggered();
-
     void on_actionGoto_triggered();
-
     void on_actionCollapse_triggered();
+    void on_actionReplace_BIOS_triggered();
+
+    void on_searchButton_clicked();
 
 private:
     Ui::MainWindow *ui;

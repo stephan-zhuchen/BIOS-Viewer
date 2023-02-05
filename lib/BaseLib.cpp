@@ -172,15 +172,33 @@ namespace BaseLibrarySpace {
         INT8 *cStr;
         if (hasZeroEnding)
             cStr = new INT8[length];
-        else
+        else {
             cStr = new INT8[length + 1];
+            cStr[length] = 0x0;
+        }
         for (int var = 0; var < length; ++var) {
             cStr[var] = *(INT8*)(address + var);
         }
-        cStr[length] = 0x0;
         string result = cStr;
         delete[] cStr;
         return result;
+    }
+
+    string Buffer::wcharToString(CHAR16* wcharAddress, INT64 length, bool hasZeroEnding) {
+        UINT8* charAddress;
+        INT64 charSize = length / 2;
+        if (hasZeroEnding)
+            charAddress = new UINT8[charSize];
+        else {
+            charAddress = new UINT8[charSize + 1];
+            charAddress[charSize] = 0x0;
+        }
+        for (int var = 0; var < charSize; ++var) {
+            charAddress[var] = (UINT8)*(wcharAddress + var);
+        }
+        string str = (INT8*)charAddress;
+        delete[] charAddress;
+        return str;
     }
 
     string Buffer::wstringToString(CHAR16* wcharAddress) {

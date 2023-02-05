@@ -64,6 +64,7 @@ namespace BaseLibrarySpace {
         static void prepareBufferToSave(INT64 offset, INT64 size, const string& name);
         static INT64 adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length);
         static string charToString(INT8* address, INT64 length, bool hasZeroEnding=false);
+        static string wcharToString(CHAR16* address, INT64 length, bool hasZeroEnding=false);
         static string wstringToString(CHAR16* wcharAddress);
         static UINT8 CaculateSum8(UINT8 *Buffer, INT64 Size);
         static UINT16 CaculateSum16(UINT16 *Buffer, INT64 Size);

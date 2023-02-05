@@ -85,6 +85,40 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="searchButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>36</width>
+          <height>29</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="logo/Images.qrc">
+          <normaloff>:/search.svg</normaloff>:/search.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>16</width>
+          <height>16</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="infoButton">
         <property name="enabled">
          <bool>true</bool>
@@ -341,6 +375,8 @@
     <addaction name="separator"/>
     <addaction name="actionExtract_BIOS"/>
     <addaction name="actionSeperate_Binary"/>
+    <addaction name="actionReplace_BIOS"/>
+    <addaction name="separator"/>
     <addaction name="actionLoad_GUID_Database"/>
    </widget>
    <widget class="QMenu" name="menuShow">
@@ -546,6 +582,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionReplace_BIOS">
+   <property name="text">
+    <string>Replace BIOS</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
   </action>
  </widget>

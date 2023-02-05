@@ -51,9 +51,9 @@ void MainWindow::on_actionExtract_BIOS_triggered()
     QFileInfo fileinfo {OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_BIOS.bin";
     QString BiosName = QFileDialog::getSaveFileName(this,
-                                                    tr("Extract Capsule Component"),
+                                                    tr("Extract BIOS"),
                                                     outputPath,
-                                                    tr("Capsule files(*.rom *.bin *.cap);;All files (*.*)"));
+                                                    tr("BIOS image(*.rom *.bin *.cap);;All files (*.*)"));
     if (BiosName.isEmpty()) {
         return;
     }
@@ -110,4 +110,57 @@ void MainWindow::on_actionGoto_triggered()
 void MainWindow::on_actionCollapse_triggered()
 {
     ui->treeWidget->collapseAll();
+}
+
+void MainWindow::on_actionReplace_BIOS_triggered()
+{
+    if (BiosImage == nullptr) {
+        QMessageBox::critical(this, tr("Extract BIOS Tool"), "No Binary Opened!");
+        return;
+    }
+    INT64 BinarySize = BiosImage->size;
+    if (BinarySize != 0x2000000) {
+        QMessageBox::critical(this, tr("About BIOS Viewer"), "This is not an IFWI Binary!");
+        return;
+    }
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString BiosName = QFileDialog::getOpenFileName(this,
+                                                    tr("Replace BIOS image"),
+                                                    lastPath,
+                                                    tr("BIOS image(*.rom *.bin *.fd);;All files (*.*)"));
+    if (BiosName.isEmpty()) {
+        return;
+    }
+
+    Buffer *NewBiosBuffer = new BaseLibrarySpace::Buffer(new std::ifstream(BiosName.toStdString(), std::ios::in | std::ios::binary));
+    INT64 NewBiosSize = NewBiosBuffer->getBufferSize();
+    INT64 PaddingSize = 0x1000000 - NewBiosSize;
+    UINT8* NewBios = NewBiosBuffer->getBytes(NewBiosSize);
+    if (NewBiosSize > 0x1000000) {
+        QMessageBox::critical(this, tr("Extract BIOS Tool"), "Do not support BIOS larger than 16MB!");
+        return;
+    }
+    UINT8* NewIFWI = new UINT8[0x2000000];
+    for (int IfwiIdx = 0; IfwiIdx < 0x1000000; ++IfwiIdx) {
+        NewIFWI[IfwiIdx] = BiosImage->data[IfwiIdx];
+    }
+    for (int PaddingIdx = 0; PaddingIdx < PaddingSize; ++PaddingIdx) {
+        NewIFWI[0x1000000 + PaddingIdx] = 0xFF;
+    }
+    for (int NewBiosIdx = 0; NewBiosIdx < NewBiosSize; ++NewBiosIdx) {
+        NewIFWI[0x1000000 + PaddingSize + NewBiosIdx] = NewBios[NewBiosIdx];
+    }
+
+    QFileInfo fileinfo {OpenedFileName};
+    QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_IntegratedBIOS.bin";
+    Buffer::saveBinary(outputPath.toStdString(), NewIFWI, 0, 0x2000000);
+
+    delete NewBiosBuffer;
+    delete[] NewBios;
+    delete[] NewIFWI;
+}
+
+void MainWindow::on_searchButton_clicked()
+{
+    on_actionSearch_triggered();
 }

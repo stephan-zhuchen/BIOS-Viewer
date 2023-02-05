@@ -27,6 +27,15 @@ std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
     std::string name;
 
     switch (guid.Data1) {
+        case gEfiFirmwareFileSystem2Guid.Data1:
+            name = "FV File System 2";
+        break;
+        case gEfiFirmwareFileSystem3Guid.Data1:
+            name = "FV File System 3";
+            break;
+        case gEfiSystemNvDataFvGuid.Data1:
+            name = "Non Volatile Variable";
+            break;
         case gFvValidationUncompactGuid.Data1:
             name = "FvValidationUncompact";
             break;
@@ -132,10 +141,13 @@ std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
 
         // FFS GUID
         case gEfiCertTypeRsa2048Sha256Guid.Data1:
-            name = "EfiCertTypeRsa2048Sha256Guid";
+            name = "CertType Rsa2048Sha256";
+            break;
+        case gEfiCertPkcs7Guid.Data1:
+            name = "CertType Pkcs7";
             break;
         case gLzmaCustomDecompressGuid.Data1:
-            name = "LzmaCustomDecompressGuid";
+            name = "Lzma Compression";
             break;
         case gPeiAprioriFileNameGuid.Data1:
             name = "Pei Apriori";

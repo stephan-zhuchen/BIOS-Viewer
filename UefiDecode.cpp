@@ -11,10 +11,7 @@ void MainWindow::setFvData()
     buffer->setOffset(0);
     INT64 bufferSize = buffer->getBufferSize();
     INT64 offset = 0;
-    cout << "Before BiosImageVolume" << endl;
     BiosImage = new BiosImageVolume(buffer->getBytes(bufferSize), bufferSize);
-    cout << "After BiosImageVolume" << endl;
-
     BiosImageModel = new DataModel(BiosImage, "Image Overview", "Image", "UEFI");
 
     buffer->setOffset(0);
@@ -28,10 +25,6 @@ void MainWindow::setFvData()
         }
         EFI_FIRMWARE_VOLUME_HEADER *fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
         INT64 FvLength = fvHeader->FvLength;
-        if (offset + FvLength > bufferSize) {
-            pushDataToVector(offset, bufferSize - offset);
-            return;
-        }
 
         INT64 searchInterval = 0x100;
         INT64 EmptyVolumeLength = 0;
@@ -39,6 +32,7 @@ void MainWindow::setFvData()
             delete fvHeader;
             EmptyVolumeLength += searchInterval;
             buffer->setOffset(offset + EmptyVolumeLength);
+            cout << "Search offset = " << hex << offset + EmptyVolumeLength << endl;
             if (offset + EmptyVolumeLength >= bufferSize) {
                 pushDataToVector(offset, bufferSize - offset);
                 return;

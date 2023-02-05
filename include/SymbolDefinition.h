@@ -46,6 +46,32 @@ struct FIRMWARE_INTERFACE_TABLE_ENTRY {
 };
 #pragma pack ()
 
+///
+/// EFI Capsule Header.
+///
+struct EFI_CAPSULE_HEADER {
+  ///
+  /// A GUID that defines the contents of a capsule.
+  ///
+  EFI_GUID    CapsuleGuid;
+  ///
+  /// The size of the capsule header. This may be larger than the size of
+  /// the EFI_CAPSULE_HEADER since CapsuleGuid may imply
+  /// extended header entries
+  ///
+  UINT32      HeaderSize;
+  ///
+  /// Bit-mapped list describing the capsule attributes. The Flag values
+  /// of 0x0000 - 0xFFFF are defined by CapsuleGuid. Flag values
+  /// of 0x10000 - 0xFFFFFFFF are defined by this specification
+  ///
+  UINT32      Flags;
+  ///
+  /// Size in bytes of the capsule.
+  ///
+  UINT32      CapsuleImageSize;
+};
+
 #define DEFAULT_FIT_TABLE_POINTER_OFFSET  0x40
 #define DEFAULT_FIT_ENTRY_VERSION         0x0100
 #define FIT_SIGNATURE                     0x2020205F5449465F
@@ -68,3 +94,17 @@ struct FIRMWARE_INTERFACE_TABLE_ENTRY {
 #define FIT_TABLE_TYPE_VAB_PROVISION_TABLE         26
 #define FIT_TABLE_TYPE_VAB_BOOT_IMAGE_MANIFEST     27
 #define FIT_TABLE_TYPE_VAB_BOOT_KEY_MANIFEST       28
+
+typedef struct {
+  UINT16    Year;
+  UINT8     Month;
+  UINT8     Day;
+  UINT8     Hour;
+  UINT8     Minute;
+  UINT8     Second;
+  UINT8     Pad1;
+  UINT32    Nanosecond;
+  INT16     TimeZone;
+  UINT8     Daylight;
+  UINT8     Pad2;
+} EFI_TIME;

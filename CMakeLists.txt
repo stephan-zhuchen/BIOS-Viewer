@@ -46,6 +46,7 @@ set(INCLUDE_FILE
         include/BaseMemoryLib.h
         include/BaseMemoryLib.cpp
         include/Microcode.h
+        include/VariableFormat.h
 )
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")

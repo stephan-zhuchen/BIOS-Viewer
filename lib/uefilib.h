@@ -8,6 +8,7 @@
 #include "../include/PiFirmwareVolume.h"
 #include "../include/PeImage.h"
 #include "../include/Microcode.h"
+#include "../include/VariableFormat.h"
 
 namespace UefiSpace {
     using namespace BaseLibrarySpace;
@@ -15,6 +16,7 @@ namespace UefiSpace {
     class FitTableClass;
     class MicrocodeHeaderClass;
     class FfsFile;
+    class NvStorageVariable;
 
     enum class VolumeType {
         FirmwareVolume,
@@ -148,6 +150,7 @@ namespace UefiSpace {
         INT64                          FirmwareVolumeSize;
         vector<FfsFile*>               FfsFiles;
         Volume                         *freeSpace{nullptr};
+        NvStorageVariable              *NvStorage{nullptr};
         bool                           isExt{false};
         bool                           isEmpty{false};
         bool                           isNv{false};
@@ -163,6 +166,33 @@ namespace UefiSpace {
         void setInfoStr() override;
 
         static bool isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER* address);
+    };
+
+    class NvVariableEntry : public Volume {
+    public:
+        VARIABLE_HEADER               *VariableHeader;
+        AUTHENTICATED_VARIABLE_HEADER *AuthVariableHeader;
+        bool                          AuthFlag;
+        string                        VariableName;
+        UINT8                         *DataPtr;
+        INT64                         DataSize;
+
+        NvVariableEntry() = delete;
+        NvVariableEntry(UINT8* fv, INT64 offset, bool isAuth);
+        INT64 getHeaderSize() const override;
+        void setInfoStr() override;
+    };
+
+    class NvStorageVariable : public Volume {
+    public:
+        VARIABLE_STORE_HEADER    NvStoreHeader;
+        vector<NvVariableEntry*> VariableList;
+        bool                     AuthFlag;
+
+        NvStorageVariable() = delete;
+        NvStorageVariable(UINT8* fv, INT64 offset);
+        ~NvStorageVariable();
+        void setInfoStr() override;
     };
 
     class BiosImageVolume: public Volume {

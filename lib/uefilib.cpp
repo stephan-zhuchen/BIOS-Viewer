@@ -595,6 +595,9 @@ namespace UefiSpace {
         if (freeSpace != nullptr) {
             delete freeSpace;
         }
+        if (NvStorage != nullptr) {
+            delete NvStorage;
+        }
     }
 
     GUID FirmwareVolume::getFvGuid(bool returnExt) const {
@@ -607,9 +610,13 @@ namespace UefiSpace {
     }
 
     void FirmwareVolume::decodeFfs() {
-        if (isEmpty || isCorrupted || !checksumValid || isNv)
-            return;
         INT64 offset = FirmwareVolumeSize;
+        if (isEmpty || isCorrupted || !checksumValid)
+            return;
+        if (isNv) {
+            NvStorage = new NvStorageVariable(data + offset, offsetFromBegin + offset);
+            return;
+        }
         while (offset < size) {
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
@@ -687,6 +694,82 @@ namespace UefiSpace {
         if (sumValue != 0)
             return false;
         return true;
+    }
+
+    NvVariableEntry::NvVariableEntry(UINT8* fv, INT64 offset, bool isAuth):Volume(fv, 0, offset), AuthFlag(isAuth) {
+        if (AuthFlag) {
+            AuthVariableHeader = (AUTHENTICATED_VARIABLE_HEADER*)fv;
+            size = sizeof(AUTHENTICATED_VARIABLE_HEADER) + AuthVariableHeader->NameSize + AuthVariableHeader->DataSize;
+            VariableName = Buffer::wcharToString((CHAR16*)(AuthVariableHeader + 1), AuthVariableHeader->NameSize, true);
+            DataPtr = fv + sizeof(AUTHENTICATED_VARIABLE_HEADER) + AuthVariableHeader->NameSize;
+            DataSize = AuthVariableHeader->DataSize;
+        }
+        else {
+            VariableHeader = (VARIABLE_HEADER*)fv;
+            size = sizeof(VARIABLE_HEADER) + VariableHeader->NameSize + VariableHeader->DataSize;
+            Buffer::wcharToString((CHAR16*)(AuthVariableHeader + 1), VariableHeader->NameSize, true);
+            DataPtr = fv + sizeof(VARIABLE_HEADER) + VariableHeader->NameSize;
+            DataSize = VariableHeader->DataSize;
+        }
+    }
+
+    INT64 NvVariableEntry::getHeaderSize() const {
+        if (AuthFlag)
+            return sizeof(AUTHENTICATED_VARIABLE_HEADER);
+        else
+            return sizeof(VARIABLE_HEADER);
+    }
+
+    void NvVariableEntry::setInfoStr() {
+        INT64 width = 15;
+        stringstream ss;
+        ss.setf(ios::left);
+
+        if (AuthFlag) {
+            ss << "Variable GUID:\n" << GUID(AuthVariableHeader->VendorGuid).str(true) << "\n"
+               << setw(width) << "Variable Name:"   << VariableName << "\n"
+               << setw(width) << "Variable Size:"   << hex << DataSize << "h\n";
+        } else {
+            ss << "Variable GUID:\n" << GUID(VariableHeader->VendorGuid).str(true) << "\n"
+               << setw(width) << "Variable Name:"   << VariableName << "\n"
+               << setw(width) << "Variable Size:"   << hex << DataSize << "h\n";
+        }
+        InfoStr = QString::fromStdString(ss.str());
+    }
+
+    NvStorageVariable::NvStorageVariable(UINT8* fv, INT64 offset):Volume(fv, 0, offset), AuthFlag(false) {
+        NvStoreHeader = *(VARIABLE_STORE_HEADER*)fv;
+        size = NvStoreHeader.Size;
+        if (NvStoreHeader.Signature == GuidDatabase::gEfiAuthenticatedVariableGuid) {
+            AuthFlag = true;
+        }
+        INT64 VariableOffset = sizeof(VARIABLE_STORE_HEADER);
+        while (VariableOffset < size) {
+            if (*(UINT16*)(fv + VariableOffset) != 0x55AA)
+                break;
+            NvVariableEntry *VarEntry = new NvVariableEntry(fv + VariableOffset, offsetFromBegin + VariableOffset, AuthFlag);
+            VariableList.push_back(VarEntry);
+            VariableOffset += VarEntry->size;
+            Buffer::Align(VariableOffset, 0, 4);
+        }
+    }
+
+    NvStorageVariable::~NvStorageVariable() {
+        for(NvVariableEntry* VarEntry:VariableList)
+            delete VarEntry;
+    }
+
+    void NvStorageVariable::setInfoStr() {
+        INT64 width = 15;
+        stringstream ss;
+        ss.setf(ios::left);
+
+        ss << "Signature:\n" << GUID(NvStoreHeader.Signature).str(true) << "\n"
+           << setw(width) << "Full size:"   << hex << uppercase << NvStoreHeader.Size << "h\n"
+           << setw(width) << "Header size:" << hex << uppercase << sizeof(VARIABLE_STORE_HEADER) << "h\n"
+           << setw(width) << "Format:"      << hex << uppercase << NvStoreHeader.Format << "h\n"
+           << setw(width) << "State:"       << hex << uppercase << (UINT32)NvStoreHeader.State << "h\n";
+        InfoStr = QString::fromStdString(ss.str());
     }
 
     BiosImageVolume::BiosImageVolume(UINT8* fv, INT64 length):Volume(fv, length) {
@@ -822,7 +905,7 @@ namespace UefiSpace {
                 UINT32 ExtendedTableCount = ExtendedTableHeader->ExtendedSignatureCount;
                 if (ExtendedTableCount <= (ExtendedTableLength - sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) / sizeof(CPU_MICROCODE_EXTENDED_TABLE)) {
                     CPU_MICROCODE_EXTENDED_TABLE *ExtendedTable = (CPU_MICROCODE_EXTENDED_TABLE *)(ExtendedTableHeader + 1);
-                    for (INT32 Index = 0; Index < ExtendedTableCount; Index++) {
+                    for (UINT32 Index = 0; Index < ExtendedTableCount; Index++) {
                         ExtendedMicrocodeList.push_back(*ExtendedTable);
                         ExtendedTable += 1;
                     }

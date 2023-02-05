@@ -114,7 +114,7 @@ SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
         break;
     case EFI_SECTION_FIRMWARE_VOLUME_IMAGE:
         name = "Volume Image Section";
-        subtype = "Volume image";
+        subtype = "Volume Image";
         break;
     case EFI_SECTION_FREEFORM_SUBTYPE_GUID:
         name = QString::fromStdString(guidData->getNameFromGuid(section->SubTypeGuid));
@@ -284,23 +284,19 @@ FvModel::FvModel(FirmwareVolume *fv) {
         }
         return;
     }
-    if (fv->isNv) {
-        name = "Non Volatile Variable";
-        type = "Volume";
-        subtype = "NVRAM";
-        return;
-    }
+
     name = QString::fromStdString(guidData->getNameFromGuid(fv->getFvGuid().GuidData));
     type = "Volume";
+    text = "";
 
     EFI_GUID guid = fv->getFvGuid(false).GuidData;
     if (guid == GuidDatabase::gEfiFirmwareFileSystem2Guid) {
         subtype = "FFSv2";
     } else if (guid == GuidDatabase::gEfiFirmwareFileSystem3Guid) {
         subtype = "FFSv3";
+    } else if (guid == GuidDatabase::gEfiSystemNvDataFvGuid) {
+        subtype = "NVRAM";
     }
-
-    text = "";
 
     for(auto ffs:fv->FfsFiles) {
         FfsModel *ffsmodel = new FfsModel(ffs, this);
@@ -311,7 +307,25 @@ FvModel::FvModel(FirmwareVolume *fv) {
         DataModel *freeModel = new DataModel(fv->freeSpace, "Volume free space", "Free space", "Empty");
         volumeModelData.push_back(freeModel);
     }
+
+    if (fv->NvStorage != nullptr) {
+        VariableModel *NvStorageModel = new VariableModel(fv->NvStorage);
+        volumeModelData.push_back(NvStorageModel);
+    }
 }
 
 FvModel::~FvModel() {
+}
+
+VariableModel::VariableModel(NvStorageVariable* Nv) {
+    modelData = Nv;
+    name = "Nv Storage";
+    for(NvVariableEntry* NvEntry:Nv->VariableList) {
+        QString NvName = QString::fromStdString(NvEntry->VariableName);
+        DataModel *NvEntryModel = new DataModel(NvEntry, NvName, "Variable");
+        volumeModelData.push_back(NvEntryModel);
+    }
+}
+
+VariableModel::~VariableModel() {
 }

@@ -194,6 +194,13 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
         this->connect(extractBodyVolume,SIGNAL(triggered(bool)),this,SLOT(extractBodyVolume()));
     }
 
+    if (RightClickeditemModel->getType() == "Variable") {
+        QAction* showNvHex = new QAction("Variable Data Hex View");
+        showNvHex->setIcon(QIcon(":/hexagon.svg"));
+        menu->addAction(showNvHex);
+        this->connect(showNvHex,SIGNAL(triggered(bool)),this,SLOT(showNvHexView()));
+    }
+
     menu->move(ui->treeWidget->cursor().pos());
     menu->show();
 }
@@ -214,6 +221,17 @@ void MainWindow::showBodyHexView() {
     INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
     hexDialog->m_hexview->loadFromBuffer(BodyHexViewData);
+    hexDialog->exec();
+    delete hexViewData;
+}
+
+void MainWindow::showNvHexView() {
+    HexViewDialog *hexDialog = new HexViewDialog;
+    UINT8 *NvData = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataPtr;
+    INT64 NvDataSize = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataSize;
+    cout << "NvDataSize = " << hex << NvDataSize << endl;
+    QByteArray *hexViewData = new QByteArray((char*)NvData, NvDataSize);
+    hexDialog->m_hexview->loadFromBuffer(*hexViewData);
     hexDialog->exec();
     delete hexViewData;
 }
@@ -360,8 +378,8 @@ void MainWindow::on_OpenFile_triggered()
 {
     QString lastPath = setting.value("LastFilePath").toString();
     QString fileName = QFileDialog::getOpenFileName(
-        this, tr("Open Image File"),
-        lastPath, tr("Image files(*.rom *.bin *.fd);;All files (*.*)"));
+                                                    this, tr("Open Image File"),
+                                                    lastPath, tr("Image files(*.rom *.bin *.fd);;All files (*.*)"));
     if (fileName.isEmpty()){
         return;
     }
@@ -430,9 +448,9 @@ void MainWindow::on_treeWidget_itemSelectionChanged()
     DataModel * itemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
     Volume* volume = itemModel->modelData;
     QPalette pal(ui->AddressPanel->palette());
-    if (volume->isCompressed) {
-        pal.setColor(QPalette::Base, Qt::cyan);
-    }
+//    if (volume->isCompressed) {
+//        pal.setColor(QPalette::Base, Qt::cyan);
+//    }
     ui->AddressPanel->setPalette(pal);
     setPanelInfo(volume->offsetFromBegin, volume->size);
 
@@ -450,4 +468,3 @@ void MainWindow::on_infoButton_clicked()
 
     infoWindow->show();
 }
-
