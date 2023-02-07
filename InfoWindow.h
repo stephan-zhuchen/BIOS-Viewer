@@ -24,6 +24,7 @@ public:
     void setBiosImage(BiosImageVolume *Image);
     void showFitTable();
     void showMicrocodeTable();
+    void showAcmTable();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -31,6 +32,8 @@ protected:
 
 private slots:
     void on_microcodeListWidget_itemClicked(QListWidgetItem *item);
+
+    void on_acmListWidget_itemClicked(QListWidgetItem *item);
 
 private:
     Ui::InfoWindow *ui;

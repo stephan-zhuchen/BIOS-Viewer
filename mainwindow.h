@@ -11,7 +11,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.9.7"
+#define __BiosViewerVersion__ "0.9.8"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -31,10 +31,11 @@ public:
     void cleanup();
     void refresh();
 
-    void OpenFile(std::string path);
-    void DoubleClickOpenFile(std::string path);
+    void OpenFile(QString path);
+    void DoubleClickOpenFile(QString path);
     void parseBinaryInfo();
-    void setFvData();
+    bool detectIfwi(INT64 &BiosOffset);
+    void setBiosFvData();
     void setFfsData();
     void pushDataToVector(INT64 offset, INT64 length);
     void getBiosID();
@@ -62,22 +63,21 @@ private slots:
     void extractVolume();
     void extractBodyVolume();
 
-    void on_OpenFile_triggered();
-    void on_actionExit_triggered();
-    void on_actionSettings_triggered();
-    void on_actionAboutQt_triggered();
-    void on_actionAboutBiosViewer_triggered();
-    void on_OpenInNewWindow_triggered();
-    void on_treeWidget_itemSelectionChanged();
-    void on_infoButton_clicked();
-    void on_actionSeperate_Binary_triggered();
-    void on_actionExtract_BIOS_triggered();
-    void on_actionSearch_triggered();
-    void on_actionGoto_triggered();
-    void on_actionCollapse_triggered();
-    void on_actionReplace_BIOS_triggered();
-
-    void on_searchButton_clicked();
+    void OpenFileTriggered();
+    void ActionExitTriggered();
+    void ActionSettingsTriggered();
+    void ActionAboutQtTriggered();
+    void ActionAboutBiosViewerTriggered();
+    void OpenInNewWindowTriggered();
+    void TreeWidgetItemSelectionChanged();
+    void InfoButtonClicked();
+    void ActionSeperateBinaryTriggered();
+    void ActionExtractBIOSTriggered();
+    void ActionSearchTriggered();
+    void ActionGotoTriggered();
+    void ActionCollapseTriggered();
+    void ActionReplaceBIOSTriggered();
+    void SearchButtonClicked();
 
 private:
     Ui::MainWindow *ui;
@@ -90,11 +90,15 @@ private:
     QString        OpenedFileName;
     QSettings      setting{"./Setting.ini", QSettings::IniFormat};
 
+    UINT8                        *InputImage;
+    INT64                        InputImageSize;
+    DataModel                    *InputImageModel;
     std::vector<UINT8*>          FirmwareVolumeBuffer{};
     std::vector<FirmwareVolume*> FirmwareVolumeData{};
     std::vector<FvModel*>        FvModelData{};
     BiosImageVolume              *BiosImage;
-    DataModel                    *BiosImageModel;
+    std::vector<Volume*>         IFWI_Sections;
+    std::vector<DataModel*>      IFWI_ModelData;
     enum treeColNum {Name=0, Type, SubType, Text};
 };
 

@@ -1,20 +1,90 @@
 #include <QMessageBox>
 #include "mainwindow.h"
+#include "lib/iwfi.h"
 #include "include/GuidDefinition.h"
 #include "./ui_mainwindow.h"
 
-void MainWindow::setFvData()
+#define V_FLASH_FDBAR_FLVALSIG  0x0FF0A55A
+
+bool MainWindow::detectIfwi(INT64 &BiosOffset) {
+    using namespace std;
+
+    INT64 bufferSize = InputImageSize;
+    if (bufferSize < 0x1000) {
+        return false;
+    }
+    buffer->setOffset(0x10);
+    UINT32 FlashDescriptorSignature = buffer->getUINT32();
+    if (FlashDescriptorSignature != V_FLASH_FDBAR_FLVALSIG) {
+        return false;
+    }
+    buffer->setOffset(0x16);
+    UINT32 FRBA_address = buffer->getUINT8() * 0x10;
+    buffer->setOffset(FRBA_address);
+    UINT32 temp;
+    temp = buffer->getUINT32();
+    FlashRegionBaseArea *FlashRegion = (FlashRegionBaseArea*)(&temp);
+    if (FlashRegion->getBase() != 0) {
+        return false;
+    }
+    if (bufferSize < FlashRegion->getLimit()) {
+        return false;
+    }
+    buffer->setOffset(0);
+    cout << "FlashRegion size = " << hex << FlashRegion->getSize() << endl;
+    FlashDescriptorClass *flashDescriptorVolume = new FlashDescriptorClass(buffer->getBytes(FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
+    IFWI_Sections.push_back(flashDescriptorVolume);
+    IFWI_ModelData.push_back(new DataModel(flashDescriptorVolume, "Flash Descriptor", "Region", ""));
+
+    FlashRegionBaseArea BiosRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionBios);
+    FlashRegionBaseArea MeRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionMe);
+    FlashRegionBaseArea GbERegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionGbE);
+    FlashRegionBaseArea EcRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionEC);
+
+    if (EcRegion.getLimit() > bufferSize)
+        return false;
+    buffer->setOffset(EcRegion.getBase());
+    EC_RegionClass *EcVolume = new EC_RegionClass(buffer->getBytes(EcRegion.getSize()), EcRegion.getSize(), EcRegion.getBase());
+    IFWI_Sections.push_back(EcVolume);
+    IFWI_ModelData.push_back(new DataModel(EcVolume, "EC", "Region", ""));
+
+    if (GbERegion.getLimit() > bufferSize)
+        return false;
+    buffer->setOffset(GbERegion.getBase());
+    GbE_RegionClass *GbEVolume = new GbE_RegionClass(buffer->getBytes(GbERegion.getSize()), GbERegion.getSize(), GbERegion.getBase());
+    IFWI_Sections.push_back(GbEVolume);
+    IFWI_ModelData.push_back(new DataModel(GbEVolume, "GbE", "Region", ""));
+
+    if (MeRegion.getLimit() > bufferSize)
+        return false;
+    buffer->setOffset(MeRegion.getBase());
+    ME_RegionClass *MeVolume = new ME_RegionClass(buffer->getBytes(MeRegion.getSize()), MeRegion.getSize(), MeRegion.getBase());
+    IFWI_Sections.push_back(MeVolume);
+    IFWI_ModelData.push_back(new DataModel(MeVolume, "ME", "Region", ""));
+
+    if (BiosRegion.getLimit() > bufferSize)
+        return false;
+    buffer->setOffset(BiosRegion.getBase());
+    BiosImage = new BiosImageVolume(buffer->getBytes(BiosRegion.getSize()), BiosRegion.getSize(), BiosRegion.getBase());
+//    IFWI_Sections.push_back(BiosImage);
+    IFWI_ModelData.push_back(new DataModel(BiosImage, "BIOS", "Region", ""));
+    BiosOffset = BiosRegion.getBase();
+    return true;
+}
+
+void MainWindow::setBiosFvData()
 {
     using namespace std;
-    cout << "setFvData" << endl;
 
-    buffer->setOffset(0);
-    INT64 bufferSize = buffer->getBufferSize();
     INT64 offset = 0;
-    BiosImage = new BiosImageVolume(buffer->getBytes(bufferSize), bufferSize);
-    BiosImageModel = new DataModel(BiosImage, "Image Overview", "Image", "UEFI");
+    INT64 bufferSize = buffer->getBufferSize();
+    bool IFWI_exist = detectIfwi(offset);
 
-    buffer->setOffset(0);
+    if (!IFWI_exist) {
+        buffer->setOffset(offset);
+        BiosImage = new BiosImageVolume(buffer->getBytes(bufferSize), bufferSize);
+        InputImageModel->setName("BIOS Image Overview");
+    }
 
     while (offset < bufferSize) {
         cout << "offset = " << hex << offset << endl;
@@ -32,7 +102,7 @@ void MainWindow::setFvData()
             delete fvHeader;
             EmptyVolumeLength += searchInterval;
             buffer->setOffset(offset + EmptyVolumeLength);
-            cout << "Search offset = " << hex << offset + EmptyVolumeLength << endl;
+//            cout << "Search offset = " << hex << offset + EmptyVolumeLength << endl;
             if (offset + EmptyVolumeLength >= bufferSize) {
                 pushDataToVector(offset, bufferSize - offset);
                 return;
@@ -58,8 +128,9 @@ void MainWindow::setFvData()
 void MainWindow::setFfsData() {
     if (FirmwareVolumeData.size() == 1 && FirmwareVolumeData.at(0)->isEmpty) {
         FirmwareVolumeData.clear();
-        BiosImageModel->setType("");
-        BiosImageModel->setSubtype("");
+        InputImageModel->setName("Image Overview");
+        InputImageModel->setType("");
+        InputImageModel->setSubtype("");
     }
     for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
         FirmwareVolume *volume = FirmwareVolumeData.at(idx);
@@ -71,17 +142,21 @@ void MainWindow::setFfsData() {
 
 void MainWindow::pushDataToVector(INT64 offset, INT64 length) {
     buffer->setOffset(offset);
-    cout << "Remaining size = " << hex << buffer->getRemainingSize() << endl;
-    cout << "length = " << hex << length << endl;
-    UINT8* fvData = buffer->getBytes(length);  // heap memory
-    cout << "After getBytes" << endl;
-    FirmwareVolume *volume = new FirmwareVolume(fvData, length, offset);
-    cout << "After new FirmwareVolume" << endl;
-
-    FirmwareVolumeBuffer.push_back(fvData);
-    cout << "After push FirmwareVolumeBuffer" << endl;
-    FirmwareVolumeData.push_back(volume);
-    cout << "After push FirmwareVolumeData" << endl;
+    INT64 RemainingSize = buffer->getRemainingSize();
+    if (RemainingSize < length) {
+        FirmwareVolume *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
+        FirmwareVolumeData.push_back(volume);
+        return;
+    }
+    try {
+        UINT8* fvData = buffer->getBytes(length);  // heap memory
+        FirmwareVolume *volume = new FirmwareVolume(fvData, length, offset);
+        FirmwareVolumeBuffer.push_back(fvData);
+        FirmwareVolumeData.push_back(volume);
+    } catch (...) {
+        FirmwareVolume *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
+        FirmwareVolumeData.push_back(volume);
+    }
 }
 
 void MainWindow::getBiosID() {

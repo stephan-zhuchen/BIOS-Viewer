@@ -5,7 +5,7 @@
 #include "SearchDialog.h"
 #include "./ui_mainwindow.h"
 
-void MainWindow::on_actionSeperate_Binary_triggered()
+void MainWindow::ActionSeperateBinaryTriggered()
 {
     if ( BiosImage == nullptr )
       return;
@@ -36,7 +36,7 @@ void MainWindow::on_actionSeperate_Binary_triggered()
     }
 }
 
-void MainWindow::on_actionExtract_BIOS_triggered()
+void MainWindow::ActionExtractBIOSTriggered()
 {
     if (BiosImage == nullptr) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "No Binary Opened!");
@@ -60,7 +60,7 @@ void MainWindow::on_actionExtract_BIOS_triggered()
     Buffer::saveBinary(BiosName.toStdString(), BiosImage->data, 0x1000000, 0x1000000);
 }
 
-void MainWindow::on_actionSearch_triggered()
+void MainWindow::ActionSearchTriggered()
 {
     SearchDialog *settingDialog = new SearchDialog;
     settingDialog->setSearchMode(false);
@@ -79,7 +79,7 @@ void MainWindow::RecursiveSearchOffset(DataModel* model, INT64 offset, vector<IN
     }
 }
 
-void MainWindow::on_actionGoto_triggered()
+void MainWindow::ActionGotoTriggered()
 {
     if ( BiosImage == nullptr )
       return;
@@ -92,7 +92,7 @@ void MainWindow::on_actionGoto_triggered()
     if ( done && offset[0] == '0' && offset[1] == 'x' ) {
         INT64 SearchOffset = offset.toInt ( nullptr, 16 );
         vector<INT32> SearchRows;
-        for (INT64 row = 0; (INT64)row < FvModelData.size(); ++row) {
+        for (UINT64 row = 0; row < FvModelData.size(); ++row) {
             DataModel *model = FvModelData.at(row);
             if (SearchOffset >= model->modelData->offsetFromBegin && SearchOffset < model->modelData->offsetFromBegin + model->modelData->size) {
                 SearchRows.push_back(row + 1);
@@ -107,12 +107,12 @@ void MainWindow::on_actionGoto_triggered()
     }
 }
 
-void MainWindow::on_actionCollapse_triggered()
+void MainWindow::ActionCollapseTriggered()
 {
     ui->treeWidget->collapseAll();
 }
 
-void MainWindow::on_actionReplace_BIOS_triggered()
+void MainWindow::ActionReplaceBIOSTriggered()
 {
     if (BiosImage == nullptr) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "No Binary Opened!");
@@ -160,7 +160,7 @@ void MainWindow::on_actionReplace_BIOS_triggered()
     delete[] NewIFWI;
 }
 
-void MainWindow::on_searchButton_clicked()
+void MainWindow::SearchButtonClicked()
 {
-    on_actionSearch_triggered();
+    ActionSearchTriggered();
 }

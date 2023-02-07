@@ -60,6 +60,8 @@ set(PROJECT_SOURCES
         lib/BaseLib.cpp
         lib/UefiLib.h
         lib/UefiLib.cpp
+        lib/iwfi.h
+        lib/iwfi.cpp
         lib/Model.h
         lib/Model.cpp
         lib/Section.cpp

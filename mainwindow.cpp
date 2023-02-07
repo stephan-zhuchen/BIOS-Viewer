@@ -21,8 +21,9 @@ MainWindow::MainWindow(QWidget *parent)
       popMenu(new QMenu),
       structureLabel(new QLabel("Structure:", this)),
       infoLabel(new QLabel("Infomation:", this)),
-      BiosImage(nullptr),
-      BiosImageModel(nullptr)
+      InputImage(nullptr),
+      InputImageModel(nullptr),
+      BiosImage(nullptr)
 {
     ui->setupUi(this);
     ui->titleInfomation->clear();
@@ -34,13 +35,21 @@ MainWindow::MainWindow(QWidget *parent)
     structureLabel->setGeometry(15, 80, 100, 20);
     infoLabel->setGeometry(ui->treeWidget->width() + 23, 80, 100, 20);
 
-//    QColor color = QColor(Qt::gray);
-//    QPalette p = this->palette();
-//    p.setColor(QPalette::Window,color);
-//    this->setPalette(p);
-//    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
-//    QApplication::setStyle(QStyleFactory::create("Fusion"));
-//    qDebug() << QStyleFactory::keys();
+    connect(ui->OpenFile,           SIGNAL(triggered()), this, SLOT(OpenFileTriggered()));
+    connect(ui->actionExit,         SIGNAL(triggered()), this, SLOT(ActionExitTriggered()));
+    connect(ui->actionSettings,     SIGNAL(triggered()), this, SLOT(ActionSettingsTriggered()));
+    connect(ui->actionAboutQt,      SIGNAL(triggered()), this, SLOT(ActionAboutQtTriggered()));
+    connect(ui->actionAboutBiosViewer, SIGNAL(triggered()), this, SLOT(ActionAboutBiosViewerTriggered()));
+    connect(ui->OpenInNewWindow,    SIGNAL(triggered()), this, SLOT(OpenInNewWindowTriggered()));
+    connect(ui->treeWidget,         SIGNAL(itemSelectionChanged()), this, SLOT(TreeWidgetItemSelectionChanged()));
+    connect(ui->infoButton,         SIGNAL(clicked()),   this, SLOT(InfoButtonClicked()));
+    connect(ui->searchButton,       SIGNAL(clicked()),   this, SLOT(SearchButtonClicked()));
+    connect(ui->actionSeperate_Binary, SIGNAL(triggered()), this, SLOT(ActionSeperateBinaryTriggered()));
+    connect(ui->actionExtract_BIOS, SIGNAL(triggered()), this, SLOT(ActionExtractBIOSTriggered()));
+    connect(ui->actionSearch,       SIGNAL(triggered()), this, SLOT(ActionSearchTriggered()));
+    connect(ui->actionGoto,         SIGNAL(triggered()), this, SLOT(ActionGotoTriggered()));
+    connect(ui->actionCollapse,     SIGNAL(triggered()), this, SLOT(ActionCollapseTriggered()));
+    connect(ui->actionReplace_BIOS, SIGNAL(triggered()), this, SLOT(ActionReplaceBIOSTriggered()));
 
     initSettings();
 
@@ -64,26 +73,36 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::cleanup() {
+    this->setWindowTitle("BIOS Viewer");
     for (auto FvModel:FvModelData) {
         delete FvModel;
     }
     FvModelData.clear();
+
+    for (auto IWFI_Model:IFWI_ModelData) {
+        delete IWFI_Model;
+    }
+    IFWI_ModelData.clear();
 
     for (auto FirmwareVolume:FirmwareVolumeData) {
         delete FirmwareVolume;
     }
     FirmwareVolumeData.clear();
 
+    for (auto IWFI_Section:IFWI_Sections) {
+        delete IWFI_Section;
+    }
+    IFWI_Sections.clear();
+
     for (UINT8* fvBuffer:FirmwareVolumeBuffer) {
         delete[] fvBuffer;
     }
     FirmwareVolumeBuffer.clear();
 
-    if (buffer != nullptr)
-        delete buffer;
-
     if (BiosImage != nullptr)
         delete BiosImage;
+    if (InputImage != nullptr)
+        delete InputImage;
 }
 
 void MainWindow::refresh() {
@@ -141,22 +160,29 @@ void MainWindow::dropEvent(QDropEvent* event) {
         ui->infoBrowser->clear();
         ui->AddressPanel->clear();
         cleanup();
-        OpenFile(OpenedFileName.toStdString());
+        OpenFile(OpenedFileName);
     }
 }
 
-void MainWindow::OpenFile(std::string path)
+void MainWindow::OpenFile(QString path)
 {
-    buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path, std::ios::in | std::ios::binary));
-    parseBinaryInfo();
+    buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
+    if (buffer != nullptr) {
+        this->setWindowTitle("BIOS Viewer -- " + path);
+        InputImageSize = buffer->getBufferSize();
+        InputImage = buffer->getBytes(InputImageSize);
+        InputImageModel = new DataModel(new Volume(InputImage, InputImageSize), "IFWI Overview", "Image", "UEFI");
+        parseBinaryInfo();
+        delete buffer;
+    }
 }
 
-void MainWindow::DoubleClickOpenFile(std::string path) {
+void MainWindow::DoubleClickOpenFile(QString path) {
     OpenFile(path);
 }
 
 void MainWindow::parseBinaryInfo() {
-    setFvData();
+    setBiosFvData();
     setFfsData();
     getBiosID();
     setTreeData();
@@ -317,8 +343,8 @@ void MainWindow::initSettings() {
 }
 
 void MainWindow::setTreeData() {
-    QTreeWidgetItem *ImageOverviewItem = new QTreeWidgetItem(BiosImageModel->getData());
-    ImageOverviewItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)BiosImageModel));
+    QTreeWidgetItem *ImageOverviewItem = new QTreeWidgetItem(InputImageModel->getData());
+    ImageOverviewItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)InputImageModel));
     ImageOverviewItem->setFont(MainWindow::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
     ImageOverviewItem->setFont(MainWindow::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
     ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
@@ -329,6 +355,21 @@ void MainWindow::setTreeData() {
         ShowPaddingData = false;
     else
         ShowPaddingData = true;
+
+    for (auto IfwiModel:IFWI_ModelData) {
+        if (!ShowPaddingData && IfwiModel->getSubType() == "Empty")
+            continue;
+        QTreeWidgetItem *IfwiItem = new QTreeWidgetItem(IfwiModel->getData());
+        IfwiItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)IfwiModel));
+        ui->treeWidget->addTopLevelItem(IfwiItem);
+        if (IfwiModel->getName() == "BIOS") {
+            for (auto FvModel:FvModelData) {
+                addTreeItem(IfwiItem, FvModel, ShowPaddingData);
+            }
+            ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+            return;
+        }
+    }
 
     for (auto FvModel:FvModelData) {
         if (!ShowPaddingData && FvModel->getSubType() == "Empty")
@@ -374,7 +415,7 @@ void MainWindow::setOpenedFileName(QString name) {
     this->OpenedFileName = name;
 }
 
-void MainWindow::on_OpenFile_triggered()
+void MainWindow::OpenFileTriggered()
 {
     QString lastPath = setting.value("LastFilePath").toString();
     QString fileName = QFileDialog::getOpenFileName(
@@ -392,27 +433,27 @@ void MainWindow::on_OpenFile_triggered()
     cleanup();
     QFileInfo fileinfo {fileName};
     setting.setValue("LastFilePath", fileinfo.path());
-    OpenFile(fileName.toStdString());
+    OpenFile(fileName);
 }
 
-void MainWindow::on_actionExit_triggered()
+void MainWindow::ActionExitTriggered()
 {
     this->close();
 }
 
-void MainWindow::on_actionSettings_triggered()
+void MainWindow::ActionSettingsTriggered()
 {
     SettingsDialog *settingDialog = new SettingsDialog;
     settingDialog->setParentWidget(this);
     settingDialog->exec();
 }
 
-void MainWindow::on_actionAboutQt_triggered()
+void MainWindow::ActionAboutQtTriggered()
 {
     QMessageBox::aboutQt(this, tr("About Qt"));
 }
 
-void MainWindow::on_actionAboutBiosViewer_triggered()
+void MainWindow::ActionAboutBiosViewerTriggered()
 {
     QString strText= QString("<html><head/><body><p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1"
                              "</span></p><p>Internal Use Only</p><p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Chen, Zhu")
@@ -420,7 +461,7 @@ void MainWindow::on_actionAboutBiosViewer_triggered()
     QMessageBox::about(this, tr("About BIOS Viewer"), strText);
 }
 
-void MainWindow::on_OpenInNewWindow_triggered()
+void MainWindow::OpenInNewWindowTriggered()
 {
     QString lastPath = setting.value("LastFilePath").toString();
     QString fileName = QFileDialog::getOpenFileName(
@@ -436,10 +477,10 @@ void MainWindow::on_OpenInNewWindow_triggered()
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
     newWindow->setOpenedFileName(fileName);
     newWindow->show();
-    newWindow->OpenFile(fileName.toStdString());
+    newWindow->OpenFile(fileName);
 }
 
-void MainWindow::on_treeWidget_itemSelectionChanged()
+void MainWindow::TreeWidgetItemSelectionChanged()
 {
     QModelIndex index = ui->treeWidget->currentIndex();
     if (!index.isValid())
@@ -458,7 +499,7 @@ void MainWindow::on_treeWidget_itemSelectionChanged()
     ui->infoBrowser->setText(volume->InfoStr);
 }
 
-void MainWindow::on_infoButton_clicked()
+void MainWindow::InfoButtonClicked()
 {
     InfoWindow *infoWindow = new InfoWindow;
     if (BiosImage != nullptr) {

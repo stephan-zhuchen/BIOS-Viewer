@@ -15,6 +15,7 @@ namespace UefiSpace {
 
     class FitTableClass;
     class MicrocodeHeaderClass;
+    class AcmHeaderClass;
     class FfsFile;
     class NvStorageVariable;
 
@@ -53,6 +54,12 @@ namespace UefiSpace {
         INT64  getSize() const;
         virtual INT64 getHeaderSize() const;
         virtual void setInfoStr();
+    };
+
+    class EmptyVolume : public Volume {
+    public:
+        EmptyVolume()=delete;
+        EmptyVolume(UINT8* file, INT64 length, INT64 offset);
     };
 
     class PeCoff : public Volume
@@ -152,12 +159,12 @@ namespace UefiSpace {
         Volume                         *freeSpace{nullptr};
         NvStorageVariable              *NvStorage{nullptr};
         bool                           isExt{false};
-        bool                           isEmpty{false};
+        bool                           isEmpty;
         bool                           isNv{false};
         bool                           checksumValid{false};
     public:
         FirmwareVolume() = delete;
-        FirmwareVolume(UINT8* fv, INT64 length, INT64 offset);
+        FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty=false);
         ~FirmwareVolume();
 
         GUID getFvGuid(bool returnExt=true) const;
@@ -201,7 +208,7 @@ namespace UefiSpace {
         FitTableClass *FitTable{nullptr};
     public:
         BiosImageVolume()=delete;
-        BiosImageVolume(UINT8* fv, INT64 length);
+        BiosImageVolume(UINT8* fv, INT64 length, INT64 offset=0);
         ~BiosImageVolume();
 
         void setInfoStr() override;
@@ -212,6 +219,7 @@ namespace UefiSpace {
         FIRMWARE_INTERFACE_TABLE_ENTRY         FitHeader;
         vector<FIRMWARE_INTERFACE_TABLE_ENTRY> FitEntries;
         vector<MicrocodeHeaderClass*>          MicrocodeEntries;
+        vector<AcmHeaderClass*>                AcmEntries;
         INT64 FitEntryNum{0};
         bool  isValid{false};
     public:
@@ -235,6 +243,24 @@ namespace UefiSpace {
         MicrocodeHeaderClass()=delete;
         MicrocodeHeaderClass(UINT8* fv, INT64 address);
         ~MicrocodeHeaderClass();
+        void setInfoStr();
+    };
+
+    class AcmHeaderClass {
+    private:
+        UINT8* data;
+        INT64  size;
+        INT64  offset;
+        bool   ProdFlag{true};
+        bool   ValidFlag{true};
+    public:
+        QString     InfoStr;
+        ACM_HEADER  acmHeader;
+        AcmHeaderClass() = delete;
+        AcmHeaderClass(UINT8* fv, INT64 address);
+        ~AcmHeaderClass();
+        bool isValid() const;
+        bool isProd() const;
         void setInfoStr();
     };
 

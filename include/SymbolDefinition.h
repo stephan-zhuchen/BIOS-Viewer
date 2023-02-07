@@ -108,3 +108,39 @@ typedef struct {
   UINT8     Daylight;
   UINT8     Pad2;
 } EFI_TIME;
+
+//
+// ACM definition
+//
+#define ACM_MODULE_TYPE_CHIPSET_ACM                     2
+#define ACM_MODULE_SUBTYPE_CAPABLE_OF_EXECUTE_AT_RESET  0x1
+#define ACM_MODULE_SUBTYPE_ANC_MODULE                   0x2
+#define ACM_HEADER_FLAG_DEBUG_SIGNED                    BIT15
+#define ACM_NPW_SVN                                     0x2
+
+typedef struct {
+  UINT16     ModuleType;
+  UINT16     ModuleSubType;
+  UINT32     HeaderLen;
+  UINT32     HeaderVersion;
+  UINT16     ChipsetId;
+  UINT16     Flags;
+  UINT32     ModuleVendor;
+  UINT32     Date;
+  UINT32     Size;
+  UINT16     AcmSvn;
+  UINT16     SeAcmSvn;
+  UINT32     CodeControl;
+  UINT32     ErrorEntryPoint;
+  UINT32     GdtLimit;
+  UINT32     GdtBasePtr;
+  UINT32     SegSel;
+  UINT32     EntryPoint;
+  UINT8      Rsvd2[64];
+  UINT32     KeySize;            // 64 DWORDS in the Key
+  UINT32     ScratchSize;
+  UINT8      Rsa2048PubKey[256];
+  UINT32     RsaPubExp;
+  UINT8      Rsa2048Sig[256];
+  UINT8      Scratch[572];       // 143 DWORDS = 572 BYTES Scratch Size
+} ACM_HEADER;

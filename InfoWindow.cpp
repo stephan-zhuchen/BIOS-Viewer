@@ -21,6 +21,7 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->MicrocodeTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->AcmTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 
     if (setting.value("Theme").toString() == "Dark") {
         QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
@@ -98,6 +99,7 @@ void InfoWindow::showFitTable() {
     }
 
     showMicrocodeTable();
+    showAcmTable();
 }
 
 void InfoWindow::showMicrocodeTable() {
@@ -107,8 +109,8 @@ void InfoWindow::showMicrocodeTable() {
             ItemName += " (Empty)";
         else
             ItemName = ItemName + "  " + QString::number(MicrocodeEntry->microcodeHeader.ProcessorSignature.Uint32, 16).toUpper();
-        QListWidgetItem *item2 = new QListWidgetItem(ItemName);
-        ui->microcodeListWidget->addItem(item2);
+        QListWidgetItem *MicrocodeItem = new QListWidgetItem(ItemName);
+        ui->microcodeListWidget->addItem(MicrocodeItem);
     }
 
     if (BiosImage->FitTable->MicrocodeEntries.size() != 0) {
@@ -116,6 +118,27 @@ void InfoWindow::showMicrocodeTable() {
         auto EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(0);
         EntryHeader->setInfoStr();
         ui->MicrocodeTextBrowser->setText(EntryHeader->InfoStr);
+    }
+}
+
+void InfoWindow::showAcmTable() {
+    for (auto AcmEntry:BiosImage->FitTable->AcmEntries) {
+        QString ItemName;
+        if (!AcmEntry->isValid())
+            ItemName = "Corrupted ACM";
+        else if (AcmEntry->isProd())
+            ItemName = "Prod ACM";
+        else
+            ItemName = "Non Prod ACM";
+        QListWidgetItem *AcmItem = new QListWidgetItem(ItemName);
+        ui->acmListWidget->addItem(AcmItem);
+    }
+
+    if (BiosImage->FitTable->AcmEntries.size() != 0) {
+        ui->acmListWidget->setCurrentRow(0);
+        auto EntryHeader = BiosImage->FitTable->AcmEntries.at(0);
+        EntryHeader->setInfoStr();
+        ui->AcmTextBrowser->setText(EntryHeader->InfoStr);
     }
 }
 
@@ -142,3 +165,10 @@ void InfoWindow::on_microcodeListWidget_itemClicked(QListWidgetItem *item) {
     ui->MicrocodeTextBrowser->setText(EntryHeader->InfoStr);
 }
 
+void InfoWindow::on_acmListWidget_itemClicked(QListWidgetItem *item)
+{
+    INT32 currentRow = ui->acmListWidget->currentRow();
+    auto EntryHeader = BiosImage->FitTable->AcmEntries.at(currentRow);
+    EntryHeader->setInfoStr();
+    ui->AcmTextBrowser->setText(EntryHeader->InfoStr);
+}
