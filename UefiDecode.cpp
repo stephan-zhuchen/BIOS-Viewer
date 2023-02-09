@@ -123,6 +123,7 @@ void MainWindow::setBiosFvData()
         pushDataToVector(offset, FvLength);
         offset += FvLength;
     }
+    BiosImage->FvData = &FirmwareVolumeData;
 }
 
 void MainWindow::setFfsData() {
@@ -156,24 +157,6 @@ void MainWindow::pushDataToVector(INT64 offset, INT64 length) {
     } catch (...) {
         FirmwareVolume *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
         FirmwareVolumeData.push_back(volume);
-    }
-}
-
-void MainWindow::getBiosID() {
-    for (size_t idx = FirmwareVolumeData.size(); idx > 0; --idx) {
-        FirmwareVolume *volume = FirmwareVolumeData.at(idx - 1);
-        for(auto file:volume->FfsFiles) {
-            if (file->FfsHeader.Name == GuidDatabase::gBiosIdGuid) {
-                if (file->Sections.size() == 0)
-                    return;
-                CommonSection *sec = file->Sections.at(0);
-                CHAR16 *biosIdStr = (CHAR16*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
-                BiosID = QString::fromStdString(Buffer::wstringToString(biosIdStr));
-                BiosImage->BiosID = BiosID.toStdString();
-                ui->titleInfomation->setText(BiosID);
-                return;
-            }
-        }
     }
 }
 

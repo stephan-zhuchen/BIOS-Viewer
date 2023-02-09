@@ -242,7 +242,7 @@ namespace BaseLibrarySpace {
         return (UINT16) (0x10000 - Sum);
     }
 
-    UINT32 Buffer::CaculateSum32(UINT16 *Buffer, INT64 Size) {
+    UINT32 Buffer::CaculateSum32(UINT32 *Buffer, INT64 Size) {
         UINT32  Sum;
         UINTN   Count;
         UINTN   Total;
@@ -256,7 +256,6 @@ namespace BaseLibrarySpace {
         for (Sum = 0, Count = 0; Count < Total; Count++) {
             Sum = Sum + *(Buffer + Count);
         }
-
         return Sum;
     }
 

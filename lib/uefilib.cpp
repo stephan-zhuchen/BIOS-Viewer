@@ -778,6 +778,18 @@ namespace UefiSpace {
     BiosImageVolume::BiosImageVolume(UINT8* fv, INT64 length, INT64 offset):Volume(fv, length, offset) {
         try {
             FitTable = new FitTableClass(fv, length);
+            const INT64 IBB_length = 0x400000;
+            if (length >= IBB_length * 2) {
+                INT64 IBB_begin_address = length - IBB_length;
+                INT64 IBBR_begin_address = length - IBB_length * 2;
+                isResiliency = true;
+                for (int index = 0; index < IBB_length; ++index) {
+                    if (fv[IBB_begin_address + index] != fv[IBBR_begin_address + index]) {
+                        isResiliency = false;
+                        break;
+                    }
+                }
+            }
         } catch (...) {
             cout << "No Fit Table" << endl;
             FitTable = nullptr;
@@ -785,10 +797,39 @@ namespace UefiSpace {
     }
 
     BiosImageVolume::~BiosImageVolume() {
-        cout << "~BiosImageVolume" << endl;
         if (FitTable != nullptr)
             delete FitTable;
         delete[] data;
+    }
+
+    void BiosImageVolume::setDebugFlag() {
+        INT64 pos = BiosID.find(".");
+        if (pos != string::npos && pos + 1 < BiosID.size()) {
+            if (BiosID[pos + 1] == 'R') {
+                DebugFlag = false;
+            }
+            else if (BiosID[pos + 1] == 'D') {
+                DebugFlag = true;
+            }
+        }
+    }
+
+    void BiosImageVolume::setBiosID() {
+        for (size_t idx = FvData->size(); idx > 0; --idx) {
+            FirmwareVolume *volume = FvData->at(idx - 1);
+            for(auto file:volume->FfsFiles) {
+                if (file->FfsHeader.Name == GuidDatabase::gBiosIdGuid) {
+                    if (file->Sections.size() == 0)
+                        return;
+                    CommonSection *sec = file->Sections.at(0);
+                    CHAR16 *biosIdStr = (CHAR16*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
+                    BiosID = Buffer::wstringToString(biosIdStr);
+                    foundBiosID = true;
+                    setDebugFlag();
+                    return;
+                }
+            }
+        }
     }
 
     void BiosImageVolume::setInfoStr() {
@@ -796,7 +837,15 @@ namespace UefiSpace {
         stringstream ss;
         ss.setf(ios::left);
 
-        ss << setw(width) << "BIOS ID:" << BiosID << "\n";
+        if (foundBiosID) {
+            ss << setw(width) << "BIOS ID:" << BiosID << "\n\n";
+            if (isResiliency)
+                ss << "Resiliency ";
+            if (DebugFlag)
+                ss << "Debug BIOS" << "\n";
+            else
+                ss << "Release BIOS" << "\n";
+        }
 
         InfoStr = QString::fromStdString(ss.str());
     }
@@ -819,11 +868,16 @@ namespace UefiSpace {
                 if (FitEntry.Type == FIT_TABLE_TYPE_MICROCODE) {
                     UINT64 MicrocodeAddress = FitEntry.Address & 0xFFFFFF;
                     UINT64 RelativeMicrocodeAddress = Buffer::adjustBufferAddress(0x1000000, MicrocodeAddress, length);
+                    cout << "RelativeMicrocodeAddress = " << hex << RelativeMicrocodeAddress << endl;
+                    if (RelativeMicrocodeAddress > length)
+                        continue;
                     MicrocodeHeaderClass *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, MicrocodeAddress);
                     MicrocodeEntries.push_back(MicrocodeEntry);
                 } else if (FitEntry.Type == FIT_TABLE_TYPE_STARTUP_ACM) {
                     UINT64 AcmAddress = FitEntry.Address & 0xFFFFFF;
                     UINT64 RelativeAcmAddress = Buffer::adjustBufferAddress(0x1000000, AcmAddress, length);
+                    if (RelativeAcmAddress > length)
+                        continue;
                     AcmHeaderClass *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, AcmAddress);
                     AcmEntries.push_back(AcmEntry);
                 }
@@ -909,7 +963,9 @@ namespace UefiSpace {
         if (ExtendedTableLength != 0) {
             ExtendedTableHeader = (CPU_MICROCODE_EXTENDED_TABLE_HEADER *)(fv + microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
             if ((ExtendedTableLength > sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) && ((ExtendedTableLength & 0x3) == 0)) {
-//                UINT32 CheckSum32 = Buffer::CaculateSum32((UINT32 *)ExtendedTableHeader, ExtendedTableLength);
+                UINT32 CheckSum32 = Buffer::CaculateSum32((UINT32 *)ExtendedTableHeader, ExtendedTableLength);
+                if (CheckSum32 != 0)
+                    return;
                 UINT32 ExtendedTableCount = ExtendedTableHeader->ExtendedSignatureCount;
                 if (ExtendedTableCount <= (ExtendedTableLength - sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) / sizeof(CPU_MICROCODE_EXTENDED_TABLE)) {
                     CPU_MICROCODE_EXTENDED_TABLE *ExtendedTable = (CPU_MICROCODE_EXTENDED_TABLE *)(ExtendedTableHeader + 1);

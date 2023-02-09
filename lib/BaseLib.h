@@ -68,7 +68,7 @@ namespace BaseLibrarySpace {
         static string wstringToString(CHAR16* wcharAddress);
         static UINT8 CaculateSum8(UINT8 *Buffer, INT64 Size);
         static UINT16 CaculateSum16(UINT16 *Buffer, INT64 Size);
-        static UINT32 CaculateSum32(UINT16 *Buffer, INT64 Size);
+        static UINT32 CaculateSum32(UINT32 *Buffer, INT64 Size);
         static INT32  getSizeFromUINT24(UINT8* address);
         static void   saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size);
         void saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const;

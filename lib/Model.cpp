@@ -246,23 +246,50 @@ QString FfsModel::getFmpDeviceName() {
     QString FmpName;
     EFI_GUID FmpGuid = ((FfsFile*)modelData)->FfsHeader.Name;
     switch (FmpGuid.Data1) {
-    case guidData->gFmpDeviceMonolithicDefaultGuid.Data1:
+    case guidData->gFmpDevicePlatformMonolithicGuid.Data1:
         FmpName = "Monolithic";
         break;
-    case guidData->gFmpDeviceBiosDefaultGuid.Data1:
+    case guidData->gFmpDevicePlatformIfwiGuid.Data1:
+        FmpName = "IFWI";
+        break;
+    case guidData->gFmpDevicePlatformBiosGuid.Data1:
         FmpName = "Bios";
         break;
-    case guidData->gFmpDeviceMeDefaultGuid.Data1:
+    case guidData->gFmpDevicePlatformMeGuid.Data1:
         FmpName = "Me";
         break;
-    case guidData->gFmpDeviceEcDefaultGuid.Data1:
+    case guidData->gFmpDevicePlatformEcGuid.Data1:
         FmpName = "EC";
         break;
-    case guidData->gFmpDeviceBtGAcmDefaultGuid.Data1:
+    case guidData->gFmpDevicePlatformBtGAcmGuid.Data1:
         FmpName = "BtgAcm";
         break;
-    case guidData->gFmpDeviceMicrocodeDefaultGuid.Data1:
+    case guidData->gFmpDevicePlatformuCodeGuid.Data1:
         FmpName = "uCode";
+        break;
+    case guidData->gFmpDevicePlatformCypressPDGuid.Data1:
+        FmpName = "CypressPD";
+        break;
+    case guidData->gFmpDevicePlatformTiPDGuid.Data1:
+        FmpName = "TiPD";
+        break;
+    case guidData->gFmpDevicePlatformRetimerGuid.Data1:
+        FmpName = "Retimer";
+        break;
+    case guidData->gFmpDevicePlatformDiscreteTBTGuid.Data1:
+        FmpName = "DiscreteTBT";
+        break;
+    case guidData->gFmpDeviceMeFwAdlLpConsGuid.Data1:
+        FmpName = "MeFwAdlLpCons";
+        break;
+    case guidData->gFmpDeviceMeFwAdlHConsGuid.Data1:
+        FmpName = "MeFwAdlHCons";
+        break;
+    case guidData->gFmpDeviceMeFwAdlLpCorpGuid.Data1:
+        FmpName = "MeFwAdlLpCorp";
+        break;
+    case guidData->gFmpDeviceMeFwAdlHCorpGuid.Data1:
+        FmpName = "MeFwAdlHCorp";
         break;
     default:
         break;

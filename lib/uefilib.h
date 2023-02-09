@@ -206,11 +206,17 @@ namespace UefiSpace {
     public:
         string BiosID;
         FitTableClass *FitTable{nullptr};
+        vector<FirmwareVolume*> *FvData;
+        bool   foundBiosID{false};
+        bool   isResiliency{false};
+        bool   DebugFlag{false};
     public:
         BiosImageVolume()=delete;
         BiosImageVolume(UINT8* fv, INT64 length, INT64 offset=0);
         ~BiosImageVolume();
 
+        void setBiosID();
+        void setDebugFlag();
         void setInfoStr() override;
     };
 

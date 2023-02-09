@@ -377,7 +377,6 @@
     <addaction name="actionSeperate_Binary"/>
     <addaction name="actionReplace_BIOS"/>
     <addaction name="separator"/>
-    <addaction name="actionLoad_GUID_Database"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -487,16 +486,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+,</string>
-   </property>
-  </action>
-  <action name="actionLoad_GUID_Database">
-   <property name="text">
-    <string>Load GUID Database</string>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-    </font>
    </property>
   </action>
   <action name="actionSeperate_Binary">

@@ -11,7 +11,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.9.8"
+#define __BiosViewerVersion__ "0.10"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -38,7 +38,6 @@ public:
     void setBiosFvData();
     void setFfsData();
     void pushDataToVector(INT64 offset, INT64 length);
-    void getBiosID();
     void HighlightTreeItem(vector<INT32> rows);
 
     // Tree Widget
@@ -84,7 +83,6 @@ private:
     Buffer         *buffer;
     DataModel      *RightClickeditemModel;
     QMenu          *popMenu;
-    QString        BiosID;
     QLabel         *structureLabel;
     QLabel         *infoLabel;
     QString        OpenedFileName;

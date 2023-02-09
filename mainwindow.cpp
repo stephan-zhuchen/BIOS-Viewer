@@ -184,12 +184,17 @@ void MainWindow::DoubleClickOpenFile(QString path) {
 void MainWindow::parseBinaryInfo() {
     setBiosFvData();
     setFfsData();
-    getBiosID();
     setTreeData();
+    BiosImage->setBiosID();
+    BiosImage->setInfoStr();
+    cout << "set InputImageModel text" << endl;
+    InputImageModel->modelData->InfoStr = BiosImage->InfoStr;
+    ui->titleInfomation->setText(QString::fromStdString(BiosImage->BiosID));
     if (BiosImage->FitTable == nullptr)
         ui->infoButton->setVisible(false);
     else
         ui->infoButton->setVisible(true);
+    ui->treeWidget->setCurrentIndex(ui->treeWidget->model()->index(0, 0, QModelIndex()));
 }
 
 void MainWindow::showTreeRightMenu(QPoint pos) {
@@ -420,12 +425,11 @@ void MainWindow::OpenFileTriggered()
     QString lastPath = setting.value("LastFilePath").toString();
     QString fileName = QFileDialog::getOpenFileName(
                                                     this, tr("Open Image File"),
-                                                    lastPath, tr("Image files(*.rom *.bin *.fd);;All files (*.*)"));
+                                                    lastPath, tr("Image files(*.rom *.bin *.fd *.fv);;All files (*.*)"));
     if (fileName.isEmpty()){
         return;
     }
     OpenedFileName = fileName;
-    cout << OpenedFileName.toStdString() << endl;
     ui->treeWidget->clear();
     ui->titleInfomation->clear();
     ui->infoBrowser->clear();
@@ -482,6 +486,7 @@ void MainWindow::OpenInNewWindowTriggered()
 
 void MainWindow::TreeWidgetItemSelectionChanged()
 {
+    cout << "TreeWidgetItemSelectionChanged" << endl;
     QModelIndex index = ui->treeWidget->currentIndex();
     if (!index.isValid())
         return;
