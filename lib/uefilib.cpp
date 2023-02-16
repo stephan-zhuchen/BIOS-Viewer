@@ -1047,7 +1047,9 @@ namespace UefiSpace {
            << setw(width) << "SegSel:"        << hex << uppercase << acmHeader.SegSel << "h\n"
            << setw(width) << "EntryPoint:"    << hex << uppercase << acmHeader.EntryPoint << "h\n"
            << setw(width) << "KeySize:"       << hex << uppercase << acmHeader.KeySize << "h\n"
-           << setw(width) << "ScratchSize:"   << hex << uppercase << acmHeader.ScratchSize << "h\n";
+           << setw(width) << "ScratchSize:"   << hex << uppercase << acmHeader.ScratchSize << "h\n"
+           << setw(width) << "Rsa2048PubKey:\n";
+//           <<
 
         InfoStr = QString::fromStdString(ss.str());
     }

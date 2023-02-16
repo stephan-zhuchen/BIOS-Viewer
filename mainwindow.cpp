@@ -299,7 +299,7 @@ void MainWindow::extractBodyVolume() {
 
 void MainWindow::initSettings() {
     if (!setting.contains("Theme"))
-        setting.setValue("Theme", "Default");
+        setting.setValue("Theme", "System");
     if (!setting.contains("BiosViewerFontSize"))
         setting.setValue("BiosViewerFontSize", 12);
     if (!setting.contains("BiosViewerFont"))
@@ -321,6 +321,13 @@ void MainWindow::initSettings() {
     if (!setting.contains("LineSpacing"))
         setting.setValue("LineSpacing", "2");
 
+    if (setting.value("Theme").toString() == "System") {
+        if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
+            QApplication::setStyle(QStyleFactory::create("Fusion"));
+            QApplication::setPalette(QApplication::style()->standardPalette());
+        }
+    }
+
     ui->treeWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->treeWidget->setStyleSheet(QString("QTreeView::item{margin:%1px;}").arg(setting.value("LineSpacing").toInt()));
 
@@ -329,22 +336,6 @@ void MainWindow::initSettings() {
 
     ui->infoBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AddressPanel->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
-
-    if (setting.value("Theme").toString() == "Dark") {
-        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
-        if(styleFile.open(QIODevice::ReadOnly)) {
-            QString setStyleSheet(styleFile.readAll());
-            this->setStyleSheet(setStyleSheet);
-            styleFile.close();
-        }
-    } else if (setting.value("Theme").toString() == "Light") {
-        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
-        if(styleFile.open(QIODevice::ReadOnly)) {
-            QString setStyleSheet(styleFile.readAll());
-            this->setStyleSheet(setStyleSheet);
-            styleFile.close();
-        }
-    }
 }
 
 void MainWindow::setTreeData() {

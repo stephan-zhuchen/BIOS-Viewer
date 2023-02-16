@@ -13,7 +13,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
 
     if (!setting.contains("Theme"))
-        setting.setValue("Theme", "Default");
+        setting.setValue("Theme", "System");
     if (!setting.contains("BiosViewerFontSize"))
         setting.setValue("BiosViewerFontSize", 12);
     if (!setting.contains("BiosViewerFont"))
@@ -63,21 +63,21 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     else if (setting.value("ShowPaddingItem") == "false")
         ui->showPaddingBox->setCheckState(Qt::Unchecked);
 
-    if (setting.value("Theme").toString() == "Dark") {
-        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
-        if(styleFile.open(QIODevice::ReadOnly)) {
-            QString setStyleSheet(styleFile.readAll());
-            this->setStyleSheet(setStyleSheet);
-            styleFile.close();
-        }
-    } else if (setting.value("Theme").toString() == "Light") {
-        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
-        if(styleFile.open(QIODevice::ReadOnly)) {
-            QString setStyleSheet(styleFile.readAll());
-            this->setStyleSheet(setStyleSheet);
-            styleFile.close();
-        }
-    }
+//    if (setting.value("Theme").toString() == "Dark") {
+//        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
+//        if(styleFile.open(QIODevice::ReadOnly)) {
+//            QString setStyleSheet(styleFile.readAll());
+//            this->setStyleSheet(setStyleSheet);
+//            styleFile.close();
+//        }
+//    } else if (setting.value("Theme").toString() == "Light") {
+//        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
+//        if(styleFile.open(QIODevice::ReadOnly)) {
+//            QString setStyleSheet(styleFile.readAll());
+//            this->setStyleSheet(setStyleSheet);
+//            styleFile.close();
+//        }
+//    }
 }
 
 SettingsDialog::~SettingsDialog()

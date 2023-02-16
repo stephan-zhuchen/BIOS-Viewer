@@ -11,7 +11,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.10"
+#define __BiosViewerVersion__ "0.11"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -87,6 +87,7 @@ private:
     QLabel         *infoLabel;
     QString        OpenedFileName;
     QSettings      setting{"./Setting.ini", QSettings::IniFormat};
+    QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
     UINT8                        *InputImage;
     INT64                        InputImageSize;

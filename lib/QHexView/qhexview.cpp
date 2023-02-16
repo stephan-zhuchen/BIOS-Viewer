@@ -37,7 +37,11 @@ QHexView::QHexView(QWidget *parent)
       showCursor(true),
       startFromAscii(false),
       fileOpened(false),
-      fontSetting("Courier New", 12, QFont::Normal, false)
+      fontSetting("Courier New", 12, QFont::Normal, false),
+      selectionColor(COLOR_SELECTION),
+      wordColor(Qt::black),
+      wordColorOpposite(Qt::white),
+      cursorColor(COLOR_CURSOR)
 {
   // default configs
   if (setting.contains("HexFont") && setting.contains("HexFontSize")){
@@ -46,6 +50,21 @@ QHexView::QHexView(QWidget *parent)
       fontSetting = QFont(font, fontsize, QFont::Normal, false);
   }
   setFont(fontSetting); // default font
+
+  if (setting.value("Theme").toString() == "System") {
+      if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
+          wordColor = Qt::white;
+          wordColorOpposite = Qt::black;
+          selectionColor = QColor(38, 79, 120);
+          cursorColor = QColor(235, 235, 235);
+      } else {
+          wordColor = Qt::black;
+          wordColorOpposite = Qt::white;
+          selectionColor = QColor(COLOR_SELECTION);
+          cursorColor = QColor(COLOR_CURSOR);
+      }
+  }
+
   this->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   timer = new QTimer(this);
@@ -181,7 +200,7 @@ void QHexView::paintEvent(QPaintEvent *event)
   painter.drawLine(linePos, horizenLinePosY, linePos, height());
   painter.setPen(QPen(Qt::gray, 1));
   painter.drawLine(0, horizenLinePosY, m_posAscii + m_bytesPerLine * m_charWidth , horizenLinePosY);
-  painter.setPen(Qt::black);
+  painter.setPen(wordColor);
 
   // offset drawn
   for (int offsetX = m_posHex, i = 0; i < m_bytesPerLine; ++i, offsetX += m_charWidth * 3) {
@@ -190,10 +209,9 @@ void QHexView::paintEvent(QPaintEvent *event)
   }
 
   QByteArray data = m_pdata.mid(firstLineIdx * m_bytesPerLine, (lastLineIdx - firstLineIdx) * m_bytesPerLine);
-  painter.setPen(COLOR_CHARACTERS); // paint white characters and binary
+  painter.setPen(wordColor); // paint white characters and binary
 
-  for (int lineIdx = firstLineIdx, yPos = yPosStart; lineIdx < lastLineIdx;
-       lineIdx += 1, yPos += m_charHeight)
+  for (int lineIdx = firstLineIdx, yPos = yPosStart; lineIdx < lastLineIdx; lineIdx += 1, yPos += m_charHeight)
   {
     // ascii position
     for (int xPosAscii = m_posAscii, i = 0;
@@ -206,7 +224,7 @@ void QHexView::paintEvent(QPaintEvent *event)
 
       int pos = ((lineIdx * m_bytesPerLine + i) * 2) + 1;
       if (isSelected(pos)) {
-          painter.fillRect(QRectF(xPosAscii, yPos - m_charHeight + 4, m_charWidth, m_charHeight), QColor(COLOR_SELECTION));
+          painter.fillRect(QRectF(xPosAscii, yPos - m_charHeight + 4, m_charWidth, m_charHeight), selectionColor);
       }
 
       painter.drawText(xPosAscii, yPos, QString(character));
@@ -222,9 +240,9 @@ void QHexView::paintEvent(QPaintEvent *event)
     {
       int pos = ((lineIdx * m_bytesPerLine) * 2) + i;
       if (isSelected(pos)) {
-          painter.fillRect(QRectF(xPos, yPos - m_charHeight + 4, m_charWidth, m_charHeight), QColor(COLOR_SELECTION));
+          painter.fillRect(QRectF(xPos, yPos - m_charHeight + 4, m_charWidth, m_charHeight), selectionColor);
           if ((i % 2 == 1) && isSelected(pos + 1) && (i != m_bytesPerLine * 2 - 1)){
-              painter.fillRect(QRectF(xPos + m_charWidth, yPos - m_charHeight + 4, m_charWidth, m_charHeight), QColor(COLOR_SELECTION));
+              painter.fillRect(QRectF(xPos + m_charWidth, yPos - m_charHeight + 4, m_charWidth, m_charHeight), selectionColor);
           }
       }
 
@@ -253,21 +271,42 @@ void QHexView::paintEvent(QPaintEvent *event)
     }
 
     viewport()->update();
+  }
 
-    //cursor drawn
-    if (hasFocus() && showCursor && (m_cursorPos >= 0))
-    {
+  //cursor drawn
+  if (hasFocus() && showCursor && (m_cursorPos >= 0))
+  {
       int x = (m_cursorPos % (2 * m_bytesPerLine));
       int y = m_cursorPos / (2 * m_bytesPerLine);
+      if (y >= lastLineIdx)
+          return;
       y -= firstLineIdx;
       int cursorX;
       if (startFromAscii)
           cursorX = (x / 2) * m_charWidth + m_posAscii;
       else
-        cursorX = (((x / 2) * 3) + (x % 2)) * m_charWidth + m_posHex;
+          cursorX = (((x / 2) * 3) + (x % 2)) * m_charWidth + m_posHex;
       int cursorY = y * m_charHeight + 4;
-      painter.fillRect(cursorX, cursorY + horizenLinePosY, m_charWidth, m_charHeight, QColor(COLOR_CURSOR));
-    }
+      painter.fillRect(cursorX, cursorY + horizenLinePosY, m_charWidth, m_charHeight, cursorColor);
+
+      if (startFromAscii) {
+          char character = data[y * m_bytesPerLine + x / 2];
+          CHAR_VALID(character);
+          painter.setPen(wordColorOpposite);
+          painter.drawText(cursorX, (y + 1) * m_charHeight + horizenLinePosY, QString(character));
+          painter.setPen(wordColor);
+      } else {
+          QString val;
+          char binaryNum = data.at(y * m_bytesPerLine + x / 2);
+          if (x % 2 == 0) {
+              val = QString::number((binaryNum & 0xF0) >> 4, 16);
+          } else {
+              val = QString::number(binaryNum & 0xF, 16);
+          }
+          painter.setPen(wordColorOpposite);
+          painter.drawText(cursorX, (y + 1) * m_charHeight + horizenLinePosY, val.toUpper());
+          painter.setPen(wordColor);
+      }
   }
 }
 

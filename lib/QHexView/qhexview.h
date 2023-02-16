@@ -13,7 +13,7 @@
 #define COLOR_CHARACTERS Qt::black
 #define COLOR_SELECTION 199, 199, 199, 0xff
 #define COLOR_ADDRESS 199, 199, 199, 0xff
-#define COLOR_CURSOR 38, 95, 153, 0x80
+#define COLOR_CURSOR 38, 95, 153, 0xff
 
 // config lines
 #define MIN_HEXCHARS_IN_LINE 47
@@ -63,13 +63,18 @@ private:
       m_bytesPerLine,
       m_addressLength;
 
-  bool showCursor;
-  bool startFromAscii;
-  bool fileOpened;
-  QTimer * timer;
-  QFont fontSetting;
-  QWidget *parentWidget;
+  bool      showCursor;
+  bool      startFromAscii;
+  bool      fileOpened;
+  QTimer    *timer;
+  QFont     fontSetting;
+  QWidget   *parentWidget;
+  QColor    selectionColor;
+  QColor    wordColor;
+  QColor    wordColorOpposite;
+  QColor    cursorColor;
   QSettings setting{"./Setting.ini", QSettings::IniFormat};
+  QSettings SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
   QSize fullSize() const;
   void updatePositions();

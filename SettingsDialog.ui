@@ -109,17 +109,12 @@
      </property>
      <item>
       <property name="text">
-       <string>Default</string>
+       <string>System</string>
       </property>
      </item>
      <item>
       <property name="text">
        <string>Light</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Dark</string>
       </property>
      </item>
     </widget>
