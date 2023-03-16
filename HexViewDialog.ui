@@ -18,7 +18,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="logo/Images.qrc">
-    <normaloff>:/hexagon.svg</normaloff>:/hexagon.svg</iconset>
+    <normaloff>:/file-binary.svg</normaloff>:/file-binary.svg</iconset>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>

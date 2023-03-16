@@ -1,0 +1,7 @@
+<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" class="bi bi-hexagon" fill="currentColor">
+
+ <g>
+  <title>Layer 1</title>
+  <path id="svg_1" d="m14,4.577l0,6.846l-6,3.577l-6,-3.577l0,-6.846l6,-3.577l6,3.577zm-5.5,-4.443a1,1 0 0 0 -1,0l-6,3.577a1,1 0 0 0 -0.5,0.866l0,6.846a1,1 0 0 0 0.5,0.866l6,3.577a1,1 0 0 0 1,0l6,-3.577a1,1 0 0 0 0.5,-0.866l0,-6.846a1,1 0 0 0 -0.5,-0.866l-6,-3.577z" stroke="white"/>
+ </g>
+</svg>

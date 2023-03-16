@@ -11,7 +11,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.11"
+#define __BiosViewerVersion__ "0.12"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -39,6 +39,7 @@ public:
     void setFfsData();
     void pushDataToVector(INT64 offset, INT64 length);
     void HighlightTreeItem(vector<INT32> rows);
+    bool isDarkMode();
 
     // Tree Widget
     void initSettings();
@@ -86,6 +87,7 @@ private:
     QLabel         *structureLabel;
     QLabel         *infoLabel;
     QString        OpenedFileName;
+    bool           DarkmodeFlag;
     QSettings      setting{"./Setting.ini", QSettings::IniFormat};
     QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 

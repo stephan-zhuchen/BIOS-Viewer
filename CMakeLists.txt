@@ -9,7 +9,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_PREFIX_PATH "D:/Qt/6.4.2/msvc2019_64/lib/cmake")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
@@ -47,6 +46,9 @@ set(INCLUDE_FILE
         include/BaseMemoryLib.cpp
         include/Microcode.h
         include/VariableFormat.h
+        include/BootGuard.h
+        include/ME.h
+        include/GbE.h
 )
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
@@ -62,6 +64,7 @@ set(PROJECT_SOURCES
         lib/UefiLib.cpp
         lib/iwfi.h
         lib/iwfi.cpp
+        lib/BootGuard.cpp
         lib/Model.h
         lib/Model.cpp
         lib/Section.cpp
@@ -77,8 +80,6 @@ set(PROJECT_SOURCES
         InfoWindow.h InfoWindow.cpp InfoWindow.ui
         SearchDialog.h SearchDialog.cpp SearchDialog.ui
         logo/Images.qrc
-        theme/light/lightstyle.qrc
-        theme/dark/darkstyle.qrc
         ${INCLUDE_FILE}
         ${LZMA_SDK}
         ${UEFI_DECOMPRESS}

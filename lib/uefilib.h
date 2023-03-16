@@ -9,6 +9,7 @@
 #include "../include/PeImage.h"
 #include "../include/Microcode.h"
 #include "../include/VariableFormat.h"
+#include "../include/BootGuard.h"
 
 namespace UefiSpace {
     using namespace BaseLibrarySpace;
@@ -18,6 +19,10 @@ namespace UefiSpace {
     class AcmHeaderClass;
     class FfsFile;
     class NvStorageVariable;
+    class KeyManifestClass;
+    class BootPolicyManifestClass;
+    class BpmElement;
+    class IBBS_Class;
 
     enum class VolumeType {
         FirmwareVolume,
@@ -226,6 +231,8 @@ namespace UefiSpace {
         vector<FIRMWARE_INTERFACE_TABLE_ENTRY> FitEntries;
         vector<MicrocodeHeaderClass*>          MicrocodeEntries;
         vector<AcmHeaderClass*>                AcmEntries;
+        KeyManifestClass                       *KmEntry{nullptr};
+        BootPolicyManifestClass                *BpmEntry{nullptr};
         INT64 FitEntryNum{0};
         bool  isValid{false};
     public:
@@ -252,22 +259,162 @@ namespace UefiSpace {
         void setInfoStr();
     };
 
-    class AcmHeaderClass {
-    private:
+    class BootGuardClass {
+    protected:
         UINT8* data;
         INT64  size;
         INT64  offset;
+        static void InternalDumpData(stringstream &ss, UINT8* Data, INT64 Size);
+    public:
+        BootGuardClass()=delete;
+        BootGuardClass(UINT8* fv, INT64 length, INT64 address);
+        virtual void setInfoStr();
+        static string DumpHex(UINT8* HexData, INT64 length, bool SingleLine = false);
+        static string getAlgName(UINT16 Alg);
+        virtual ~BootGuardClass();
+    };
+
+    class AcmHeaderClass : public BootGuardClass {
+    private:
         bool   ProdFlag{true};
         bool   ValidFlag{true};
     public:
-        QString     InfoStr;
-        ACM_HEADER  acmHeader;
+        QString          InfoStr;
+        ACM_HEADER       acmHeader;
+        Ext_ACM_Header   ExtAcmHeader;
+        Ext_ACM_Header3  ExtAcmHeader3;
+        ACM_INFO_TABLE   AcmInfoTable;
+        bool             isAcm3{false};
         AcmHeaderClass() = delete;
         AcmHeaderClass(UINT8* fv, INT64 address);
         ~AcmHeaderClass();
         bool isValid() const;
         bool isProd() const;
-        void setInfoStr();
+        void setInfoStr() override;
+    };
+
+    class KeyManifestClass : public BootGuardClass {
+    private:
+        KEY_MANIFEST_STRUCTURE     KM_Header;
+        vector<SHAX_KMHASH_STRUCT> KmHashList;
+        KEY_AND_SIGNATURE_STRUCT   *KeySig;
+
+        INT64 SigSchemeOffset;
+        INT64 SigOffset;
+        UINT16 SigScheme;
+        union Key {
+          RSA_PUBLIC_KEY_STRUCT    RsaKey;
+          ECC_PUBLIC_KEY_STRUCT    EccKey;
+        } key;
+        union Sig {
+          RSASSA_SIGNATURE_STRUCT  SignatureRsa;
+          ECC_SIGNATURE_STRUCT     SignatureEcc;
+        } sig;
+
+    public:
+        QString                    InfoStr;
+        bool                       isValid{true};
+        KeyManifestClass()=delete;
+        KeyManifestClass(UINT8* fv, INT64 length);
+        ~KeyManifestClass();
+        void setInfoStr() override;
+    };
+
+    class BootPolicyManifestClass : public BootGuardClass {
+    private:
+        INT64 SigSchemeOffset;
+        INT64 SigOffset;
+        UINT16 SigScheme;
+        union Key {
+          RSA_PUBLIC_KEY_STRUCT    RsaKey;
+          ECC_PUBLIC_KEY_STRUCT    EccKey;
+        } key;
+        union Sig {
+          RSASSA_SIGNATURE_STRUCT  SignatureRsa;
+          ECC_SIGNATURE_STRUCT     SignatureEcc;
+        } sig;
+        vector<BpmElement*>        BpmElementList;
+    public:
+        QString                      InfoStr;
+        BOOT_POLICY_MANIFEST_HEADER  BPM_Header;
+        KEY_AND_SIGNATURE_STRUCT     *KeySig;
+        bool                         isValid{true};
+        bool                         IbbElementValid{false};
+        BootPolicyManifestClass()=delete;
+        BootPolicyManifestClass(UINT8* fv, INT64 length);
+        ~BootPolicyManifestClass();
+        void setInfoStr() override;
+    };
+
+    class BpmElement : public BootGuardClass {
+    public:
+        string     InfoStr;
+        INT64      BpmElementSize{0};
+        BpmElement(UINT8* fv, INT64 length);
+        ~BpmElement();
+        void setInfoStr() override;
+        INT64 getBpmElementSize() const;
+    };
+
+    class IBBS_Class : public BpmElement {
+    private:
+        bool                         IbbElementValid{false};
+
+        IBB_ELEMENT                  IbbElement;
+        UINT32                       IbbEntryPoint;
+        HASH_LIST                    HashList;
+        vector<HASH_STRUCTURE>       IbbHashList;
+        vector<HASH_STRUCTURE>       ObbHashList;
+        UINT8                        Reserved[3];
+        UINT8                        SegmentCount;
+        vector<IBB_SEGMENT>          IbbSegment;
+    public:
+        IBBS_Class()=delete;
+        IBBS_Class(UINT8* fv, INT64 length);
+        ~IBBS_Class();
+        void setInfoStr() override;
+    };
+
+    class TXTS_Class : public BpmElement {
+    private:
+        bool                         TxtElementValid{false};
+
+        TXT_ELEMENT                  TxtElement;
+        vector<IBB_SEGMENT>          TxtSegment;
+    public:
+        TXTS_Class()=delete;
+        TXTS_Class(UINT8* fv, INT64 length);
+        ~TXTS_Class();
+        void setInfoStr() override;
+    };
+
+    class PCDS_Class  : public BpmElement {
+    private:
+        bool                         PcdElementValid{false};
+        bool                         PdrElementValid{false};
+        bool                         CnbsElementValid{false};
+
+        PLATFORM_CONFIG_DATA_ELEMENT   PcdElement;
+        PDRS_SEGMENT                   PdrElement;
+        vector<PDR_LOCATION_STRUCTURE> PdrLocations;
+        CNBS_SEGMENT                   CnbsElement;
+    public:
+        PCDS_Class()=delete;
+        PCDS_Class(UINT8* fv, INT64 length);
+        ~PCDS_Class();
+        void setInfoStr() override;
+    };
+
+    class PMSG_Class  : public BpmElement {
+    private:
+        bool                         PmsgElementValid{false};
+
+        BOOT_POLICY_MANIFEST_SIGNATURE_ELEMENT PmsgElement;
+    public:
+        PMSG_Class()=delete;
+        PMSG_Class(UINT8* fv, INT64 length);
+        ~PMSG_Class();
+        void setInfoStr() override;
     };
 
 }

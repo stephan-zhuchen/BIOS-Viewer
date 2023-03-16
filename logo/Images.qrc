@@ -2,9 +2,6 @@
     <qresource prefix="/">
         <file>open.svg</file>
         <file>gear.svg</file>
-        <file>x-lg.svg</file>
-        <file>x.svg</file>
-        <file>info-circle.svg</file>
         <file>file-earmark-font.svg</file>
         <file>file-earmark-binary.svg</file>
         <file>bookmark.svg</file>
@@ -14,6 +11,22 @@
         <file>Hex.ico</file>
         <file>hexagon.svg</file>
         <file>box-arrow-up.svg</file>
+        <file>hexagon_light.svg</file>
+        <file>bookmark_light.svg</file>
+        <file>gear_light.svg</file>
+        <file>arrows-collapse_light.svg</file>
+        <file>box-arrow-up_light.svg</file>
+        <file>open_light.svg</file>
+        <file>search_light.svg</file>
+        <file>Exit.svg</file>
+        <file>Exit_light.svg</file>
+        <file>scissors_light.svg</file>
+        <file>replace.svg</file>
+        <file>replace_light.svg</file>
+        <file>about.svg</file>
+        <file>about_light.svg</file>
+        <file>file-binary_light.svg</file>
+        <file>file-binary.svg</file>
     </qresource>
     <qresource prefix="/sty">
         <file>dark_mode.qss</file>

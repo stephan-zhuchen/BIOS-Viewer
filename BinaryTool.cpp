@@ -66,6 +66,8 @@ void MainWindow::ActionSearchTriggered()
     settingDialog->setSearchMode(false);
     settingDialog->SetModelData(&FvModelData);
     settingDialog->setParentWidget(this);
+    if (isDarkMode())
+        settingDialog->setWindowIcon(QIcon(":/search_light.svg"));
     settingDialog->show();
 }
 
@@ -114,12 +116,11 @@ void MainWindow::ActionCollapseTriggered()
 
 void MainWindow::ActionReplaceBIOSTriggered()
 {
-    if (BiosImage == nullptr) {
+    if (InputImage == nullptr) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "No Binary Opened!");
         return;
     }
-    INT64 BinarySize = BiosImage->size;
-    if (BinarySize != 0x2000000) {
+    if (InputImageSize != 0x2000000) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "This is not an IFWI Binary!");
         return;
     }

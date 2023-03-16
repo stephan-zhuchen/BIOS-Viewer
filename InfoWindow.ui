@@ -29,7 +29,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="FitTab">
       <attribute name="title">
@@ -117,7 +117,7 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>300</width>
+           <width>200</width>
            <height>0</height>
           </size>
          </property>
@@ -162,14 +162,18 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>300</width>
+           <width>200</width>
            <height>0</height>
           </size>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QTextBrowser" name="AcmTextBrowser"/>
+        <widget class="QTextBrowser" name="AcmTextBrowser">
+         <property name="lineWrapMode">
+          <enum>QTextEdit::NoWrap</enum>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -177,6 +181,49 @@
       <attribute name="title">
        <string>BootGuard</string>
       </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QListWidget" name="BtgListWidget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>200</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextBrowser" name="BtgTextBrowser">
+         <property name="acceptDrops">
+          <bool>false</bool>
+         </property>
+         <property name="lineWrapMode">
+          <enum>QTextEdit::NoWrap</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>

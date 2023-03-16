@@ -278,7 +278,7 @@ void QHexView::paintEvent(QPaintEvent *event)
   {
       int x = (m_cursorPos % (2 * m_bytesPerLine));
       int y = m_cursorPos / (2 * m_bytesPerLine);
-      if (y >= lastLineIdx)
+      if (y < firstLineIdx || y >= lastLineIdx)
           return;
       y -= firstLineIdx;
       int cursorX;

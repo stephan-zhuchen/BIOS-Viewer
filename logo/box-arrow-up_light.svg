@@ -1,0 +1,8 @@
+<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" class="bi bi-box-arrow-up" fill="currentColor">
+
+ <g>
+  <title>Layer 1</title>
+  <path id="svg_1" d="m3.5,6a0.5,0.5 0 0 0 -0.5,0.5l0,8a0.5,0.5 0 0 0 0.5,0.5l9,0a0.5,0.5 0 0 0 0.5,-0.5l0,-8a0.5,0.5 0 0 0 -0.5,-0.5l-2,0a0.5,0.5 0 0 1 0,-1l2,0a1.5,1.5 0 0 1 1.5,1.5l0,8a1.5,1.5 0 0 1 -1.5,1.5l-9,0a1.5,1.5 0 0 1 -1.5,-1.5l0,-8a1.5,1.5 0 0 1 1.5,-1.5l2,0a0.5,0.5 0 0 1 0,1l-2,0z" fill-rule="evenodd" stroke="white"/>
+  <path id="svg_2" d="m7.646,0.146a0.5,0.5 0 0 1 0.708,0l3,3a0.5,0.5 0 0 1 -0.708,0.708l-2.146,-2.147l0,8.793a0.5,0.5 0 0 1 -1,0l0,-8.793l-2.146,2.147a0.5,0.5 0 1 1 -0.708,-0.708l3,-3z" fill-rule="evenodd" stroke="white"/>
+ </g>
+</svg>

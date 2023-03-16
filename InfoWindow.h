@@ -25,15 +25,16 @@ public:
     void showFitTable();
     void showMicrocodeTable();
     void showAcmTable();
+    void showBtgTable();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
-    void on_microcodeListWidget_itemClicked(QListWidgetItem *item);
-
-    void on_acmListWidget_itemClicked(QListWidgetItem *item);
+    void on_microcodeListWidget_itemSelectionChanged();
+    void on_acmListWidget_itemSelectionChanged();
+    void on_BtgListWidget_itemSelectionChanged();
 
 private:
     Ui::InfoWindow *ui;

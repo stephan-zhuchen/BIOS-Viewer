@@ -22,22 +22,7 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui->tabWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->MicrocodeTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AcmTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
-
-//    if (setting.value("Theme").toString() == "Dark") {
-//        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
-//        if(styleFile.open(QIODevice::ReadOnly)) {
-//            QString setStyleSheet(styleFile.readAll());
-//            this->setStyleSheet(setStyleSheet);
-//            styleFile.close();
-//        }
-//    } else if (setting.value("Theme").toString() == "Light") {
-//        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
-//        if(styleFile.open(QIODevice::ReadOnly)) {
-//            QString setStyleSheet(styleFile.readAll());
-//            this->setStyleSheet(setStyleSheet);
-//            styleFile.close();
-//        }
-//    }
+    ui->BtgTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 }
 
 InfoWindow::~InfoWindow()
@@ -100,6 +85,7 @@ void InfoWindow::showFitTable() {
 
     showMicrocodeTable();
     showAcmTable();
+    showBtgTable();
 }
 
 void InfoWindow::showMicrocodeTable() {
@@ -113,12 +99,8 @@ void InfoWindow::showMicrocodeTable() {
         ui->microcodeListWidget->addItem(MicrocodeItem);
     }
 
-    if (BiosImage->FitTable->MicrocodeEntries.size() != 0) {
+    if (ui->microcodeListWidget->model()->rowCount() != 0)
         ui->microcodeListWidget->setCurrentRow(0);
-        auto EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(0);
-        EntryHeader->setInfoStr();
-        ui->MicrocodeTextBrowser->setText(EntryHeader->InfoStr);
-    }
 }
 
 void InfoWindow::showAcmTable() {
@@ -134,12 +116,29 @@ void InfoWindow::showAcmTable() {
         ui->acmListWidget->addItem(AcmItem);
     }
 
-    if (BiosImage->FitTable->AcmEntries.size() != 0) {
+    if (ui->acmListWidget->model()->rowCount() != 0)
         ui->acmListWidget->setCurrentRow(0);
-        auto EntryHeader = BiosImage->FitTable->AcmEntries.at(0);
-        EntryHeader->setInfoStr();
-        ui->AcmTextBrowser->setText(EntryHeader->InfoStr);
+}
+
+void InfoWindow::showBtgTable() {
+    QString ItemName;
+    if (BiosImage->FitTable->KmEntry != nullptr) {
+        ItemName = "Key Manifest";
+        if (!BiosImage->FitTable->KmEntry->isValid)
+            ItemName += " (Empty)";
+        QListWidgetItem *KmItem = new QListWidgetItem(ItemName);
+        ui->BtgListWidget->addItem(KmItem);
     }
+    if (BiosImage->FitTable->BpmEntry != nullptr) {
+        ItemName = "Boot Policy Manifest";
+        if (!BiosImage->FitTable->BpmEntry->isValid)
+            ItemName += " (Empty)";
+        QListWidgetItem *BpItem = new QListWidgetItem(ItemName);
+        ui->BtgListWidget->addItem(BpItem);
+    }
+
+    if (ui->BtgListWidget->model()->rowCount() != 0)
+        ui->BtgListWidget->setCurrentRow(0);
 }
 
 void InfoWindow::resizeEvent(QResizeEvent *event) {
@@ -158,17 +157,43 @@ void InfoWindow::keyPressEvent(QKeyEvent *event) {
     }
 }
 
-void InfoWindow::on_microcodeListWidget_itemClicked(QListWidgetItem *item) {
+void InfoWindow::on_microcodeListWidget_itemSelectionChanged() {
+    using UefiSpace::MicrocodeHeaderClass;
     INT32 currentRow = ui->microcodeListWidget->currentRow();
-    auto EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(currentRow);
+    MicrocodeHeaderClass* EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(currentRow);
     EntryHeader->setInfoStr();
     ui->MicrocodeTextBrowser->setText(EntryHeader->InfoStr);
 }
 
-void InfoWindow::on_acmListWidget_itemClicked(QListWidgetItem *item)
+void InfoWindow::on_acmListWidget_itemSelectionChanged()
 {
+    using UefiSpace::AcmHeaderClass;
     INT32 currentRow = ui->acmListWidget->currentRow();
-    auto EntryHeader = BiosImage->FitTable->AcmEntries.at(currentRow);
+    AcmHeaderClass* EntryHeader = BiosImage->FitTable->AcmEntries.at(currentRow);
     EntryHeader->setInfoStr();
     ui->AcmTextBrowser->setText(EntryHeader->InfoStr);
 }
+
+void InfoWindow::on_BtgListWidget_itemSelectionChanged()
+{
+    using UefiSpace::KeyManifestClass;
+    using UefiSpace::BootPolicyManifestClass;
+    QModelIndex index = ui->BtgListWidget->currentIndex();
+    if (!index.isValid())
+        return;
+    QListWidgetItem *item = ui->BtgListWidget->currentItem();
+
+    QString text;
+    if (item->text() == "Key Manifest") {
+        KeyManifestClass* EntryHeader = BiosImage->FitTable->KmEntry;
+        EntryHeader->setInfoStr();
+        text = EntryHeader->InfoStr;
+    } else if (item->text() == "Boot Policy Manifest") {
+        BootPolicyManifestClass* EntryHeader = BiosImage->FitTable->BpmEntry;
+        EntryHeader->setInfoStr();
+        text = EntryHeader->InfoStr;
+    }
+
+    ui->BtgTextBrowser->setText(text);
+}
+

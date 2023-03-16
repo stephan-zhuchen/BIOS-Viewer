@@ -868,7 +868,6 @@ namespace UefiSpace {
                 if (FitEntry.Type == FIT_TABLE_TYPE_MICROCODE) {
                     UINT64 MicrocodeAddress = FitEntry.Address & 0xFFFFFF;
                     UINT64 RelativeMicrocodeAddress = Buffer::adjustBufferAddress(0x1000000, MicrocodeAddress, length);
-                    cout << "RelativeMicrocodeAddress = " << hex << RelativeMicrocodeAddress << endl;
                     if (RelativeMicrocodeAddress > length)
                         continue;
                     MicrocodeHeaderClass *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, MicrocodeAddress);
@@ -880,6 +879,19 @@ namespace UefiSpace {
                         continue;
                     AcmHeaderClass *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, AcmAddress);
                     AcmEntries.push_back(AcmEntry);
+                } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST) {
+                    UINT64 KmAddress = FitEntry.Address & 0xFFFFFF;
+                    UINT64 RelativeKmAddress = Buffer::adjustBufferAddress(0x1000000, KmAddress, length);
+                    if (RelativeKmAddress > length && KmEntry != nullptr)
+                        continue;
+                    KmEntry = new KeyManifestClass(fv + RelativeKmAddress, length - RelativeKmAddress);
+                } else if (FitEntry.Type == FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST) {
+                    UINT64 BpmAddress = FitEntry.Address & 0xFFFFFF;
+                    UINT64 RelativeBpmAddress = Buffer::adjustBufferAddress(0x1000000, BpmAddress, length);
+                    INT64 FitEntrySize = (FitEntry.Size[2] << 16) + (FitEntry.Size[1] << 8) + FitEntry.Size[0];
+                    if (RelativeBpmAddress > length && BpmEntry != nullptr && RelativeBpmAddress + FitEntrySize > length)
+                        continue;
+                    BpmEntry = new BootPolicyManifestClass(fv + RelativeBpmAddress, FitEntrySize);
                 }
             }
         } else {
@@ -891,6 +903,12 @@ namespace UefiSpace {
     FitTableClass::~FitTableClass() {
         for (auto MicrocodeEntry:MicrocodeEntries)
             delete MicrocodeEntry;
+        for (auto AcmEntry:AcmEntries)
+            delete AcmEntry;
+        if (KmEntry != nullptr)
+            delete KmEntry;
+        if (BpmEntry != nullptr)
+            delete BpmEntry;
     }
 
     string FitTableClass::getTypeName(UINT8 type) {
@@ -1005,51 +1023,6 @@ namespace UefiSpace {
                    << setw(width) << "ProcessorSignature:" << hex << uppercase << ExtendedMicrocode.ProcessorSignature.Uint32 << "h\n";
             }
         }
-
-        InfoStr = QString::fromStdString(ss.str());
-    }
-
-    AcmHeaderClass::AcmHeaderClass(UINT8* fv, INT64 address):data(fv), offset(address) {
-        acmHeader = *(ACM_HEADER*)fv;
-        ValidFlag = (acmHeader.ModuleType == ACM_MODULE_TYPE_CHIPSET_ACM) ? true : false;
-        ProdFlag = (acmHeader.Flags & 0x8000) ? false : true;
-    }
-
-    AcmHeaderClass::~AcmHeaderClass() {}
-
-    bool AcmHeaderClass::isValid() const {
-        return ValidFlag;
-    }
-
-    bool AcmHeaderClass::isProd() const {
-        return ProdFlag;
-    }
-
-    void AcmHeaderClass::setInfoStr() {
-        INT64 width = 20;
-        stringstream ss;
-        ss.setf(ios::left);
-        ss << setw(width) << "ModuleType:"    << hex << uppercase << acmHeader.ModuleType << "h\n"
-           << setw(width) << "ModuleSubType:" << hex << uppercase << acmHeader.ModuleSubType << "h\n"
-           << setw(width) << "HeaderLen:"     << hex << uppercase << acmHeader.HeaderLen << "h\n"
-           << setw(width) << "HeaderVersion:" << hex << uppercase << acmHeader.HeaderVersion << "h\n"
-           << setw(width) << "ChipsetId:"     << hex << uppercase << acmHeader.ChipsetId << "h\n"
-           << setw(width) << "Flags:"         << hex << uppercase << acmHeader.Flags << "h\n"
-           << setw(width) << "ModuleVendor:"  << hex << uppercase << acmHeader.ModuleVendor << "h\n"
-           << setw(width) << "Date:"          << hex << uppercase << acmHeader.Date << "h\n"
-           << setw(width) << "Size:"          << hex << uppercase << acmHeader.Size << "h\n"
-           << setw(width) << "AcmSvn:"        << hex << uppercase << acmHeader.AcmSvn << "h\n"
-           << setw(width) << "SeAcmSvn:"      << hex << uppercase << acmHeader.SeAcmSvn << "h\n"
-           << setw(width) << "CodeControl:"   << hex << uppercase << acmHeader.CodeControl << "h\n"
-           << setw(width) << "ErrorEntryPoint:" << hex << uppercase << acmHeader.ErrorEntryPoint << "h\n"
-           << setw(width) << "GdtLimit:"      << hex << uppercase << acmHeader.GdtLimit << "h\n"
-           << setw(width) << "GdtBasePtr:"    << hex << uppercase << acmHeader.GdtBasePtr << "h\n"
-           << setw(width) << "SegSel:"        << hex << uppercase << acmHeader.SegSel << "h\n"
-           << setw(width) << "EntryPoint:"    << hex << uppercase << acmHeader.EntryPoint << "h\n"
-           << setw(width) << "KeySize:"       << hex << uppercase << acmHeader.KeySize << "h\n"
-           << setw(width) << "ScratchSize:"   << hex << uppercase << acmHeader.ScratchSize << "h\n"
-           << setw(width) << "Rsa2048PubKey:\n";
-//           <<
 
         InfoStr = QString::fromStdString(ss.str());
     }

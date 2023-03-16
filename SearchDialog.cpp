@@ -16,22 +16,6 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui->SearchContent->selectAll();
     setAttribute(Qt::WA_DeleteOnClose);
     this->setWindowFlags(Qt::WindowStaysOnTopHint);
-
-//    if (setting.value("Theme").toString() == "Dark") {
-//        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
-//        if(styleFile.open(QIODevice::ReadOnly)) {
-//            QString setStyleSheet(styleFile.readAll());
-//            this->setStyleSheet(setStyleSheet);
-//            styleFile.close();
-//        }
-//    } else if (setting.value("Theme").toString() == "Light") {
-//        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
-//        if(styleFile.open(QIODevice::ReadOnly)) {
-//            QString setStyleSheet(styleFile.readAll());
-//            this->setStyleSheet(setStyleSheet);
-//            styleFile.close();
-//        }
-//    }
 }
 
 SearchDialog::~SearchDialog()

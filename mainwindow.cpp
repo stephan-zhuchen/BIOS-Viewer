@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
       popMenu(new QMenu),
       structureLabel(new QLabel("Structure:", this)),
       infoLabel(new QLabel("Infomation:", this)),
+      DarkmodeFlag(false),
       InputImage(nullptr),
       InputImageModel(nullptr),
       BiosImage(nullptr)
@@ -105,6 +106,10 @@ void MainWindow::cleanup() {
         delete InputImage;
 }
 
+bool MainWindow::isDarkMode() {
+    return DarkmodeFlag;
+}
+
 void MainWindow::refresh() {
     initSettings();
     QTreeWidgetItem *ImageOverviewItem = ui->treeWidget->itemAt(0, 0);
@@ -187,7 +192,6 @@ void MainWindow::parseBinaryInfo() {
     setTreeData();
     BiosImage->setBiosID();
     BiosImage->setInfoStr();
-    cout << "set InputImageModel text" << endl;
     InputImageModel->modelData->InfoStr = BiosImage->InfoStr;
     ui->titleInfomation->setText(QString::fromStdString(BiosImage->BiosID));
     if (BiosImage->FitTable == nullptr)
@@ -198,6 +202,14 @@ void MainWindow::parseBinaryInfo() {
 }
 
 void MainWindow::showTreeRightMenu(QPoint pos) {
+    QIcon hexBinary, box_arrow_up;
+    if (DarkmodeFlag) {
+        hexBinary = QIcon(":/file-binary_light.svg");
+        box_arrow_up = QIcon(":/box-arrow-up_light.svg");
+    } else {
+        hexBinary = QIcon(":/file-binary.svg");
+        box_arrow_up = QIcon(":/box-arrow-up.svg");
+    }
     QModelIndex index = ui->treeWidget->indexAt(pos);
     if (!index.isValid())
         return;
@@ -206,7 +218,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
 
     QMenu* menu = new QMenu;
     QAction* showHex = new QAction("Hex View");
-    showHex->setIcon(QIcon(":/hexagon.svg"));
+    showHex->setIcon(hexBinary);
     menu->addAction(showHex);
     this->connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
 
@@ -214,9 +226,9 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
         QAction* showBodyHex = new QAction("Body Hex View");
         QAction* extractVolume = new QAction("Extract " + RightClickeditemModel->getType());
         QAction* extractBodyVolume = new QAction("Extract " + RightClickeditemModel->getType() + " Body");
-        showBodyHex->setIcon(QIcon(":/hexagon.svg"));
-        extractVolume->setIcon(QIcon(":/box-arrow-up.svg"));
-        extractBodyVolume->setIcon(QIcon(":/box-arrow-up.svg"));
+        showBodyHex->setIcon(hexBinary);
+        extractVolume->setIcon(box_arrow_up);
+        extractBodyVolume->setIcon(box_arrow_up);
         menu->addAction(showBodyHex);
         menu->addAction(extractVolume);
         menu->addAction(extractBodyVolume);
@@ -227,7 +239,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
 
     if (RightClickeditemModel->getType() == "Variable") {
         QAction* showNvHex = new QAction("Variable Data Hex View");
-        showNvHex->setIcon(QIcon(":/hexagon.svg"));
+        showNvHex->setIcon(hexBinary);
         menu->addAction(showNvHex);
         this->connect(showNvHex,SIGNAL(triggered(bool)),this,SLOT(showNvHexView()));
     }
@@ -238,6 +250,9 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
 
 void MainWindow::showHexView() {
     HexViewDialog *hexDialog = new HexViewDialog;
+    if (isDarkMode()) {
+        hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
+    }
     UINT8 *itemData = RightClickeditemModel->modelData->data;
     QByteArray *hexViewData = new QByteArray((char*)itemData, RightClickeditemModel->modelData->size);
     hexDialog->m_hexview->loadFromBuffer(*hexViewData);
@@ -247,6 +262,9 @@ void MainWindow::showHexView() {
 
 void MainWindow::showBodyHexView() {
     HexViewDialog *hexDialog = new HexViewDialog;
+    if (isDarkMode()) {
+        hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
+    }
     UINT8 *itemData = RightClickeditemModel->modelData->data;
     QByteArray *hexViewData = new QByteArray((char*)itemData, RightClickeditemModel->modelData->size);
     INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
@@ -308,14 +326,14 @@ void MainWindow::initSettings() {
         setting.setValue("ShowPaddingItem", "false");
 
     if (!setting.contains("InfoFontSize"))
-        setting.setValue("InfoFontSize", 12);
+        setting.setValue("InfoFontSize", 11);
     if (!setting.contains("InfoFont"))
         setting.setValue("InfoFont", "Fira Code");
     if (!setting.contains("InfoLineSpacing"))
         setting.setValue("InfoLineSpacing", "2");
 
     if (!setting.contains("HexFontSize"))
-        setting.setValue("HexFontSize", 12);
+        setting.setValue("HexFontSize", 11);
     if (!setting.contains("HexFont"))
         setting.setValue("HexFont", "Courier");
     if (!setting.contains("LineSpacing"))
@@ -323,6 +341,7 @@ void MainWindow::initSettings() {
 
     if (setting.value("Theme").toString() == "System") {
         if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
+            DarkmodeFlag = true;
             QApplication::setStyle(QStyleFactory::create("Fusion"));
             QApplication::setPalette(QApplication::style()->standardPalette());
         }
@@ -336,6 +355,22 @@ void MainWindow::initSettings() {
 
     ui->infoBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AddressPanel->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+
+    if (DarkmodeFlag) {
+        ui->searchButton->setIcon(QIcon(":/search_light.svg"));
+        ui->OpenFile->setIcon(QIcon(":/open_light.svg"));
+        ui->OpenInNewWindow->setIcon(QIcon(":/open_light.svg"));
+        ui->actionSettings->setIcon(QIcon(":/gear_light.svg"));
+        ui->actionExit->setIcon(QIcon(":/Exit_light.svg"));
+        ui->actionSearch->setIcon(QIcon(":/search_light.svg"));
+        ui->actionGoto->setIcon(QIcon(":/bookmark_light.svg"));
+        ui->actionCollapse->setIcon(QIcon(":/arrows-collapse_light.svg"));
+        ui->actionExtract_BIOS->setIcon(QIcon(":/scissors_light.svg"));
+        ui->actionSeperate_Binary->setIcon(QIcon(":/scissors_light.svg"));
+        ui->actionReplace_BIOS->setIcon(QIcon(":/replace_light.svg"));
+        ui->actionAboutBiosViewer->setIcon(QIcon(":/about_light.svg"));
+        ui->actionAboutQt->setIcon(QIcon(":/about_light.svg"));
+    }
 }
 
 void MainWindow::setTreeData() {
@@ -439,6 +474,9 @@ void MainWindow::ActionExitTriggered()
 void MainWindow::ActionSettingsTriggered()
 {
     SettingsDialog *settingDialog = new SettingsDialog;
+    if (isDarkMode()) {
+        settingDialog->setWindowIcon(QIcon(":/gear_light.svg"));
+    }
     settingDialog->setParentWidget(this);
     settingDialog->exec();
 }
@@ -477,7 +515,6 @@ void MainWindow::OpenInNewWindowTriggered()
 
 void MainWindow::TreeWidgetItemSelectionChanged()
 {
-    cout << "TreeWidgetItemSelectionChanged" << endl;
     QModelIndex index = ui->treeWidget->currentIndex();
     if (!index.isValid())
         return;
