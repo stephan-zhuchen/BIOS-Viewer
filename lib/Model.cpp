@@ -102,7 +102,6 @@ SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
         subtype = "UI";
         text = QString::fromStdString(section->FileNameString);
         if (text == "FmpDxe") {
-            cout << "FmpDxe" << endl;
             parentModel->setName(text + " " + parentModel->getFmpDeviceName());
         } else {
             parentModel->setName(text);

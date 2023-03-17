@@ -19,9 +19,7 @@ bool EFI_GUID::operator==(EFI_GUID guid) {
     return true;
 }
 
-GuidDatabase::~GuidDatabase() {
-    std::cout << "~GuidDatabase\n";
-}
+GuidDatabase::~GuidDatabase() {}
 
 std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
     std::string name;

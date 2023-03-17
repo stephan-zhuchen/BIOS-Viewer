@@ -1,4 +1,5 @@
 #include <QMessageBox>
+#include <QElapsedTimer>
 #include "mainwindow.h"
 #include "lib/iwfi.h"
 #include "include/GuidDefinition.h"
@@ -31,10 +32,10 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
         return false;
     }
     buffer->setOffset(0);
-    cout << "FlashRegion size = " << hex << FlashRegion->getSize() << endl;
+//    cout << "FlashRegion size = " << hex << FlashRegion->getSize() << endl;
     FlashDescriptorClass *flashDescriptorVolume = new FlashDescriptorClass(buffer->getBytes(FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
     IFWI_Sections.push_back(flashDescriptorVolume);
-    IFWI_ModelData.push_back(new DataModel(flashDescriptorVolume, "Flash Descriptor", "Region", ""));
+//    IFWI_ModelData.push_back(new DataModel(flashDescriptorVolume, "Flash Descriptor", "Region", ""));
 
     FlashRegionBaseArea BiosRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionBios);
     FlashRegionBaseArea MeRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionMe);
@@ -87,7 +88,7 @@ void MainWindow::setBiosFvData()
     }
 
     while (offset < bufferSize) {
-        cout << "offset = " << hex << offset << endl;
+//        cout << "offset = " << hex << offset << endl;
         buffer->setOffset(offset);
         if (bufferSize - offset < 0x40) {
             pushDataToVector(offset, bufferSize - offset);
@@ -119,7 +120,7 @@ void MainWindow::setBiosFvData()
             FvLength = EmptyVolumeLength;
         }
 
-        cout << "offset = 0x" << hex << offset << ", FvLength = 0x" << hex << FvLength << endl;
+//        cout << "offset = 0x" << hex << offset << ", FvLength = 0x" << hex << FvLength << endl;
         pushDataToVector(offset, FvLength);
         offset += FvLength;
     }
@@ -133,12 +134,30 @@ void MainWindow::setFfsData() {
         InputImageModel->setType("");
         InputImageModel->setSubtype("");
     }
+    QElapsedTimer timer;
+    timer.start();
+    vector<class thread*> threadPool;
     for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
-        FirmwareVolume *volume = FirmwareVolumeData.at(idx);
-        volume->decodeFfs();
-        FvModel* fvm = new FvModel(volume);
-        FvModelData.push_back(fvm);
+        FvModelData.push_back(nullptr);
+        threadPool.push_back(nullptr);
     }
+
+    for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
+        auto FvDecoder = [this](int index) {
+            FirmwareVolume *volume = FirmwareVolumeData.at(index);
+            volume->decodeFfs();
+            FvModel* fvm = new FvModel(volume);
+            FvModelData.at(index) = fvm;
+        };
+        class thread *th = new class thread(FvDecoder, idx);
+        threadPool.at(idx) = th;
+    }
+    for (class thread* t:threadPool) {
+        t->join();
+        delete t;
+    }
+    float time = (double)timer.nsecsElapsed()/(double)1000000;
+    qDebug() << "setFfsData time = " << time << "ms";
 }
 
 void MainWindow::pushDataToVector(INT64 offset, INT64 length) {

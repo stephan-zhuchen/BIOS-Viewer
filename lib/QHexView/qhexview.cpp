@@ -106,7 +106,7 @@ void QHexView::loadFile(QString p_file)
 }
 
 void QHexView::loadFromBuffer(QByteArray buffer) {
-    qDebug("QHexView::loadFromBuffer");
+//    qDebug("QHexView::loadFromBuffer");
     m_pdata = buffer;
 
     setCursorPos(0);
@@ -316,11 +316,9 @@ void QHexView::keyPressEvent(QKeyEvent *event)
       parentWidget->close();
   }
   else if( (event ->modifiers()& Qt::ControlModifier) != 0 && event ->key() == Qt::Key_F ) {
-      qDebug() << "Ctrl + F";
       actionSearch();
   }
   else if( (event ->modifiers()& Qt::ControlModifier) != 0 && event ->key() == Qt::Key_G ) {
-      qDebug() << "Ctrl + G";
       actionGoto();
   }
 
@@ -564,7 +562,7 @@ void QHexView::mouseMoveEvent(QMouseEvent *event)
   if (!fileOpened)
       return;
   int actPos = cursorPos(event->pos());
-  qDebug("mouseMoveEvent, actPos = %x", actPos);
+//  qDebug("mouseMoveEvent, actPos = %x", actPos);
 
   if (actPos >= 0 && actPos < m_pdata.size() * 2)
   {
@@ -594,7 +592,7 @@ void QHexView::mousePressEvent(QMouseEvent *event)
       startFromAscii = false;
 
   int cPos = cursorPos(event->pos());
-  qDebug("mousePressEvent, cPos = %x", cPos);
+//  qDebug("mousePressEvent, cPos = %x", cPos);
 
   if ((QApplication::keyboardModifiers() & Qt::ShiftModifier) && event->button() == Qt::LeftButton)
     setSelection(cPos);
@@ -627,8 +625,8 @@ int QHexView::cursorPos(const QPoint &position)
     int x = 0;
     int y = 0;
 
-    qDebug("position.x() = %x", position.x());
-    qDebug("position.y() = %x", position.y());
+//    qDebug("position.x() = %x", position.x());
+//    qDebug("position.y() = %x", position.y());
     if (!startFromAscii) {
         if (position.x() < (int)m_posHex)
             x = 0;
@@ -678,11 +676,11 @@ int QHexView::cursorPos(const QPoint &position)
     if (((m_pdata.size() % m_bytesPerLine) != 0) && (y == lastDataIdx) && (x > lastX_Offset))
         x = lastX_Offset;
     y = (y == 0) ? y : y - 1;
-    qDebug("y = %x", y);
-    qDebug("x = %x", x);
+//    qDebug("y = %x", y);
+//    qDebug("x = %x", x);
     pos = x + y * 2 * m_bytesPerLine + firstLineIdx * m_bytesPerLine * 2;
-    qDebug("firstLineIdx = %x", firstLineIdx);
-    qDebug("cursorPos = %x", pos);
+//    qDebug("firstLineIdx = %x", firstLineIdx);
+//    qDebug("cursorPos = %x", pos);
 
   return pos;
 }
@@ -705,7 +703,7 @@ void QHexView::resetSelection(int pos)
 
 void QHexView::setSelection(int pos)
 {
-  qDebug("setSelection, pos = %x", pos);
+//  qDebug("setSelection, pos = %x", pos);
   if (pos == std::numeric_limits<int>::max())
     pos = 0;
 
@@ -713,13 +711,13 @@ void QHexView::setSelection(int pos)
   {
     m_selectEnd = pos;
     m_selectBegin = m_selectInit;
-    qDebug("%x --- %x", m_selectBegin, m_selectEnd);
+//    qDebug("%x --- %x", m_selectBegin, m_selectEnd);
   }
   else
   {
     m_selectBegin = pos;
     m_selectEnd = m_selectInit;
-    qDebug("%x --- %x", m_selectBegin, m_selectEnd);
+//    qDebug("%x --- %x", m_selectBegin, m_selectEnd);
   }
   if (startFromAscii){
       if (m_selectBegin == m_selectEnd) {
@@ -727,13 +725,13 @@ void QHexView::setSelection(int pos)
       } else {
           m_selectEnd -= 1;
       }
-      qDebug("%x --- %x", m_selectBegin, m_selectEnd);
+//      qDebug("%x --- %x", m_selectBegin, m_selectEnd);
   }
 }
 
 void QHexView::setCursorPos(int position)
 {
-  qDebug("setCursorPos, position = %x", position);
+//  qDebug("setCursorPos, position = %x", position);
   if (position < 0)
     position = 0;
 
@@ -751,7 +749,7 @@ void QHexView::setCursorPos(int position)
     position = maxPos;
 
   m_cursorPos = position;
-  qDebug("setCursorPos, m_cursorPos = %x", m_cursorPos);
+//  qDebug("setCursorPos, m_cursorPos = %x", m_cursorPos);
 }
 
 int QHexView::getCursorPos()

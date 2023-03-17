@@ -4,6 +4,7 @@
 #include <QMimeData>
 #include <QStyleFactory>
 #include <QInputDialog>
+#include <QElapsedTimer>
 #include "mainwindow.h"
 #include "HexViewDialog.h"
 #include "SettingsDialog.h"
@@ -64,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     OpenedWindow -= 1;
-    cout << "OpenedWindow = " << OpenedWindow << endl;
+//    cout << "OpenedWindow = " << OpenedWindow << endl;
     if (guidData != nullptr && OpenedWindow == 0)
         delete guidData;
     delete structureLabel;
@@ -177,7 +178,11 @@ void MainWindow::OpenFile(QString path)
         InputImageSize = buffer->getBufferSize();
         InputImage = buffer->getBytes(InputImageSize);
         InputImageModel = new DataModel(new Volume(InputImage, InputImageSize), "IFWI Overview", "Image", "UEFI");
+        QElapsedTimer timer;
+        timer.start();
         parseBinaryInfo();
+        float time = (double)timer.nsecsElapsed()/(double)1000000;
+        qDebug() << time << "ms";
         delete buffer;
     }
 }
@@ -278,7 +283,6 @@ void MainWindow::showNvHexView() {
     HexViewDialog *hexDialog = new HexViewDialog;
     UINT8 *NvData = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataSize;
-    cout << "NvDataSize = " << hex << NvDataSize << endl;
     QByteArray *hexViewData = new QByteArray((char*)NvData, NvDataSize);
     hexDialog->m_hexview->loadFromBuffer(*hexViewData);
     hexDialog->exec();

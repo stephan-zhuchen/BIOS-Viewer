@@ -1,4 +1,6 @@
 #include <iomanip>
+#include <thread>
+#include <algorithm>
 #include "UefiLib.h"
 #include "../include/Base.h"
 #include "../include/Microcode.h"
@@ -182,7 +184,7 @@ namespace UefiSpace {
                 destination = malloc(decompressedSize);
                 scratch = malloc(ScratchSize);
                 status = UefiDecompress(data + HeaderSize, destination, scratch);
-                cout << "UefiDecompress Status = " << status << ", size = " << decompressedSize << endl;
+//                cout << "UefiDecompress Status = " << status << ", size = " << decompressedSize << endl;
                 if (status != RETURN_SUCCESS) {
                     throw exception();
                 }
@@ -205,7 +207,7 @@ namespace UefiSpace {
                 HeaderSize = sizeof(EFI_GUID_DEFINED_SECTION2);
             }
             if (SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
-                cout << "Rsa2048, SectionSize = " << hex << SectionSize << endl;
+//                cout << "Rsa2048, SectionSize = " << hex << SectionSize << endl;
                 HeaderSize = 0x228;
                 DataOffset = HeaderSize;
                 offset = HeaderSize;
@@ -228,7 +230,7 @@ namespace UefiSpace {
                 destination = malloc(decompressedSize);
                 scratch = malloc(ScratchSize);
                 status = LzmaUefiDecompress(data + HeaderSize, SectionSize - HeaderSize, destination, scratch);
-                cout << "LzmaUefiDecompress Status = " << status << ", size = " << decompressedSize << endl;
+//                cout << "LzmaUefiDecompress Status = " << status << ", size = " << decompressedSize << endl;
                 if (status != RETURN_SUCCESS) {
                     throw exception();
                 }
@@ -590,8 +592,6 @@ namespace UefiSpace {
     }
 
     FirmwareVolume::~FirmwareVolume() {
-        GUID guid = getFvGuid(true);
-        cout << "~FirmwareVolume: " << &guid << endl;
         for (auto file:FfsFiles) {
             delete file;
         }
@@ -620,6 +620,7 @@ namespace UefiSpace {
             NvStorage = new NvStorageVariable(data + offset, offsetFromBegin + offset);
             return;
         }
+        vector<thread*> threadPool;
         while (offset < size) {
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
@@ -627,33 +628,43 @@ namespace UefiSpace {
                 freeSpace = new Volume(data + offset, size - offset);
                 break;
             }
-            FfsFile *Ffs = new FfsFile(data + offset, offsetFromBegin + offset);
-            switch (Ffs->getType()) {
-            case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
-            case EFI_FV_FILETYPE_FREEFORM:
-            case EFI_FV_FILETYPE_SECURITY_CORE:
-            case EFI_FV_FILETYPE_PEI_CORE:
-            case EFI_FV_FILETYPE_DXE_CORE:
-            case EFI_FV_FILETYPE_PEIM:
-            case EFI_FV_FILETYPE_DRIVER:
-            case EFI_FV_FILETYPE_APPLICATION:
-            case EFI_FV_FILETYPE_MM:
-                Ffs->decodeSections();
-                break;
-            default:
-                break;
-            }
 
-            FfsFiles.push_back(Ffs);
-            if (offset + Ffs->FfsSize > offset){
-                offset += Ffs->FfsSize;
+            auto FvDecoder = [this, offset]() {
+                FfsFile *Ffs = new FfsFile(data + offset, offsetFromBegin + offset);
+                switch (Ffs->getType()) {
+                case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
+                case EFI_FV_FILETYPE_FREEFORM:
+                case EFI_FV_FILETYPE_SECURITY_CORE:
+                case EFI_FV_FILETYPE_PEI_CORE:
+                case EFI_FV_FILETYPE_DXE_CORE:
+                case EFI_FV_FILETYPE_PEIM:
+                case EFI_FV_FILETYPE_DRIVER:
+                case EFI_FV_FILETYPE_APPLICATION:
+                case EFI_FV_FILETYPE_MM:
+                    Ffs->decodeSections();
+                    break;
+                default:
+                    break;
+                }
+                FfsFiles.push_back(Ffs);
+            };
+            thread *th = new thread(FvDecoder);
+            threadPool.push_back(th);
+//            th->join();
+
+            if (offset + FfsSize > offset){
+                offset += FfsSize;
                 Buffer::Align(offset, 0, 0x8);
             } else {
                 freeSpace = new Volume(data + offset, size - offset);
                 break;
             }
-
         }
+        for (thread* t:threadPool) {
+            t->join();
+            delete t;
+        }
+        std::sort(FfsFiles.begin(), FfsFiles.end(), [](FfsFile *f1, FfsFile *f2) { return f1->offsetFromBegin < f2->offsetFromBegin; });
     }
 
     INT64 FirmwareVolume::getHeaderSize() const {
@@ -791,7 +802,7 @@ namespace UefiSpace {
                 }
             }
         } catch (...) {
-            cout << "No Fit Table" << endl;
+//            cout << "No Fit Table" << endl;
             FitTable = nullptr;
         }
     }
@@ -977,7 +988,7 @@ namespace UefiSpace {
         }
 
         UINT32 ExtendedTableLength = microcodeHeader.TotalSize - (microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
-        cout << "ExtendedTableLength = " << hex << ExtendedTableLength << endl;
+//        cout << "ExtendedTableLength = " << hex << ExtendedTableLength << endl;
         if (ExtendedTableLength != 0) {
             ExtendedTableHeader = (CPU_MICROCODE_EXTENDED_TABLE_HEADER *)(fv + microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
             if ((ExtendedTableLength > sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) && ((ExtendedTableLength & 0x3) == 0)) {

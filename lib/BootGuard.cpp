@@ -166,8 +166,6 @@ namespace UefiSpace {
         }
         if (isAcm3) {
             AcmInfoTable = *(ACM_INFO_TABLE*)(fv + sizeof(ACM_HEADER) + acmHeader.KeySize * 4 + ACM_PKCS_1_5_RSA_SIGNATURE_SHA384_SIZE + acmHeader.ScratchSize * 4);
-            cout << "Scratch offset = " << hex << sizeof(ACM_HEADER) + acmHeader.KeySize * 4 + ACM_PKCS_1_5_RSA_SIGNATURE_SHA384_SIZE << endl;
-            cout << "AcmInfoTable offset = " << hex << sizeof(ACM_HEADER) + acmHeader.KeySize * 4 + ACM_PKCS_1_5_RSA_SIGNATURE_SHA384_SIZE + acmHeader.ScratchSize * 4 << endl;
         } else {
             AcmInfoTable = *(ACM_INFO_TABLE*)(fv + sizeof(ACM_HEADER) + acmHeader.KeySize * 4 + ACM_PKCS_1_5_RSA_SIGNATURE_SHA256_SIZE + sizeof(UINT32) + acmHeader.ScratchSize * 4);
         }
@@ -452,7 +450,6 @@ namespace UefiSpace {
                 IbbSegmentOffset += sizeof(IBB_SEGMENT);
             }
             BpmElementSize = IbbSegmentOffset;
-            cout << "IBBS_Size = " << hex << BpmElementSize << endl;
         }
     }
 

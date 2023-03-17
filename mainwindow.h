@@ -7,11 +7,12 @@
 #include <QLabel>
 #include <iostream>
 #include <fstream>
+#include <thread>
 #include "lib/BaseLib.h"
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.12"
+#define __BiosViewerVersion__ "0.13"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;

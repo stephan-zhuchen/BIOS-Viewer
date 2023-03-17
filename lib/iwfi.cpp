@@ -85,7 +85,6 @@ EC_RegionClass::EC_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):Vo
         searchValue = this->getUINT32(searchOffset);
         if (searchValue == 0x43534b54) // TKSC
         {
-            std::cout << "EC signature found!" << std::endl;
             Signature = searchValue;
             PlatId = this->getUINT8(searchOffset + 4);
             MajorVer = this->getUINT8(searchOffset + 5);
