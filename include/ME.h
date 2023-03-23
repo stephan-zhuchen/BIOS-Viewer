@@ -86,6 +86,8 @@ typedef struct FPT_HEADER_ENTRY_{
     UINT8  EntryValid;
 } FPT_HEADER_ENTRY;
 
+#define BOOT_PARTITION_NUM  5
+
 // IFWI
 typedef struct IFWI_HEADER_ENTRY_ {
     UINT32 Offset;
@@ -96,7 +98,7 @@ typedef struct IFWI_HEADER_ENTRY_ {
 typedef struct IFWI_16_LAYOUT_HEADER_ {
     UINT8             RomBypassVector[16];
     IFWI_HEADER_ENTRY DataPartition;
-    IFWI_HEADER_ENTRY BootPartition[5];
+    IFWI_HEADER_ENTRY BootPartition[BOOT_PARTITION_NUM];
     UINT64            Checksum;
 } IFWI_16_LAYOUT_HEADER;
 
@@ -108,7 +110,7 @@ typedef struct IFWI_17_LAYOUT_HEADER_ {
     UINT8  Reserved;
     UINT32 Checksum;
     IFWI_HEADER_ENTRY DataPartition;
-    IFWI_HEADER_ENTRY BootPartition[5];
+    IFWI_HEADER_ENTRY BootPartition[BOOT_PARTITION_NUM];
     IFWI_HEADER_ENTRY TempPage;
 } IFWI_17_LAYOUT_HEADER;
 
@@ -116,5 +118,90 @@ typedef struct IFWI_17_LAYOUT_HEADER_ {
 
 // Restore previous packing rules
 #pragma pack()
+
+//*****************************************************************************
+// IFWI
+//*****************************************************************************
+
+// BPDT
+#define BPDT_GREEN_SIGNATURE  0x000055AA
+#define BPDT_YELLOW_SIGNATURE 0x00AA55AA
+
+typedef struct BPDT_HEADER_ {
+    UINT32 Signature;
+    UINT16 NumEntries;
+    UINT8  HeaderVersion;
+    UINT8  RedundancyFlag; // Reserved zero in version 1
+    UINT32 Checksum;
+    UINT32 IfwiVersion;
+    UINT16 FitcMajor;
+    UINT16 FitcMinor;
+    UINT16 FitcHotfix;
+    UINT16 FitcBuild;
+} BPDT_HEADER;
+
+#define BPDT_HEADER_VERSION_1 1
+#define BPDT_HEADER_VERSION_2 2
+
+typedef struct BPDT_ENTRY_ {
+    UINT32 Type : 16;
+    UINT32 SplitSubPartitionFirstPart : 1;
+    UINT32 SplitSubPartitionSecondPart : 1;
+    UINT32 CodeSubPartition : 1;
+    UINT32 UmaCachable : 1;
+    UINT32 Reserved: 12;
+    UINT32 Offset;
+    UINT32 Size;
+} BPDT_ENTRY;
+
+// https://github.com/platomav/MEAnalyzer/blob/master/MEA.py#L10595
+#define BPDT_ENTRY_TYPE_SMIP        0
+#define BPDT_ENTRY_TYPE_RBEP        1
+#define BPDT_ENTRY_TYPE_FTPR        2
+#define BPDT_ENTRY_TYPE_UCOD        3
+#define BPDT_ENTRY_TYPE_IBBP        4
+#define BPDT_ENTRY_TYPE_S_BPDT      5
+#define BPDT_ENTRY_TYPE_OBBP        6
+#define BPDT_ENTRY_TYPE_NFTP        7
+#define BPDT_ENTRY_TYPE_ISHC        8
+#define BPDT_ENTRY_TYPE_DLMP        9
+#define BPDT_ENTRY_TYPE_UEBP        10
+#define BPDT_ENTRY_TYPE_UTOK        11
+#define BPDT_ENTRY_TYPE_UFS_PHY     12
+#define BPDT_ENTRY_TYPE_UFS_GPP_LUN 13
+#define BPDT_ENTRY_TYPE_PMCP        14
+#define BPDT_ENTRY_TYPE_IUNP        15
+#define BPDT_ENTRY_TYPE_NVMC        16
+#define BPDT_ENTRY_TYPE_UEP         17
+#define BPDT_ENTRY_TYPE_WCOD        18
+#define BPDT_ENTRY_TYPE_LOCL        19
+#define BPDT_ENTRY_TYPE_OEMP        20
+#define BPDT_ENTRY_TYPE_FITC        21
+#define BPDT_ENTRY_TYPE_PAVP        22
+#define BPDT_ENTRY_TYPE_IOMP        23
+#define BPDT_ENTRY_TYPE_XPHY        24
+#define BPDT_ENTRY_TYPE_TBTP        25
+#define BPDT_ENTRY_TYPE_PLTS        26
+#define BPDT_ENTRY_TYPE_RES27       27
+#define BPDT_ENTRY_TYPE_RES28       28
+#define BPDT_ENTRY_TYPE_RES29       29
+#define BPDT_ENTRY_TYPE_RES30       30
+#define BPDT_ENTRY_TYPE_DPHY        31
+#define BPDT_ENTRY_TYPE_PCHC        32
+#define BPDT_ENTRY_TYPE_ISIF        33
+#define BPDT_ENTRY_TYPE_ISIC        34
+#define BPDT_ENTRY_TYPE_HBMI        35
+#define BPDT_ENTRY_TYPE_OMSM        36
+#define BPDT_ENTRY_TYPE_GTGP        37
+#define BPDT_ENTRY_TYPE_MDFI        38
+#define BPDT_ENTRY_TYPE_PUNP        39
+#define BPDT_ENTRY_TYPE_PHYP        40
+#define BPDT_ENTRY_TYPE_SAMF        41
+#define BPDT_ENTRY_TYPE_PPHY        42
+#define BPDT_ENTRY_TYPE_GBST        43
+#define BPDT_ENTRY_TYPE_TCCP        44
+#define BPDT_ENTRY_TYPE_PSEP        45
+#define BPDT_ENTRY_TYPE_ESE         46
+#define BPDT_ENTRY_TYPE_ACE         50
 
 #endif // ME_H

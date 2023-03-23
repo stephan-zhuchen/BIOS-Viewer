@@ -650,7 +650,6 @@ namespace UefiSpace {
             };
             thread *th = new thread(FvDecoder);
             threadPool.push_back(th);
-//            th->join();
 
             if (offset + FfsSize > offset){
                 offset += FfsSize;

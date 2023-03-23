@@ -34,7 +34,7 @@ void InfoWindow::setBiosImage(BiosImageVolume *Image) {
     BiosImage = Image;
 }
 
-void InfoWindow::showFitTable() {
+void InfoWindow::showFitTab() {
     QTableWidgetItem    *item;
     FIRMWARE_INTERFACE_TABLE_ENTRY  FitHeader = BiosImage->FitTable->FitHeader;
     UINT64 address = FitHeader.Address;
@@ -83,12 +83,12 @@ void InfoWindow::showFitTable() {
         ui->tableWidget->setItem(index + 1, InfoWindow::Checksum, item);
     }
 
-    showMicrocodeTable();
-    showAcmTable();
-    showBtgTable();
+    showMicrocodeTab();
+    showAcmTab();
+    showBtgTab();
 }
 
-void InfoWindow::showMicrocodeTable() {
+void InfoWindow::showMicrocodeTab() {
     for (auto MicrocodeEntry:BiosImage->FitTable->MicrocodeEntries) {
         QString ItemName = "Microcode";
         if (MicrocodeEntry->isEmpty)
@@ -103,7 +103,7 @@ void InfoWindow::showMicrocodeTable() {
         ui->microcodeListWidget->setCurrentRow(0);
 }
 
-void InfoWindow::showAcmTable() {
+void InfoWindow::showAcmTab() {
     for (auto AcmEntry:BiosImage->FitTable->AcmEntries) {
         QString ItemName;
         if (!AcmEntry->isValid())
@@ -120,7 +120,7 @@ void InfoWindow::showAcmTable() {
         ui->acmListWidget->setCurrentRow(0);
 }
 
-void InfoWindow::showBtgTable() {
+void InfoWindow::showBtgTab() {
     QString ItemName;
     if (BiosImage->FitTable->KmEntry != nullptr) {
         ItemName = "Key Manifest";
@@ -139,6 +139,10 @@ void InfoWindow::showBtgTable() {
 
     if (ui->BtgListWidget->model()->rowCount() != 0)
         ui->BtgListWidget->setCurrentRow(0);
+}
+
+void InfoWindow::showFlashmapTab() {
+
 }
 
 void InfoWindow::resizeEvent(QResizeEvent *event) {

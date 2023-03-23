@@ -290,6 +290,9 @@ QString FfsModel::getFmpDeviceName() {
     case guidData->gFmpDeviceMeFwAdlHCorpGuid.Data1:
         FmpName = "MeFwAdlHCorp";
         break;
+    case guidData->gFmpCapsuleIshPdtFileGuid.Data1:
+        FmpName = "ISH PDT";
+        break;
     default:
         break;
     }

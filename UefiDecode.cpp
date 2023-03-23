@@ -35,7 +35,7 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
 //    cout << "FlashRegion size = " << hex << FlashRegion->getSize() << endl;
     FlashDescriptorClass *flashDescriptorVolume = new FlashDescriptorClass(buffer->getBytes(FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
     IFWI_Sections.push_back(flashDescriptorVolume);
-//    IFWI_ModelData.push_back(new DataModel(flashDescriptorVolume, "Flash Descriptor", "Region", ""));
+    IFWI_ModelData.push_back(new DataModel(flashDescriptorVolume, "Flash Descriptor", "Region", ""));
 
     FlashRegionBaseArea BiosRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionBios);
     FlashRegionBaseArea MeRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionMe);
@@ -61,7 +61,20 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
     buffer->setOffset(MeRegion.getBase());
     ME_RegionClass *MeVolume = new ME_RegionClass(buffer->getBytes(MeRegion.getSize()), MeRegion.getSize(), MeRegion.getBase());
     IFWI_Sections.push_back(MeVolume);
-    IFWI_ModelData.push_back(new DataModel(MeVolume, "ME", "Region", ""));
+    IFWI_ModelData.push_back(new DataModel(MeVolume, "CSE", "Region", ""));
+    if (MeVolume->CSE_Layout->isValid()) {
+        ME_ModelData.push_back(new DataModel(MeVolume->CSE_Layout, "CSE Layout Table", "Partition", ""));
+        for (CSE_PartitionClass* Partition:MeVolume->CSE_Layout->CSE_Partitions) {
+            QString MeModelName = QString::fromStdString(Partition->PartitionName);
+            DataModel *PartitionModel = new DataModel(Partition, MeModelName, "Partition", "");
+            for (CSE_PartitionClass* ChildPartition:Partition->ChildPartitions) {
+                QString ChildPartitionName = QString::fromStdString(ChildPartition->PartitionName);
+                DataModel *ChildPartitionModel = new DataModel(ChildPartition, ChildPartitionName, "Partition", "");
+                PartitionModel->volumeModelData.push_back(ChildPartitionModel);
+            }
+            ME_ModelData.push_back(PartitionModel);
+        }
+    }
 
     if (BiosRegion.getLimit() > bufferSize)
         return false;
@@ -133,6 +146,7 @@ void MainWindow::setFfsData() {
         InputImageModel->setName("Image Overview");
         InputImageModel->setType("");
         InputImageModel->setSubtype("");
+        BiosValidFlag = false;
     }
     QElapsedTimer timer;
     timer.start();

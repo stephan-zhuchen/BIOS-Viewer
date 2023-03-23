@@ -22,10 +22,11 @@ public:
     ~InfoWindow();
 
     void setBiosImage(BiosImageVolume *Image);
-    void showFitTable();
-    void showMicrocodeTable();
-    void showAcmTable();
-    void showBtgTable();
+    void showFitTab();
+    void showMicrocodeTab();
+    void showAcmTab();
+    void showBtgTab();
+    void showFlashmapTab();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

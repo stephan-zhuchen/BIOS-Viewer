@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
       structureLabel(new QLabel("Structure:", this)),
       infoLabel(new QLabel("Infomation:", this)),
       DarkmodeFlag(false),
+      BiosValidFlag(true),
       InputImage(nullptr),
       InputImageModel(nullptr),
       BiosImage(nullptr)
@@ -65,7 +66,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     OpenedWindow -= 1;
-//    cout << "OpenedWindow = " << OpenedWindow << endl;
     if (guidData != nullptr && OpenedWindow == 0)
         delete guidData;
     delete structureLabel;
@@ -76,10 +76,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::cleanup() {
     this->setWindowTitle("BIOS Viewer");
+    BiosValidFlag = true;
     for (auto FvModel:FvModelData) {
         delete FvModel;
     }
     FvModelData.clear();
+
+    for (auto ME_Model:ME_ModelData) {
+        delete ME_Model;
+    }
 
     for (auto IWFI_Model:IFWI_ModelData) {
         delete IWFI_Model;
@@ -195,8 +200,10 @@ void MainWindow::parseBinaryInfo() {
     setBiosFvData();
     setFfsData();
     setTreeData();
-    BiosImage->setBiosID();
-    BiosImage->setInfoStr();
+    if (BiosValidFlag != false) {
+        BiosImage->setBiosID();
+        BiosImage->setInfoStr();
+    }
     InputImageModel->modelData->InfoStr = BiosImage->InfoStr;
     ui->titleInfomation->setText(QString::fromStdString(BiosImage->BiosID));
     if (BiosImage->FitTable == nullptr)
@@ -397,6 +404,18 @@ void MainWindow::setTreeData() {
         QTreeWidgetItem *IfwiItem = new QTreeWidgetItem(IfwiModel->getData());
         IfwiItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)IfwiModel));
         ui->treeWidget->addTopLevelItem(IfwiItem);
+        if (IfwiModel->getName() == "CSE") {
+            for (auto MeModel:ME_ModelData) {
+                 QTreeWidgetItem *MeItem = new QTreeWidgetItem(MeModel->getData());
+                 MeItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)MeModel));
+                 IfwiItem->addChild(MeItem);
+                 for (auto ChildModel:MeModel->volumeModelData) {
+                     QTreeWidgetItem *ChildPartitionItem = new QTreeWidgetItem(ChildModel->getData());
+                     ChildPartitionItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)ChildModel));
+                     MeItem->addChild(ChildPartitionItem);
+                 }
+            }
+        }
         if (IfwiModel->getName() == "BIOS") {
             for (auto FvModel:FvModelData) {
                 addTreeItem(IfwiItem, FvModel, ShowPaddingData);
@@ -541,7 +560,7 @@ void MainWindow::InfoButtonClicked()
     InfoWindow *infoWindow = new InfoWindow;
     if (BiosImage != nullptr) {
         infoWindow->setBiosImage(BiosImage);
-        infoWindow->showFitTable();
+        infoWindow->showFitTab();
     }
 
     infoWindow->show();

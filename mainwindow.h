@@ -12,7 +12,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.13"
+#define __BiosViewerVersion__ "0.14"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -89,6 +89,7 @@ private:
     QLabel         *infoLabel;
     QString        OpenedFileName;
     bool           DarkmodeFlag;
+    bool           BiosValidFlag;
     QSettings      setting{"./Setting.ini", QSettings::IniFormat};
     QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
@@ -101,6 +102,7 @@ private:
     BiosImageVolume              *BiosImage;
     std::vector<Volume*>         IFWI_Sections;
     std::vector<DataModel*>      IFWI_ModelData;
+    std::vector<DataModel*>      ME_ModelData;
     enum treeColNum {Name=0, Type, SubType, Text};
 };
 
