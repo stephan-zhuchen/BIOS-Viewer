@@ -12,7 +12,7 @@
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
 
-#define __BiosViewerVersion__ "0.14"
+#define __BiosViewerVersion__ "0.15"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;

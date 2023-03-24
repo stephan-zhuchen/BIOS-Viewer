@@ -85,6 +85,7 @@ void MainWindow::cleanup() {
     for (auto ME_Model:ME_ModelData) {
         delete ME_Model;
     }
+    ME_ModelData.clear();
 
     for (auto IWFI_Model:IFWI_ModelData) {
         delete IWFI_Model;

@@ -2,7 +2,6 @@
 #include <QElapsedTimer>
 #include "mainwindow.h"
 #include "lib/iwfi.h"
-#include "include/GuidDefinition.h"
 #include "./ui_mainwindow.h"
 
 #define V_FLASH_FDBAR_FLVALSIG  0x0FF0A55A
@@ -170,6 +169,7 @@ void MainWindow::setFfsData() {
         t->join();
         delete t;
     }
+    threadPool.clear();
     float time = (double)timer.nsecsElapsed()/(double)1000000;
     qDebug() << "setFfsData time = " << time << "ms";
 }

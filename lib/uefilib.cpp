@@ -663,6 +663,7 @@ namespace UefiSpace {
             t->join();
             delete t;
         }
+        threadPool.clear();
         std::sort(FfsFiles.begin(), FfsFiles.end(), [](FfsFile *f1, FfsFile *f2) { return f1->offsetFromBegin < f2->offsetFromBegin; });
     }
 
