@@ -15,15 +15,21 @@
 GuidDatabase *guidData = nullptr;
 UINT32       OpenedWindow = 0;
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QString applicationDir, QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       buffer(nullptr),
       popMenu(new QMenu),
       structureLabel(new QLabel("Structure:", this)),
       infoLabel(new QLabel("Infomation:", this)),
+      appDir(applicationDir),
       DarkmodeFlag(false),
       BiosValidFlag(true),
+      infoWindow(nullptr),
+      infoWindowOpened(false),
+      searchDialog(nullptr),
+      searchDialogOpened(false),
+      setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat)),
       InputImage(nullptr),
       InputImageModel(nullptr),
       BiosImage(nullptr)
@@ -59,7 +65,9 @@ MainWindow::MainWindow(QWidget *parent)
     this->connect(ui->treeWidget,SIGNAL(customContextMenuRequested(QPoint)),
                       this,SLOT(showTreeRightMenu(QPoint)));
 
-    guidData = new GuidDatabase;
+    if (guidData == nullptr) {
+        guidData = new GuidDatabase;
+    }
     OpenedWindow += 1;
 }
 
@@ -70,13 +78,14 @@ MainWindow::~MainWindow()
         delete guidData;
     delete structureLabel;
     delete infoLabel;
-    delete ui;
     cleanup();
+    delete ui;
 }
 
 void MainWindow::cleanup() {
     this->setWindowTitle("BIOS Viewer");
     BiosValidFlag = true;
+
     for (auto FvModel:FvModelData) {
         delete FvModel;
     }
@@ -111,6 +120,14 @@ void MainWindow::cleanup() {
         delete BiosImage;
     if (InputImage != nullptr)
         delete InputImage;
+}
+
+void MainWindow::setInfoWindowState(bool opened) {
+    infoWindowOpened = opened;
+}
+
+void MainWindow::setSearchDialogState(bool opened) {
+    searchDialogOpened = opened;
 }
 
 bool MainWindow::isDarkMode() {
@@ -176,6 +193,19 @@ void MainWindow::dropEvent(QDropEvent* event) {
     }
 }
 
+void MainWindow::closeEvent(QCloseEvent *event) {
+    if (infoWindowOpened) {
+        infoWindow->close();
+        delete infoWindow;
+        infoWindow = nullptr;
+    }
+    if (searchDialogOpened) {
+        searchDialog->close();
+        delete searchDialog;
+        searchDialog = nullptr;
+    }
+}
+
 void MainWindow::OpenFile(QString path)
 {
     buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
@@ -194,6 +224,7 @@ void MainWindow::OpenFile(QString path)
 }
 
 void MainWindow::DoubleClickOpenFile(QString path) {
+    OpenedFileName = path;
     OpenFile(path);
 }
 
@@ -530,7 +561,7 @@ void MainWindow::OpenInNewWindowTriggered()
     QFileInfo fileinfo {fileName};
     setting.setValue("LastFilePath", fileinfo.path());
 
-    MainWindow *newWindow = new MainWindow;
+    MainWindow *newWindow = new MainWindow(appDir);
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
     newWindow->setOpenedFileName(fileName);
     newWindow->show();
@@ -558,11 +589,14 @@ void MainWindow::TreeWidgetItemSelectionChanged()
 
 void MainWindow::InfoButtonClicked()
 {
-    InfoWindow *infoWindow = new InfoWindow;
-    if (BiosImage != nullptr) {
-        infoWindow->setBiosImage(BiosImage);
-        infoWindow->showFitTab();
+    if (!infoWindowOpened) {
+        infoWindowOpened = true;
+        infoWindow = new InfoWindow;
+        if (BiosImage != nullptr) {
+            infoWindow->setBiosImage(BiosImage);
+            infoWindow->setParentWidget(this);
+            infoWindow->showFitTab();
+        }
+        infoWindow->show();
     }
-
-    infoWindow->show();
 }

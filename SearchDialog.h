@@ -2,8 +2,8 @@
 #define SEARCHDIALOG_H
 
 #include <QDialog>
+#include <QSettings>
 #include <vector>
-#include "mainwindow.h"
 #include "lib/Model.h"
 
 namespace Ui {
@@ -28,6 +28,9 @@ public:
     void setSearchMode(bool searchBinary);
     static char UpperToLower(char s);
     static char LowerToUpper(char s);
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <QKeyEvent>
 #include <QFile>
+#include "mainwindow.h"
 #include "InfoWindow.h"
 #include "lib/BaseLib.h"
 #include "ui_InfoWindow.h"
@@ -32,6 +33,10 @@ InfoWindow::~InfoWindow()
 
 void InfoWindow::setBiosImage(BiosImageVolume *Image) {
     BiosImage = Image;
+}
+
+void InfoWindow::setParentWidget(QWidget *pWidget) {
+    parentWidget = pWidget;
 }
 
 void InfoWindow::showFitTab() {
@@ -159,6 +164,10 @@ void InfoWindow::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) {
         this->close();
     }
+}
+
+void InfoWindow::closeEvent(QCloseEvent *event) {
+    ((MainWindow*)parentWidget)->setInfoWindowState(false);
 }
 
 void InfoWindow::on_microcodeListWidget_itemSelectionChanged() {

@@ -62,13 +62,16 @@ void MainWindow::ActionExtractBIOSTriggered()
 
 void MainWindow::ActionSearchTriggered()
 {
-    SearchDialog *settingDialog = new SearchDialog;
-    settingDialog->setSearchMode(false);
-    settingDialog->SetModelData(&FvModelData);
-    settingDialog->setParentWidget(this);
-    if (isDarkMode())
-        settingDialog->setWindowIcon(QIcon(":/search_light.svg"));
-    settingDialog->show();
+    if (!searchDialogOpened) {
+        searchDialogOpened = true;
+        searchDialog = new SearchDialog;
+        searchDialog->setSearchMode(false);
+        searchDialog->SetModelData(&FvModelData);
+        searchDialog->setParentWidget(this);
+        if (isDarkMode())
+            searchDialog->setWindowIcon(QIcon(":/search_light.svg"));
+        searchDialog->show();
+    }
 }
 
 void MainWindow::RecursiveSearchOffset(DataModel* model, INT64 offset, vector<INT32> &SearchRows) {

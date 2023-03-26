@@ -5,14 +5,17 @@
 #include <QTreeWidgetItem>
 #include <QSettings>
 #include <QLabel>
+#include <QCloseEvent>
 #include <iostream>
 #include <fstream>
 #include <thread>
 #include "lib/BaseLib.h"
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
+#include "InfoWindow.h"
+#include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "0.15"
+#define __BiosViewerVersion__ "0.16"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -26,7 +29,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QString applicationDir, QWidget *parent = nullptr);
     ~MainWindow();
 
     void cleanup();
@@ -38,6 +41,8 @@ public:
     bool detectIfwi(INT64 &BiosOffset);
     void setBiosFvData();
     void setFfsData();
+    void setInfoWindowState(bool opened);
+    void setSearchDialogState(bool opened);
     void pushDataToVector(INT64 offset, INT64 length);
     void HighlightTreeItem(vector<INT32> rows);
     bool isDarkMode();
@@ -53,8 +58,9 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
-    void dragEnterEvent(QDragEnterEvent* event) override;
-    void dropEvent(QDropEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void showTreeRightMenu(QPoint);
@@ -88,9 +94,14 @@ private:
     QLabel         *structureLabel;
     QLabel         *infoLabel;
     QString        OpenedFileName;
+    QString        appDir;
     bool           DarkmodeFlag;
     bool           BiosValidFlag;
-    QSettings      setting{"./Setting.ini", QSettings::IniFormat};
+    InfoWindow     *infoWindow;
+    bool           infoWindowOpened;
+    SearchDialog   *searchDialog;
+    bool           searchDialogOpened;
+    QSettings      setting;
     QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
     UINT8                        *InputImage;

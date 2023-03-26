@@ -620,7 +620,7 @@ namespace UefiSpace {
             NvStorage = new NvStorageVariable(data + offset, offsetFromBegin + offset);
             return;
         }
-        vector<thread*> threadPool;
+//        vector<thread*> threadPool;
         while (offset < size) {
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
@@ -629,7 +629,7 @@ namespace UefiSpace {
                 break;
             }
 
-            auto FvDecoder = [this, offset]() {
+//            auto FvDecoder = [this, offset]() {
                 FfsFile *Ffs = new FfsFile(data + offset, offsetFromBegin + offset);
                 switch (Ffs->getType()) {
                 case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
@@ -647,9 +647,9 @@ namespace UefiSpace {
                     break;
                 }
                 FfsFiles.push_back(Ffs);
-            };
-            thread *th = new thread(FvDecoder);
-            threadPool.push_back(th);
+//            };
+//            thread *th = new thread(FvDecoder);
+//            threadPool.push_back(th);
 
             if (offset + FfsSize > offset){
                 offset += FfsSize;
@@ -659,12 +659,12 @@ namespace UefiSpace {
                 break;
             }
         }
-        for (thread* t:threadPool) {
-            t->join();
-            delete t;
-        }
-        threadPool.clear();
-        std::sort(FfsFiles.begin(), FfsFiles.end(), [](FfsFile *f1, FfsFile *f2) { return f1->offsetFromBegin < f2->offsetFromBegin; });
+//        for (auto t:threadPool) {
+//            t->join();
+//            delete t;
+//        }
+//        threadPool.clear();
+//        std::sort(FfsFiles.begin(), FfsFiles.end(), [](FfsFile *f1, FfsFile *f2) { return f1->offsetFromBegin < f2->offsetFromBegin; });
     }
 
     INT64 FirmwareVolume::getHeaderSize() const {

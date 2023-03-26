@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <QRegularExpression>
+#include "mainwindow.h"
 #include "SearchDialog.h"
 #include "lib/QHexView/qhexview.h"
 #include "ui_SearchDialog.h"
@@ -201,6 +202,10 @@ char SearchDialog::LowerToUpper(char s) {
     if(s >= 97 && s <= 122)
         s = s - 32;
     return s;
+}
+
+void SearchDialog::closeEvent(QCloseEvent *event) {
+    ((MainWindow*)parentWidget)->setSearchDialogState(false);
 }
 
 void SearchDialog::on_AsciiCheckbox_stateChanged(int state)

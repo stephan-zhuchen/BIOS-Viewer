@@ -22,6 +22,7 @@ public:
     ~InfoWindow();
 
     void setBiosImage(BiosImageVolume *Image);
+    void setParentWidget(QWidget *pWidget);
     void showFitTab();
     void showMicrocodeTab();
     void showAcmTab();
@@ -31,6 +32,7 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void on_microcodeListWidget_itemSelectionChanged();
@@ -38,8 +40,9 @@ private slots:
     void on_BtgListWidget_itemSelectionChanged();
 
 private:
-    Ui::InfoWindow *ui;
-    BiosImageVolume *BiosImage;
+    Ui::InfoWindow   *ui;
+    BiosImageVolume  *BiosImage;
+    QWidget          *parentWidget;
     QSettings setting{"./Setting.ini", QSettings::IniFormat};
 
     enum tableColNum {Address=0, Size, Version, C_V, Checksum, Type};
