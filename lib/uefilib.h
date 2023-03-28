@@ -222,6 +222,7 @@ namespace UefiSpace {
 
         void setBiosID();
         void setDebugFlag();
+        string getFlashmap();
         void setInfoStr() override;
     };
 

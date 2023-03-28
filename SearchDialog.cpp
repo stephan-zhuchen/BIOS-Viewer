@@ -204,6 +204,12 @@ char SearchDialog::LowerToUpper(char s) {
     return s;
 }
 
+void SearchDialog::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Escape) {
+        this->close();
+    }
+}
+
 void SearchDialog::closeEvent(QCloseEvent *event) {
     ((MainWindow*)parentWidget)->setSearchDialogState(false);
 }

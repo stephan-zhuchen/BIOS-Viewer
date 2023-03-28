@@ -61,6 +61,7 @@ MainWindow::MainWindow(QString applicationDir, QWidget *parent)
     connect(ui->actionReplace_BIOS, SIGNAL(triggered()), this, SLOT(ActionReplaceBIOSTriggered()));
 
     initSettings();
+    ui->infoButton->setVisible(false);
 
     this->connect(ui->treeWidget,SIGNAL(customContextMenuRequested(QPoint)),
                       this,SLOT(showTreeRightMenu(QPoint)));
@@ -197,12 +198,10 @@ void MainWindow::dropEvent(QDropEvent* event) {
 void MainWindow::closeEvent(QCloseEvent *event) {
     if (infoWindowOpened) {
         infoWindow->close();
-        delete infoWindow;
         infoWindow = nullptr;
     }
     if (searchDialogOpened) {
         searchDialog->close();
-        delete searchDialog;
         searchDialog = nullptr;
     }
 }
@@ -529,7 +528,7 @@ void MainWindow::ActionExitTriggered()
 
 void MainWindow::ActionSettingsTriggered()
 {
-    SettingsDialog *settingDialog = new SettingsDialog;
+    SettingsDialog *settingDialog = new SettingsDialog(appDir);
     if (isDarkMode()) {
         settingDialog->setWindowIcon(QIcon(":/gear_light.svg"));
     }

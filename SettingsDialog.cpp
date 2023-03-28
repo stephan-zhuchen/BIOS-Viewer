@@ -4,9 +4,10 @@
 #include <QPainterPath>
 #include <iostream>
 
-SettingsDialog::SettingsDialog(QWidget *parent) :
+SettingsDialog::SettingsDialog(QString applicationDir, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SettingsDialog)
+    ui(new Ui::SettingsDialog),
+    setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat))
 {
     ui->setupUi(this);
     ui->tabWidget->setCurrentIndex(lastTabIndex);
@@ -62,22 +63,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
         ui->showPaddingBox->setCheckState(Qt::Checked);
     else if (setting.value("ShowPaddingItem") == "false")
         ui->showPaddingBox->setCheckState(Qt::Unchecked);
-
-//    if (setting.value("Theme").toString() == "Dark") {
-//        QFile styleFile(":/qdarkstyle/dark/darkstyle.qss");
-//        if(styleFile.open(QIODevice::ReadOnly)) {
-//            QString setStyleSheet(styleFile.readAll());
-//            this->setStyleSheet(setStyleSheet);
-//            styleFile.close();
-//        }
-//    } else if (setting.value("Theme").toString() == "Light") {
-//        QFile styleFile(":/qdarkstyle/light/lightstyle.qss");
-//        if(styleFile.open(QIODevice::ReadOnly)) {
-//            QString setStyleSheet(styleFile.readAll());
-//            this->setStyleSheet(setStyleSheet);
-//            styleFile.close();
-//        }
-//    }
 }
 
 SettingsDialog::~SettingsDialog()

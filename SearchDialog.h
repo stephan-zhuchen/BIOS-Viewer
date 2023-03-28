@@ -2,7 +2,6 @@
 #define SEARCHDIALOG_H
 
 #include <QDialog>
-#include <QSettings>
 #include <vector>
 #include "lib/Model.h"
 
@@ -30,6 +29,7 @@ public:
     static char LowerToUpper(char s);
 
 protected:
+    void keyPressEvent(QKeyEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
@@ -50,7 +50,6 @@ private:
     int              PreviousOffset;
     QByteArray       *BinaryBuffer;
     static QString   SearchedString;
-    QSettings        setting{"./Setting.ini", QSettings::IniFormat};
     bool             isBinary{false};
     bool             SearchAscii{false};
     bool             SearchText{false};

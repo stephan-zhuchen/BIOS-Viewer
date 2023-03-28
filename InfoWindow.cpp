@@ -14,6 +14,7 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui(new Ui::InfoWindow)
 {
     ui->setupUi(this);
+    setAttribute(Qt::WA_DeleteOnClose);
     ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
     ui->tableWidget->horizontalHeader()->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
@@ -171,6 +172,7 @@ void InfoWindow::keyPressEvent(QKeyEvent *event) {
 }
 
 void InfoWindow::closeEvent(QCloseEvent *event) {
+    cout << "SearchDialog close" << endl;
     ((MainWindow*)parentWidget)->setInfoWindowState(false);
 }
 

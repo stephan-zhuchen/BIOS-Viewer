@@ -104,6 +104,7 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
     if (BiosRegion.limit != 0) {
         buffer->setOffset(BiosRegion.getBase());
         BiosImage = new BiosImageVolume(buffer->getBytes(BiosRegion.getSize()), BiosRegion.getSize(), BiosRegion.getBase());
+        flashmap += QString::fromStdString(BiosImage->getFlashmap());
     //    IFWI_Sections.push_back(BiosImage);
         IFWI_ModelData.push_back(new DataModel(BiosImage, "BIOS", "Region", ""));
         BiosOffset = BiosRegion.getBase();

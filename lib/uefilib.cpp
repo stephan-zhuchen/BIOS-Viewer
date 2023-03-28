@@ -825,6 +825,17 @@ namespace UefiSpace {
         }
     }
 
+    string BiosImageVolume::getFlashmap() {
+        INT64 width = 8;
+        stringstream ss;
+        ss.setf(ios::right);
+        ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
+        ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin + size - 1 << "      ";
+        ss << setw(width) << setfill('0') << hex << uppercase << size << "      ";
+        ss << "BIOS Region\n";
+        return ss.str();
+    }
+
     void BiosImageVolume::setBiosID() {
         for (size_t idx = FvData->size(); idx > 0; --idx) {
             FirmwareVolume *volume = FvData->at(idx - 1);

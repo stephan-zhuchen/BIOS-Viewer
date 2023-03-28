@@ -39,7 +39,6 @@ FlashDescriptorClass::FlashDescriptorClass(UINT8* file, INT64 RegionLength, INT6
 
     if (FlashComponentSection.FlashParameters.ReadClockFrequency == FLASH_FREQUENCY_20MHZ) {
         descriptorVersion = 1;
-        std::cout << "descriptorVersion = 1\n";
     }
 
     UINT32 temp;

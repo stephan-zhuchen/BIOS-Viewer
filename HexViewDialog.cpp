@@ -15,11 +15,6 @@ HexViewDialog::HexViewDialog(QWidget *parent) :
     m_hexview->setParentWidget(this);
     m_layout->addWidget( m_hexview );
     this->setLayout ( m_layout );
-
-//    QColor color = QColor(Qt::white);
-//    QPalette p = this->palette();
-//    p.setColor(QPalette::Window, color);
-//    this->setPalette(p);
 }
 
 HexViewDialog::~HexViewDialog()
