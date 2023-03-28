@@ -85,6 +85,7 @@ MainWindow::~MainWindow()
 void MainWindow::cleanup() {
     this->setWindowTitle("BIOS Viewer");
     BiosValidFlag = true;
+    flashmap = "";
 
     for (auto FvModel:FvModelData) {
         delete FvModel;
@@ -596,6 +597,7 @@ void MainWindow::InfoButtonClicked()
             infoWindow->setBiosImage(BiosImage);
             infoWindow->setParentWidget(this);
             infoWindow->showFitTab();
+            infoWindow->showFlashmapTab(flashmap);
         }
         infoWindow->show();
     }

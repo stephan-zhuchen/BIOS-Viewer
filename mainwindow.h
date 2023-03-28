@@ -12,10 +12,11 @@
 #include "lib/BaseLib.h"
 #include "lib/UefiLib.h"
 #include "lib/Model.h"
+#include "lib/iwfi.h"
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "0.16"
+#define __BiosViewerVersion__ "0.17"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -95,6 +96,7 @@ private:
     QLabel         *infoLabel;
     QString        OpenedFileName;
     QString        appDir;
+    QString        flashmap;
     bool           DarkmodeFlag;
     bool           BiosValidFlag;
     InfoWindow     *infoWindow;
@@ -111,7 +113,7 @@ private:
     std::vector<FirmwareVolume*> FirmwareVolumeData{};
     std::vector<FvModel*>        FvModelData{};
     BiosImageVolume              *BiosImage;
-    std::vector<Volume*>         IFWI_Sections;
+    std::vector<IfwiVolume*>     IFWI_Sections;
     std::vector<DataModel*>      IFWI_ModelData;
     std::vector<DataModel*>      ME_ModelData;
     enum treeColNum {Name=0, Type, SubType, Text};

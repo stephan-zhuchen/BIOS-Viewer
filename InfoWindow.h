@@ -5,7 +5,7 @@
 #include <QSettings>
 #include <QTableWidgetItem>
 #include <QListWidgetItem>
-#include "lib/UefiLib.h"
+#include "lib/iwfi.h"
 
 using UefiSpace::BiosImageVolume;
 
@@ -27,7 +27,7 @@ public:
     void showMicrocodeTab();
     void showAcmTab();
     void showBtgTab();
-    void showFlashmapTab();
+    void showFlashmapTab(const QString &SectionFlashMap);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

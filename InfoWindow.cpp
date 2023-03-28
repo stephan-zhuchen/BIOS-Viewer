@@ -24,6 +24,7 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui->MicrocodeTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AcmTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->BtgTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->flashmapText->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 }
 
 InfoWindow::~InfoWindow()
@@ -146,8 +147,11 @@ void InfoWindow::showBtgTab() {
         ui->BtgListWidget->setCurrentRow(0);
 }
 
-void InfoWindow::showFlashmapTab() {
-
+void InfoWindow::showFlashmapTab(const QString &SectionFlashMap) {
+    QString header = "Start (hex)   End (hex)     Length (hex)  Area Name\n"
+                     "-----------   ---------     ------------  ---------\n\n";
+    header += SectionFlashMap;
+    ui->flashmapText->setText(header);
 }
 
 void InfoWindow::resizeEvent(QResizeEvent *event) {

@@ -203,5 +203,6 @@ typedef struct BPDT_ENTRY_ {
 #define BPDT_ENTRY_TYPE_PSEP        45
 #define BPDT_ENTRY_TYPE_ESE         46
 #define BPDT_ENTRY_TYPE_ACE         50
+#define BPDT_ENTRY_TYPE_SPHY        54
 
 #endif // ME_H

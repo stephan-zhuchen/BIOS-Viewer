@@ -10,7 +10,7 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
     using namespace std;
 
     INT64 bufferSize = InputImageSize;
-    if (bufferSize < 0x1000) {
+    if (bufferSize < 0x4000) {
         return false;
     }
     buffer->setOffset(0x10);
@@ -33,6 +33,7 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
     buffer->setOffset(0);
 //    cout << "FlashRegion size = " << hex << FlashRegion->getSize() << endl;
     FlashDescriptorClass *flashDescriptorVolume = new FlashDescriptorClass(buffer->getBytes(FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
+    flashmap += QString::fromStdString(flashDescriptorVolume->getFlashmap());
     IFWI_Sections.push_back(flashDescriptorVolume);
     IFWI_ModelData.push_back(new DataModel(flashDescriptorVolume, "Flash Descriptor", "Region", ""));
 
@@ -40,48 +41,73 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
     FlashRegionBaseArea MeRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionMe);
     FlashRegionBaseArea GbERegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionGbE);
     FlashRegionBaseArea EcRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionEC);
+    FlashRegionBaseArea OsseRegion = flashDescriptorVolume->RegionList.at(FLASH_REGION_TYPE::FlashRegionIE);
 
     if (EcRegion.getLimit() > bufferSize)
         return false;
-    buffer->setOffset(EcRegion.getBase());
-    EC_RegionClass *EcVolume = new EC_RegionClass(buffer->getBytes(EcRegion.getSize()), EcRegion.getSize(), EcRegion.getBase());
-    IFWI_Sections.push_back(EcVolume);
-    IFWI_ModelData.push_back(new DataModel(EcVolume, "EC", "Region", ""));
+    if (EcRegion.limit != 0) {
+        buffer->setOffset(EcRegion.getBase());
+        EC_RegionClass *EcVolume = new EC_RegionClass(buffer->getBytes(EcRegion.getSize()), EcRegion.getSize(), EcRegion.getBase());
+        flashmap += QString::fromStdString(EcVolume->getFlashmap());
+        IFWI_Sections.push_back(EcVolume);
+        IFWI_ModelData.push_back(new DataModel(EcVolume, "EC", "Region", ""));
+    }
 
     if (GbERegion.getLimit() > bufferSize)
         return false;
-    buffer->setOffset(GbERegion.getBase());
-    GbE_RegionClass *GbEVolume = new GbE_RegionClass(buffer->getBytes(GbERegion.getSize()), GbERegion.getSize(), GbERegion.getBase());
-    IFWI_Sections.push_back(GbEVolume);
-    IFWI_ModelData.push_back(new DataModel(GbEVolume, "GbE", "Region", ""));
+    if (GbERegion.limit != 0) {
+        buffer->setOffset(GbERegion.getBase());
+        GbE_RegionClass *GbEVolume = new GbE_RegionClass(buffer->getBytes(GbERegion.getSize()), GbERegion.getSize(), GbERegion.getBase());
+        flashmap += QString::fromStdString(GbEVolume->getFlashmap());
+        IFWI_Sections.push_back(GbEVolume);
+        IFWI_ModelData.push_back(new DataModel(GbEVolume, "GbE", "Region", ""));
+    }
 
     if (MeRegion.getLimit() > bufferSize)
         return false;
-    buffer->setOffset(MeRegion.getBase());
-    ME_RegionClass *MeVolume = new ME_RegionClass(buffer->getBytes(MeRegion.getSize()), MeRegion.getSize(), MeRegion.getBase());
-    IFWI_Sections.push_back(MeVolume);
-    IFWI_ModelData.push_back(new DataModel(MeVolume, "CSE", "Region", ""));
-    if (MeVolume->CSE_Layout->isValid()) {
-        ME_ModelData.push_back(new DataModel(MeVolume->CSE_Layout, "CSE Layout Table", "Partition", ""));
-        for (CSE_PartitionClass* Partition:MeVolume->CSE_Layout->CSE_Partitions) {
-            QString MeModelName = QString::fromStdString(Partition->PartitionName);
-            DataModel *PartitionModel = new DataModel(Partition, MeModelName, "Partition", "");
-            for (CSE_PartitionClass* ChildPartition:Partition->ChildPartitions) {
-                QString ChildPartitionName = QString::fromStdString(ChildPartition->PartitionName);
-                DataModel *ChildPartitionModel = new DataModel(ChildPartition, ChildPartitionName, "Partition", "");
-                PartitionModel->volumeModelData.push_back(ChildPartitionModel);
+    if (MeRegion.limit != 0) {
+        buffer->setOffset(MeRegion.getBase());
+        ME_RegionClass *MeVolume = new ME_RegionClass(buffer->getBytes(MeRegion.getSize()), MeRegion.getSize(), MeRegion.getBase());
+        flashmap += QString::fromStdString(MeVolume->getFlashmap());
+        flashmap += QString::fromStdString(MeVolume->CSE_Layout->getFlashmap());
+        IFWI_Sections.push_back(MeVolume);
+        IFWI_ModelData.push_back(new DataModel(MeVolume, "CSE", "Region", ""));
+        if (MeVolume->CSE_Layout->isValid()) {
+            ME_ModelData.push_back(new DataModel(MeVolume->CSE_Layout, "CSE Layout Table", "Partition", ""));
+            for (CSE_PartitionClass* Partition:MeVolume->CSE_Layout->CSE_Partitions) {
+                flashmap += QString::fromStdString(Partition->getFlashmap());
+                QString MeModelName = QString::fromStdString(Partition->PartitionName);
+                DataModel *PartitionModel = new DataModel(Partition, MeModelName, "Partition", "");
+                for (CSE_PartitionClass* ChildPartition:Partition->ChildPartitions) {
+                    flashmap += QString::fromStdString(ChildPartition->getFlashmap());
+                    QString ChildPartitionName = QString::fromStdString(ChildPartition->PartitionName);
+                    DataModel *ChildPartitionModel = new DataModel(ChildPartition, ChildPartitionName, "Partition", "");
+                    PartitionModel->volumeModelData.push_back(ChildPartitionModel);
+                }
+                ME_ModelData.push_back(PartitionModel);
             }
-            ME_ModelData.push_back(PartitionModel);
         }
+    }
+
+    if (OsseRegion.getLimit() > bufferSize)
+        return false;
+    if (OsseRegion.limit != 0) {
+        buffer->setOffset(OsseRegion.getBase());
+        OSSE_RegionClass *OsseVolume = new OSSE_RegionClass(buffer->getBytes(OsseRegion.getSize()), OsseRegion.getSize(), OsseRegion.getBase());
+        flashmap += QString::fromStdString(OsseVolume->getFlashmap());
+        IFWI_Sections.push_back(OsseVolume);
+        IFWI_ModelData.push_back(new DataModel(OsseVolume, "OSSE", "Region", ""));
     }
 
     if (BiosRegion.getLimit() > bufferSize)
         return false;
-    buffer->setOffset(BiosRegion.getBase());
-    BiosImage = new BiosImageVolume(buffer->getBytes(BiosRegion.getSize()), BiosRegion.getSize(), BiosRegion.getBase());
-//    IFWI_Sections.push_back(BiosImage);
-    IFWI_ModelData.push_back(new DataModel(BiosImage, "BIOS", "Region", ""));
-    BiosOffset = BiosRegion.getBase();
+    if (BiosRegion.limit != 0) {
+        buffer->setOffset(BiosRegion.getBase());
+        BiosImage = new BiosImageVolume(buffer->getBytes(BiosRegion.getSize()), BiosRegion.getSize(), BiosRegion.getBase());
+    //    IFWI_Sections.push_back(BiosImage);
+        IFWI_ModelData.push_back(new DataModel(BiosImage, "BIOS", "Region", ""));
+        BiosOffset = BiosRegion.getBase();
+    }
     return true;
 }
 

@@ -49,6 +49,7 @@ set(INCLUDE_FILE
         include/BootGuard.h
         include/ME.h
         include/GbE.h
+        include/descriptor.h
 )
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
