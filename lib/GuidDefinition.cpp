@@ -1,5 +1,5 @@
 #include <initializer_list>
-#include "../include/GuidDefinition.h"
+#include "GuidDefinition.h"
 #include "BaseLib.h"
 
 bool EFI_GUID::operator==(EFI_GUID guid) {

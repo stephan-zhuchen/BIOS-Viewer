@@ -16,7 +16,7 @@
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "0.18"
+#define __BiosViewerVersion__ "0.19"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -70,6 +70,12 @@ private slots:
     void showNvHexView();
     void extractVolume();
     void extractBodyVolume();
+    void getMD5();
+    void getSHA1();
+    void getSHA224();
+    void getSHA256();
+    void getSHA384();
+    void getSHA512();
 
     void OpenFileTriggered();
     void ActionExitTriggered();

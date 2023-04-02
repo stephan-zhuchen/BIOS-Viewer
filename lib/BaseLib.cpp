@@ -374,12 +374,12 @@ namespace BaseLibrarySpace {
         }
 
         GuidData.Data1 = strtoul(tempStr[0].data(), &endptr, 16);
-        GuidData.Data2 = strtoul(tempStr[1].data(), &endptr, 16);
-        GuidData.Data3 = strtoul(tempStr[2].data(), &endptr, 16);
-        GuidData.Data4[0] = strtoul(tempStr[3].substr(0, 2).data(), &endptr, 16);
-        GuidData.Data4[1] = strtoul(tempStr[3].substr(2, 2).data(), &endptr, 16);
+        GuidData.Data2 = (UINT16)strtoul(tempStr[1].data(), &endptr, 16);
+        GuidData.Data3 = (UINT16)strtoul(tempStr[2].data(), &endptr, 16);
+        GuidData.Data4[0] = (UINT8)strtoul(tempStr[3].substr(0, 2).data(), &endptr, 16);
+        GuidData.Data4[1] = (UINT8)strtoul(tempStr[3].substr(2, 2).data(), &endptr, 16);
         for (int i = 0; i < 6; ++i) {
-            GuidData.Data4[i + 2] = strtoul(tempStr[4].substr(i * 2, 2).data(), &endptr, 16);
+            GuidData.Data4[i + 2] = (UINT8)strtoul(tempStr[4].substr(i * 2, 2).data(), &endptr, 16);
         }
     }
 

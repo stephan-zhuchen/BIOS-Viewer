@@ -13,6 +13,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
+include_directories(include lib/Openssl/include)
+set(LINK_DIR  lib/Openssl/lib)
+link_directories(${LINK_DIR})
+
 set(LZMA_SDK
         lib/LzmaDecompress/Sdk/C/7zTypes.h
         lib/LzmaDecompress/Sdk/C/7zVersion.h
@@ -54,7 +58,7 @@ set(INCLUDE_FILE
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
 
-link_directories(D:/Code/BiosViewer/lib/LzmaDecompress/Sdk/C)
+#link_directories(D:/Code/BiosViewer/lib/LzmaDecompress/Sdk/C)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -110,7 +114,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto)
 
 set_target_properties(BiosViewer PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

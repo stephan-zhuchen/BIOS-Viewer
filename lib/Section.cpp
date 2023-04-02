@@ -1,6 +1,6 @@
 #include "UefiLib.h"
-#include "../include/PiDependency.h"
-#include "../include/GuidDefinition.h"
+#include "PiDependency.h"
+#include "GuidDefinition.h"
 
 namespace UefiSpace {
     PeCoff::PeCoff(UINT8* file, INT64 length, INT64 offset):Volume(file, length, offset) {

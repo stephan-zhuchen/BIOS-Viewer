@@ -1,5 +1,5 @@
 #include "Model.h"
-#include "../include/GuidDefinition.h"
+#include "GuidDefinition.h"
 
 DataModel::DataModel(Volume* model, QString nm, QString typ, QString sbtyp, QString txt):
     name(nm),

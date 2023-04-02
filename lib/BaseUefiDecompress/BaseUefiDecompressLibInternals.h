@@ -9,8 +9,8 @@
 #ifndef __BASE_UEFI_DECOMPRESS_LIB_INTERNALS_H__
 #define __BASE_UEFI_DECOMPRESS_LIB_INTERNALS_H__
 
-#include "../../include/Base.h"
-#include "../../include/BaseMemoryLib.h"
+#include "Base.h"
+#include "BaseMemoryLib.h"
 #include "UefiDecompressLib.h"
 //
 // Decompression algorithm begins here

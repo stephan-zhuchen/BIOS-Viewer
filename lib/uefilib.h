@@ -3,13 +3,13 @@
 #include <QString>
 #include <stack>
 #include "BaseLib.h"
-#include "../include/SymbolDefinition.h"
-#include "../include/PiFirmwareFile.h"
-#include "../include/PiFirmwareVolume.h"
-#include "../include/PeImage.h"
-#include "../include/Microcode.h"
-#include "../include/VariableFormat.h"
-#include "../include/BootGuard.h"
+#include "SymbolDefinition.h"
+#include "PiFirmwareFile.h"
+#include "PiFirmwareVolume.h"
+#include "PeImage.h"
+#include "Microcode.h"
+#include "VariableFormat.h"
+#include "BootGuard.h"
 
 namespace UefiSpace {
     using namespace BaseLibrarySpace;
@@ -173,7 +173,7 @@ namespace UefiSpace {
         ~FirmwareVolume();
 
         GUID getFvGuid(bool returnExt=true) const;
-        void decodeFfs();
+        void decodeFfs(bool multithread=false);
         INT64 getHeaderSize() const override;
         void setInfoStr() override;
 

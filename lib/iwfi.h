@@ -1,10 +1,10 @@
 #pragma once
 #include <vector>
 #include "UefiLib.h"
-#include "../include/GbE.h"
-#include "../include/ME.h"
-#include "../include/descriptor.h"
-#include "../include/SymbolDefinition.h"
+#include "GbE.h"
+#include "ME.h"
+#include "descriptor.h"
+#include "SymbolDefinition.h"
 
 using UefiSpace::Volume;
 

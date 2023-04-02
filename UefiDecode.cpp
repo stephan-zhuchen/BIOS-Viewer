@@ -176,27 +176,24 @@ void MainWindow::setFfsData() {
     }
     QElapsedTimer timer;
     timer.start();
-    vector<class thread*> threadPool;
+    vector<class thread> threadPool;
     for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
         FvModelData.push_back(nullptr);
-        threadPool.push_back(nullptr);
     }
 
     for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
         auto FvDecoder = [this](int index) {
             FirmwareVolume *volume = FirmwareVolumeData.at(index);
-            volume->decodeFfs();
+            volume->decodeFfs(true);
             FvModel* fvm = new FvModel(volume);
             FvModelData.at(index) = fvm;
         };
-        class thread *th = new class thread(FvDecoder, idx);
-        threadPool.at(idx) = th;
+//        FvDecoder(idx);
+        threadPool.emplace_back(FvDecoder, idx);
     }
-    for (class thread* t:threadPool) {
-        t->join();
-        delete t;
+    for (class thread& t:threadPool) {
+        t.join();
     }
-    threadPool.clear();
     float time = (double)timer.nsecsElapsed()/(double)1000000;
     qDebug() << "setFfsData time = " << time << "ms";
 }

@@ -11,7 +11,7 @@
 #include <utility>
 #include <exception>
 #include <fstream>
-#include "../include/SymbolDefinition.h"
+#include "SymbolDefinition.h"
 
 namespace BaseLibrarySpace {
 

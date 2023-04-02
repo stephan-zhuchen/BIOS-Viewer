@@ -2,9 +2,9 @@
 #include <thread>
 #include <algorithm>
 #include "UefiLib.h"
-#include "../include/Base.h"
-#include "../include/Microcode.h"
-#include "../include/GuidDefinition.h"
+#include "Base.h"
+#include "Microcode.h"
+#include "GuidDefinition.h"
 #include "LzmaDecompress/LzmaDecompressLibInternal.h"
 #include "BaseUefiDecompress/UefiDecompressLib.h"
 
@@ -612,7 +612,7 @@ namespace UefiSpace {
         return GUID(FirmwareVolumeHeader.FileSystemGuid);
     }
 
-    void FirmwareVolume::decodeFfs() {
+    void FirmwareVolume::decodeFfs(bool multithread) {
         INT64 offset = FirmwareVolumeSize;
         if (isEmpty || isCorrupted || !checksumValid)
             return;
@@ -620,7 +620,7 @@ namespace UefiSpace {
             NvStorage = new NvStorageVariable(data + offset, offsetFromBegin + offset);
             return;
         }
-//        vector<thread*> threadPool;
+        vector<thread> threadPool;
         while (offset < size) {
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
@@ -629,8 +629,8 @@ namespace UefiSpace {
                 break;
             }
 
-//            auto FvDecoder = [this, offset]() {
-                FfsFile *Ffs = new FfsFile(data + offset, offsetFromBegin + offset);
+            auto FvDecoder = [this](INT64 off) {
+                FfsFile *Ffs = new FfsFile(data + off, offsetFromBegin + off);
                 switch (Ffs->getType()) {
                 case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
                 case EFI_FV_FILETYPE_FREEFORM:
@@ -647,9 +647,13 @@ namespace UefiSpace {
                     break;
                 }
                 FfsFiles.push_back(Ffs);
-//            };
-//            thread *th = new thread(FvDecoder);
-//            threadPool.push_back(th);
+            };
+
+            if (multithread) {
+                threadPool.emplace_back(FvDecoder, offset);
+            } else {
+                FvDecoder(offset);
+            }
 
             if (offset + FfsSize > offset){
                 offset += FfsSize;
@@ -659,12 +663,13 @@ namespace UefiSpace {
                 break;
             }
         }
-//        for (auto t:threadPool) {
-//            t->join();
-//            delete t;
-//        }
-//        threadPool.clear();
-//        std::sort(FfsFiles.begin(), FfsFiles.end(), [](FfsFile *f1, FfsFile *f2) { return f1->offsetFromBegin < f2->offsetFromBegin; });
+        if (multithread) {
+            for (thread &t:threadPool) {
+                t.join();
+            }
+//            threadPool.clear();
+            std::sort(FfsFiles.begin(), FfsFiles.end(), [](FfsFile *f1, FfsFile *f2) { return f1->offsetFromBegin < f2->offsetFromBegin; });
+        }
     }
 
     INT64 FirmwareVolume::getHeaderSize() const {

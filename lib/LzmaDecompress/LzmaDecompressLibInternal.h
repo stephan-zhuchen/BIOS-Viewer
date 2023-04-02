@@ -9,7 +9,7 @@
 #ifndef __LZMADECOMPRESSLIB_INTERNAL_H__
 #define __LZMADECOMPRESSLIB_INTERNAL_H__
 
-#include "../../include/Base.h"
+#include "Base.h"
 
 /**
   Given a Lzma compressed source buffer, this function retrieves the size of

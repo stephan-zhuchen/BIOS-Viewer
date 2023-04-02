@@ -11,6 +11,8 @@
 #include "InfoWindow.h"
 #include "./ui_mainwindow.h"
 #include "include/GuidDefinition.h"
+#include "openssl/sha.h"
+#include "openssl/md5.h"
 
 GuidDatabase *guidData = nullptr;
 UINT32       OpenedWindow = 0;
@@ -288,6 +290,27 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
         this->connect(showNvHex,SIGNAL(triggered(bool)),this,SLOT(showNvHexView()));
     }
 
+    QMenu* DigestMenu = new QMenu("Digest");
+    QAction* md5_Menu = new QAction("MD5");
+    DigestMenu->addAction(md5_Menu);
+    this->connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
+    QAction* sha1_Menu = new QAction("SHA1");
+    DigestMenu->addAction(sha1_Menu);
+    this->connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
+    QAction* sha224_Menu = new QAction("SHA224");
+    DigestMenu->addAction(sha224_Menu);
+    this->connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
+    QAction* sha256_Menu = new QAction("SHA256");
+    DigestMenu->addAction(sha256_Menu);
+    this->connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
+    QAction* sha384_Menu = new QAction("SHA384");
+    DigestMenu->addAction(sha384_Menu);
+    this->connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
+    QAction* sha512_Menu = new QAction("SHA512");
+    DigestMenu->addAction(sha512_Menu);
+    this->connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
+
+    menu->addMenu(DigestMenu);
     menu->move(ui->treeWidget->cursor().pos());
     menu->show();
 }
@@ -356,6 +379,78 @@ void MainWindow::extractBodyVolume() {
 
     INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
     Buffer::saveBinary(extractVolumeName.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
+}
+
+void MainWindow::getMD5() {
+    UINT8 *itemData = RightClickeditemModel->modelData->data;
+    UINT8 md[MD5_DIGEST_LENGTH];
+    MD5(itemData, RightClickeditemModel->modelData->size, md);
+
+    QString hash;
+    for (INT32 i = 0; i < MD5_DIGEST_LENGTH; i++) {
+        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    }
+    QMessageBox::about(this, tr("MD5"), hash);
+}
+
+void MainWindow::getSHA1() {
+    UINT8 *itemData = RightClickeditemModel->modelData->data;
+    UINT8 md[SHA_DIGEST_LENGTH];
+    SHA1(itemData, RightClickeditemModel->modelData->size, md);
+
+    QString hash;
+    for (INT32 i = 0; i < SHA_DIGEST_LENGTH; i++) {
+        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    }
+    QMessageBox::about(this, tr("SHA1"), hash);
+}
+
+void MainWindow::getSHA224() {
+    UINT8 *itemData = RightClickeditemModel->modelData->data;
+    UINT8 md[SHA224_DIGEST_LENGTH];
+    SHA224(itemData, RightClickeditemModel->modelData->size, md);
+
+    QString hash;
+    for (INT32 i = 0; i < SHA224_DIGEST_LENGTH; i++) {
+        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    }
+    QMessageBox::about(this, tr("SHA224"), hash);
+}
+
+void MainWindow::getSHA256() {
+    UINT8 *itemData = RightClickeditemModel->modelData->data;
+    UINT8 md[SHA256_DIGEST_LENGTH];
+    SHA256(itemData, RightClickeditemModel->modelData->size, md);
+
+    QString hash;
+    for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    }
+    QMessageBox::about(this, tr("SHA256"), hash);
+}
+
+void MainWindow::getSHA384() {
+    UINT8 *itemData = RightClickeditemModel->modelData->data;
+    UINT8 md[SHA384_DIGEST_LENGTH];
+    SHA384(itemData, RightClickeditemModel->modelData->size, md);
+
+    QString hash;
+    for (INT32 i = 0; i < SHA384_DIGEST_LENGTH; i++) {
+        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    }
+    QMessageBox::about(this, tr("SHA384"), hash);
+}
+
+void MainWindow::getSHA512() {
+    UINT8 *itemData = RightClickeditemModel->modelData->data;
+    UINT8 md[SHA512_DIGEST_LENGTH];
+    SHA512(itemData, RightClickeditemModel->modelData->size, md);
+
+    QString hash;
+    for (INT32 i = 0; i < SHA512_DIGEST_LENGTH; i++) {
+        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    }
+    QMessageBox::about(this, tr("SHA512"), hash);
 }
 
 void MainWindow::initSettings() {
