@@ -14,7 +14,7 @@ class SettingsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SettingsDialog(QString applicationDir, QWidget *parent = nullptr);
+    explicit SettingsDialog(QString &applicationDir, QWidget *parent = nullptr);
     ~SettingsDialog();
 
     void setParentWidget(MainWindow *pWidget);

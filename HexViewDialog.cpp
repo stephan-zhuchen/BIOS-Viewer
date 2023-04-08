@@ -2,9 +2,9 @@
 #include "HexViewDialog.h"
 #include "ui_HexViewDialog.h"
 
-HexViewDialog::HexViewDialog(QWidget *parent) :
+HexViewDialog::HexViewDialog(QString &applicationDir, QWidget *parent) :
     QDialog(parent),
-    m_hexview ( new QHexView ),
+    m_hexview ( new QHexView(applicationDir) ),
     ui(new Ui::HexViewDialog),
     m_layout ( new QVBoxLayout )
 {

@@ -14,7 +14,7 @@ class HexViewDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit HexViewDialog(QWidget *parent = nullptr);
+    explicit HexViewDialog(QString &applicationDir, QWidget *parent = nullptr);
     ~HexViewDialog();
 
     void keyPressEvent(QKeyEvent *event) override;

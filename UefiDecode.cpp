@@ -71,9 +71,10 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
         flashmap += QString::fromStdString(MeVolume->getFlashmap());
         flashmap += QString::fromStdString(MeVolume->CSE_Layout->getFlashmap());
         IFWI_Sections.push_back(MeVolume);
-        IFWI_ModelData.push_back(new DataModel(MeVolume, "CSE", "Region", ""));
+        DataModel *MeModel = new DataModel(MeVolume, "CSE", "Region", "");
+        IFWI_ModelData.push_back(MeModel);
         if (MeVolume->CSE_Layout->isValid()) {
-            ME_ModelData.push_back(new DataModel(MeVolume->CSE_Layout, "CSE Layout Table", "Partition", ""));
+            MeModel->volumeModelData.push_back(new DataModel(MeVolume->CSE_Layout, "CSE Layout Table", "Partition", ""));
             for (CSE_PartitionClass* Partition:MeVolume->CSE_Layout->CSE_Partitions) {
                 flashmap += QString::fromStdString(Partition->getFlashmap());
                 QString MeModelName = QString::fromStdString(Partition->PartitionName);
@@ -84,7 +85,7 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
                     DataModel *ChildPartitionModel = new DataModel(ChildPartition, ChildPartitionName, "Partition", "");
                     PartitionModel->volumeModelData.push_back(ChildPartitionModel);
                 }
-                ME_ModelData.push_back(PartitionModel);
+                MeModel->volumeModelData.push_back(PartitionModel);
             }
         }
     }
@@ -118,7 +119,7 @@ void MainWindow::setBiosFvData()
 
     INT64 offset = 0;
     INT64 bufferSize = buffer->getBufferSize();
-    bool IFWI_exist = detectIfwi(offset);
+    IFWI_exist = detectIfwi(offset);
 
     if (!IFWI_exist) {
         buffer->setOffset(offset);
@@ -178,7 +179,11 @@ void MainWindow::setFfsData() {
     timer.start();
     vector<class thread> threadPool;
     for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
-        FvModelData.push_back(nullptr);
+        if (IFWI_exist) {
+            IFWI_ModelData.at(IFWI_ModelData.size() - 1)->volumeModelData.push_back(nullptr);
+        } else {
+            IFWI_ModelData.push_back(nullptr);
+        }
     }
 
     for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
@@ -186,7 +191,11 @@ void MainWindow::setFfsData() {
             FirmwareVolume *volume = FirmwareVolumeData.at(index);
             volume->decodeFfs(true);
             FvModel* fvm = new FvModel(volume);
-            FvModelData.at(index) = fvm;
+            if (IFWI_exist) {
+                IFWI_ModelData.at(IFWI_ModelData.size() - 1)->volumeModelData.at(index) = fvm;
+            } else {
+                IFWI_ModelData.at(index) = fvm;
+            }
         };
 //        FvDecoder(idx);
         threadPool.emplace_back(FvDecoder, idx);

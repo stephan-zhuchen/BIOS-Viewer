@@ -20,7 +20,7 @@ QOffsetView::QOffsetView(QWidget *parent):QWidget(parent) {
 //    QLabel *label = new QLabel(this);
 }
 
-QHexView::QHexView(QWidget *parent)
+QHexView::QHexView(QString &applicationDir, QWidget *parent)
     : QAbstractScrollArea(parent),
       m_pdata(nullptr),
       m_posAddr(0),
@@ -41,7 +41,9 @@ QHexView::QHexView(QWidget *parent)
       selectionColor(COLOR_SELECTION),
       wordColor(Qt::black),
       wordColorOpposite(Qt::white),
-      cursorColor(COLOR_CURSOR)
+      cursorColor(COLOR_CURSOR),
+      appDir(applicationDir),
+      setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat))
 {
   // default configs
   if (setting.contains("HexFont") && setting.contains("HexFontSize")){
@@ -838,7 +840,7 @@ void QHexView::actionGoto() {
 }
 
 void QHexView::actionSearch() {
-    SearchDialog *settingDialog = new SearchDialog;
+    SearchDialog *settingDialog = new SearchDialog(appDir);
     settingDialog->setSearchMode(true);
 //    settingDialog->SetModelData(&FvModelData);
     settingDialog->SetBinaryData(&m_pdata);

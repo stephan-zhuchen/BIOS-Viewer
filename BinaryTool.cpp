@@ -64,9 +64,9 @@ void MainWindow::ActionSearchTriggered()
 {
     if (!searchDialogOpened) {
         searchDialogOpened = true;
-        searchDialog = new SearchDialog;
+        searchDialog = new SearchDialog(appDir);
         searchDialog->setSearchMode(false);
-        searchDialog->SetModelData(&FvModelData);
+        searchDialog->SetModelData(&IFWI_ModelData);
         searchDialog->setParentWidget(this);
         if (isDarkMode())
             searchDialog->setWindowIcon(QIcon(":/search_light.svg"));
@@ -97,8 +97,8 @@ void MainWindow::ActionGotoTriggered()
     if ( done && offset[0] == '0' && offset[1] == 'x' ) {
         INT64 SearchOffset = offset.toInt ( nullptr, 16 );
         vector<INT32> SearchRows;
-        for (UINT64 row = 0; row < FvModelData.size(); ++row) {
-            DataModel *model = FvModelData.at(row);
+        for (UINT64 row = 0; row < IFWI_ModelData.size(); ++row) {
+            DataModel *model = IFWI_ModelData.at(row);
             if (SearchOffset >= model->modelData->offsetFromBegin && SearchOffset < model->modelData->offsetFromBegin + model->modelData->size) {
                 SearchRows.push_back(row + 1);
                 RecursiveSearchOffset(model, SearchOffset, SearchRows);

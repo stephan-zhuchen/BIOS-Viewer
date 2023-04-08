@@ -27,6 +27,7 @@ MainWindow::MainWindow(QString applicationDir, QWidget *parent)
       appDir(applicationDir),
       DarkmodeFlag(false),
       BiosValidFlag(true),
+      IFWI_exist(false),
       infoWindow(nullptr),
       infoWindowOpened(false),
       searchDialog(nullptr),
@@ -89,16 +90,6 @@ void MainWindow::cleanup() {
     this->setWindowTitle("BIOS Viewer");
     BiosValidFlag = true;
     flashmap = "";
-
-    for (auto FvModel:FvModelData) {
-        delete FvModel;
-    }
-    FvModelData.clear();
-
-    for (auto ME_Model:ME_ModelData) {
-        delete ME_Model;
-    }
-    ME_ModelData.clear();
 
     for (auto IWFI_Model:IFWI_ModelData) {
         delete IWFI_Model;
@@ -316,7 +307,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
 }
 
 void MainWindow::showHexView() {
-    HexViewDialog *hexDialog = new HexViewDialog;
+    HexViewDialog *hexDialog = new HexViewDialog(appDir);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -328,7 +319,7 @@ void MainWindow::showHexView() {
 }
 
 void MainWindow::showBodyHexView() {
-    HexViewDialog *hexDialog = new HexViewDialog;
+    HexViewDialog *hexDialog = new HexViewDialog(appDir);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -342,7 +333,7 @@ void MainWindow::showBodyHexView() {
 }
 
 void MainWindow::showNvHexView() {
-    HexViewDialog *hexDialog = new HexViewDialog;
+    HexViewDialog *hexDialog = new HexViewDialog(appDir);
     UINT8 *NvData = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataSize;
     QByteArray *hexViewData = new QByteArray((char*)NvData, NvDataSize);
@@ -511,6 +502,18 @@ void MainWindow::initSettings() {
     }
 }
 
+void MainWindow::erasePadding(vector<DataModel*> &items) {
+    for (int i = 0; i < items.size(); ++i) {
+        DataModel *FvModel = items.at(i);
+        if (FvModel->getSubType() == "Empty" || FvModel->getSubType() == "Pad") {
+            delete FvModel;
+            items.erase(items.begin() + i);
+            continue;
+        }
+        erasePadding(FvModel->volumeModelData);
+    }
+}
+
 void MainWindow::setTreeData() {
     QTreeWidgetItem *ImageOverviewItem = new QTreeWidgetItem(InputImageModel->getData());
     ImageOverviewItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)InputImageModel));
@@ -519,61 +522,29 @@ void MainWindow::setTreeData() {
     ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
     ui->treeWidget->addTopLevelItem(ImageOverviewItem);
 
-    bool ShowPaddingData;
-    if (setting.value("ShowPaddingItem") == "false")
-        ShowPaddingData = false;
-    else
-        ShowPaddingData = true;
-
-    for (auto IfwiModel:IFWI_ModelData) {
-        if (!ShowPaddingData && IfwiModel->getSubType() == "Empty")
-            continue;
-        QTreeWidgetItem *IfwiItem = new QTreeWidgetItem(IfwiModel->getData());
-        IfwiItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)IfwiModel));
-        ui->treeWidget->addTopLevelItem(IfwiItem);
-        if (IfwiModel->getName() == "CSE") {
-            for (auto MeModel:ME_ModelData) {
-                 QTreeWidgetItem *MeItem = new QTreeWidgetItem(MeModel->getData());
-                 MeItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)MeModel));
-                 IfwiItem->addChild(MeItem);
-                 for (auto ChildModel:MeModel->volumeModelData) {
-                     QTreeWidgetItem *ChildPartitionItem = new QTreeWidgetItem(ChildModel->getData());
-                     ChildPartitionItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)ChildModel));
-                     MeItem->addChild(ChildPartitionItem);
-                 }
-            }
-        }
-        if (IfwiModel->getName() == "BIOS") {
-            for (auto FvModel:FvModelData) {
-                addTreeItem(IfwiItem, FvModel, ShowPaddingData);
-            }
-            ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-            return;
-        }
+    if (setting.value("ShowPaddingItem") == "false") {
+        erasePadding(IFWI_ModelData);
     }
 
-    for (auto FvModel:FvModelData) {
-        if (!ShowPaddingData && FvModel->getSubType() == "Empty")
-            continue;
+    for (int i = 0; i < IFWI_ModelData.size(); ++i) {
+        DataModel *FvModel = IFWI_ModelData.at(i);
         QTreeWidgetItem *fvItem = new QTreeWidgetItem(FvModel->getData());
         fvItem->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue((DataModel*)FvModel));
         ui->treeWidget->addTopLevelItem(fvItem);
 
         for (auto FfsModel:FvModel->volumeModelData) {
-            addTreeItem(fvItem, FfsModel, ShowPaddingData);
+            addTreeItem(fvItem, FfsModel);
         }
     }
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-void MainWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData, bool ShowPadding) {
-    if (!ShowPadding && (modelData->getSubType() == "Pad" || modelData->getSubType() == "Empty"))
-        return;
+void MainWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData) {
     QTreeWidgetItem *Item = new QTreeWidgetItem(modelData->getData());
     Item->setData(MainWindow::Name, Qt::UserRole, QVariant::fromValue(modelData));
     parentItem->addChild(Item);
     for (auto volumeModel:modelData->volumeModelData) {
-        addTreeItem(Item, volumeModel, ShowPadding);
+        addTreeItem(Item, volumeModel);
     }
 }
 

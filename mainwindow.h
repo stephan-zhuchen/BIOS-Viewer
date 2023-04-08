@@ -16,7 +16,7 @@
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "0.19"
+#define __BiosViewerVersion__ "0.20"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -50,8 +50,9 @@ public:
 
     // Tree Widget
     void initSettings();
+    void erasePadding(vector<DataModel*> &items);
     void setTreeData();
-    void addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData, bool ShowPadding);
+    void addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData);
     void setPanelInfo(INT64 offset, INT64 size);
     void setOpenedFileName(QString name);
     void RecursiveSearchOffset(DataModel* model, INT64 offset, vector<INT32> &SearchRows);
@@ -105,6 +106,7 @@ private:
     QString        flashmap;
     bool           DarkmodeFlag;
     bool           BiosValidFlag;
+    bool           IFWI_exist;
     InfoWindow     *infoWindow;
     bool           infoWindowOpened;
     SearchDialog   *searchDialog;
@@ -117,11 +119,9 @@ private:
     DataModel                    *InputImageModel;
     std::vector<UINT8*>          FirmwareVolumeBuffer{};
     std::vector<FirmwareVolume*> FirmwareVolumeData{};
-    std::vector<FvModel*>        FvModelData{};
     BiosImageVolume              *BiosImage;
     std::vector<IfwiVolume*>     IFWI_Sections;
     std::vector<DataModel*>      IFWI_ModelData;
-    std::vector<DataModel*>      ME_ModelData;
     enum treeColNum {Name=0, Type, SubType, Text};
 };
 

@@ -1,13 +1,15 @@
 #include <QDebug>
 #include <QRegularExpression>
+#include <QMessageBox>
 #include "mainwindow.h"
 #include "SearchDialog.h"
 #include "lib/QHexView/qhexview.h"
 #include "ui_SearchDialog.h"
 
-SearchDialog::SearchDialog(QWidget *parent) :
+SearchDialog::SearchDialog(QString &applicationDir, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SearchDialog),
+    setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat)),
     SearchModelData(nullptr),
     PreviousOffset(-1)
 {
@@ -21,20 +23,27 @@ SearchDialog::SearchDialog(QWidget *parent) :
 
 SearchDialog::~SearchDialog()
 {
-    SearchFound = false;
-    PreviousItem.clear();
+    PreviousItems.clear();
     delete ui;
 }
 
 QString SearchDialog::SearchedString = "";
+QString SearchDialog::pSearchedString = "";
 
 void SearchDialog::setParentWidget(QWidget *pWidget) {
     parentWidget = pWidget;
 }
 
-void SearchDialog::SetModelData(vector<FvModel*> *fvModel) {
-    if (!isBinary)
+void SearchDialog::SetModelData(vector<DataModel*> *fvModel) {
+    if (!isBinary) {
         SearchModelData = fvModel;
+        vector<int> pos;
+        setTextList(SearchModelData, pos);
+
+        for (int var = 0; var < SearchPositionList.size(); ++var) {
+            SearchPositionList.at(var).at(0) += 1;
+        }
+    }
 }
 
 void SearchDialog::SetBinaryData(QByteArray *BinaryData) {
@@ -43,69 +52,43 @@ void SearchDialog::SetBinaryData(QByteArray *BinaryData) {
     }
 }
 
-bool SearchDialog::RecursiveSearch(DataModel *model, const QString &str, int depth, bool sameParent) {
-    int row = 0;
-    bool isSameParent = false;
-    if (sameParent && PreviousItem.size() == depth + 1) {
-        row = PreviousItem.at(depth) + 1;
-    } else if (sameParent && PreviousItem.size() > depth + 1) {
-        isSameParent = true;
-        row = PreviousItem.at(depth);
+void SearchDialog::setTextList(vector<DataModel*> *itemsModel, vector<int> position) {
+    for (int i = 0; i < itemsModel->size(); ++i) {
+        vector<int> parentPos = position;
+        DataModel* item = itemsModel->at(i);
+        parentPos.push_back(i);
+        QString name = item->getName().toLower();
+        SearchTextList.push_back(name);
+        SearchPositionList.push_back(parentPos);
+        setTextList(&(item->volumeModelData), parentPos);
     }
-
-    if (model->getName().contains(str, Qt::CaseInsensitive) || model->getText().contains(str, Qt::CaseInsensitive)) {
-        qDebug() << str << " Found!";
-        SearchFound = true;
-        return SearchFound;
-    }
-    while (row < model->volumeModelData.size() && SearchFound == false) {
-        for (int var = 0; var < depth; ++var) {
-            cout << "-";
-        }
-        cout << "Row: " << row << ", num= " << model->volumeModelData.size() << endl;
-
-        DataModel *childModel = model->volumeModelData.at(row);
-        if (PreviousItem.size() > depth && row != PreviousItem.at(depth))
-            isSameParent = false;
-        if (RecursiveSearch(childModel, str, depth + 1, isSameParent) == true) {
-            SearchRows.emplace(SearchRows.begin(), row);
-            break;
-        }
-        row += 1;
-    }
-    return SearchFound;
 }
 
 void SearchDialog::SearchFileText() {
-    SearchRows.clear();
+    int PreviousRow = -1;
+    if (SearchedString != pSearchedString) {
+        PreviousItems.clear();
+    }
+    if (PreviousItems.size() != 0) {
+        PreviousRow = PreviousItems.at(PreviousItems.size() - 1);
+    }
     if (SearchModelData->size() == 0 || SearchedString == "")
         return;
-    int row = 0;
-    bool isSameParent = false;
-    if (PreviousItem.size() != 0) {
-        isSameParent = true;
-        row = PreviousItem.at(0) - 1;
-    }
 
-    while (row < SearchModelData->size()) {
-        cout << "Row: " << row << endl;
-        DataModel *model = SearchModelData->at(row);
-        if (PreviousItem.size() != 0 && row != PreviousItem.at(0) - 1)
-            isSameParent = false;
-
-        if (RecursiveSearch(model, SearchedString, 1, isSameParent) == true) {
-            SearchRows.emplace(SearchRows.begin(), row + 1);
+    int row = PreviousRow + 1;
+    while (row < SearchTextList.size()) {
+        if (SearchTextList.at(row).contains(SearchedString, Qt::CaseInsensitive)) {
             break;
         }
         row += 1;
     }
-    for (auto row:SearchRows) {
-        cout << row << " ";
+
+    if (row == SearchTextList.size()) {
+        QMessageBox::about(this, tr("Search"), "Not Found!");
+        return;
     }
-    cout << endl;
-    PreviousItem = SearchRows;
-    SearchFound = false;
-    ((MainWindow*)parentWidget)->HighlightTreeItem(SearchRows);
+    PreviousItems.push_back(row);
+    ((MainWindow*)parentWidget)->HighlightTreeItem(SearchPositionList.at(row));
 }
 
 bool SearchDialog::SearchBinary(int *begin, int *length) {
@@ -117,11 +100,10 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
     QStringList littleEndianNum;
     QVector<char> searchNum;
     for (int idx = 0; idx < number.size(); idx += 2) {
-        littleEndianNum.insert(0, number.mid(idx, 2));
+        littleEndianNum.append(number.mid(idx, 2));
     }
     for (int var = 0; var < littleEndianNum.size(); ++var) {
         searchNum.push_back(littleEndianNum.at(var).toInt(nullptr, 16));
-        cout << hex << littleEndianNum.at(var).toInt(nullptr, 16) << endl;
     }
 
     // Search little endian binary
@@ -134,7 +116,6 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
         }
         for (int strIdx = 1; strIdx < searchNum.size(); ++strIdx) {
             if (BinaryBuffer->at(matchIdx + strIdx) != searchNum.at(strIdx)) {
-                cout << (UINT16)BinaryBuffer->at(matchIdx + strIdx) << endl;
                 Found = false;
                 break;
             }
@@ -143,7 +124,6 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
             *begin = matchIdx;
             *length = searchNum.size();
             PreviousOffset = matchIdx;
-            cout << "matchIdx = " << hex << matchIdx << endl;
             return true;
         }
     }
@@ -168,8 +148,6 @@ bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
                 }
             }
             if (Found || wFound) {
-                cout << "Found" << endl;
-                cout << "matchIdx = " << hex << idx << endl;
                 *begin = idx;
                 *length = SearchedString.size();
                 PreviousOffset = idx;
@@ -261,6 +239,7 @@ void SearchDialog::on_NextButton_clicked()
     int searchLength = 0;
     if (!isBinary && SearchText) {
         SearchFileText();
+        pSearchedString = SearchedString;
     } else if (isBinary && SearchAscii) {
         if (SearchBinaryAscii(&beginOffset, &searchLength)) {
             HistoryResult.push_back(QPair<int, int>(beginOffset, searchLength));
@@ -285,6 +264,15 @@ void SearchDialog::on_PreviousButton_clicked()
         int searchLength = lastResult.second;
         PreviousOffset = beginOffset;
         ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
+    } else {
+        if (SearchedString != pSearchedString) {
+            PreviousItems.clear();
+        }
+        if (PreviousItems.size() > 1) {
+            int PreviousRow = PreviousItems.at(PreviousItems.size() - 2);
+            PreviousItems.pop_back();
+            ((MainWindow*)parentWidget)->HighlightTreeItem(SearchPositionList.at(PreviousRow));
+        }
     }
 }
 

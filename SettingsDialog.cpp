@@ -4,7 +4,7 @@
 #include <QPainterPath>
 #include <iostream>
 
-SettingsDialog::SettingsDialog(QString applicationDir, QWidget *parent) :
+SettingsDialog::SettingsDialog(QString &applicationDir, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog),
     setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat))
