@@ -807,7 +807,7 @@ namespace UefiSpace {
                 }
             }
         } catch (...) {
-//            cout << "No Fit Table" << endl;
+            cout << "No Fit Table" << endl;
             FitTable = nullptr;
         }
     }
@@ -830,14 +830,70 @@ namespace UefiSpace {
         }
     }
 
+    void BiosImageVolume::decodeBiosRegion() {
+        cout << "decodeBiosRegion" << endl;
+        INT32 NV_index;
+        for (NV_index = 0; NV_index < FvData->size(); ++NV_index) {
+            FirmwareVolume *fv = FvData->at(NV_index);
+            if (fv->getFvGuid().GuidData == guidData->gEfiSystemNvDataFvGuid) {
+                NV_Region.first = fv->offsetFromBegin;
+                NV_Region.second = fv->size;
+                break;
+            }
+        }
+        OBB_Region.first = NV_Region.first + NV_Region.second;
+
+        INT32 OBB_index;
+        INT64 OBB_size = 0;
+        for (OBB_index = NV_index + 1; OBB_index < FvData->size(); ++OBB_index) {
+            FirmwareVolume *fv = FvData->at(OBB_index);
+//            cout << guidData->getNameFromGuid(fv->getFvGuid().GuidData) << endl;
+            OBB_size += fv->getSize();
+            UINT8 digest[SHA256_DIGEST_LENGTH];
+            SHA256(this->data + OBB_Region.first - this->offsetFromBegin, OBB_size, digest);
+            if (memcmp(ObbDigest, digest, SHA256_DIGEST_LENGTH) == 0) {
+                OBB_Region.second = OBB_size;
+                break;
+            }
+        }
+
+        if (isResiliency) {
+            IBBR_Region.first = OBB_Region.first + OBB_Region.second;
+            IBBR_Region.second = 0x400000;
+            IBB_Region.first = IBBR_Region.first + IBBR_Region.second;
+            IBB_Region.second = 0x400000;
+        } else {
+            IBB_Region.first = OBB_Region.first + OBB_Region.second;
+            IBB_Region.second = this->size - NV_Region.second - OBB_Region.second;
+        }
+    }
+
     string BiosImageVolume::getFlashmap() {
+        decodeBiosRegion();
         INT64 width = 8;
         stringstream ss;
         ss.setf(ios::right);
         ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
         ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin + size - 1 << "      ";
-        ss << setw(width) << setfill('0') << hex << uppercase << size << "      ";
-        ss << "BIOS Region\n";
+        ss << setw(width) << setfill('0') << hex << uppercase << size << "      BIOS Region\n";
+
+        ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.first << "      ";
+        ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.first + NV_Region.second - 1 << "      ";
+        ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.second << "         NV Region\n";
+
+        ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.first << "      ";
+        ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.first + OBB_Region.second - 1 << "      ";
+        ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.second << "         OBB Region\n";
+
+        if (isResiliency) {
+            ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.first << "      ";
+            ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.first + IBBR_Region.second - 1 << "      ";
+            ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.second << "         IBBR Region\n";
+        }
+
+        ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.first << "      ";
+        ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.first + IBB_Region.second - 1 << "      ";
+        ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.second << "         IBB Region\n";
         return ss.str();
     }
 
@@ -853,6 +909,29 @@ namespace UefiSpace {
                     BiosID = Buffer::wstringToString(biosIdStr);
                     foundBiosID = true;
                     setDebugFlag();
+                    return;
+                }
+            }
+        }
+    }
+
+    void BiosImageVolume::getObbDigest() {
+        for (size_t idx = FvData->size(); idx > 0; --idx) {
+            FirmwareVolume *volume = FvData->at(idx - 1);
+            for(auto file:volume->FfsFiles) {
+                if (file->FfsHeader.Name == GuidDatabase::gObbSha256HashFileGuid) {
+                    if (file->Sections.size() == 0)
+                        return;
+                    CommonSection *sec = file->Sections.at(0);
+                    if (sec->getSize() != sizeof(EFI_COMMON_SECTION_HEADER) + SHA256_DIGEST_LENGTH)
+                        return;
+                    UINT8 *digest = (UINT8*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER));
+                    memcpy(ObbDigest, digest, SHA256_DIGEST_LENGTH);
+//                    QString hash;
+//                    for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+//                        hash += QString("%1").arg(ObbDigest[i], 2, 16, QLatin1Char('0'));
+//                    }
+//                    qDebug() << hash;
                     return;
                 }
             }

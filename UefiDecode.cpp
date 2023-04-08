@@ -3,6 +3,7 @@
 #include "mainwindow.h"
 #include "lib/iwfi.h"
 #include "./ui_mainwindow.h"
+#include "openssl/sha.h"
 
 #define V_FLASH_FDBAR_FLVALSIG  0x0FF0A55A
 
@@ -105,8 +106,6 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
     if (BiosRegion.limit != 0) {
         buffer->setOffset(BiosRegion.getBase());
         BiosImage = new BiosImageVolume(buffer->getBytes(BiosRegion.getSize()), BiosRegion.getSize(), BiosRegion.getBase());
-        flashmap += QString::fromStdString(BiosImage->getFlashmap());
-    //    IFWI_Sections.push_back(BiosImage);
         IFWI_ModelData.push_back(new DataModel(BiosImage, "BIOS", "Region", ""));
         BiosOffset = BiosRegion.getBase();
     }

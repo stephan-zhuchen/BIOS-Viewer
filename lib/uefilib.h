@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QDebug>
 #include <stack>
 #include "BaseLib.h"
 #include "SymbolDefinition.h"
@@ -10,6 +11,7 @@
 #include "Microcode.h"
 #include "VariableFormat.h"
 #include "BootGuard.h"
+#include "openssl/sha.h"
 
 namespace UefiSpace {
     using namespace BaseLibrarySpace;
@@ -210,8 +212,13 @@ namespace UefiSpace {
     class BiosImageVolume: public Volume {
     public:
         string BiosID;
-        FitTableClass *FitTable{nullptr};
+        FitTableClass           *FitTable{nullptr};
         vector<FirmwareVolume*> *FvData;
+        pair<INT64, INT64>      NV_Region;  // pair<offset, size>
+        pair<INT64, INT64>      OBB_Region;
+        pair<INT64, INT64>      IBB_Region;
+        pair<INT64, INT64>      IBBR_Region;
+        UINT8                   ObbDigest[SHA256_DIGEST_LENGTH];
         bool   foundBiosID{false};
         bool   isResiliency{false};
         bool   DebugFlag{false};
@@ -221,7 +228,9 @@ namespace UefiSpace {
         ~BiosImageVolume();
 
         void setBiosID();
+        void getObbDigest();
         void setDebugFlag();
+        void decodeBiosRegion();
         string getFlashmap();
         void setInfoStr() override;
     };

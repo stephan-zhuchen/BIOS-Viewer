@@ -225,9 +225,11 @@ void MainWindow::parseBinaryInfo() {
     setBiosFvData();
     setFfsData();
     setTreeData();
-    if (BiosValidFlag != false) {
+    if (BiosValidFlag != false && BiosImage->FitTable != nullptr) {
         BiosImage->setBiosID();
+        BiosImage->getObbDigest();
         BiosImage->setInfoStr();
+        flashmap += QString::fromStdString(BiosImage->getFlashmap());
     }
     InputImageModel->modelData->InfoStr = BiosImage->InfoStr;
     ui->titleInfomation->setText(QString::fromStdString(BiosImage->BiosID));
