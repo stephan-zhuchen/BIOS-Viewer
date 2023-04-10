@@ -229,7 +229,8 @@ void MainWindow::parseBinaryInfo() {
         BiosImage->setBiosID();
         BiosImage->getObbDigest();
         BiosImage->setInfoStr();
-        flashmap += QString::fromStdString(BiosImage->getFlashmap());
+        class thread getBiosFlashmap([this](){ flashmap += QString::fromStdString(BiosImage->getFlashmap()); });
+        getBiosFlashmap.detach();
     }
     InputImageModel->modelData->InfoStr = BiosImage->InfoStr;
     ui->titleInfomation->setText(QString::fromStdString(BiosImage->BiosID));
@@ -241,13 +242,15 @@ void MainWindow::parseBinaryInfo() {
 }
 
 void MainWindow::showTreeRightMenu(QPoint pos) {
-    QIcon hexBinary, box_arrow_up;
+    QIcon hexBinary, box_arrow_up, key;
     if (DarkmodeFlag) {
         hexBinary = QIcon(":/file-binary_light.svg");
         box_arrow_up = QIcon(":/box-arrow-up_light.svg");
+        key = QIcon(":/key_light.svg");
     } else {
         hexBinary = QIcon(":/file-binary.svg");
         box_arrow_up = QIcon(":/box-arrow-up.svg");
+        key = QIcon(":/key.svg");
     }
     QModelIndex index = ui->treeWidget->indexAt(pos);
     if (!index.isValid())
@@ -284,6 +287,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
     }
 
     QMenu* DigestMenu = new QMenu("Digest");
+    DigestMenu->setIcon(key);
     QAction* md5_Menu = new QAction("MD5");
     DigestMenu->addAction(md5_Menu);
     this->connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));

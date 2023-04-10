@@ -219,6 +219,7 @@ namespace UefiSpace {
         pair<INT64, INT64>      IBB_Region;
         pair<INT64, INT64>      IBBR_Region;
         UINT8                   ObbDigest[SHA256_DIGEST_LENGTH];
+        bool   ObbDigestValid{false};
         bool   foundBiosID{false};
         bool   isResiliency{false};
         bool   DebugFlag{false};

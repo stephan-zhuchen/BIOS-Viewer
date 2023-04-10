@@ -877,23 +877,25 @@ namespace UefiSpace {
         ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin + size - 1 << "      ";
         ss << setw(width) << setfill('0') << hex << uppercase << size << "      BIOS Region\n";
 
-        ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.first << "      ";
-        ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.first + NV_Region.second - 1 << "      ";
-        ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.second << "         NV Region\n";
+        if (ObbDigestValid) {
+            ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.first << "      ";
+            ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.first + NV_Region.second - 1 << "      ";
+            ss << setw(width) << setfill('0') << hex << uppercase << NV_Region.second << "         NV Region\n";
 
-        ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.first << "      ";
-        ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.first + OBB_Region.second - 1 << "      ";
-        ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.second << "         OBB Region\n";
+            ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.first << "      ";
+            ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.first + OBB_Region.second - 1 << "      ";
+            ss << setw(width) << setfill('0') << hex << uppercase << OBB_Region.second << "         OBB Region\n";
 
-        if (isResiliency) {
-            ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.first << "      ";
-            ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.first + IBBR_Region.second - 1 << "      ";
-            ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.second << "         IBBR Region\n";
+            if (isResiliency) {
+                ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.first << "      ";
+                ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.first + IBBR_Region.second - 1 << "      ";
+                ss << setw(width) << setfill('0') << hex << uppercase << IBBR_Region.second << "         IBBR Region\n";
+            }
+
+            ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.first << "      ";
+            ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.first + IBB_Region.second - 1 << "      ";
+            ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.second << "         IBB Region\n";
         }
-
-        ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.first << "      ";
-        ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.first + IBB_Region.second - 1 << "      ";
-        ss << setw(width) << setfill('0') << hex << uppercase << IBB_Region.second << "         IBB Region\n";
         return ss.str();
     }
 
@@ -927,6 +929,7 @@ namespace UefiSpace {
                         return;
                     UINT8 *digest = (UINT8*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER));
                     memcpy(ObbDigest, digest, SHA256_DIGEST_LENGTH);
+                    ObbDigestValid = true;
 //                    QString hash;
 //                    for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
 //                        hash += QString("%1").arg(ObbDigest[i], 2, 16, QLatin1Char('0'));
