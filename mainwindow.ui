@@ -501,9 +501,6 @@
      <pointsize>10</pointsize>
     </font>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
-   </property>
   </action>
   <action name="actionExtract_BIOS">
    <property name="icon">
@@ -517,9 +514,6 @@
     <font>
      <pointsize>10</pointsize>
     </font>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actionSearch">
@@ -585,9 +579,6 @@
     <font>
      <pointsize>10</pointsize>
     </font>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+R</string>
    </property>
   </action>
  </widget>

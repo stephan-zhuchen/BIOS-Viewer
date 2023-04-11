@@ -203,6 +203,7 @@ void MainWindow::OpenFile(QString path)
 {
     buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
     if (buffer != nullptr) {
+        setOpenedFileName(path);
         this->setWindowTitle("BIOS Viewer -- " + path);
         InputImageSize = buffer->getBufferSize();
         InputImage = buffer->getBytes(InputImageSize);
@@ -319,7 +320,12 @@ void MainWindow::showHexView() {
     }
     UINT8 *itemData = RightClickeditemModel->modelData->data;
     QByteArray *hexViewData = new QByteArray((char*)itemData, RightClickeditemModel->modelData->size);
-    hexDialog->m_hexview->loadFromBuffer(*hexViewData);
+    hexDialog->loadBuffer(*hexViewData,
+                          InputImageModel->modelData,
+                          RightClickeditemModel->modelData->offsetFromBegin,
+                          RightClickeditemModel->getName(),
+                          OpenedFileName,
+                          RightClickeditemModel->modelData->isCompressed);
     hexDialog->exec();
     delete hexViewData;
 }
@@ -333,7 +339,12 @@ void MainWindow::showBodyHexView() {
     QByteArray *hexViewData = new QByteArray((char*)itemData, RightClickeditemModel->modelData->size);
     INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
-    hexDialog->m_hexview->loadFromBuffer(BodyHexViewData);
+    hexDialog->loadBuffer(BodyHexViewData,
+                          InputImageModel->modelData,
+                          RightClickeditemModel->modelData->offsetFromBegin,
+                          RightClickeditemModel->getName(),
+                          OpenedFileName,
+                          RightClickeditemModel->modelData->isCompressed);
     hexDialog->exec();
     delete hexViewData;
 }
@@ -343,7 +354,12 @@ void MainWindow::showNvHexView() {
     UINT8 *NvData = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataSize;
     QByteArray *hexViewData = new QByteArray((char*)NvData, NvDataSize);
-    hexDialog->m_hexview->loadFromBuffer(*hexViewData);
+    hexDialog->loadBuffer(*hexViewData,
+                          InputImageModel->modelData,
+                          RightClickeditemModel->modelData->offsetFromBegin,
+                          RightClickeditemModel->getName(),
+                          OpenedFileName,
+                          RightClickeditemModel->modelData->isCompressed);
     hexDialog->exec();
     delete hexViewData;
 }
@@ -635,7 +651,7 @@ void MainWindow::OpenInNewWindowTriggered()
 
     MainWindow *newWindow = new MainWindow(appDir);
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
-    newWindow->setOpenedFileName(fileName);
+//    newWindow->setOpenedFileName(fileName);
     newWindow->show();
     newWindow->OpenFile(fileName);
 }

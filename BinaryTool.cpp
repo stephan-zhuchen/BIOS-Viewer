@@ -94,22 +94,27 @@ void MainWindow::ActionGotoTriggered()
                      tr ( "Offset (0x for hexadecimal):" ), QLineEdit::Normal,
                      nullptr, &done );
 
+    INT64 SearchOffset = 0;
     if ( done && offset[0] == '0' && offset[1] == 'x' ) {
-        INT64 SearchOffset = offset.toInt ( nullptr, 16 );
-        vector<INT32> SearchRows;
-        for (UINT64 row = 0; row < IFWI_ModelData.size(); ++row) {
-            DataModel *model = IFWI_ModelData.at(row);
-            if (SearchOffset >= model->modelData->offsetFromBegin && SearchOffset < model->modelData->offsetFromBegin + model->modelData->size) {
-                SearchRows.push_back(row + 1);
-                RecursiveSearchOffset(model, SearchOffset, SearchRows);
-            }
-        }
-        for (auto row:SearchRows) {
-            cout << row << " ";
-        }
-        cout << endl;
-        HighlightTreeItem(SearchRows);
+        SearchOffset = offset.toInt ( nullptr, 16 );
+    } else {
+        SearchOffset = offset.toInt ( nullptr, 10 );
     }
+
+    if (SearchOffset < 0 || SearchOffset >= InputImageModel->modelData->size) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), tr("Invalid Address!"));
+        return;
+    }
+
+    vector<INT32> SearchRows;
+    for (UINT64 row = 0; row < IFWI_ModelData.size(); ++row) {
+        DataModel *model = IFWI_ModelData.at(row);
+        if (SearchOffset >= model->modelData->offsetFromBegin && SearchOffset < model->modelData->offsetFromBegin + model->modelData->size) {
+            SearchRows.push_back(row + 1);
+            RecursiveSearchOffset(model, SearchOffset, SearchRows);
+        }
+    }
+    HighlightTreeItem(SearchRows);
 }
 
 void MainWindow::ActionCollapseTriggered()

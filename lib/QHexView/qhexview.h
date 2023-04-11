@@ -41,6 +41,7 @@ public:
 
   void setfileOpened(bool state);
   void setParentWidget(QWidget *pWidget);
+  void setReadOnly(bool ReadOnlyFlag);
 
   void paintEvent(QPaintEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
@@ -63,6 +64,11 @@ private:
       m_bytesPerLine,
       m_addressLength;
 
+  char inputKey;
+  bool BinaryEdited{false};
+  bool ReadOnly{false};
+  std::vector<unsigned int> EditedPos;
+
   bool      showCursor;
   bool      startFromAscii;
   bool      fileOpened;
@@ -70,6 +76,7 @@ private:
   QFont     fontSetting;
   QWidget   *parentWidget;
   QColor    selectionColor;
+  QColor    EditedColor;
   QColor    wordColor;
   QColor    wordColorOpposite;
   QColor    cursorColor;
@@ -89,14 +96,16 @@ private:
   void paintMark(int xpos, int ypos);
   void confScrollBar();
   bool isSelected(int index);
+  bool isEdited(unsigned int index);
   void restartTimer();
   int  getLineNum();
   void actionGoto();
   void actionSearch();
+  void binaryEdit(char inputChar);
 
 public slots:
   void loadFile(QString p_file);
-  void loadFromBuffer(QByteArray buffer);
+  void loadFromBuffer(QByteArray &buffer);
   void clear();
   void showFromOffset(int offset, int length=1);
   std::size_t sizeFile();

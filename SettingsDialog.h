@@ -33,8 +33,8 @@ private slots:
     void on_infoFontSizeBox_activated(int index);
     void on_infoLineSpacingBox_activated(int index);
     void on_infoFontBox_activated(int index);
-
     void on_showPaddingBox_stateChanged(int state);
+    void on_enableEditingBox_stateChanged(int state);
 
 private:
     Ui::SettingsDialog *ui;
@@ -51,6 +51,7 @@ private:
     QString LineSpacing;
     QString InfoLineSpacing;
     QString ShowPaddingItem;
+    QString EnableHexEditing;
     static int lastTabIndex;
 };
 

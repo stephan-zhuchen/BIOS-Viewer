@@ -36,6 +36,8 @@ SettingsDialog::SettingsDialog(QString &applicationDir, QWidget *parent) :
 
     if (!setting.contains("ShowPaddingItem"))
         setting.setValue("ShowPaddingItem", "false");
+    if (!setting.contains("EnableHexEditing"))
+        setting.setValue("EnableHexEditing", "true");
 
     Theme = setting.value("Theme").toString();
     StructureFontSize = setting.value("BiosViewerFontSize").toString();
@@ -63,6 +65,11 @@ SettingsDialog::SettingsDialog(QString &applicationDir, QWidget *parent) :
         ui->showPaddingBox->setCheckState(Qt::Checked);
     else if (setting.value("ShowPaddingItem") == "false")
         ui->showPaddingBox->setCheckState(Qt::Unchecked);
+
+    if (setting.value("EnableHexEditing") == "true")
+        ui->enableEditingBox->setCheckState(Qt::Checked);
+    else if (setting.value("EnableHexEditing") == "false")
+        ui->enableEditingBox->setCheckState(Qt::Unchecked);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -140,6 +147,7 @@ void SettingsDialog::on_buttonBox_accepted()
     setting.setValue("InfoLineSpacing", InfoLineSpacing);
     setting.setValue("Theme", Theme);
     setting.setValue("ShowPaddingItem", ShowPaddingItem);
+    setting.setValue("EnableHexEditing", EnableHexEditing);
     lastTabIndex = ui->tabWidget->currentIndex();
     parentWidget->refresh();
 }
@@ -156,3 +164,13 @@ void SettingsDialog::on_showPaddingBox_stateChanged(int state)
         ShowPaddingItem = "false";
     }
 }
+
+void SettingsDialog::on_enableEditingBox_stateChanged(int state)
+{
+    if (state == Qt::Checked) {
+        EnableHexEditing = "true";
+    } else if (state == Qt::Unchecked) {
+        EnableHexEditing = "false";
+    }
+}
+

@@ -74,6 +74,7 @@ set(PROJECT_SOURCES
         lib/Model.cpp
         lib/Section.cpp
         lib/QHexView/qhexview.cpp
+        lib/QHexView/HexEdit.cpp
         lib/QHexView/qhexview.h
         UefiDecode.cpp
         mainwindow.cpp
