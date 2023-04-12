@@ -16,7 +16,7 @@
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "0.23"
+#define __BiosViewerVersion__ "1.0"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;

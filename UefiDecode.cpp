@@ -32,7 +32,6 @@ bool MainWindow::detectIfwi(INT64 &BiosOffset) {
         return false;
     }
     buffer->setOffset(0);
-//    cout << "FlashRegion size = " << hex << FlashRegion->getSize() << endl;
     FlashDescriptorClass *flashDescriptorVolume = new FlashDescriptorClass(buffer->getBytes(FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
     flashmap += QString::fromStdString(flashDescriptorVolume->getFlashmap());
     IFWI_Sections.push_back(flashDescriptorVolume);
@@ -127,7 +126,6 @@ void MainWindow::setBiosFvData()
     }
 
     while (offset < bufferSize) {
-//        cout << "offset = " << hex << offset << endl;
         buffer->setOffset(offset);
         if (bufferSize - offset < 0x40) {
             pushDataToVector(offset, bufferSize - offset);
@@ -142,7 +140,6 @@ void MainWindow::setBiosFvData()
             delete fvHeader;
             EmptyVolumeLength += searchInterval;
             buffer->setOffset(offset + EmptyVolumeLength);
-//            cout << "Search offset = " << hex << offset + EmptyVolumeLength << endl;
             if (offset + EmptyVolumeLength >= bufferSize) {
                 pushDataToVector(offset, bufferSize - offset);
                 return;
@@ -159,7 +156,6 @@ void MainWindow::setBiosFvData()
             FvLength = EmptyVolumeLength;
         }
 
-//        cout << "offset = 0x" << hex << offset << ", FvLength = 0x" << hex << FvLength << endl;
         pushDataToVector(offset, FvLength);
         offset += FvLength;
     }

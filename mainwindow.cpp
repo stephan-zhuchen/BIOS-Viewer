@@ -527,9 +527,13 @@ void MainWindow::initSettings() {
 void MainWindow::erasePadding(vector<DataModel*> &items) {
     for (int i = 0; i < items.size(); ++i) {
         DataModel *FvModel = items.at(i);
+
         if (FvModel->getSubType() == "Empty" || FvModel->getSubType() == "Pad") {
             delete FvModel;
             items.erase(items.begin() + i);
+            if (i > 0) {
+                i -= 1;
+            }
             continue;
         }
         erasePadding(FvModel->volumeModelData);

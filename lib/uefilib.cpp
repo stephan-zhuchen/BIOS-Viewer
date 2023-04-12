@@ -184,7 +184,6 @@ namespace UefiSpace {
                 destination = malloc(decompressedSize);
                 scratch = malloc(ScratchSize);
                 status = UefiDecompress(data + HeaderSize, destination, scratch);
-//                cout << "UefiDecompress Status = " << status << ", size = " << decompressedSize << endl;
                 if (status != RETURN_SUCCESS) {
                     throw exception();
                 }
@@ -201,13 +200,11 @@ namespace UefiSpace {
             SectionDefinitionGuid = this->getGUID(offset);
             DataOffset = this->getUINT16(offset + 0x10);
             Attributes = this->getUINT16(offset + 0x12);
-//            offset += 0x14;
             HeaderSize = sizeof(EFI_GUID_DEFINED_SECTION);
             if (isExtend) {
                 HeaderSize = sizeof(EFI_GUID_DEFINED_SECTION2);
             }
             if (SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
-//                cout << "Rsa2048, SectionSize = " << hex << SectionSize << endl;
                 HeaderSize = 0x228;
                 DataOffset = HeaderSize;
                 offset = HeaderSize;
@@ -230,7 +227,6 @@ namespace UefiSpace {
                 destination = malloc(decompressedSize);
                 scratch = malloc(ScratchSize);
                 status = LzmaUefiDecompress(data + HeaderSize, SectionSize - HeaderSize, destination, scratch);
-//                cout << "LzmaUefiDecompress Status = " << status << ", size = " << decompressedSize << endl;
                 if (status != RETURN_SUCCESS) {
                     throw exception();
                 }
@@ -807,7 +803,6 @@ namespace UefiSpace {
                 }
             }
         } catch (...) {
-            cout << "No Fit Table" << endl;
             FitTable = nullptr;
         }
     }
@@ -831,7 +826,6 @@ namespace UefiSpace {
     }
 
     void BiosImageVolume::decodeBiosRegion() {
-        cout << "decodeBiosRegion" << endl;
         INT32 NV_index;
         for (NV_index = 0; NV_index < FvData->size(); ++NV_index) {
             FirmwareVolume *fv = FvData->at(NV_index);
@@ -847,7 +841,6 @@ namespace UefiSpace {
         INT64 OBB_size = 0;
         for (OBB_index = NV_index + 1; OBB_index < FvData->size(); ++OBB_index) {
             FirmwareVolume *fv = FvData->at(OBB_index);
-//            cout << guidData->getNameFromGuid(fv->getFvGuid().GuidData) << endl;
             OBB_size += fv->getSize();
             UINT8 digest[SHA256_DIGEST_LENGTH];
             SHA256(this->data + OBB_Region.first - this->offsetFromBegin, OBB_size, digest);
@@ -930,11 +923,6 @@ namespace UefiSpace {
                     UINT8 *digest = (UINT8*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER));
                     memcpy(ObbDigest, digest, SHA256_DIGEST_LENGTH);
                     ObbDigestValid = true;
-//                    QString hash;
-//                    for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-//                        hash += QString("%1").arg(ObbDigest[i], 2, 16, QLatin1Char('0'));
-//                    }
-//                    qDebug() << hash;
                     return;
                 }
             }
@@ -1086,7 +1074,6 @@ namespace UefiSpace {
         }
 
         UINT32 ExtendedTableLength = microcodeHeader.TotalSize - (microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
-//        cout << "ExtendedTableLength = " << hex << ExtendedTableLength << endl;
         if (ExtendedTableLength != 0) {
             ExtendedTableHeader = (CPU_MICROCODE_EXTENDED_TABLE_HEADER *)(fv + microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
             if ((ExtendedTableLength > sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) && ((ExtendedTableLength & 0x3) == 0)) {

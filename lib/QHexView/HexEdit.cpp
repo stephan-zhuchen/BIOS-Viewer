@@ -271,7 +271,6 @@ void QHexView::mouseMoveEvent(QMouseEvent *event)
     if (!fileOpened)
         return;
     int actPos = cursorPos(event->pos());
-    //  qDebug("mouseMoveEvent, actPos = %x", actPos);
 
     if (actPos >= 0 && actPos < m_pdata.size() * 2)
     {
@@ -301,7 +300,6 @@ void QHexView::mousePressEvent(QMouseEvent *event)
         startFromAscii = false;
 
     int cPos = cursorPos(event->pos());
-    //  qDebug("mousePressEvent, cPos = %x", cPos);
 
     if ((QApplication::keyboardModifiers() & Qt::ShiftModifier) && event->button() == Qt::LeftButton)
         setSelection(cPos);

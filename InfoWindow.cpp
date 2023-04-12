@@ -172,7 +172,6 @@ void InfoWindow::keyPressEvent(QKeyEvent *event) {
 }
 
 void InfoWindow::closeEvent(QCloseEvent *event) {
-    cout << "SearchDialog close" << endl;
     ((MainWindow*)parentWidget)->setInfoWindowState(false);
 }
 
