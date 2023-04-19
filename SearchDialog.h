@@ -29,7 +29,7 @@ class SearchDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SearchDialog(QString &applicationDir, QWidget *parent = nullptr);
+    explicit SearchDialog(QWidget *parent = nullptr);
     ~SearchDialog();
 
     void setParentWidget(QWidget *pWidget);
@@ -50,16 +50,16 @@ protected:
 
 private slots:
 
-    void on_AsciiCheckbox_stateChanged(int state);
-    void on_TextCheckbox_stateChanged(int state);
-    void on_SearchContent_textChanged(const QString &arg1);
-    void on_NextButton_clicked();
-    void on_PreviousButton_clicked();
-    void on_SearchContent_returnPressed();
+    void AsciiCheckboxStateChanged(int state);
+    void TextCheckboxStateChanged(int state);
+    void SearchContentTextChanged(const QString &arg1);
+    void NextButtonClicked();
+    void PreviousButtonClicked();
+    void SearchContentReturnPressed();
 
 private:
     Ui::SearchDialog *ui;
-    QSettings        setting;
+    QSettings        setting{"Intel", "BiosViewer"};
     QWidget          *parentWidget;
     vector<DataModel*> *SearchModelData;
     int              PreviousOffset;

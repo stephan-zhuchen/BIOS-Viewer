@@ -496,7 +496,7 @@ std::string OSSE_RegionClass::getFlashmap() {
 
 void OSSE_RegionClass::setInfoStr() {
     using namespace std;
-    INT64 width = 20;
+//    INT64 width = 20;
     stringstream ss;
     ss.setf(ios::left);
 

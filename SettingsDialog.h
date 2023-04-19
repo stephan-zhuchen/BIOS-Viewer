@@ -14,31 +14,28 @@ class SettingsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SettingsDialog(QString &applicationDir, QWidget *parent = nullptr);
+    explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
 
     void setParentWidget(MainWindow *pWidget);
 
-protected:
-    void paintEvent(QPaintEvent *) override;
-
 private slots:
-    void on_hexFontSizeBox_activated(int index);
-    void on_hexFontBox_activated(int index);
-    void on_biosViewerThemeBox_activated(int index);
-    void on_biosViewerFontSizeBox_activated(int index);
-    void on_biosViewerFontBox_activated(int index);
-    void on_buttonBox_accepted();
-    void on_lineSpacingBox_activated(int index);
-    void on_infoFontSizeBox_activated(int index);
-    void on_infoLineSpacingBox_activated(int index);
-    void on_infoFontBox_activated(int index);
-    void on_showPaddingBox_stateChanged(int state);
-    void on_enableEditingBox_stateChanged(int state);
+    void hexFontSizeBoxActivated(int index);
+    void hexFontBoxActivated(int index);
+    void biosViewerThemeBoxActivated(int index);
+    void biosViewerFontSizeBoxActivated(int index);
+    void biosViewerFontBoxActivated(int index);
+    void buttonBoxAccepted();
+    void lineSpacingBoxActivated(int index);
+    void infoFontSizeBoxActivated(int index);
+    void infoLineSpacingBoxActivated(int index);
+    void infoFontBoxActivated(int index);
+    void showPaddingBoxStateChanged(int state);
+    void enableEditingBoxStateChanged(int state);
 
 private:
     Ui::SettingsDialog *ui;
-    QSettings setting;
+    QSettings setting{"Intel", "BiosViewer"};
     MainWindow *parentWidget;
 
     QString StructureFontSize;

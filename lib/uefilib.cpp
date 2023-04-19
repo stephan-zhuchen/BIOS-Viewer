@@ -959,34 +959,39 @@ namespace UefiSpace {
             isValid = true;
             FitEntryNum = *(UINT32*)(FitHeader.Size) & 0xFFFFFF;
 
+            UINT8 Checksum = Buffer::CaculateSum8((UINT8 *)(fv + FitTableAddress), sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * FitEntryNum);
+            if (Checksum == 0) {
+                isChecksumValid = true;
+            }
+
             for (INT64 index = 1; index < FitEntryNum; ++index) {
                 FIRMWARE_INTERFACE_TABLE_ENTRY FitEntry = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(fv + FitTableAddress + sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * index);
                 FitEntries.push_back(FitEntry);
                 if (FitEntry.Type == FIT_TABLE_TYPE_MICROCODE) {
                     UINT64 MicrocodeAddress = FitEntry.Address & 0xFFFFFF;
                     UINT64 RelativeMicrocodeAddress = Buffer::adjustBufferAddress(0x1000000, MicrocodeAddress, length);
-                    if (RelativeMicrocodeAddress > length)
+                    if (RelativeMicrocodeAddress > (UINT64)length)
                         continue;
                     MicrocodeHeaderClass *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, MicrocodeAddress);
                     MicrocodeEntries.push_back(MicrocodeEntry);
                 } else if (FitEntry.Type == FIT_TABLE_TYPE_STARTUP_ACM) {
                     UINT64 AcmAddress = FitEntry.Address & 0xFFFFFF;
                     UINT64 RelativeAcmAddress = Buffer::adjustBufferAddress(0x1000000, AcmAddress, length);
-                    if (RelativeAcmAddress > length)
+                    if (RelativeAcmAddress > (UINT64)length)
                         continue;
                     AcmHeaderClass *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, AcmAddress);
                     AcmEntries.push_back(AcmEntry);
                 } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST) {
                     UINT64 KmAddress = FitEntry.Address & 0xFFFFFF;
                     UINT64 RelativeKmAddress = Buffer::adjustBufferAddress(0x1000000, KmAddress, length);
-                    if (RelativeKmAddress > length && KmEntry != nullptr)
+                    if (RelativeKmAddress > (UINT64)length && KmEntry != nullptr)
                         continue;
                     KmEntry = new KeyManifestClass(fv + RelativeKmAddress, length - RelativeKmAddress);
                 } else if (FitEntry.Type == FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST) {
                     UINT64 BpmAddress = FitEntry.Address & 0xFFFFFF;
                     UINT64 RelativeBpmAddress = Buffer::adjustBufferAddress(0x1000000, BpmAddress, length);
                     INT64 FitEntrySize = (FitEntry.Size[2] << 16) + (FitEntry.Size[1] << 8) + FitEntry.Size[0];
-                    if (RelativeBpmAddress > length && BpmEntry != nullptr && RelativeBpmAddress + FitEntrySize > length)
+                    if (RelativeBpmAddress > (UINT64)length && BpmEntry != nullptr && RelativeBpmAddress + (UINT64)FitEntrySize > (UINT64)length)
                         continue;
                     BpmEntry = new BootPolicyManifestClass(fv + RelativeBpmAddress, FitEntrySize);
                 }

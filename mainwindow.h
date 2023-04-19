@@ -16,7 +16,7 @@
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "1.0"
+#define __BiosViewerVersion__ "1.1"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -30,7 +30,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QString applicationDir, QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
     void cleanup();
@@ -102,7 +102,6 @@ private:
     QLabel         *structureLabel;
     QLabel         *infoLabel;
     QString        OpenedFileName;
-    QString        appDir;
     QString        flashmap;
     bool           DarkmodeFlag;
     bool           BiosValidFlag;
@@ -111,7 +110,7 @@ private:
     bool           infoWindowOpened;
     SearchDialog   *searchDialog;
     bool           searchDialogOpened;
-    QSettings      setting;
+    QSettings      setting{"Intel", "BiosViewer"};
     QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
     UINT8                        *InputImage;

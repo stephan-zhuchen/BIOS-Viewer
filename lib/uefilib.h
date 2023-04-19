@@ -246,6 +246,7 @@ namespace UefiSpace {
         BootPolicyManifestClass                *BpmEntry{nullptr};
         INT64 FitEntryNum{0};
         bool  isValid{false};
+        bool  isChecksumValid{false};
     public:
         FitTableClass(UINT8* fv, INT64 length);
         ~FitTableClass();
@@ -294,7 +295,8 @@ namespace UefiSpace {
         ACM_HEADER       acmHeader;
         Ext_ACM_Header   ExtAcmHeader;
         Ext_ACM_Header3  ExtAcmHeader3;
-        ACM_INFO_TABLE   AcmInfoTable;
+        ACM_INFO_TABLE   *AcmInfoTable;
+        ACM_VERSION      AcmVersion;
         bool             isAcm3{false};
         AcmHeaderClass() = delete;
         AcmHeaderClass(UINT8* fv, INT64 address);

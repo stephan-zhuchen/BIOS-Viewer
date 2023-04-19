@@ -7,12 +7,12 @@
 #include "lib/QHexView/qhexview.h"
 #include "lib/BaseLib.h"
 
-HexViewDialog::HexViewDialog(QString &applicationDir, QWidget *parent) :
+HexViewDialog::HexViewDialog(QWidget *parent) :
     QDialog(parent),
-    m_hexview ( new QHexView(applicationDir) ),
+    m_hexview ( new QHexView() ),
     ui(new Ui::HexViewDialog),
     m_layout ( new QVBoxLayout ),
-    setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat))
+    setting(QSettings("Intel", "BiosViewer"))
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);

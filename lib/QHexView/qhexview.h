@@ -36,7 +36,7 @@ class QHexView : public QAbstractScrollArea
 {
   Q_OBJECT
 public:
-  QHexView(QString &applicationDir, QWidget *parent = nullptr);
+  QHexView(QWidget *parent = nullptr);
   ~QHexView();
 
   void setfileOpened(bool state);
@@ -80,7 +80,6 @@ private:
   QColor    wordColor;
   QColor    wordColorOpposite;
   QColor    cursorColor;
-  QString   appDir;
   QSettings setting;
   QSettings SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 

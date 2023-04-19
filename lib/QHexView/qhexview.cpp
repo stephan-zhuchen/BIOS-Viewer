@@ -19,7 +19,7 @@ QOffsetView::QOffsetView(QWidget *parent):QWidget(parent) {
 //    QLabel *label = new QLabel(this);
 }
 
-QHexView::QHexView(QString &applicationDir, QWidget *parent)
+QHexView::QHexView(QWidget *parent)
     : QAbstractScrollArea(parent),
       m_pdata(nullptr),
       m_posAddr(0),
@@ -42,8 +42,7 @@ QHexView::QHexView(QString &applicationDir, QWidget *parent)
       wordColor(Qt::black),
       wordColorOpposite(Qt::white),
       cursorColor(COLOR_CURSOR),
-      appDir(applicationDir),
-      setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat))
+      setting(QSettings("Intel", "BiosViewer"))
 {
   // default configs
   if (setting.contains("HexFont") && setting.contains("HexFontSize")){
@@ -528,7 +527,7 @@ void QHexView::actionGoto() {
 }
 
 void QHexView::actionSearch() {
-    SearchDialog *settingDialog = new SearchDialog(appDir);
+    SearchDialog *settingDialog = new SearchDialog();
     settingDialog->setSearchMode(true);
 //    settingDialog->SetModelData(&FvModelData);
     settingDialog->SetBinaryData(&m_pdata);

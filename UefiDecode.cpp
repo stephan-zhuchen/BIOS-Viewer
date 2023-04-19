@@ -3,7 +3,6 @@
 #include "mainwindow.h"
 #include "lib/iwfi.h"
 #include "./ui_mainwindow.h"
-#include "openssl/sha.h"
 
 #define V_FLASH_FDBAR_FLVALSIG  0x0FF0A55A
 

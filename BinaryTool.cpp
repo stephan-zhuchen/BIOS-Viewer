@@ -64,7 +64,7 @@ void MainWindow::ActionSearchTriggered()
 {
     if (!searchDialogOpened) {
         searchDialogOpened = true;
-        searchDialog = new SearchDialog(appDir);
+        searchDialog = new SearchDialog();
         searchDialog->setSearchMode(false);
         searchDialog->SetModelData(&IFWI_ModelData);
         searchDialog->setParentWidget(this);

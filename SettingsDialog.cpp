@@ -4,12 +4,25 @@
 #include <QPainterPath>
 #include <iostream>
 
-SettingsDialog::SettingsDialog(QString &applicationDir, QWidget *parent) :
+SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SettingsDialog),
-    setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat))
+    ui(new Ui::SettingsDialog)
 {
     ui->setupUi(this);
+
+    connect(ui->hexFontSizeBox,        SIGNAL(activated(int)),    this, SLOT(hexFontSizeBoxActivated(int)));
+    connect(ui->hexFontBox,            SIGNAL(activated(int)),    this, SLOT(hexFontBoxActivated(int)));
+    connect(ui->biosViewerThemeBox,    SIGNAL(activated(int)),    this, SLOT(biosViewerThemeBoxActivated(int)));
+    connect(ui->biosViewerFontSizeBox, SIGNAL(activated(int)),    this, SLOT(biosViewerFontSizeBoxActivated(int)));
+    connect(ui->biosViewerFontBox,     SIGNAL(activated(int)),    this, SLOT(biosViewerFontBoxActivated(int)));
+    connect(ui->buttonBox,             SIGNAL(accepted()),        this, SLOT(buttonBoxAccepted()));
+    connect(ui->lineSpacingBox,        SIGNAL(activated(int)),    this, SLOT(lineSpacingBoxActivated(int)));
+    connect(ui->infoFontSizeBox,       SIGNAL(activated(int)),    this, SLOT(infoFontSizeBoxActivated(int)));
+    connect(ui->infoLineSpacingBox,    SIGNAL(activated(int)),    this, SLOT(infoLineSpacingBoxActivated(int)));
+    connect(ui->infoFontBox,           SIGNAL(activated(int)),    this, SLOT(infoFontBoxActivated(int)));
+    connect(ui->showPaddingBox,        SIGNAL(stateChanged(int)), this, SLOT(showPaddingBoxStateChanged(int)));
+    connect(ui->enableEditingBox,      SIGNAL(stateChanged(int)), this, SLOT(enableEditingBoxStateChanged(int)));
+
     ui->tabWidget->setCurrentIndex(lastTabIndex);
     setAttribute(Qt::WA_DeleteOnClose);
 
@@ -79,63 +92,52 @@ SettingsDialog::~SettingsDialog()
 
 int SettingsDialog::lastTabIndex = 0;
 
-void SettingsDialog::paintEvent(QPaintEvent *)
-{
-//    QPainter painter(this);
-//    painter.setRenderHint(QPainter::Antialiasing);
-//    painter.setPen(QPen(Qt::gray,1));
-//    QPainterPath path;
-//    path.addRoundedRect(QRectF(40,55,520,120), 5, 5);
-//    painter.fillPath(path, Qt::gray);
-//    painter.drawPath(path);
-}
-
-void SettingsDialog::on_hexFontSizeBox_activated(int index)
+void SettingsDialog::hexFontSizeBoxActivated(int index)
 {
     HexFontSize = ui->hexFontSizeBox->currentText();
 }
 
-void SettingsDialog::on_hexFontBox_activated(int index)
+void SettingsDialog::hexFontBoxActivated(int index)
 {
     HexFont = ui->hexFontBox->currentText();
 }
 
-void SettingsDialog::on_biosViewerThemeBox_activated(int index)
+void SettingsDialog::biosViewerThemeBoxActivated(int index)
 {
     Theme = ui->biosViewerThemeBox->currentText();
 }
 
-void SettingsDialog::on_biosViewerFontSizeBox_activated(int index)
+void SettingsDialog::biosViewerFontSizeBoxActivated(int index)
 {
     StructureFontSize = ui->biosViewerFontSizeBox->currentText();
 }
 
-void SettingsDialog::on_biosViewerFontBox_activated(int index)
+void SettingsDialog::biosViewerFontBoxActivated(int index)
 {
     StructureFont = ui->biosViewerFontBox->currentText();
 }
 
-void SettingsDialog::on_lineSpacingBox_activated(int index)
+void SettingsDialog::lineSpacingBoxActivated(int index)
 {
     LineSpacing = ui->lineSpacingBox->currentText();
 }
 
-void SettingsDialog::on_infoFontSizeBox_activated(int index)
+void SettingsDialog::infoFontSizeBoxActivated(int index)
 {
     InfoFontSize = ui->infoFontSizeBox->currentText();
 }
 
-void SettingsDialog::on_infoLineSpacingBox_activated(int index)
+void SettingsDialog::infoLineSpacingBoxActivated(int index)
 {
     InfoLineSpacing = ui->infoLineSpacingBox->currentText();
 }
 
-void SettingsDialog::on_infoFontBox_activated(int index)
+void SettingsDialog::infoFontBoxActivated(int index)
 {
     InfoFont = ui->infoFontBox->currentText();
 }
 
-void SettingsDialog::on_buttonBox_accepted()
+void SettingsDialog::buttonBoxAccepted()
 {
     setting.setValue("BiosViewerFontSize", StructureFontSize);
     setting.setValue("BiosViewerFont", StructureFont);
@@ -156,7 +158,7 @@ void SettingsDialog::setParentWidget(MainWindow *pWidget) {
     parentWidget = pWidget;
 }
 
-void SettingsDialog::on_showPaddingBox_stateChanged(int state)
+void SettingsDialog::showPaddingBoxStateChanged(int state)
 {
     if (state == Qt::Checked) {
         ShowPaddingItem = "true";
@@ -165,7 +167,7 @@ void SettingsDialog::on_showPaddingBox_stateChanged(int state)
     }
 }
 
-void SettingsDialog::on_enableEditingBox_stateChanged(int state)
+void SettingsDialog::enableEditingBoxStateChanged(int state)
 {
     if (state == Qt::Checked) {
         EnableHexEditing = "true";

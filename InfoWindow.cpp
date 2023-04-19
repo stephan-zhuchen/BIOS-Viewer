@@ -26,6 +26,10 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui->AcmTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->BtgTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->flashmapText->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+
+    connect(ui->microcodeListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(microcodeListWidgetItemSelectionChanged()));
+    connect(ui->acmListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(acmListWidgetItemSelectionChanged()));
+    connect(ui->BtgListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(BtgListWidgetItemSelectionChanged()));
 }
 
 InfoWindow::~InfoWindow()
@@ -66,7 +70,11 @@ void InfoWindow::showFitTab() {
     item = new QTableWidgetItem(QString::number(FitHeader.C_V, 16).toUpper() + "h");
     ui->tableWidget->setItem(0, InfoWindow::C_V, item);
 
-    item = new QTableWidgetItem(QString::number(FitHeader.Checksum, 16).toUpper() + "h");
+    if (BiosImage->FitTable->isChecksumValid) {
+        item = new QTableWidgetItem(QString::number(FitHeader.Checksum, 16).toUpper() + "h (Valid)");
+    } else {
+        item = new QTableWidgetItem(QString::number(FitHeader.Checksum, 16).toUpper() + "h (Invalid)");
+    }
     ui->tableWidget->setItem(0, InfoWindow::Checksum, item);
 
     for (int index = 0; index < FitNum - 1; ++index) {
@@ -175,7 +183,7 @@ void InfoWindow::closeEvent(QCloseEvent *event) {
     ((MainWindow*)parentWidget)->setInfoWindowState(false);
 }
 
-void InfoWindow::on_microcodeListWidget_itemSelectionChanged() {
+void InfoWindow::microcodeListWidgetItemSelectionChanged() {
     using UefiSpace::MicrocodeHeaderClass;
     INT32 currentRow = ui->microcodeListWidget->currentRow();
     MicrocodeHeaderClass* EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(currentRow);
@@ -183,7 +191,7 @@ void InfoWindow::on_microcodeListWidget_itemSelectionChanged() {
     ui->MicrocodeTextBrowser->setText(EntryHeader->InfoStr);
 }
 
-void InfoWindow::on_acmListWidget_itemSelectionChanged()
+void InfoWindow::acmListWidgetItemSelectionChanged()
 {
     using UefiSpace::AcmHeaderClass;
     INT32 currentRow = ui->acmListWidget->currentRow();
@@ -192,7 +200,7 @@ void InfoWindow::on_acmListWidget_itemSelectionChanged()
     ui->AcmTextBrowser->setText(EntryHeader->InfoStr);
 }
 
-void InfoWindow::on_BtgListWidget_itemSelectionChanged()
+void InfoWindow::BtgListWidgetItemSelectionChanged()
 {
     using UefiSpace::KeyManifestClass;
     using UefiSpace::BootPolicyManifestClass;

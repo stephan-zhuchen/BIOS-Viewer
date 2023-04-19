@@ -35,15 +35,15 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
-    void on_microcodeListWidget_itemSelectionChanged();
-    void on_acmListWidget_itemSelectionChanged();
-    void on_BtgListWidget_itemSelectionChanged();
+    void microcodeListWidgetItemSelectionChanged();
+    void acmListWidgetItemSelectionChanged();
+    void BtgListWidgetItemSelectionChanged();
 
 private:
     Ui::InfoWindow   *ui;
     BiosImageVolume  *BiosImage;
     QWidget          *parentWidget;
-    QSettings setting{"./Setting.ini", QSettings::IniFormat};
+    QSettings setting{"Intel", "BiosViewer"};
 
     enum tableColNum {Address=0, Size, Version, C_V, Checksum, Type};
 };

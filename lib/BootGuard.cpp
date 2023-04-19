@@ -164,10 +164,35 @@ namespace UefiSpace {
             isAcm3 = true;
             ExtAcmHeader3 = *(Ext_ACM_Header3*)(fv + sizeof(ACM_HEADER));
         }
-        if (isAcm3) {
-            AcmInfoTable = *(ACM_INFO_TABLE*)(fv + sizeof(ACM_HEADER) + acmHeader.KeySize * 4 + ACM_PKCS_1_5_RSA_SIGNATURE_SHA384_SIZE + acmHeader.ScratchSize * 4);
-        } else {
-            AcmInfoTable = *(ACM_INFO_TABLE*)(fv + sizeof(ACM_HEADER) + acmHeader.KeySize * 4 + ACM_PKCS_1_5_RSA_SIGNATURE_SHA256_SIZE + sizeof(UINT32) + acmHeader.ScratchSize * 4);
+        UINT8 *AcmPtr = (UINT8 *)fv;
+        AcmPtr += acmHeader.HeaderLen * 4;
+        AcmPtr += acmHeader.ScratchSize * 4;
+        AcmInfoTable = (ACM_INFO_TABLE *)AcmPtr;
+        if (AcmInfoTable->AitVersion < ACM_INFO_TABLE_VERSION_9) {
+            if (AcmInfoTable->Guid == guidData->gTxtAcmInfoTableGuid) {
+                AcmVersion.AcmMajorVersion = AcmInfoTable->AitRevision[0];
+                AcmVersion.AcmMinorVersion = AcmInfoTable->AitRevision[1];
+                AcmVersion.AcmRevision = AcmInfoTable->AitRevision[2];
+            }
+        } else if (AcmInfoTable->AitVersion == ACM_INFO_TABLE_VERSION_9) {
+            AcmPtr += sizeof(ACM_INFO_TABLE);
+            UINT8 *StartPtr = AcmPtr;
+            bool TableFound = false;
+            while (memcmp(((VAR_LIST *)AcmPtr)->Id, NULL_TERMINATOR_ID, 4) && ((AcmPtr - StartPtr) < 300)) {
+                //
+                // Check if ACM VERSION INFO table found
+                //
+                if (!memcmp(((VAR_LIST *)AcmPtr)->Id, ACM_VERSION_INFORMATION_LIST_ID, 4)) {
+                    TableFound = TRUE;
+                    break;
+                }
+                AcmPtr += ((VAR_LIST *)AcmPtr)->Length;
+            }
+            if (TableFound) {
+                AcmVersion.AcmMajorVersion = ((ACM_VER_INFO_TABLE *)AcmPtr)->AcmRev[0];
+                AcmVersion.AcmMinorVersion = ((ACM_VER_INFO_TABLE *)AcmPtr)->AcmRev[1];
+                AcmVersion.AcmRevision = ((ACM_VER_INFO_TABLE *)AcmPtr)->AcmRev[2];
+            }
         }
     }
 
@@ -185,9 +210,8 @@ namespace UefiSpace {
         INT64 width = 20;
         stringstream ss;
         ss.setf(ios::left);
-
-        ss << setw(width) << "Guid:"    << GUID(AcmInfoTable.Guid).str(true) << "\n"
-           << setw(width) << "Acm Version:"   << (UINT32)AcmInfoTable.AitRevision[0] << "." << (UINT32)AcmInfoTable.AitRevision[1] << "." << (UINT32)AcmInfoTable.AitRevision[2] << "\n";
+        ss << setw(width) << "Guid:"    << GUID(AcmInfoTable->Guid).str(true) << "\n"
+           << setw(width) << "Acm Version:"   << (UINT32)AcmVersion.AcmMajorVersion << "." << (UINT32)AcmVersion.AcmMinorVersion << "." << (UINT32)AcmVersion.AcmRevision << "\n";
 
         ss << setw(width) << "ModuleType:"    << hex << uppercase << acmHeader.ModuleType << "h\n"
            << setw(width) << "ModuleSubType:" << hex << uppercase << acmHeader.ModuleSubType << "h\n"
@@ -476,7 +500,7 @@ namespace UefiSpace {
                << "PostIbbHash:\n"
                << setw(width) << "HashAlg:"       << hex << uppercase << IbbElement.PostIbbHash.HashAlg << "h (" << getAlgName(IbbElement.PostIbbHash.HashAlg) << ")\n"
                << setw(width) << "Size:"          << hex << uppercase << IbbElement.PostIbbHash.Size << "h\n"
-               << "HashBuffer:\n" << DumpHex(data + sizeof(BOOT_POLICY_MANIFEST_HEADER) + sizeof(IBB_ELEMENT) - 1, IbbElement.PostIbbHash.Size) << "\n"
+               << "HashBuffer:\n" << DumpHex(data + sizeof(IBB_ELEMENT) - 1, IbbElement.PostIbbHash.Size) << "\n"
                << setw(width) << "IbbEntry:"      << hex << uppercase << IbbEntryPoint << "h\n"
                << setw(width) << "HashList:"      << "(Number of Digests: " << HashList.Count << ", Total Size: " << hex << uppercase << HashList.Size << "h)\n";
             for (int i = 0; i < HashList.Count; ++i) {

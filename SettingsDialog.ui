@@ -687,11 +687,6 @@
      </property>
     </widget>
    </widget>
-   <widget class="QWidget" name="otherTab">
-    <attribute name="title">
-     <string>Other</string>
-    </attribute>
-   </widget>
   </widget>
   <zorder>tabWidget</zorder>
   <zorder>buttonBox</zorder>

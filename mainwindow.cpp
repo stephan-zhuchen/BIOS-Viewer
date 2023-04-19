@@ -17,14 +17,13 @@
 GuidDatabase *guidData = nullptr;
 UINT32       OpenedWindow = 0;
 
-MainWindow::MainWindow(QString applicationDir, QWidget *parent)
+MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       buffer(nullptr),
       popMenu(new QMenu),
       structureLabel(new QLabel("Structure:", this)),
       infoLabel(new QLabel("Infomation:", this)),
-      appDir(applicationDir),
       DarkmodeFlag(false),
       BiosValidFlag(true),
       IFWI_exist(false),
@@ -32,16 +31,18 @@ MainWindow::MainWindow(QString applicationDir, QWidget *parent)
       infoWindowOpened(false),
       searchDialog(nullptr),
       searchDialogOpened(false),
-      setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat)),
       InputImage(nullptr),
       InputImageModel(nullptr),
       BiosImage(nullptr)
 {
     ui->setupUi(this);
+
+    // restore window position
+    QSettings windowSettings("Intel", "BiosViewer");
+    restoreGeometry(windowSettings.value("mainwindow/geometry").toByteArray());
+    initSettings();
+
     ui->titleInfomation->clear();
-    ui->treeWidget->header()->setResizeContentsPrecision(QHeaderView::ResizeToContents);
-    ui->treeWidget->header()->setStretchLastSection(true);
-    ui->treeWidget->viewport()->installEventFilter(this);
     structureLabel->setFont(QFont("Microsoft YaHei UI", 10));
     infoLabel->setFont(QFont("Microsoft YaHei UI", 10));
     structureLabel->setGeometry(15, 80, 100, 20);
@@ -63,7 +64,6 @@ MainWindow::MainWindow(QString applicationDir, QWidget *parent)
     connect(ui->actionCollapse,     SIGNAL(triggered()), this, SLOT(ActionCollapseTriggered()));
     connect(ui->actionReplace_BIOS, SIGNAL(triggered()), this, SLOT(ActionReplaceBIOSTriggered()));
 
-    initSettings();
     ui->infoButton->setVisible(false);
 
     this->connect(ui->treeWidget,SIGNAL(customContextMenuRequested(QPoint)),
@@ -134,15 +134,15 @@ void MainWindow::refresh() {
     QTreeWidgetItem *ImageOverviewItem = ui->treeWidget->itemAt(0, 0);
     if (ui->treeWidget->indexOfTopLevelItem(ImageOverviewItem) == -1)
         return;
-    ImageOverviewItem->setFont(MainWindow::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 1, 700));
-    ImageOverviewItem->setFont(MainWindow::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 1, 700));
-    ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 1, 700));
+    ImageOverviewItem->setFont(MainWindow::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+    ImageOverviewItem->setFont(MainWindow::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
+    ImageOverviewItem->setFont(MainWindow::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
     INT32 width = ui->treeWidget->width();
-    ui->treeWidget->setColumnWidth(MainWindow::Name, width - 300);
-    ui->treeWidget->setColumnWidth(MainWindow::Type, 100);
+    ui->treeWidget->setColumnWidth(MainWindow::Name, width - 280);
+    ui->treeWidget->setColumnWidth(MainWindow::Type, 120);
     infoLabel->setGeometry(ui->treeWidget->width() + 23, 80, 100, 20);
 }
 
@@ -197,6 +197,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         searchDialog->close();
         searchDialog = nullptr;
     }
+    // save window position
+    QSettings windowSettings("Intel", "BiosViewer");
+    windowSettings.setValue("mainwindow/geometry", saveGeometry());
 }
 
 void MainWindow::OpenFile(QString path)
@@ -215,6 +218,7 @@ void MainWindow::OpenFile(QString path)
         qDebug() << time << "ms";
         delete buffer;
     }
+    resizeEvent(nullptr);
 }
 
 void MainWindow::DoubleClickOpenFile(QString path) {
@@ -314,7 +318,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
 }
 
 void MainWindow::showHexView() {
-    HexViewDialog *hexDialog = new HexViewDialog(appDir);
+    HexViewDialog *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -331,7 +335,7 @@ void MainWindow::showHexView() {
 }
 
 void MainWindow::showBodyHexView() {
-    HexViewDialog *hexDialog = new HexViewDialog(appDir);
+    HexViewDialog *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -350,7 +354,7 @@ void MainWindow::showBodyHexView() {
 }
 
 void MainWindow::showNvHexView() {
-    HexViewDialog *hexDialog = new HexViewDialog(appDir);
+    HexViewDialog *hexDialog = new HexViewDialog();
     UINT8 *NvData = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataSize;
     QByteArray *hexViewData = new QByteArray((char*)NvData, NvDataSize);
@@ -468,7 +472,7 @@ void MainWindow::getSHA512() {
 
 void MainWindow::initSettings() {
     if (!setting.contains("Theme"))
-        setting.setValue("Theme", "System");
+        setting.setValue("Theme", "Light");
     if (!setting.contains("BiosViewerFontSize"))
         setting.setValue("BiosViewerFontSize", 12);
     if (!setting.contains("BiosViewerFont"))
@@ -620,7 +624,7 @@ void MainWindow::ActionExitTriggered()
 
 void MainWindow::ActionSettingsTriggered()
 {
-    SettingsDialog *settingDialog = new SettingsDialog(appDir);
+    SettingsDialog *settingDialog = new SettingsDialog();
     if (isDarkMode()) {
         settingDialog->setWindowIcon(QIcon(":/gear_light.svg"));
     }
@@ -653,7 +657,7 @@ void MainWindow::OpenInNewWindowTriggered()
     QFileInfo fileinfo {fileName};
     setting.setValue("LastFilePath", fileinfo.path());
 
-    MainWindow *newWindow = new MainWindow(appDir);
+    MainWindow *newWindow = new MainWindow();
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
 //    newWindow->setOpenedFileName(fileName);
     newWindow->show();

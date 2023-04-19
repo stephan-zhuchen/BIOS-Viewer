@@ -46,9 +46,24 @@
 #define ACM_MODULE_SUBTYPE_ANC_MODULE                   0x2
 #define ACM_HEADER_FLAG_DEBUG_SIGNED                    BIT15
 #define ACM_NPW_SVN                                     0x2
-#define ACM_HEADER_VERSION_3                            (3 << 16)
 #define ACM_PKCS_1_5_RSA_SIGNATURE_SHA256_SIZE          256
 #define ACM_PKCS_1_5_RSA_SIGNATURE_SHA384_SIZE          384
+
+///
+/// ACM Header
+///
+#define ACM_HEADER_VERSION_3                            0x30000
+#define ACM_HEADER_VERSION_4                            0x40000
+#define ACM_HEADER_VERSION_5                            0x50004
+
+#define ACM_INFO_TABLE_VERSION_9                        0x9
+
+#define ACM_VERSION_INFORMATION_LIST_ID                 "LREV"
+#define CHIPSET_1_LIST_ID                               "L1SC"
+#define CHIPSET_2_LIST_ID                               "L2SC"
+#define NULL_TERMINATOR_ID                              "LLUN"
+#define PROC_INFO_LIST_ID                               "LUPC"
+#define TPM_INFO_TABLE_ID                               "LMPT"
 
 typedef struct {
   UINT16     ModuleType;
@@ -101,7 +116,29 @@ typedef struct {
   UINT32  ProcessorIdList;
   UINT32  TpmInfoList;
 } ACM_INFO_TABLE;
+
+typedef struct {
+  UINT8  TableId[4];    // Table ID: VERSION_LIST : "VERL"
+  UINT32 Size;          // Table size
+  UINT32 Rev;           // Major.Minor.Flavor(1byte.1byte.2bytes)
+  UINT32 InfoExtTblVer; // Major.Minor.Flavor(1byte.1byte.2bytes)
+  UINT32 GenVer;        // Major.Minor.Flavor(1byte.1byte.2bytes)
+  UINT32 CoreVer;       // Major.Minor.Flavor(1byte.1byte.2bytes)
+  UINT8  AcmRev[4];     // Major.Minor.Build(1byte.1byte.2bytes)
+  UINT32 ACMSecVer;     // SINIT: SINIT version, S-ACM: Minimal SINIT SVN
+} ACM_VER_INFO_TABLE;
+
+typedef struct {
+  CHAR8  Id[4];
+  UINT32 Length;
+} VAR_LIST;
 #pragma pack (pop)
+
+struct ACM_VERSION {
+  UINT8   AcmMajorVersion;         ///< BIOSACM binary major version
+  UINT8   AcmMinorVersion;         ///< BIOSACM binary minor version
+  UINT8   AcmRevision;             ///< BIOSACM binary revision
+};
 
 //
 // BPM Policy:

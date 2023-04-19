@@ -6,14 +6,21 @@
 #include "lib/QHexView/qhexview.h"
 #include "ui_SearchDialog.h"
 
-SearchDialog::SearchDialog(QString &applicationDir, QWidget *parent) :
+SearchDialog::SearchDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SearchDialog),
-    setting(QSettings(applicationDir + "/Setting.ini", QSettings::IniFormat)),
     SearchModelData(nullptr),
     PreviousOffset(-1)
 {
     ui->setupUi(this);
+
+    connect(ui->AsciiCheckbox,  SIGNAL(stateChanged(int)),    this, SLOT(AsciiCheckboxStateChanged(int)));
+    connect(ui->TextCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(TextCheckboxStateChanged(int)));
+    connect(ui->SearchContent,  SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
+    connect(ui->NextButton,     SIGNAL(clicked(bool)),        this, SLOT(NextButtonClicked(bool)));
+    connect(ui->PreviousButton, SIGNAL(clicked(bool)),        this, SLOT(PreviousButtonClicked(bool)));
+    connect(ui->SearchContent,  SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
+
     ui->SearchContent->setAttribute(Qt::WA_InputMethodEnabled, false);
     ui->SearchContent->setText(SearchedString);
     ui->SearchContent->selectAll();
@@ -192,7 +199,7 @@ void SearchDialog::closeEvent(QCloseEvent *event) {
     ((MainWindow*)parentWidget)->setSearchDialogState(false);
 }
 
-void SearchDialog::on_AsciiCheckbox_stateChanged(int state)
+void SearchDialog::AsciiCheckboxStateChanged(int state)
 {
     PreviousOffset = -1;
     HistoryResult.clear();
@@ -209,7 +216,7 @@ void SearchDialog::on_AsciiCheckbox_stateChanged(int state)
     }
 }
 
-void SearchDialog::on_TextCheckbox_stateChanged(int state)
+void SearchDialog::TextCheckboxStateChanged(int state)
 {
     PreviousOffset = -1;
     HistoryResult.clear();
@@ -226,14 +233,14 @@ void SearchDialog::on_TextCheckbox_stateChanged(int state)
     }
 }
 
-void SearchDialog::on_SearchContent_textChanged(const QString &arg1)
+void SearchDialog::SearchContentTextChanged(const QString &arg1)
 {
     PreviousOffset = -1;
     HistoryResult.clear();
     SearchedString = arg1.toLower();
 }
 
-void SearchDialog::on_NextButton_clicked()
+void SearchDialog::NextButtonClicked()
 {
     int beginOffset = 0;
     int searchLength = 0;
@@ -253,7 +260,7 @@ void SearchDialog::on_NextButton_clicked()
     }
 }
 
-void SearchDialog::on_PreviousButton_clicked()
+void SearchDialog::PreviousButtonClicked()
 {
     if (isBinary) {
         if (HistoryResult.size() <= 1)
@@ -277,8 +284,8 @@ void SearchDialog::on_PreviousButton_clicked()
 }
 
 
-void SearchDialog::on_SearchContent_returnPressed()
+void SearchDialog::SearchContentReturnPressed()
 {
-    on_NextButton_clicked();
+    NextButtonClicked();
 }
 
