@@ -5,10 +5,12 @@
 #include <QStyleFactory>
 #include <QInputDialog>
 #include <QElapsedTimer>
+#include <QProcess>
 #include "mainwindow.h"
 #include "HexViewDialog.h"
 #include "SettingsDialog.h"
 #include "InfoWindow.h"
+#include "PeCoffInfo.h"
 #include "./ui_mainwindow.h"
 #include "include/GuidDefinition.h"
 #include "openssl/sha.h"
@@ -17,7 +19,7 @@
 GuidDatabase *guidData = nullptr;
 UINT32       OpenedWindow = 0;
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QString appPath, QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       buffer(nullptr),
@@ -31,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
       infoWindowOpened(false),
       searchDialog(nullptr),
       searchDialogOpened(false),
+      appDir(appPath),
       InputImage(nullptr),
       InputImageModel(nullptr),
       BiosImage(nullptr)
@@ -247,15 +250,17 @@ void MainWindow::parseBinaryInfo() {
 }
 
 void MainWindow::showTreeRightMenu(QPoint pos) {
-    QIcon hexBinary, box_arrow_up, key;
+    QIcon hexBinary, box_arrow_up, key, windows;
     if (DarkmodeFlag) {
         hexBinary = QIcon(":/file-binary_light.svg");
         box_arrow_up = QIcon(":/box-arrow-up_light.svg");
         key = QIcon(":/key_light.svg");
+        windows = QIcon(":/windows_light.svg");
     } else {
         hexBinary = QIcon(":/file-binary.svg");
         box_arrow_up = QIcon(":/box-arrow-up.svg");
         key = QIcon(":/key.svg");
+        windows = QIcon(":/windows.svg");
     }
     QModelIndex index = ui->treeWidget->indexAt(pos);
     if (!index.isValid())
@@ -264,6 +269,17 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
     RightClickeditemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
 
     QMenu* menu = new QMenu;
+    if (RightClickeditemModel->getSubType() == "PE32 image" ||
+        RightClickeditemModel->getSubType() == "PE32+ image") {
+        QString filepath = appDir + "/tool/dumpbin.exe";
+        QFile file(filepath);
+        if (file.exists()) {
+            QAction* showPeCoff = new QAction("PE/COFF");
+            showPeCoff->setIcon(windows);
+            menu->addAction(showPeCoff);
+            this->connect(showPeCoff,SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
+        }
+    }
     QAction* showHex = new QAction("Hex View");
     showHex->setIcon(hexBinary);
     menu->addAction(showHex);
@@ -366,6 +382,40 @@ void MainWindow::showNvHexView() {
                           RightClickeditemModel->modelData->isCompressed);
     hexDialog->exec();
     delete hexViewData;
+}
+
+void MainWindow::showPeCoffView() {
+    QString filepath = appDir + "/tool/temp.bin";
+    QString toolpath = appDir + "/tool/dumpbin.exe";
+    PeCoffInfo *PeCoffDialog = new PeCoffInfo();
+    if (isDarkMode()) {
+        PeCoffDialog->setWindowIcon(QIcon(":/windows_light.svg"));
+    }
+    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
+    Buffer::saveBinary(filepath.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
+
+    QProcess *process = new QProcess(this);
+    process->start(toolpath, QStringList() << "/DISASM" << filepath);
+    process->waitForFinished();
+    QString DisAssembly = process->readAllStandardOutput();
+    PeCoffDialog->setAsmText(DisAssembly);
+
+    process->start(toolpath, QStringList() << "/HEADERS" << filepath);
+    process->waitForFinished();
+    QString Header = process->readAllStandardOutput();
+    PeCoffDialog->setHeaderText(Header);
+
+    process->start(toolpath, QStringList() << "/RELOCATIONS" << filepath);
+    process->waitForFinished();
+    QString Relocation = process->readAllStandardOutput();
+    PeCoffDialog->setRelocationText(Relocation);
+
+    delete process;
+
+    QFile file(filepath);
+    file.remove();
+
+    PeCoffDialog->exec();
 }
 
 void MainWindow::extractVolume() {
@@ -657,7 +707,7 @@ void MainWindow::OpenInNewWindowTriggered()
     QFileInfo fileinfo {fileName};
     setting.setValue("LastFilePath", fileinfo.path());
 
-    MainWindow *newWindow = new MainWindow();
+    MainWindow *newWindow = new MainWindow(appDir);
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
 //    newWindow->setOpenedFileName(fileName);
     newWindow->show();

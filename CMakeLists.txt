@@ -85,6 +85,7 @@ set(PROJECT_SOURCES
         SettingsDialog.h SettingsDialog.cpp SettingsDialog.ui
         InfoWindow.h InfoWindow.cpp InfoWindow.ui
         SearchDialog.h SearchDialog.cpp SearchDialog.ui
+        PeCoffInfo.h PeCoffInfo.cpp PeCoffInfo.ui
         logo/Images.qrc
         ${INCLUDE_FILE}
         ${LZMA_SDK}

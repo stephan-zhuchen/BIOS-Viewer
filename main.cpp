@@ -4,7 +4,8 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w = MainWindow();
+    QString dir_path = QCoreApplication::applicationDirPath();
+    MainWindow w = MainWindow(dir_path);
     w.show();
     if (argc == 2){
         w.DoubleClickOpenFile(argv[1]);

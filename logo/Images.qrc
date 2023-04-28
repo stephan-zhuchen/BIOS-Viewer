@@ -29,6 +29,8 @@
         <file>file-binary.svg</file>
         <file>key.svg</file>
         <file>key_light.svg</file>
+        <file>windows.svg</file>
+        <file>windows_light.svg</file>
     </qresource>
     <qresource prefix="/sty">
         <file>dark_mode.qss</file>

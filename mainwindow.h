@@ -16,7 +16,7 @@
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "1.1"
+#define __BiosViewerVersion__ "1.2"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -30,7 +30,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QString appPath, QWidget *parent = nullptr);
     ~MainWindow();
 
     void cleanup();
@@ -69,6 +69,7 @@ private slots:
     void showHexView();
     void showBodyHexView();
     void showNvHexView();
+    void showPeCoffView();
     void extractVolume();
     void extractBodyVolume();
     void getMD5();
@@ -110,6 +111,7 @@ private:
     bool           infoWindowOpened;
     SearchDialog   *searchDialog;
     bool           searchDialogOpened;
+    QString        appDir;
     QSettings      setting{"Intel", "BiosViewer"};
     QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
