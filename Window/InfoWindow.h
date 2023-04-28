@@ -5,7 +5,7 @@
 #include <QSettings>
 #include <QTableWidgetItem>
 #include <QListWidgetItem>
-#include "lib/UefiLib.h"
+#include "UefiLib.h"
 
 using UefiSpace::BiosImageVolume;
 

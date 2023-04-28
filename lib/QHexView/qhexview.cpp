@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <QtGlobal>
 #include <QInputDialog>
-#include "../../SearchDialog.h"
+#include "SearchDialog.h"
 
 // valid character table ascii
 #define CHAR_VALID(caracter) \

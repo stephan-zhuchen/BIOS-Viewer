@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QSettings>
 #include <vector>
-#include "lib/Model.h"
+#include "Model.h"
 
 namespace Ui {
 class SearchDialog;

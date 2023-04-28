@@ -12,7 +12,7 @@
 #include "InfoWindow.h"
 #include "PeCoffInfo.h"
 #include "./ui_mainwindow.h"
-#include "include/GuidDefinition.h"
+#include "GuidDefinition.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
 

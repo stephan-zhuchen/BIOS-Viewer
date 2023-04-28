@@ -1,7 +1,7 @@
 #include <QMessageBox>
 #include <QElapsedTimer>
 #include "mainwindow.h"
-#include "lib/iwfi.h"
+#include "iwfi.h"
 #include "./ui_mainwindow.h"
 
 #define V_FLASH_FDBAR_FLVALSIG  0x0FF0A55A

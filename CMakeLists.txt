@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-include_directories(include lib/Openssl/include)
+include_directories(include lib lib/Openssl/include Window)
 set(LINK_DIR  lib/Openssl/lib)
 link_directories(${LINK_DIR})
 
@@ -60,6 +60,32 @@ set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
 
 #link_directories(D:/Code/BiosViewer/lib/LzmaDecompress/Sdk/C)
 
+set(UI_SOURCES
+        Window/mainwindow.ui
+        Window/HexViewDialog.ui
+        Window/SettingsDialog.ui
+        Window/InfoWindow.ui
+        Window/SearchDialog.ui
+        Window/PeCoffInfo.ui
+)
+
+set(WINDOW_SOURCES
+        Window/mainwindow.cpp
+        Window/BinaryTool.cpp
+        Window/mainwindow.h
+        Window/HexViewDialog.h
+        Window/HexViewDialog.cpp
+        Window/SettingsDialog.h
+        Window/SettingsDialog.cpp
+        Window/InfoWindow.h
+        Window/InfoWindow.cpp
+        Window/SearchDialog.h
+        Window/SearchDialog.cpp
+        Window/PeCoffInfo.h
+        Window/PeCoffInfo.cpp
+        Window/UefiDecode.cpp
+    )
+
 set(PROJECT_SOURCES
         main.cpp
         lib/GuidDefinition.cpp
@@ -76,21 +102,13 @@ set(PROJECT_SOURCES
         lib/QHexView/qhexview.cpp
         lib/QHexView/HexEdit.cpp
         lib/QHexView/qhexview.h
-        UefiDecode.cpp
-        mainwindow.cpp
-        BinaryTool.cpp
-        mainwindow.h
-        mainwindow.ui
-        HexViewDialog.h HexViewDialog.cpp HexViewDialog.ui
-        SettingsDialog.h SettingsDialog.cpp SettingsDialog.ui
-        InfoWindow.h InfoWindow.cpp InfoWindow.ui
-        SearchDialog.h SearchDialog.cpp SearchDialog.ui
-        PeCoffInfo.h PeCoffInfo.cpp PeCoffInfo.ui
         logo/Images.qrc
+        ${WINDOW_SOURCES}
         ${INCLUDE_FILE}
         ${LZMA_SDK}
         ${UEFI_DECOMPRESS}
         ${app_icon_resource_windows}
+        ${UI_SOURCES}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

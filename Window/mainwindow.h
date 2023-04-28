@@ -9,10 +9,10 @@
 #include <iostream>
 #include <fstream>
 #include <thread>
-#include "lib/BaseLib.h"
-#include "lib/UefiLib.h"
-#include "lib/Model.h"
-#include "lib/iwfi.h"
+#include "BaseLib.h"
+#include "UefiLib.h"
+#include "Model.h"
+#include "iwfi.h"
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 

@@ -6,7 +6,7 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QMessageBox>
-#include "../../HexViewDialog.h"
+#include "HexViewDialog.h"
 
 void QHexView::keyPressEvent(QKeyEvent *event)
 {

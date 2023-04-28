@@ -4,8 +4,8 @@
 #include <string>
 #include "HexViewDialog.h"
 #include "ui_HexViewDialog.h"
-#include "lib/QHexView/qhexview.h"
-#include "lib/BaseLib.h"
+#include "QHexView/qhexview.h"
+#include "BaseLib.h"
 
 HexViewDialog::HexViewDialog(QWidget *parent) :
     QDialog(parent),

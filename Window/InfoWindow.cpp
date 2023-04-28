@@ -3,7 +3,7 @@
 #include <QFile>
 #include "mainwindow.h"
 #include "InfoWindow.h"
-#include "lib/BaseLib.h"
+#include "BaseLib.h"
 #include "ui_InfoWindow.h"
 
 using BaseLibrarySpace::Buffer;

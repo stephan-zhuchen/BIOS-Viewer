@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QSettings>
-#include "lib/UefiLib.h"
+#include "UefiLib.h"
 
 namespace Ui {
 class HexViewDialog;

@@ -3,7 +3,7 @@
 #include <QMessageBox>
 #include "mainwindow.h"
 #include "SearchDialog.h"
-#include "lib/QHexView/qhexview.h"
+#include "QHexView/qhexview.h"
 #include "ui_SearchDialog.h"
 
 SearchDialog::SearchDialog(QWidget *parent) :
