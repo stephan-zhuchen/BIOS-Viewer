@@ -31,6 +31,7 @@ private slots:
     void infoLineSpacingBoxActivated(int index);
     void infoFontBoxActivated(int index);
     void showPaddingBoxStateChanged(int state);
+    void enableMultiThreadStateChanged(int state);
     void enableEditingBoxStateChanged(int state);
 
 private:
@@ -48,6 +49,7 @@ private:
     QString LineSpacing;
     QString InfoLineSpacing;
     QString ShowPaddingItem;
+    QString EnableMultiThread;
     QString EnableHexEditing;
     static int lastTabIndex;
 };

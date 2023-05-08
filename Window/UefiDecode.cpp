@@ -180,10 +180,14 @@ void MainWindow::setFfsData() {
         }
     }
 
+    bool EnableMultiThread = false;
+    if (setting.value("EnableMultiThread") == "true") {
+        EnableMultiThread = true;
+    }
     for (int idx = 0; idx < FirmwareVolumeData.size(); ++idx) {
-        auto FvDecoder = [this](int index) {
+        auto FvDecoder = [this, EnableMultiThread](int index) {
             FirmwareVolume *volume = FirmwareVolumeData.at(index);
-            volume->decodeFfs(true);
+            volume->decodeFfs(EnableMultiThread);
             FvModel* fvm = new FvModel(volume);
             if (IFWI_exist) {
                 IFWI_ModelData.at(IFWI_ModelData.size() - 1)->volumeModelData.at(index) = fvm;
@@ -191,8 +195,11 @@ void MainWindow::setFfsData() {
                 IFWI_ModelData.at(index) = fvm;
             }
         };
-//        FvDecoder(idx);
-        threadPool.emplace_back(FvDecoder, idx);
+        if (EnableMultiThread) {
+            threadPool.emplace_back(FvDecoder, idx);
+        } else {
+            FvDecoder(idx);
+        }
     }
     for (class thread& t:threadPool) {
         t.join();

@@ -49,7 +49,6 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
-
     void AsciiCheckboxStateChanged(int state);
     void TextCheckboxStateChanged(int state);
     void SearchContentTextChanged(const QString &arg1);

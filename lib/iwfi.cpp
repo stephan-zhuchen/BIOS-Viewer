@@ -15,7 +15,15 @@ UINT32 FlashRegionBaseArea::getSize() {
     return getLimit() - getBase();
 }
 
-IfwiVolume::IfwiVolume(UINT8* file, INT64 RegionLength, INT64 FlashLength):Volume(file, RegionLength, FlashLength) {}
+void FlashRegionBaseArea::setBase(UINT32 address) {
+    base = (UINT16)(address >> 12);
+}
+
+void FlashRegionBaseArea::setLimit(UINT32 address) {
+    limit = (UINT16)((address >> 12) - 1);
+}
+
+IfwiVolume::IfwiVolume(UINT8* file, INT64 RegionLength, INT64 FlashLength, FLASH_REGION_TYPE Type):Volume(file, RegionLength, FlashLength), RegionType(Type) {}
 
 IfwiVolume::~IfwiVolume() {}
 
@@ -25,7 +33,7 @@ bool IfwiVolume::isValid() const {
 
 std::string IfwiVolume::getFlashmap() { return "";}
 
-FlashDescriptorClass::FlashDescriptorClass(UINT8* file, INT64 RegionLength, INT64 FlashLength):IfwiVolume(file, RegionLength, 0), FlashTotalSize(FlashLength) {
+FlashDescriptorClass::FlashDescriptorClass(UINT8* file, INT64 RegionLength, INT64 FlashLength):IfwiVolume(file, RegionLength, 0, FLASH_REGION_TYPE::FlashRegionDescriptor), FlashTotalSize(FlashLength) {
     descriptorHeader = *(FLASH_DESCRIPTOR_HEADER*)data;
     if (descriptorHeader.Signature != FLASH_DESCRIPTOR_SIGNATURE) {
         validFlag = false;
@@ -133,7 +141,7 @@ void FlashDescriptorClass::setInfoStr() {
     InfoStr = QString::fromStdString(ss.str());
 }
 
-GbE_RegionClass::GbE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset) {
+GbE_RegionClass::GbE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset, FLASH_REGION_TYPE::FlashRegionGbE) {
     MacAddress = *(GBE_MAC_ADDRESS*)data;
     GbeVersion = *(GBE_VERSION*)(data + GBE_VERSION_OFFSET);
 }
@@ -173,7 +181,7 @@ void GbE_RegionClass::setInfoStr() {
     InfoStr = QString::fromStdString(ss.str());
 }
 
-ME_RegionClass::ME_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset) {
+ME_RegionClass::ME_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset, FLASH_REGION_TYPE::FlashRegionMe) {
     INT64 SearchOffset = 0;
     bool versionFound = false;
     while (SearchOffset < RegionLength - sizeof(INT64)) {
@@ -218,7 +226,7 @@ void ME_RegionClass::setInfoStr() {
     InfoStr = QString::fromStdString(ss.str());
 }
 
-CSE_LayoutClass::CSE_LayoutClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset) {
+CSE_LayoutClass::CSE_LayoutClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset, FLASH_REGION_TYPE::FlashRegionMe) {
     // Data partition always points to FPT header
     ifwiHeader.ifwi16Header = *(IFWI_16_LAYOUT_HEADER*)data;
     if ((ifwiHeader.ifwi16Header.DataPartition.Offset + sizeof(UINT32) < (UINT64)RegionLength) &&
@@ -317,7 +325,7 @@ void CSE_LayoutClass::setInfoStr() {
     InfoStr = QString::fromStdString(ss.str());
 }
 
-CSE_PartitionClass::CSE_PartitionClass(UINT8* file, INT64 RegionLength, INT64 offset, std::string name, PartitionLevel lv):IfwiVolume(file, RegionLength, offset), PartitionName(name) {
+CSE_PartitionClass::CSE_PartitionClass(UINT8* file, INT64 RegionLength, INT64 offset, std::string name, PartitionLevel lv):IfwiVolume(file, RegionLength, offset, FLASH_REGION_TYPE::FlashRegionMe), PartitionName(name) {
     level = lv;
 }
 
@@ -427,7 +435,7 @@ std::string CSE_PartitionClass::bpdtEntryTypeToString(const UINT16 type) {
     return "Unknown";
 }
 
-EC_RegionClass::EC_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset) {
+EC_RegionClass::EC_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset, FLASH_REGION_TYPE::FlashRegionEC) {
     UINT32 searchValue;
 
     for (INT64 searchOffset = 0; searchOffset < RegionLength; searchOffset += 2)
@@ -476,7 +484,7 @@ void EC_RegionClass::setInfoStr() {
     InfoStr = QString::fromStdString(ss.str());
 }
 
-OSSE_RegionClass::OSSE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset) {
+OSSE_RegionClass::OSSE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):IfwiVolume(file, RegionLength, offset, FLASH_REGION_TYPE::FlashRegionIE) {
 }
 
 OSSE_RegionClass::~OSSE_RegionClass() {

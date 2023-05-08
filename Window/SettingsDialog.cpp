@@ -21,6 +21,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(ui->infoLineSpacingBox,    SIGNAL(activated(int)),    this, SLOT(infoLineSpacingBoxActivated(int)));
     connect(ui->infoFontBox,           SIGNAL(activated(int)),    this, SLOT(infoFontBoxActivated(int)));
     connect(ui->showPaddingBox,        SIGNAL(stateChanged(int)), this, SLOT(showPaddingBoxStateChanged(int)));
+    connect(ui->EnableMultiThread,     SIGNAL(stateChanged(int)), this, SLOT(enableMultiThreadStateChanged(int)));
     connect(ui->enableEditingBox,      SIGNAL(stateChanged(int)), this, SLOT(enableEditingBoxStateChanged(int)));
 
     ui->tabWidget->setCurrentIndex(lastTabIndex);
@@ -49,6 +50,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     if (!setting.contains("ShowPaddingItem"))
         setting.setValue("ShowPaddingItem", "false");
+    if (!setting.contains("EnableMultiThread"))
+        setting.setValue("EnableMultiThread", "false");
     if (!setting.contains("EnableHexEditing"))
         setting.setValue("EnableHexEditing", "true");
 
@@ -78,6 +81,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
         ui->showPaddingBox->setCheckState(Qt::Checked);
     else if (setting.value("ShowPaddingItem") == "false")
         ui->showPaddingBox->setCheckState(Qt::Unchecked);
+
+    if (setting.value("EnableMultiThread") == "true")
+        ui->EnableMultiThread->setCheckState(Qt::Checked);
+    else if (setting.value("EnableMultiThread") == "false")
+        ui->EnableMultiThread->setCheckState(Qt::Unchecked);
 
     if (setting.value("EnableHexEditing") == "true")
         ui->enableEditingBox->setCheckState(Qt::Checked);
@@ -149,6 +157,7 @@ void SettingsDialog::buttonBoxAccepted()
     setting.setValue("InfoLineSpacing", InfoLineSpacing);
     setting.setValue("Theme", Theme);
     setting.setValue("ShowPaddingItem", ShowPaddingItem);
+    setting.setValue("EnableMultiThread", EnableMultiThread);
     setting.setValue("EnableHexEditing", EnableHexEditing);
     lastTabIndex = ui->tabWidget->currentIndex();
     parentWidget->refresh();
@@ -164,6 +173,14 @@ void SettingsDialog::showPaddingBoxStateChanged(int state)
         ShowPaddingItem = "true";
     } else if (state == Qt::Unchecked) {
         ShowPaddingItem = "false";
+    }
+}
+
+void SettingsDialog::enableMultiThreadStateChanged(int state) {
+    if (state == Qt::Checked) {
+        EnableMultiThread = "true";
+    } else if (state == Qt::Unchecked) {
+        EnableMultiThread = "false";
     }
 }
 

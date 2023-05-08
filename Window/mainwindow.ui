@@ -107,7 +107,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="logo/Images.qrc">
+         <iconset resource="../logo/Images.qrc">
           <normaloff>:/search.svg</normaloff>:/search.svg</iconset>
         </property>
         <property name="iconSize">
@@ -394,7 +394,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="OpenFile">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/open.svg</normaloff>:/open.svg</iconset>
    </property>
    <property name="text">
@@ -411,7 +411,7 @@
   </action>
   <action name="actionAboutBiosViewer">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/about.svg</normaloff>:/about.svg</iconset>
    </property>
    <property name="text">
@@ -425,7 +425,7 @@
   </action>
   <action name="actionAboutQt">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/about.svg</normaloff>:/about.svg</iconset>
    </property>
    <property name="text">
@@ -439,7 +439,7 @@
   </action>
   <action name="actionExit">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/Exit.svg</normaloff>:/Exit.svg</iconset>
    </property>
    <property name="text">
@@ -456,7 +456,7 @@
   </action>
   <action name="OpenInNewWindow">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/open.svg</normaloff>:/open.svg</iconset>
    </property>
    <property name="text">
@@ -473,7 +473,7 @@
   </action>
   <action name="actionSettings">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/gear.svg</normaloff>:/gear.svg</iconset>
    </property>
    <property name="text">
@@ -490,11 +490,11 @@
   </action>
   <action name="actionSeperate_Binary">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/scissors.svg</normaloff>:/scissors.svg</iconset>
    </property>
    <property name="text">
-    <string>Seperate Binary</string>
+    <string>Separate Binary</string>
    </property>
    <property name="font">
     <font>
@@ -504,7 +504,7 @@
   </action>
   <action name="actionExtract_BIOS">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/scissors.svg</normaloff>:/scissors.svg</iconset>
    </property>
    <property name="text">
@@ -518,7 +518,7 @@
   </action>
   <action name="actionSearch">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/search.svg</normaloff>:/search.svg</iconset>
    </property>
    <property name="text">
@@ -535,7 +535,7 @@
   </action>
   <action name="actionGoto">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/bookmark.svg</normaloff>:/bookmark.svg</iconset>
    </property>
    <property name="text">
@@ -552,7 +552,7 @@
   </action>
   <action name="actionCollapse">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/arrows-collapse.svg</normaloff>:/arrows-collapse.svg</iconset>
    </property>
    <property name="text">
@@ -569,7 +569,7 @@
   </action>
   <action name="actionReplace_BIOS">
    <property name="icon">
-    <iconset resource="logo/Images.qrc">
+    <iconset resource="../logo/Images.qrc">
      <normaloff>:/replace.svg</normaloff>:/replace.svg</iconset>
    </property>
    <property name="text">
@@ -583,7 +583,7 @@
   </action>
  </widget>
  <resources>
-  <include location="logo/Images.qrc"/>
+  <include location="../logo/Images.qrc"/>
  </resources>
  <connections/>
 </ui>

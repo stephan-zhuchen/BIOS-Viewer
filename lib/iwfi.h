@@ -41,14 +41,17 @@ struct FlashRegionBaseArea {
     UINT32 getBase();
     UINT32 getLimit();
     UINT32 getSize();
+    void   setBase(UINT32 address);
+    void   setLimit(UINT32 address);
 };
 
 class IfwiVolume : public Volume {
 protected:
     bool validFlag{true};
 public:
+    FLASH_REGION_TYPE RegionType;
     bool isValid() const;
-    IfwiVolume(UINT8* file, INT64 RegionLength, INT64 FlashLength);
+    IfwiVolume(UINT8* file, INT64 RegionLength, INT64 FlashLength, FLASH_REGION_TYPE Type);
     ~IfwiVolume();
     virtual std::string getFlashmap();
 };

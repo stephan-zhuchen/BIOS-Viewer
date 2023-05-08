@@ -17,8 +17,8 @@ SearchDialog::SearchDialog(QWidget *parent) :
     connect(ui->AsciiCheckbox,  SIGNAL(stateChanged(int)),    this, SLOT(AsciiCheckboxStateChanged(int)));
     connect(ui->TextCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(TextCheckboxStateChanged(int)));
     connect(ui->SearchContent,  SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
-    connect(ui->NextButton,     SIGNAL(clicked(bool)),        this, SLOT(NextButtonClicked(bool)));
-    connect(ui->PreviousButton, SIGNAL(clicked(bool)),        this, SLOT(PreviousButtonClicked(bool)));
+    connect(ui->NextButton,     SIGNAL(clicked()),            this, SLOT(NextButtonClicked()));
+    connect(ui->PreviousButton, SIGNAL(clicked()),            this, SLOT(PreviousButtonClicked()));
     connect(ui->SearchContent,  SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
 
     ui->SearchContent->setAttribute(Qt::WA_InputMethodEnabled, false);
@@ -242,6 +242,7 @@ void SearchDialog::SearchContentTextChanged(const QString &arg1)
 
 void SearchDialog::NextButtonClicked()
 {
+    qDebug("NextButtonClicked");
     int beginOffset = 0;
     int searchLength = 0;
     if (!isBinary && SearchText) {

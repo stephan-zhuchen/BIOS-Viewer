@@ -7,7 +7,7 @@
 
 void MainWindow::ActionSeperateBinaryTriggered()
 {
-    if ( BiosImage == nullptr )
+    if ( InputImage == nullptr )
       return;
 
     bool done;
@@ -18,7 +18,7 @@ void MainWindow::ActionSeperateBinaryTriggered()
     if (done) {
         INT32 SeperateOffset = offset.toInt(nullptr, 16);
 
-        if (SeperateOffset <= 0 || SeperateOffset >= BiosImage->size) {
+        if (SeperateOffset <= 0 || SeperateOffset >= InputImageSize) {
             QMessageBox::critical(this, tr("Seperate Binary Tool"), "Invalid Offset!");
             return;
         }
@@ -31,22 +31,29 @@ void MainWindow::ActionSeperateBinaryTriggered()
                                                           QFileDialog::ShowDirsOnly);
         QString upperFilePath = dirName + "/" + fileinfo.baseName() + "_upper.bin";
         QString lowerFilePath = dirName + "/" + fileinfo.baseName() + "_lower.bin";
-        Buffer::saveBinary(upperFilePath.toStdString(), BiosImage->data, 0, SeperateOffset);
-        Buffer::saveBinary(lowerFilePath.toStdString(), BiosImage->data, SeperateOffset, BiosImage->size - SeperateOffset);
+        Buffer::saveBinary(upperFilePath.toStdString(), InputImage, 0, SeperateOffset);
+        Buffer::saveBinary(lowerFilePath.toStdString(), InputImage, SeperateOffset, InputImageSize - SeperateOffset);
     }
 }
 
 void MainWindow::ActionExtractBIOSTriggered()
 {
-    if (BiosImage == nullptr) {
+    if (InputImage == nullptr) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "No Binary Opened!");
         return;
     }
-    INT64 BinarySize = BiosImage->size;
-    if (BinarySize != 0x2000000) {
+    if (InputImageSize != 0x2000000) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "This is not an IFWI Binary!");
         return;
     }
+    IfwiVolume *FlashDescriptor = IFWI_Sections.at(0);
+    if (FlashDescriptor->RegionType != FLASH_REGION_TYPE::FlashRegionDescriptor) {
+        QMessageBox::critical(this, tr("About BIOS Viewer"), "Invalid Flash Descriptor!");
+        return;
+    }
+    FlashRegionBaseArea BiosRegion = ((FlashDescriptorClass*)FlashDescriptor)->RegionList.at(FLASH_REGION_TYPE::FlashRegionBios);
+    INT64 BIOS_Offset = BiosRegion.getBase();
+    INT64 BIOS_Size = BiosRegion.getSize();
 
     QFileInfo fileinfo {OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_BIOS.bin";
@@ -57,7 +64,8 @@ void MainWindow::ActionExtractBIOSTriggered()
     if (BiosName.isEmpty()) {
         return;
     }
-    Buffer::saveBinary(BiosName.toStdString(), BiosImage->data, 0x1000000, 0x1000000);
+
+    Buffer::saveBinary(BiosName.toStdString(), InputImage, BIOS_Offset, BIOS_Size);
 }
 
 void MainWindow::ActionSearchTriggered()
@@ -124,11 +132,13 @@ void MainWindow::ActionCollapseTriggered()
 
 void MainWindow::ActionReplaceBIOSTriggered()
 {
+    const INT64 IFWI_SIZE = 0x2000000;
+//    const INT64 BLOCK_SIZE = 0x1000;
     if (InputImage == nullptr) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "No Binary Opened!");
         return;
     }
-    if (InputImageSize != 0x2000000) {
+    if (InputImageSize != IFWI_SIZE) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "This is not an IFWI Binary!");
         return;
     }
@@ -143,28 +153,66 @@ void MainWindow::ActionReplaceBIOSTriggered()
 
     Buffer *NewBiosBuffer = new BaseLibrarySpace::Buffer(new std::ifstream(BiosName.toStdString(), std::ios::in | std::ios::binary));
     INT64 NewBiosSize = NewBiosBuffer->getBufferSize();
-    INT64 PaddingSize = 0x1000000 - NewBiosSize;
-    UINT8* NewBios = NewBiosBuffer->getBytes(NewBiosSize);
-    if (NewBiosSize > 0x1000000) {
-        QMessageBox::critical(this, tr("Extract BIOS Tool"), "Do not support BIOS larger than 16MB!");
+    if (NewBiosSize != BiosImage->size) {
+        QMessageBox::critical(this, tr("About BIOS Viewer"), "Do not support replacing BIOS of different size!");
+        delete NewBiosBuffer;
         return;
     }
-    UINT8* NewIFWI = new UINT8[0x2000000];
-    for (int IfwiIdx = 0; IfwiIdx < 0x1000000; ++IfwiIdx) {
-        NewIFWI[IfwiIdx] = BiosImage->data[IfwiIdx];
+    UINT8* NewBios = NewBiosBuffer->getBytes(NewBiosSize);
+    delete NewBiosBuffer;
+
+    IfwiVolume *FlashDescriptor = IFWI_Sections.at(0);
+    if (FlashDescriptor->RegionType != FLASH_REGION_TYPE::FlashRegionDescriptor) {
+        QMessageBox::critical(this, tr("About BIOS Viewer"), "Invalid Flash Descriptor!");
+        delete[] NewBios;
+        return;
     }
-    for (int PaddingIdx = 0; PaddingIdx < PaddingSize; ++PaddingIdx) {
-        NewIFWI[0x1000000 + PaddingIdx] = 0xFF;
+
+    vector<FlashRegionBaseArea> &RegionList = ((FlashDescriptorClass*)FlashDescriptor)->RegionList;
+    vector<FlashRegionBaseArea> ValidRegionList;
+    for (FlashRegionBaseArea &region:RegionList) {
+        if (region.limit == 0) {
+            continue;
+        }
+        ValidRegionList.push_back(region);
     }
-    for (int NewBiosIdx = 0; NewBiosIdx < NewBiosSize; ++NewBiosIdx) {
-        NewIFWI[0x1000000 + PaddingSize + NewBiosIdx] = NewBios[NewBiosIdx];
+    sort(ValidRegionList.begin(), ValidRegionList.end(), [](FlashRegionBaseArea &g1, FlashRegionBaseArea &g2) { return g1.limit < g2.limit; });
+
+    FlashRegionBaseArea PaddingRegion = ValidRegionList.at(ValidRegionList.size() - 2);
+    FlashRegionBaseArea BiosRegion = ValidRegionList.at(ValidRegionList.size() - 1);
+
+    if (NewBiosSize > PaddingRegion.getSize() + BiosRegion.getSize()) {
+        QMessageBox::critical(this, tr("Extract BIOS Tool"), "Binary size is too large!");
+        delete[] NewBios;
+        return;
     }
+
+    PaddingRegion.setLimit(IFWI_SIZE - NewBiosSize);
+    BiosRegion.setBase(IFWI_SIZE - NewBiosSize);
+
+    UINT8* NewIFWI = new UINT8[IFWI_SIZE];
+    for (UINT32 IfwiIdx = 0; IfwiIdx < PaddingRegion.getBase(); ++IfwiIdx) {
+        NewIFWI[IfwiIdx] = InputImage[IfwiIdx];
+    }
+    for (UINT32 PaddingIdx = 0; PaddingIdx < PaddingRegion.getSize(); ++PaddingIdx) {
+        NewIFWI[PaddingRegion.getBase() + PaddingIdx] = 0xFF;
+    }
+    for (UINT32 NewBiosIdx = 0; NewBiosIdx < NewBiosSize; ++NewBiosIdx) {
+        NewIFWI[PaddingRegion.getLimit() + NewBiosIdx] = NewBios[NewBiosIdx];
+    }
+
+    // Fix flash descriptor (Not finished, hash etc.)
+//    FlashRegionBaseArea *FRL = (FlashRegionBaseArea*)(NewIFWI + 0x40);
+//    ((FlashRegionBaseArea*)(FRL + FLASH_REGION_TYPE::FlashRegionBios))->setBase(IFWI_SIZE - NewBiosSize);
+//    ((FlashRegionBaseArea*)(FRL + FLASH_REGION_TYPE::FlashRegionDeviceExpansion2))->setLimit(IFWI_SIZE - NewBiosSize);
+//    FlashRegionBaseArea *FRLB = (FlashRegionBaseArea*)(NewIFWI + BLOCK_SIZE + 0x40);
+//    ((FlashRegionBaseArea*)(FRLB + FLASH_REGION_TYPE::FlashRegionBios))->setBase(IFWI_SIZE - NewBiosSize);
+//    ((FlashRegionBaseArea*)(FRLB + FLASH_REGION_TYPE::FlashRegionDeviceExpansion2))->setLimit(IFWI_SIZE - NewBiosSize);
 
     QFileInfo fileinfo {OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_IntegratedBIOS.bin";
-    Buffer::saveBinary(outputPath.toStdString(), NewIFWI, 0, 0x2000000);
+    Buffer::saveBinary(outputPath.toStdString(), NewIFWI, 0, IFWI_SIZE);
 
-    delete NewBiosBuffer;
     delete[] NewBios;
     delete[] NewIFWI;
 }

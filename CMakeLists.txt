@@ -41,6 +41,8 @@ set(UEFI_DECOMPRESS
 set(INCLUDE_FILE
         include/Base.h
         include/PeImage.h
+        include/ELF.h
+        include/FspHeader.h
         include/PiFirmwareFile.h
         include/PiFirmwareVolume.h
         include/PiDependency.h
@@ -84,10 +86,10 @@ set(WINDOW_SOURCES
         Window/PeCoffInfo.h
         Window/PeCoffInfo.cpp
         Window/UefiDecode.cpp
+        Window/RightMenu.cpp
     )
 
-set(PROJECT_SOURCES
-        main.cpp
+set(LIBRARY_SOURCES
         lib/GuidDefinition.cpp
         lib/BaseLib.h
         lib/BaseLib.cpp
@@ -99,10 +101,17 @@ set(PROJECT_SOURCES
         lib/Model.h
         lib/Model.cpp
         lib/Section.cpp
+        lib/ElfLib.cpp
+        lib/ElfLib.h
         lib/QHexView/qhexview.cpp
         lib/QHexView/HexEdit.cpp
         lib/QHexView/qhexview.h
+)
+
+set(PROJECT_SOURCES
+        main.cpp
         logo/Images.qrc
+        ${LIBRARY_SOURCES}
         ${WINDOW_SOURCES}
         ${INCLUDE_FILE}
         ${LZMA_SDK}

@@ -16,7 +16,7 @@
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "1.2"
+#define __BiosViewerVersion__ "1.3"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -72,6 +72,10 @@ private slots:
     void showPeCoffView();
     void extractVolume();
     void extractBodyVolume();
+    void extractIfwiRegion();
+    void replaceIfwiRegion();
+    void replaceFfsContent();
+    void replaceMicrocodeFile();
     void getMD5();
     void getSHA1();
     void getSHA224();

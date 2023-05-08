@@ -32,7 +32,7 @@
    <string>Settings</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="logo/Images.qrc">
+   <iconset resource="../logo/Images.qrc">
     <normaloff>:/gear.svg</normaloff>:/gear.svg</iconset>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
@@ -69,7 +69,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="biosTab">
     <attribute name="title">
@@ -557,6 +557,19 @@
       <string>Show Padding and Empty Volume</string>
      </property>
     </widget>
+    <widget class="QCheckBox" name="EnableMultiThread">
+     <property name="geometry">
+      <rect>
+       <x>360</x>
+       <y>130</y>
+       <width>311</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Enable Multi-Thread</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="hexTab">
     <attribute name="title">
@@ -692,7 +705,7 @@
   <zorder>buttonBox</zorder>
  </widget>
  <resources>
-  <include location="logo/Images.qrc"/>
+  <include location="../logo/Images.qrc"/>
  </resources>
  <connections>
   <connection>

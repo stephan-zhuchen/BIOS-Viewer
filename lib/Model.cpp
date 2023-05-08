@@ -121,6 +121,9 @@ SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
         break;
     case EFI_SECTION_RAW:
         name = "Raw Section";
+        if (section->isElfFormat) {
+            name = "ELF";
+        }
         subtype = "Raw";
         break;
     case EFI_SECTION_PEI_DEPEX:
@@ -150,10 +153,23 @@ SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
         case VolumeType::CommonSection:
             SectionModel *secModel;
             secModel = new SectionModel((CommonSection*)volume, this->parentModel);
+            if (((CommonSection*)volume)->isElfFormat) {
+                secModel->name = "ELF";
+            }
             volumeModelData.push_back(secModel);
             break;
+        case VolumeType::ELF:
+            DataModel *dataModel;
+            dataModel = new DataModel(volume, "ELF");
+            volumeModelData.push_back(dataModel);
+            break;
+        case VolumeType::Other:
+            dataModel = new DataModel(volume, volume->AdditionalMsg);
+            volumeModelData.push_back(dataModel);
+            break;
         default:
-            throw exception();
+            dataModel = new DataModel(volume, "Unknown");
+            volumeModelData.push_back(dataModel);
             break;
         }
     }

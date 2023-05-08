@@ -296,8 +296,8 @@ if __name__ == "__main__":
     Project_Code_Path = []
     Project_Code_Path.append("C:\\Users\\zhuc2\\Code\\RPL")
     Project_Code_Path.append("C:\\Users\\zhuc2\\Code\\LNL")
-    Project_Code_Path.append("C:\\Users\\zhuc2\\Code\\MTL")
-    Project_Code_Path.append("C:\\Users\\zhuc2\\Code\\PTL_POC")
+    Project_Code_Path.append("C:\\Users\\zhuc2\\Code\\MTL_HSD")
+    Project_Code_Path.append("C:\\Users\\zhuc2\\Code\\PTL")
     for path in Project_Code_Path:
         # path = os.path.join(Project_Code_Path, path)
         print(path)

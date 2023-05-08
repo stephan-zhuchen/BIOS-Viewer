@@ -4,6 +4,7 @@
 #include "UefiLib.h"
 #include "Base.h"
 #include "Microcode.h"
+#include "ElfLib.h"
 #include "GuidDefinition.h"
 #include "LzmaDecompress/LzmaDecompressLibInternal.h"
 #include "BaseUefiDecompress/UefiDecompressLib.h"
@@ -130,6 +131,7 @@ namespace UefiSpace {
     CommonSection::CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs):Volume(file, length, offset) {
         Type = VolumeType::CommonSection;
         ParentFFS = Ffs;
+        CommonHeader = *(EFI_COMMON_SECTION_HEADER*)data;
     }
 
     CommonSection::~CommonSection() {
@@ -154,7 +156,6 @@ namespace UefiSpace {
 
     void CommonSection::SelfDecode() {
         INT64 HeaderSize = sizeof(EFI_COMMON_SECTION_HEADER);
-        CommonHeader = *(EFI_COMMON_SECTION_HEADER*)data;
         INT64 offset = sizeof(EFI_COMMON_SECTION_HEADER);
         INT32 SectionSize = SECTION_SIZE(&CommonHeader);
         if (IS_SECTION2(&CommonHeader)) {
@@ -270,6 +271,25 @@ namespace UefiSpace {
                     index += 1;
                 }
             }
+            else if (Elf::IsElfFormat(data + HeaderSize)) {
+                isElfFormat = true;
+                Elf elf = Elf(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize);
+                if (elf.isValid()) {
+                    elf.decodeSections();
+                    elf.setInfoStr();
+                    AdditionalMsg = elf.InfoStr;
+                    for (Volume* fv:elf.UpldFiles) {
+                        ChildFile.push_back(fv);
+                    }
+                }
+            } else if (FspHeader::isFspHeader(data + HeaderSize)) {
+                isFspHeader = true;
+                FspHeader fspH = FspHeader(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize);
+                if (fspH.isValid()) {
+                    fspH.setInfoStr();
+                    AdditionalMsg = fspH.InfoStr;
+                }
+            }
             break;
         default:
             break;
@@ -307,11 +327,31 @@ namespace UefiSpace {
             case VolumeType::CommonSection:
                 ((CommonSection*)volume)->SelfDecode();
                 break;
+            case VolumeType::ELF:
+                break;
             default:
-                throw exception();
                 break;
             }
         }
+    }
+
+    bool CommonSection::CheckValidation() {
+        UINT8 SecTpye = CommonHeader.Type;
+        if ((SecTpye >= EFI_SECTION_ALL && SecTpye <= EFI_SECTION_DISPOSABLE) ||
+            (SecTpye >= EFI_SECTION_PE32 && SecTpye <= EFI_SECTION_SMM_DEPEX) ||
+            SecTpye != 0x1A) {
+            if (!IS_SECTION2(&CommonHeader)) {
+                if (SECTION_SIZE(&CommonHeader) < getHeaderSize()) {
+                    return false;
+                }
+            } else {
+                if (SECTION2_SIZE(&CommonHeader) < getHeaderSize()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     void CommonSection::setInfoStr() {
@@ -407,6 +447,10 @@ namespace UefiSpace {
                 for (auto ApriFile:AprioriList) {
                     ss << guidData->getNameFromGuid(ApriFile) << "\n";
                 }
+            } else if (isElfFormat) {
+                ss << AdditionalMsg.toStdString();
+            } else if (isFspHeader) {
+                ss << AdditionalMsg.toStdString();
             }
             break;
         default:
@@ -519,6 +563,9 @@ namespace UefiSpace {
                 SecSize = this->getUINT32(offset + sizeof(EFI_COMMON_SECTION_HEADER));
             }
             CommonSection *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this);
+            if (!Sec->CheckValidation()) {
+                break;
+            }
             Sec->SelfDecode();
             Sections.push_back(Sec);
             if (offset + SecSize > offset) {
@@ -637,6 +684,7 @@ namespace UefiSpace {
                 case EFI_FV_FILETYPE_DRIVER:
                 case EFI_FV_FILETYPE_APPLICATION:
                 case EFI_FV_FILETYPE_MM:
+                case EFI_FV_FILETYPE_RAW:
                     Ffs->decodeSections();
                     break;
                 default:
@@ -663,7 +711,7 @@ namespace UefiSpace {
             for (thread &t:threadPool) {
                 t.join();
             }
-//            threadPool.clear();
+            // Bug here, occasionally hang
             std::sort(FfsFiles.begin(), FfsFiles.end(), [](FfsFile *f1, FfsFile *f2) { return f1->offsetFromBegin < f2->offsetFromBegin; });
         }
     }
@@ -785,6 +833,66 @@ namespace UefiSpace {
            << setw(width) << "Format:"      << hex << uppercase << NvStoreHeader.Format << "h\n"
            << setw(width) << "State:"       << hex << uppercase << (UINT32)NvStoreHeader.State << "h\n";
         InfoStr = QString::fromStdString(ss.str());
+    }
+
+    FspHeader::FspHeader(UINT8* fv, INT64 length, INT64 offset):Volume(fv, length, offset) {
+        UINT32 s = sizeof(TABLES);
+        if (s != length) {
+            validFlag = false;
+        }
+        mTable = *(TABLES*)fv;
+        if ((mTable.FspInfoHeader.Signature == FSP_INFO_HEADER_SIGNATURE) &&
+            (mTable.FspInfoExtendedHeader.Signature == FSP_INFO_EXTENDED_HEADER_SIGNATURE) &&
+            (mTable.FspPatchTable.Signature == FSP_PATCH_TABLE_SIGNATURE)) {
+            validFlag = true;
+        } else {
+            validFlag = false;
+        }
+    }
+
+    FspHeader::~FspHeader() {}
+
+    bool FspHeader::isValid() const {
+        return validFlag;
+    }
+
+    void FspHeader::setInfoStr() {
+        INT64 width = 25;
+        stringstream ss;
+        ss.setf(ios::left);
+        ss << setw(width) << "SpecVersion:"      << hex << uppercase << (UINT16)mTable.FspInfoHeader.SpecVersion << "h\n"
+           << setw(width) << "HeaderRevision:"   << hex << uppercase << (UINT16)mTable.FspInfoHeader.HeaderRevision << "h\n"
+           << setw(width) << "ImageRevision:"    << hex << uppercase << (UINT16)mTable.FspInfoHeader.ImageRevision << "h\n"
+           << setw(width) << "ImageId:"          << hex << uppercase << Buffer::charToString(mTable.FspInfoHeader.ImageId, 8)  << "\n"
+           << setw(width) << "ImageSize:"        << hex << uppercase << mTable.FspInfoHeader.ImageSize << "h\n"
+           << setw(width) << "ImageBase:"        << hex << uppercase << mTable.FspInfoHeader.ImageBase << "h\n"
+           << setw(width) << "ImageAttribute:"            << hex << uppercase << mTable.FspInfoHeader.ImageAttribute << "h\n"
+           << setw(width) << "ComponentAttribute:"        << hex << uppercase << mTable.FspInfoHeader.ComponentAttribute << "h\n"
+           << setw(width) << "CfgRegionOffset:"           << hex << uppercase << mTable.FspInfoHeader.CfgRegionOffset << "h\n"
+           << setw(width) << "CfgRegionSize:"             << hex << uppercase << mTable.FspInfoHeader.CfgRegionSize << "h\n"
+           << setw(width) << "TempRamInitEntryOffset:"    << hex << uppercase << mTable.FspInfoHeader.TempRamInitEntryOffset << "h\n"
+           << setw(width) << "NotifyPhaseEntryOffset:"    << hex << uppercase << mTable.FspInfoHeader.NotifyPhaseEntryOffset << "h\n"
+           << setw(width) << "FspMemoryInitEntryOffset:"  << hex << uppercase << mTable.FspInfoHeader.FspMemoryInitEntryOffset << "h\n"
+           << setw(width) << "TempRamExitEntryOffset:"    << hex << uppercase << mTable.FspInfoHeader.TempRamExitEntryOffset << "h\n"
+           << setw(width) << "FspSiliconInitEntryOffset:" << hex << uppercase << mTable.FspInfoHeader.FspSiliconInitEntryOffset << "h\n"
+           << setw(width) << "FspMultiPhaseSiInitEntryOffset:"   << hex << uppercase << mTable.FspInfoHeader.FspMultiPhaseSiInitEntryOffset << "h\n"
+           << setw(width) << "ExtendedImageRevision:"     << hex << uppercase << mTable.FspInfoHeader.ExtendedImageRevision << "h\n"
+           << setw(width) << "FspMultiPhaseMemInitEntryOffset:"  << hex << uppercase << mTable.FspInfoHeader.FspMultiPhaseMemInitEntryOffset << "h\n"
+           << setw(width) << "FspSmmInitEntryOffset:"     << hex << uppercase << mTable.FspInfoHeader.FspSmmInitEntryOffset << "h\n"
+           << setw(width) << "FspProducerId:"             << hex << uppercase << Buffer::charToString(mTable.FspInfoExtendedHeader.FspProducerId, 6) << "\n"
+           << setw(width) << "FspProducerRevision:"       << hex << uppercase << mTable.FspInfoExtendedHeader.FspProducerRevision << "h\n"
+           << setw(width) << "FspProducerDataSize:"       << hex << uppercase << mTable.FspInfoExtendedHeader.FspProducerDataSize << "h\n"
+           << setw(width) << "BuildTimeStamp:"            << hex << uppercase << mTable.FspProduceDataType1.BuildTimeStamp << "\n"
+           << setw(width) << "PatchEntryNum:"             << hex << uppercase << mTable.FspPatchTable.PatchEntryNum << "h\n";
+        InfoStr = QString::fromStdString(ss.str());
+    }
+
+    bool FspHeader::isFspHeader(const UINT8  *ImageBase) {
+        UINT32 *signature = (UINT32*)ImageBase;
+        if (*signature == FSP_INFO_HEADER_SIGNATURE) {
+            return true;
+        }
+        return false;
     }
 
     BiosImageVolume::BiosImageVolume(UINT8* fv, INT64 length, INT64 offset):Volume(fv, length, offset) {

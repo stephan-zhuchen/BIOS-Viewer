@@ -11,7 +11,10 @@
 #include "Microcode.h"
 #include "VariableFormat.h"
 #include "BootGuard.h"
+#include "FspHeader.h"
 #include "openssl/sha.h"
+
+class Elf;
 
 namespace UefiSpace {
     using namespace BaseLibrarySpace;
@@ -29,7 +32,9 @@ namespace UefiSpace {
     enum class VolumeType {
         FirmwareVolume,
         FfsFile,
-        CommonSection
+        CommonSection,
+        ELF,
+        Other
     };
 
     class Volume {
@@ -40,6 +45,7 @@ namespace UefiSpace {
         bool   isCompressed{false};
         bool   isCorrupted{false};
         const char* ErrorMsg = "offset larger than size!";
+        QString AdditionalMsg;
         QString InfoStr;
     public:
         VolumeType Type;
@@ -120,7 +126,10 @@ namespace UefiSpace {
         vector<Volume*>           ChildFile;
         PeCoff                    *peCoffHeader{nullptr};
         Depex                     *dependency{nullptr};
+        bool                      isValid;
         bool                      isAprioriRaw{false};
+        bool                      isElfFormat{false};
+        bool                      isFspHeader{false};
         vector<EFI_GUID>          AprioriList;
     public:
         CommonSection()=delete;
@@ -130,6 +139,7 @@ namespace UefiSpace {
         void SelfDecode();
         void DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize);
         void DecodeChildFile();
+        bool CheckValidation();
         void extracted(std::stringstream &ss);
         void setInfoStr() override;
         INT64 getHeaderSize() const override;
@@ -207,6 +217,18 @@ namespace UefiSpace {
         NvStorageVariable(UINT8* fv, INT64 offset);
         ~NvStorageVariable();
         void setInfoStr() override;
+    };
+
+    class FspHeader : public Volume {
+    private:
+        TABLES mTable;
+        bool   validFlag{true};
+    public:
+        FspHeader(UINT8* fv, INT64 length, INT64 offset);
+        ~FspHeader();
+        bool isValid() const;
+        void setInfoStr() override;
+        static bool isFspHeader(const UINT8  *ImageBase);
     };
 
     class BiosImageVolume: public Volume {
