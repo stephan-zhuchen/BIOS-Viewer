@@ -131,6 +131,7 @@ namespace UefiSpace {
         bool                      isElfFormat{false};
         bool                      isFspHeader{false};
         vector<EFI_GUID>          AprioriList;
+        UINT8                     *DecompressedBufferOnHeap{nullptr};
     public:
         CommonSection()=delete;
         CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs);

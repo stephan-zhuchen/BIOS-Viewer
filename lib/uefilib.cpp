@@ -142,6 +142,8 @@ namespace UefiSpace {
         for(auto file:ChildFile) {
             delete file;
         }
+        if (DecompressedBufferOnHeap != nullptr)
+            delete[] DecompressedBufferOnHeap;
     }
 
     INT64 CommonSection::getSectionSize(UINT8* file) {
@@ -169,7 +171,6 @@ namespace UefiSpace {
         switch (CommonHeader.Type) {
         case EFI_SECTION_COMPRESSION:
             UINT32 ScratchSize;
-            VOID* destination;
             VOID* scratch;
             RETURN_STATUS status;
             UncompressedLength = this->getINT32(offset);
@@ -182,13 +183,14 @@ namespace UefiSpace {
                     throw exception();
                 }
 
-                destination = malloc(decompressedSize);
+                DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
-                status = UefiDecompress(data + HeaderSize, destination, scratch);
+                status = UefiDecompress(data + HeaderSize, DecompressedBufferOnHeap, scratch);
                 if (status != RETURN_SUCCESS) {
+                    free(scratch);
                     throw exception();
                 }
-                DecodeDecompressedBuffer((UINT8*)destination, decompressedSize);
+                DecodeDecompressedBuffer(DecompressedBufferOnHeap, decompressedSize);
                 free(scratch);
             }
             break;
@@ -225,13 +227,14 @@ namespace UefiSpace {
                     throw exception();
                 }
 
-                destination = malloc(decompressedSize);
+                DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
-                status = LzmaUefiDecompress(data + HeaderSize, SectionSize - HeaderSize, destination, scratch);
+                status = LzmaUefiDecompress(data + HeaderSize, SectionSize - HeaderSize, DecompressedBufferOnHeap, scratch);
                 if (status != RETURN_SUCCESS) {
+                    free(scratch);
                     throw exception();
                 }
-                DecodeDecompressedBuffer((UINT8*)destination, decompressedSize);
+                DecodeDecompressedBuffer(DecompressedBufferOnHeap, decompressedSize);
                 free(scratch);
             }
             break;
@@ -564,6 +567,7 @@ namespace UefiSpace {
             }
             CommonSection *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this);
             if (!Sec->CheckValidation()) {
+                delete Sec;
                 break;
             }
             Sec->SelfDecode();

@@ -9,6 +9,63 @@
 #include "openssl/sha.h"
 #include "openssl/md5.h"
 
+void MainWindow::initRightMenu() {
+    RightMenu = new QMenu;
+    DigestMenu = new QMenu("Digest");
+    showPeCoff = new QAction("PE/COFF");
+    showHex = new QAction("Hex View");
+    showBodyHex = new QAction("Body Hex View");
+    extractVolumeAction = new QAction("Extract");
+    extractBodyVolumeAction = new QAction("Extract");
+    showNvHex = new QAction("Variable Data Hex View");
+    ExtractRegion = new QAction("Extract");
+    ReplaceRegion = new QAction("Replace");
+    ReplaceFile = new QAction("Replace");
+    md5_Menu = new QAction("MD5");
+    sha1_Menu = new QAction("SHA1");
+    sha224_Menu = new QAction("SHA224");
+    sha256_Menu = new QAction("SHA256");
+    sha384_Menu = new QAction("SHA384");
+    sha512_Menu = new QAction("SHA512");
+}
+
+void MainWindow::finiRightMenu() {
+    if (RightMenu != nullptr)
+        delete RightMenu;
+    if (DigestMenu != nullptr)
+        delete DigestMenu;
+    if (showPeCoff != nullptr)
+        delete showPeCoff;
+    if (showHex != nullptr)
+        delete showHex;
+    if (showBodyHex != nullptr)
+        delete showBodyHex;
+    if (extractVolumeAction != nullptr)
+        delete extractVolumeAction;
+    if (extractBodyVolumeAction != nullptr)
+        delete extractBodyVolumeAction;
+    if (showNvHex != nullptr)
+        delete showNvHex;
+    if (ExtractRegion != nullptr)
+        delete ExtractRegion;
+    if (ReplaceRegion != nullptr)
+        delete ReplaceRegion;
+    if (ReplaceFile != nullptr)
+        delete ReplaceFile;
+    if (md5_Menu != nullptr)
+        delete md5_Menu;
+    if (sha1_Menu != nullptr)
+        delete sha1_Menu;
+    if (sha224_Menu != nullptr)
+        delete sha224_Menu;
+    if (sha256_Menu != nullptr)
+        delete sha256_Menu;
+    if (sha384_Menu != nullptr)
+        delete sha384_Menu;
+    if (sha512_Menu != nullptr)
+        delete sha512_Menu;
+}
+
 void MainWindow::showTreeRightMenu(QPoint pos) {
     QIcon hexBinary, box_arrow_up, replace, key, windows;
     if (DarkmodeFlag) {
@@ -30,91 +87,79 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
     QTreeWidgetItem *item = ui->treeWidget->itemAt(pos);
     RightClickeditemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
 
-    QMenu* menu = new QMenu;
     if (RightClickeditemModel->getSubType() == "PE32 image" ||
         RightClickeditemModel->getSubType() == "PE32+ image") {
         QString filepath = appDir + "/tool/dumpbin.exe";
         QFile file(filepath);
         if (file.exists()) {
-            QAction* showPeCoff = new QAction("PE/COFF");
             showPeCoff->setIcon(windows);
-            menu->addAction(showPeCoff);
+            RightMenu->addAction(showPeCoff);
             this->connect(showPeCoff,SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
         }
     }
-    QAction* showHex = new QAction("Hex View");
     showHex->setIcon(hexBinary);
-    menu->addAction(showHex);
+    RightMenu->addAction(showHex);
     this->connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
 
     if (RightClickeditemModel->getType() == "Volume" || RightClickeditemModel->getType() == "File" || RightClickeditemModel->getType() == "Section") {
-        QAction* showBodyHex = new QAction("Body Hex View");
-        QAction* extractVolume = new QAction("Extract " + RightClickeditemModel->getType());
-        QAction* extractBodyVolume = new QAction("Extract " + RightClickeditemModel->getType() + " Body");
         showBodyHex->setIcon(hexBinary);
-        extractVolume->setIcon(box_arrow_up);
-        extractBodyVolume->setIcon(box_arrow_up);
-        menu->addAction(showBodyHex);
-        menu->addAction(extractVolume);
-        menu->addAction(extractBodyVolume);
+        extractVolumeAction->setText("Extract " + RightClickeditemModel->getType());
+        extractVolumeAction->setIcon(box_arrow_up);
+        extractBodyVolumeAction->setText("Extract " + RightClickeditemModel->getType() + " Body");
+        extractBodyVolumeAction->setIcon(box_arrow_up);
+        RightMenu->addAction(showBodyHex);
+        RightMenu->addAction(extractVolumeAction);
+        RightMenu->addAction(extractBodyVolumeAction);
         this->connect(showBodyHex,SIGNAL(triggered(bool)),this,SLOT(showBodyHexView()));
-        this->connect(extractVolume,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
-        this->connect(extractBodyVolume,SIGNAL(triggered(bool)),this,SLOT(extractBodyVolume()));
+        this->connect(extractVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
+        this->connect(extractBodyVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractBodyVolume()));
     }
 
     if (RightClickeditemModel->getType() == "Variable") {
-        QAction* showNvHex = new QAction("Variable Data Hex View");
         showNvHex->setIcon(hexBinary);
-        menu->addAction(showNvHex);
+        RightMenu->addAction(showNvHex);
         this->connect(showNvHex,SIGNAL(triggered(bool)),this,SLOT(showNvHexView()));
     }
 
     QString RegionName = RightClickeditemModel->getName();
     if (RightClickeditemModel->getType() == "Region") {
-        QAction* ExtractRegion = new QAction("Extract " + RegionName);
+        ExtractRegion->setText("Extract " + RegionName);
         ExtractRegion->setIcon(box_arrow_up);
-        menu->addAction(ExtractRegion);
+        RightMenu->addAction(ExtractRegion);
         this->connect(ExtractRegion,SIGNAL(triggered(bool)),this,SLOT(extractIfwiRegion()));
     }
 
     if (RightClickeditemModel->getType() == "Region" && RightClickeditemModel->getName() == "BIOS") {
-        QAction* ReplaceRegion = new QAction("Replace " + RegionName);
+        ReplaceRegion->setText("Replace " + RegionName);
         ReplaceRegion->setIcon(replace);
-        menu->addAction(ReplaceRegion);
+        RightMenu->addAction(ReplaceRegion);
         this->connect(ReplaceRegion,SIGNAL(triggered(bool)),this,SLOT(replaceIfwiRegion()));
     }
 
     if (RightClickeditemModel->getName() == "Startup Acm" && RightClickeditemModel->getType() == "File") {
-        QAction* ReplaceFile = new QAction("Replace " + RegionName);
+        ReplaceFile->setText("Replace " + RegionName);
         ReplaceFile->setIcon(replace);
-        menu->addAction(ReplaceFile);
+        RightMenu->addAction(ReplaceFile);
         this->connect(ReplaceFile,SIGNAL(triggered(bool)),this,SLOT(replaceFfsContent()));
     }
 
-    QMenu* DigestMenu = new QMenu("Digest");
     DigestMenu->setIcon(key);
-    QAction* md5_Menu = new QAction("MD5");
     DigestMenu->addAction(md5_Menu);
     this->connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
-    QAction* sha1_Menu = new QAction("SHA1");
     DigestMenu->addAction(sha1_Menu);
     this->connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
-    QAction* sha224_Menu = new QAction("SHA224");
     DigestMenu->addAction(sha224_Menu);
     this->connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
-    QAction* sha256_Menu = new QAction("SHA256");
     DigestMenu->addAction(sha256_Menu);
     this->connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
-    QAction* sha384_Menu = new QAction("SHA384");
     DigestMenu->addAction(sha384_Menu);
     this->connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
-    QAction* sha512_Menu = new QAction("SHA512");
     DigestMenu->addAction(sha512_Menu);
     this->connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
 
-    menu->addMenu(DigestMenu);
-    menu->move(ui->treeWidget->cursor().pos());
-    menu->show();
+    RightMenu->addMenu(DigestMenu);
+    RightMenu->move(ui->treeWidget->cursor().pos());
+    RightMenu->show();
 }
 
 void MainWindow::showHexView() {
@@ -130,7 +175,7 @@ void MainWindow::showHexView() {
                           RightClickeditemModel->getName(),
                           OpenedFileName,
                           RightClickeditemModel->modelData->isCompressed);
-    hexDialog->exec();
+    hexDialog->show();
     delete hexViewData;
 }
 
@@ -149,7 +194,7 @@ void MainWindow::showBodyHexView() {
                           RightClickeditemModel->getName(),
                           OpenedFileName,
                           RightClickeditemModel->modelData->isCompressed);
-    hexDialog->exec();
+    hexDialog->show();
     delete hexViewData;
 }
 
@@ -164,20 +209,24 @@ void MainWindow::showNvHexView() {
                           RightClickeditemModel->getName(),
                           OpenedFileName,
                           RightClickeditemModel->modelData->isCompressed);
-    hexDialog->exec();
+    hexDialog->show();
     delete hexViewData;
 }
 
 void MainWindow::showPeCoffView() {
     QString filepath = appDir + "/tool/temp.bin";
     QString toolpath = appDir + "/tool/dumpbin.exe";
+    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
+    Buffer::saveBinary(filepath.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
+    std::ifstream tempFile(filepath.toStdString());
+    if (!tempFile.good()) {
+        QMessageBox::critical(this, tr("About BIOS Viewer"), "Please run as Administrator!");
+        return;
+    }
     PeCoffInfo *PeCoffDialog = new PeCoffInfo();
     if (isDarkMode()) {
         PeCoffDialog->setWindowIcon(QIcon(":/windows_light.svg"));
     }
-    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
-    Buffer::saveBinary(filepath.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
-
     QProcess *process = new QProcess(this);
     process->start(toolpath, QStringList() << "/DISASM" << filepath);
     process->waitForFinished();
@@ -199,7 +248,7 @@ void MainWindow::showPeCoffView() {
     QFile file(filepath);
     file.remove();
 
-    PeCoffDialog->exec();
+    PeCoffDialog->show();
 }
 
 void MainWindow::extractVolume() {

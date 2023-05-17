@@ -488,6 +488,8 @@ OSSE_RegionClass::OSSE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset
 }
 
 OSSE_RegionClass::~OSSE_RegionClass() {
+    if (data != nullptr)
+        delete[] data;
 }
 
 std::string OSSE_RegionClass::getFlashmap() {

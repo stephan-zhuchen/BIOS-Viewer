@@ -16,7 +16,7 @@
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "1.3"
+#define __BiosViewerVersion__ "1.4"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -65,6 +65,8 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
+    void initRightMenu();
+    void finiRightMenu();
     void showTreeRightMenu(QPoint);
     void showHexView();
     void showBodyHexView();
@@ -103,7 +105,6 @@ private:
     Ui::MainWindow *ui;
     Buffer         *buffer;
     DataModel      *RightClickeditemModel;
-    QMenu          *popMenu;
     QLabel         *structureLabel;
     QLabel         *infoLabel;
     QString        OpenedFileName;
@@ -116,6 +117,23 @@ private:
     SearchDialog   *searchDialog;
     bool           searchDialogOpened;
     QString        appDir;
+    QMenu*         RightMenu{nullptr};
+    QMenu*         DigestMenu{nullptr};
+    QAction*       showPeCoff{nullptr};
+    QAction*       showHex{nullptr};
+    QAction*       showBodyHex{nullptr};
+    QAction*       extractVolumeAction{nullptr};
+    QAction*       extractBodyVolumeAction{nullptr};
+    QAction*       showNvHex{nullptr};
+    QAction*       ExtractRegion{nullptr};
+    QAction*       ReplaceRegion{nullptr};
+    QAction*       ReplaceFile{nullptr};
+    QAction*       md5_Menu{nullptr};
+    QAction*       sha1_Menu{nullptr};
+    QAction*       sha224_Menu{nullptr};
+    QAction*       sha256_Menu{nullptr};
+    QAction*       sha384_Menu{nullptr};
+    QAction*       sha512_Menu{nullptr};
     QSettings      setting{"Intel", "BiosViewer"};
     QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 

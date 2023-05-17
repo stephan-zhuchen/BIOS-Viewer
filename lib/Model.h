@@ -16,11 +16,12 @@ protected:
     QString type;
     QString subtype;
     QString text;
+    bool    needRecycle{false};
 public:
     Volume* modelData;
     vector<DataModel*> volumeModelData;
     DataModel()=default;
-    DataModel(Volume* model, QString nm, QString typ = "", QString sbtyp = "", QString txt = "");
+    DataModel(Volume* model, QString nm, QString typ = "", QString sbtyp = "", QString txt = "", bool recycle=false);
     ~DataModel();
     void    setName(QString txt);
     void    setType(QString txt);

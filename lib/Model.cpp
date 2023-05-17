@@ -1,17 +1,21 @@
 #include "Model.h"
 #include "GuidDefinition.h"
 
-DataModel::DataModel(Volume* model, QString nm, QString typ, QString sbtyp, QString txt):
+DataModel::DataModel(Volume* model, QString nm, QString typ, QString sbtyp, QString txt, bool recycle):
     name(nm),
     type(typ),
     subtype(sbtyp),
     text(txt),
+    needRecycle(recycle),
     modelData(model)
 {}
 
 DataModel::~DataModel() {
     for (auto volumeModel:volumeModelData) {
         delete volumeModel;
+    }
+    if (needRecycle) {
+        delete modelData;
     }
 }
 

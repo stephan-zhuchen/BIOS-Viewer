@@ -20,7 +20,6 @@ MainWindow::MainWindow(QString appPath, QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       buffer(nullptr),
-      popMenu(new QMenu),
       structureLabel(new QLabel("Structure:", this)),
       infoLabel(new QLabel("Infomation:", this)),
       DarkmodeFlag(false),
@@ -41,6 +40,7 @@ MainWindow::MainWindow(QString appPath, QWidget *parent)
     QSettings windowSettings("Intel", "BiosViewer");
     restoreGeometry(windowSettings.value("mainwindow/geometry").toByteArray());
     initSettings();
+    initRightMenu();
 
     ui->titleInfomation->clear();
     structureLabel->setFont(QFont("Microsoft YaHei UI", 10));
@@ -83,6 +83,7 @@ MainWindow::~MainWindow()
     delete structureLabel;
     delete infoLabel;
     cleanup();
+    finiRightMenu();
     delete ui;
 }
 
@@ -115,6 +116,8 @@ void MainWindow::cleanup() {
         delete BiosImage;
     if (InputImage != nullptr)
         delete InputImage;
+    if (InputImageModel != nullptr)
+        delete InputImageModel;
 }
 
 void MainWindow::setInfoWindowState(bool opened) {
@@ -210,7 +213,7 @@ void MainWindow::OpenFile(QString path)
         this->setWindowTitle("BIOS Viewer -- " + path);
         InputImageSize = buffer->getBufferSize();
         InputImage = buffer->getBytes(InputImageSize);
-        InputImageModel = new DataModel(new Volume(InputImage, InputImageSize), "IFWI Overview", "Image", "UEFI");
+        InputImageModel = new DataModel(new Volume(InputImage, InputImageSize), "IFWI Overview", "Image", "UEFI", "", true);
         QElapsedTimer timer;
         timer.start();
         parseBinaryInfo();

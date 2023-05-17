@@ -57,7 +57,7 @@ void HexViewDialog::loadBuffer(QByteArray buffer, Volume *image, INT64 imageOffs
     NewHexBuffer = buffer;
     OpenedImage = image;
     OpenedImageOffset = imageOffset;
-    title += bufferName;
+    title += " - " + bufferName;
     OpenedFileName = imageName;
     isCompressed = Compressed;
     setWindowTitle(title);

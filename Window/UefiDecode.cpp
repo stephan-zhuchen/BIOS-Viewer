@@ -145,6 +145,7 @@ void MainWindow::setBiosFvData()
             }
             fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
         }
+        delete fvHeader;
 
         if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
             ui->titleInfomation->setText("No Firmware Found!");
@@ -163,11 +164,13 @@ void MainWindow::setBiosFvData()
 
 void MainWindow::setFfsData() {
     if (FirmwareVolumeData.size() == 1 && FirmwareVolumeData.at(0)->isEmpty) {
+        delete FirmwareVolumeData.at(0);
         FirmwareVolumeData.clear();
         InputImageModel->setName("Image Overview");
         InputImageModel->setType("");
         InputImageModel->setSubtype("");
         BiosValidFlag = false;
+        return;
     }
     QElapsedTimer timer;
     timer.start();
