@@ -13,20 +13,49 @@ void MainWindow::initRightMenu() {
     RightMenu = new QMenu;
     DigestMenu = new QMenu("Digest");
     showPeCoff = new QAction("PE/COFF");
+    this->connect(showPeCoff,SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
+
     showHex = new QAction("Hex View");
+    this->connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
+
     showBodyHex = new QAction("Body Hex View");
+    this->connect(showBodyHex,SIGNAL(triggered(bool)),this,SLOT(showBodyHexView()));
+
     extractVolumeAction = new QAction("Extract");
+    this->connect(extractVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
+
     extractBodyVolumeAction = new QAction("Extract");
+    this->connect(extractBodyVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractBodyVolume()));
+
     showNvHex = new QAction("Variable Data Hex View");
+    this->connect(showNvHex,SIGNAL(triggered(bool)),this,SLOT(showNvHexView()));
+
     ExtractRegion = new QAction("Extract");
+    this->connect(ExtractRegion,SIGNAL(triggered(bool)),this,SLOT(extractIfwiRegion()));
+
     ReplaceRegion = new QAction("Replace");
+    this->connect(ReplaceRegion,SIGNAL(triggered(bool)),this,SLOT(replaceIfwiRegion()));
+
     ReplaceFile = new QAction("Replace");
+    this->connect(ReplaceFile,SIGNAL(triggered(bool)),this,SLOT(replaceFfsContent()));
+
     md5_Menu = new QAction("MD5");
+    this->connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
+
     sha1_Menu = new QAction("SHA1");
+    this->connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
+
     sha224_Menu = new QAction("SHA224");
+    this->connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
+
     sha256_Menu = new QAction("SHA256");
+    this->connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
+
     sha384_Menu = new QAction("SHA384");
+    this->connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
+
     sha512_Menu = new QAction("SHA512");
+    this->connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
 }
 
 void MainWindow::finiRightMenu() {
@@ -94,12 +123,10 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
         if (file.exists()) {
             showPeCoff->setIcon(windows);
             RightMenu->addAction(showPeCoff);
-            this->connect(showPeCoff,SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
         }
     }
     showHex->setIcon(hexBinary);
     RightMenu->addAction(showHex);
-    this->connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
 
     if (RightClickeditemModel->getType() == "Volume" || RightClickeditemModel->getType() == "File" || RightClickeditemModel->getType() == "Section") {
         showBodyHex->setIcon(hexBinary);
@@ -110,15 +137,11 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
         RightMenu->addAction(showBodyHex);
         RightMenu->addAction(extractVolumeAction);
         RightMenu->addAction(extractBodyVolumeAction);
-        this->connect(showBodyHex,SIGNAL(triggered(bool)),this,SLOT(showBodyHexView()));
-        this->connect(extractVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
-        this->connect(extractBodyVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractBodyVolume()));
     }
 
     if (RightClickeditemModel->getType() == "Variable") {
         showNvHex->setIcon(hexBinary);
         RightMenu->addAction(showNvHex);
-        this->connect(showNvHex,SIGNAL(triggered(bool)),this,SLOT(showNvHexView()));
     }
 
     QString RegionName = RightClickeditemModel->getName();
@@ -126,36 +149,27 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
         ExtractRegion->setText("Extract " + RegionName);
         ExtractRegion->setIcon(box_arrow_up);
         RightMenu->addAction(ExtractRegion);
-        this->connect(ExtractRegion,SIGNAL(triggered(bool)),this,SLOT(extractIfwiRegion()));
     }
 
     if (RightClickeditemModel->getType() == "Region" && RightClickeditemModel->getName() == "BIOS") {
         ReplaceRegion->setText("Replace " + RegionName);
         ReplaceRegion->setIcon(replace);
         RightMenu->addAction(ReplaceRegion);
-        this->connect(ReplaceRegion,SIGNAL(triggered(bool)),this,SLOT(replaceIfwiRegion()));
     }
 
     if (RightClickeditemModel->getName() == "Startup Acm" && RightClickeditemModel->getType() == "File") {
         ReplaceFile->setText("Replace " + RegionName);
         ReplaceFile->setIcon(replace);
         RightMenu->addAction(ReplaceFile);
-        this->connect(ReplaceFile,SIGNAL(triggered(bool)),this,SLOT(replaceFfsContent()));
     }
 
     DigestMenu->setIcon(key);
     DigestMenu->addAction(md5_Menu);
-    this->connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
     DigestMenu->addAction(sha1_Menu);
-    this->connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
     DigestMenu->addAction(sha224_Menu);
-    this->connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
     DigestMenu->addAction(sha256_Menu);
-    this->connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
     DigestMenu->addAction(sha384_Menu);
-    this->connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
     DigestMenu->addAction(sha512_Menu);
-    this->connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
 
     RightMenu->addMenu(DigestMenu);
     RightMenu->move(ui->treeWidget->cursor().pos());
@@ -163,6 +177,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
 }
 
 void MainWindow::showHexView() {
+    cout << "showHexView" << endl;
     HexViewDialog *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
