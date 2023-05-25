@@ -119,7 +119,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
     RightMenu->clear();
     if (RightClickeditemModel->getSubType() == "PE32 image" ||
         RightClickeditemModel->getSubType() == "PE32+ image") {
-        QString filepath = appDir + "/tool/dumpbin.exe";
+        QString filepath = appDir + "/tool/PECOFF/dumpbin.exe";
         QFile file(filepath);
         if (file.exists()) {
             showPeCoff->setIcon(windows);
@@ -238,6 +238,7 @@ void MainWindow::showPeCoffView() {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "Please run as Administrator!");
         return;
     }
+    tempFile.close();
     PeCoffInfo *PeCoffDialog = new PeCoffInfo();
     if (isDarkMode()) {
         PeCoffDialog->setWindowIcon(QIcon(":/windows_light.svg"));
@@ -261,7 +262,9 @@ void MainWindow::showPeCoffView() {
     delete process;
 
     QFile file(filepath);
-    file.remove();
+    if(file.exists()) {
+        file.remove();
+    }
 
     PeCoffDialog->show();
 }

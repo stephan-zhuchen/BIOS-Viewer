@@ -213,7 +213,7 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
     QListWidgetItem *item = ui->BtgListWidget->currentItem();
 
     QString text;
-    QString toolpath = appDir + "/tool/BPM/BpmGen2.exe";
+    QString toolpath = appDir + "/tool/BpmGen2/BpmGen2.exe";
     QString BpmHeaderStr("######################\r\n"
                          "# BootPolicyManifest #\r\n"
                          "######################");
@@ -249,6 +249,8 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
             text = TempFile.readAll();
             TempFile.close();
             TempFile.remove();
+        } else {
+            text = "Please run as Administrator!";
         }
     }
 

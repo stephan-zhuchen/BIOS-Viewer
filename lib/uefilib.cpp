@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <thread>
+#include <atomic>
 #include <algorithm>
 #include "UefiLib.h"
 #include "Base.h"
@@ -668,6 +669,7 @@ namespace UefiSpace {
             return;
         }
         vector<thread> threadPool;
+        atomic_flag spinlock = ATOMIC_FLAG_INIT;
         while (offset < size) {
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
@@ -676,7 +678,7 @@ namespace UefiSpace {
                 break;
             }
 
-            auto FvDecoder = [this](INT64 off) {
+            auto FvDecoder = [this, &spinlock](INT64 off) {
                 FfsFile *Ffs = new FfsFile(data + off, offsetFromBegin + off);
                 switch (Ffs->getType()) {
                 case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
@@ -694,7 +696,9 @@ namespace UefiSpace {
                 default:
                     break;
                 }
+                while (spinlock.test_and_set()) {}
                 FfsFiles.push_back(Ffs);
+                spinlock.clear();
             };
 
             if (multithread) {

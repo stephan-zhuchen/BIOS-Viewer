@@ -51,7 +51,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     if (!setting.contains("ShowPaddingItem"))
         setting.setValue("ShowPaddingItem", "false");
     if (!setting.contains("EnableMultiThread"))
-        setting.setValue("EnableMultiThread", "false");
+        setting.setValue("EnableMultiThread", "true");
     if (!setting.contains("EnableHexEditing"))
         setting.setValue("EnableHexEditing", "true");
 

@@ -259,7 +259,7 @@ void MainWindow::initSettings() {
     if (!setting.contains("ShowPaddingItem"))
         setting.setValue("ShowPaddingItem", "false");
     if (!setting.contains("EnableMultiThread"))
-        setting.setValue("EnableMultiThread", "false");
+        setting.setValue("EnableMultiThread", "true");
 
     if (!setting.contains("InfoFontSize"))
         setting.setValue("InfoFontSize", 11);
