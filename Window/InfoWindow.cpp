@@ -1,6 +1,7 @@
 #include <iostream>
 #include <QKeyEvent>
 #include <QFile>
+#include <QProcess>
 #include "mainwindow.h"
 #include "InfoWindow.h"
 #include "BaseLib.h"
@@ -9,9 +10,10 @@
 using BaseLibrarySpace::Buffer;
 using UefiSpace::FitTableClass;
 
-InfoWindow::InfoWindow(QWidget *parent) :
+InfoWindow::InfoWindow(QString Dir, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::InfoWindow)
+    ui(new Ui::InfoWindow),
+    appDir(Dir)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
@@ -39,6 +41,10 @@ InfoWindow::~InfoWindow()
 
 void InfoWindow::setBiosImage(BiosImageVolume *Image) {
     BiosImage = Image;
+}
+
+void InfoWindow::setOpenedFileName(QString name) {
+    OpenedFileName = name;
 }
 
 void InfoWindow::setParentWidget(QWidget *pWidget) {
@@ -137,20 +143,17 @@ void InfoWindow::showAcmTab() {
 
 void InfoWindow::showBtgTab() {
     QString ItemName;
-    if (BiosImage->FitTable->KmEntry != nullptr) {
-        ItemName = "Key Manifest";
-        if (!BiosImage->FitTable->KmEntry->isValid)
-            ItemName += " (Empty)";
-        QListWidgetItem *KmItem = new QListWidgetItem(ItemName);
-        ui->BtgListWidget->addItem(KmItem);
-    }
-    if (BiosImage->FitTable->BpmEntry != nullptr) {
-        ItemName = "Boot Policy Manifest";
-        if (!BiosImage->FitTable->BpmEntry->isValid)
-            ItemName += " (Empty)";
-        QListWidgetItem *BpItem = new QListWidgetItem(ItemName);
-        ui->BtgListWidget->addItem(BpItem);
-    }
+    ItemName = "Key Manifest";
+    QListWidgetItem *KmItem = new QListWidgetItem(ItemName);
+    ui->BtgListWidget->addItem(KmItem);
+
+    ItemName = "Boot Policy Manifest";
+    QListWidgetItem *BpItem = new QListWidgetItem(ItemName);
+    ui->BtgListWidget->addItem(BpItem);
+
+    ItemName = "BPM DEF";
+    QListWidgetItem *BpDefItem = new QListWidgetItem(ItemName);
+    ui->BtgListWidget->addItem(BpDefItem);
 
     if (ui->BtgListWidget->model()->rowCount() != 0)
         ui->BtgListWidget->setCurrentRow(0);
@@ -210,14 +213,43 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
     QListWidgetItem *item = ui->BtgListWidget->currentItem();
 
     QString text;
+    QString toolpath = appDir + "/tool/BPM/BpmGen2.exe";
+    QString BpmHeaderStr("######################\r\n"
+                         "# BootPolicyManifest #\r\n"
+                         "######################");
+    QString KmHeaderStr("################\r\n"
+                        "# Key Manifest #\r\n"
+                        "################");
+
+    QProcess *process = new QProcess(this);
+    process->start(toolpath, QStringList() << "INFO" << OpenedFileName);
+    process->waitForFinished();
+    QString BpmGen2Text = process->readAllStandardOutput();
+    delete process;
+
+    INT64 FirstLineLength = BpmGen2Text.indexOf("\r\n");
+    INT64 BpmIndex = BpmGen2Text.indexOf(BpmHeaderStr);
+    INT64 KmIndex = BpmGen2Text.indexOf(KmHeaderStr);
+
+    QString BpmToolVersion = BpmGen2Text.mid(0, FirstLineLength) + "\n\n";
+
     if (item->text() == "Key Manifest") {
-        KeyManifestClass* EntryHeader = BiosImage->FitTable->KmEntry;
-        EntryHeader->setInfoStr();
-        text = EntryHeader->InfoStr;
+        text = BpmToolVersion + BpmGen2Text.mid(KmIndex);
     } else if (item->text() == "Boot Policy Manifest") {
-        BootPolicyManifestClass* EntryHeader = BiosImage->FitTable->BpmEntry;
-        EntryHeader->setInfoStr();
-        text = EntryHeader->InfoStr;
+        text = BpmToolVersion + BpmGen2Text.mid(BpmIndex, KmIndex - BpmIndex);
+    } else if (item->text() == "BPM DEF") {
+        QProcess *process = new QProcess(this);
+        QString TempFilepath = appDir + "/tool/temp.txt";
+        process->start(toolpath, QStringList() << "PARSE" << OpenedFileName << "-o" << TempFilepath);
+        process->waitForFinished();
+        delete process;
+        QFile TempFile(TempFilepath);
+        if(TempFile.exists()) {
+            TempFile.open(QIODevice::ReadOnly | QIODevice::Text);
+            text = TempFile.readAll();
+            TempFile.close();
+            TempFile.remove();
+        }
     }
 
     ui->BtgTextBrowser->setText(text);

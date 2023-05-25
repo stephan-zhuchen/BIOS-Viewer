@@ -301,7 +301,7 @@ void MainWindow::initSettings() {
         ui->actionSearch->setIcon(QIcon(":/search_light.svg"));
         ui->actionGoto->setIcon(QIcon(":/bookmark_light.svg"));
         ui->actionCollapse->setIcon(QIcon(":/arrows-collapse_light.svg"));
-        ui->actionExtract_BIOS->setIcon(QIcon(":/scissors_light.svg"));
+        ui->actionExtract_BIOS->setIcon(QIcon(":/box-arrow-up_light.svg"));
         ui->actionSeperate_Binary->setIcon(QIcon(":/scissors_light.svg"));
         ui->actionReplace_BIOS->setIcon(QIcon(":/replace_light.svg"));
         ui->actionAboutBiosViewer->setIcon(QIcon(":/about_light.svg"));
@@ -421,7 +421,7 @@ void MainWindow::ActionAboutQtTriggered()
 void MainWindow::ActionAboutBiosViewerTriggered()
 {
     QString strText= QString("<html><head/><body><p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1"
-                             "</span></p><p>Internal Use Only</p><p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Chen, Zhu")
+                             "</span></p><p>Intel Internal Use Only</p><p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Zhu, Chen")
                              .arg(__BiosViewerVersion__).arg(__DATE__);
     QMessageBox::about(this, tr("About BIOS Viewer"), strText);
 }
@@ -468,9 +468,10 @@ void MainWindow::InfoButtonClicked()
 {
     if (!infoWindowOpened) {
         infoWindowOpened = true;
-        infoWindow = new InfoWindow;
+        infoWindow = new InfoWindow(appDir);
         if (BiosImage != nullptr) {
             infoWindow->setBiosImage(BiosImage);
+            infoWindow->setOpenedFileName(OpenedFileName);
             infoWindow->setParentWidget(this);
             infoWindow->showFitTab();
             infoWindow->showFlashmapTab(flashmap);

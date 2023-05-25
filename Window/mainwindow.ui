@@ -147,7 +147,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Infomation</string>
+         <string>More</string>
         </property>
         <property name="checkable">
          <bool>false</bool>
@@ -505,7 +505,7 @@
   <action name="actionExtract_BIOS">
    <property name="icon">
     <iconset resource="../logo/Images.qrc">
-     <normaloff>:/scissors.svg</normaloff>:/scissors.svg</iconset>
+     <normaloff>:/box-arrow-up.svg</normaloff>:/box-arrow-up.svg</iconset>
    </property>
    <property name="text">
     <string>Extract BIOS</string>

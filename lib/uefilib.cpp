@@ -1094,18 +1094,21 @@ namespace UefiSpace {
                     AcmHeaderClass *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, AcmAddress);
                     AcmEntries.push_back(AcmEntry);
                 } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST) {
-                    UINT64 KmAddress = FitEntry.Address & 0xFFFFFF;
-                    UINT64 RelativeKmAddress = Buffer::adjustBufferAddress(0x1000000, KmAddress, length);
-                    if (RelativeKmAddress > (UINT64)length && KmEntry != nullptr)
-                        continue;
-                    KmEntry = new KeyManifestClass(fv + RelativeKmAddress, length - RelativeKmAddress);
+                    // Use external BpmGen2 tool to parse KM and BPM info
+                    continue;
+//                    UINT64 KmAddress = FitEntry.Address & 0xFFFFFF;
+//                    UINT64 RelativeKmAddress = Buffer::adjustBufferAddress(0x1000000, KmAddress, length);
+//                    if (RelativeKmAddress > (UINT64)length && KmEntry != nullptr)
+//                        continue;
+//                    KmEntry = new KeyManifestClass(fv + RelativeKmAddress, length - RelativeKmAddress);
                 } else if (FitEntry.Type == FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST) {
-                    UINT64 BpmAddress = FitEntry.Address & 0xFFFFFF;
-                    UINT64 RelativeBpmAddress = Buffer::adjustBufferAddress(0x1000000, BpmAddress, length);
-                    INT64 FitEntrySize = (FitEntry.Size[2] << 16) + (FitEntry.Size[1] << 8) + FitEntry.Size[0];
-                    if (RelativeBpmAddress > (UINT64)length && BpmEntry != nullptr && RelativeBpmAddress + (UINT64)FitEntrySize > (UINT64)length)
-                        continue;
-                    BpmEntry = new BootPolicyManifestClass(fv + RelativeBpmAddress, FitEntrySize);
+                    continue;
+//                    UINT64 BpmAddress = FitEntry.Address & 0xFFFFFF;
+//                    UINT64 RelativeBpmAddress = Buffer::adjustBufferAddress(0x1000000, BpmAddress, length);
+//                    INT64 FitEntrySize = (FitEntry.Size[2] << 16) + (FitEntry.Size[1] << 8) + FitEntry.Size[0];
+//                    if (RelativeBpmAddress > (UINT64)length && BpmEntry != nullptr && RelativeBpmAddress + (UINT64)FitEntrySize > (UINT64)length)
+//                        continue;
+//                    BpmEntry = new BootPolicyManifestClass(fv + RelativeBpmAddress, FitEntrySize);
                 }
             }
         } else {

@@ -116,6 +116,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
     QTreeWidgetItem *item = ui->treeWidget->itemAt(pos);
     RightClickeditemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
 
+    RightMenu->clear();
     if (RightClickeditemModel->getSubType() == "PE32 image" ||
         RightClickeditemModel->getSubType() == "PE32+ image") {
         QString filepath = appDir + "/tool/dumpbin.exe";
@@ -177,7 +178,6 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
 }
 
 void MainWindow::showHexView() {
-    cout << "showHexView" << endl;
     HexViewDialog *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
@@ -230,7 +230,7 @@ void MainWindow::showNvHexView() {
 
 void MainWindow::showPeCoffView() {
     QString filepath = appDir + "/tool/temp.bin";
-    QString toolpath = appDir + "/tool/dumpbin.exe";
+    QString toolpath = appDir + "/tool/PECOFF/dumpbin.exe";
     INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
     Buffer::saveBinary(filepath.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
     std::ifstream tempFile(filepath.toStdString());

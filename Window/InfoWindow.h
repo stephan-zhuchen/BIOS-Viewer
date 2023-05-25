@@ -18,10 +18,11 @@ class InfoWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit InfoWindow(QWidget *parent = nullptr);
+    explicit InfoWindow(QString Dir, QWidget *parent = nullptr);
     ~InfoWindow();
 
     void setBiosImage(BiosImageVolume *Image);
+    void setOpenedFileName(QString name);
     void setParentWidget(QWidget *pWidget);
     void showFitTab();
     void showMicrocodeTab();
@@ -43,6 +44,8 @@ private:
     Ui::InfoWindow   *ui;
     BiosImageVolume  *BiosImage;
     QWidget          *parentWidget;
+    QString          appDir;
+    QString          OpenedFileName;
     QSettings setting{"Intel", "BiosViewer"};
 
     enum tableColNum {Address=0, Size, Version, C_V, Checksum, Type};
