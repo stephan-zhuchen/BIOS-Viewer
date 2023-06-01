@@ -1,38 +1,55 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QFormLayout>
+#include <QSpinBox>
+#include <QDialogButtonBox>
 #include "mainwindow.h"
 #include "SearchDialog.h"
+#include "inputdialog.h"
 #include "./ui_mainwindow.h"
 
 void MainWindow::ActionSeperateBinaryTriggered()
 {
-    if ( InputImage == nullptr )
-      return;
+    if (InputImage == nullptr) {
+        QMessageBox::critical(this, tr("Seperate Binary"), "No Binary Opened!");
+        return;
+    }
 
-    bool done;
-    QString offset = QInputDialog::getText ( this, tr ( "Goto..." ),
-                     tr ( "Offset (0x for hexadecimal):" ), QLineEdit::Normal,
-                     nullptr, &done );
+    QDialog dialog(this);
+    dialog.setWindowTitle("Seperate Binary");
+    QFormLayout form(&dialog);
+    // Offset
+    QString Offset = QString("Offset: ");
+    HexSpinBox *OffsetSpinbox = new HexSpinBox(&dialog);
+    OffsetSpinbox->setFocus();
+    OffsetSpinbox->selectAll();
+    form.addRow(Offset, OffsetSpinbox);
+    // Add Cancel and OK button
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+                               Qt::Horizontal, &dialog);
+    form.addRow(&buttonBox);
+    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
 
-    if (done) {
-        INT32 SeperateOffset = offset.toInt(nullptr, 16);
-
-        if (SeperateOffset <= 0 || SeperateOffset >= InputImageSize) {
-            QMessageBox::critical(this, tr("Seperate Binary Tool"), "Invalid Offset!");
+    // Process when OK button is clicked
+    if (dialog.exec() == QDialog::Accepted) {
+        INT64 InputOffset = OffsetSpinbox->value();
+        if (InputOffset < 0 ||InputOffset >= InputImageSize) {
+            QMessageBox::critical(this, tr("Extract Binary"), "Invalid offset!");
             return;
         }
 
         QFileInfo fileinfo {OpenedFileName};
-        QString outputPath = setting.value("LastFilePath").toString();
         QString dirName = QFileDialog::getExistingDirectory(this,
-                                                          tr("Open directory"),
-                                                          outputPath,
-                                                          QFileDialog::ShowDirsOnly);
+                                                            tr("Open directory"),
+                                                            fileinfo.dir().path(),
+                                                            QFileDialog::ShowDirsOnly);
         QString upperFilePath = dirName + "/" + fileinfo.baseName() + "_upper.bin";
         QString lowerFilePath = dirName + "/" + fileinfo.baseName() + "_lower.bin";
-        Buffer::saveBinary(upperFilePath.toStdString(), InputImage, 0, SeperateOffset);
-        Buffer::saveBinary(lowerFilePath.toStdString(), InputImage, SeperateOffset, InputImageSize - SeperateOffset);
+
+        Buffer::saveBinary(upperFilePath.toStdString(), InputImage, 0, InputOffset);
+        Buffer::saveBinary(lowerFilePath.toStdString(), InputImage, InputOffset, InputImageSize - InputOffset);
     }
 }
 
@@ -97,32 +114,40 @@ void MainWindow::ActionGotoTriggered()
     if ( BiosImage == nullptr )
       return;
 
-    bool done;
-    QString offset = QInputDialog::getText ( this, tr ( "Goto..." ),
-                     tr ( "Offset (0x for hexadecimal):" ), QLineEdit::Normal,
-                     nullptr, &done );
+    QDialog dialog(this);
+    dialog.setWindowTitle("Goto ...");
+    QFormLayout form(&dialog);
+    // Offset
+    QString Offset = QString("Offset: ");
+    HexSpinBox *OffsetSpinbox = new HexSpinBox(&dialog);
+    OffsetSpinbox->setFocus();
+    OffsetSpinbox->selectAll();
+    form.addRow(Offset, OffsetSpinbox);
+    // Add Cancel and OK button
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+                               Qt::Horizontal, &dialog);
+    form.addRow(&buttonBox);
+    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
 
-    INT64 SearchOffset = 0;
-    if ( done && offset[0] == '0' && offset[1] == 'x' ) {
-        SearchOffset = offset.toInt ( nullptr, 16 );
-    } else {
-        SearchOffset = offset.toInt ( nullptr, 10 );
-    }
-
-    if (SearchOffset < 0 || SearchOffset >= InputImageModel->modelData->size) {
-        QMessageBox::critical(this, tr("BIOS Viewer"), tr("Invalid Address!"));
-        return;
-    }
-
-    vector<INT32> SearchRows;
-    for (UINT64 row = 0; row < IFWI_ModelData.size(); ++row) {
-        DataModel *model = IFWI_ModelData.at(row);
-        if (SearchOffset >= model->modelData->offsetFromBegin && SearchOffset < model->modelData->offsetFromBegin + model->modelData->size) {
-            SearchRows.push_back(row + 1);
-            RecursiveSearchOffset(model, SearchOffset, SearchRows);
+    // Process when OK button is clicked
+    if (dialog.exec() == QDialog::Accepted) {
+        INT64 SearchOffset = OffsetSpinbox->value();
+      if (SearchOffset < 0 || SearchOffset >= InputImageSize) {
+            QMessageBox::critical(this, tr("Goto ..."), "Invalid offset!");
+            return;
         }
+
+        vector<INT32> SearchRows;
+        for (UINT64 row = 0; row < IFWI_ModelData.size(); ++row) {
+            DataModel *model = IFWI_ModelData.at(row);
+            if (SearchOffset >= model->modelData->offsetFromBegin && SearchOffset < model->modelData->offsetFromBegin + model->modelData->size) {
+                SearchRows.push_back(row + 1);
+                RecursiveSearchOffset(model, SearchOffset, SearchRows);
+            }
+        }
+        HighlightTreeItem(SearchRows);
     }
-    HighlightTreeItem(SearchRows);
 }
 
 void MainWindow::ActionCollapseTriggered()
@@ -220,4 +245,51 @@ void MainWindow::ActionReplaceBIOSTriggered()
 void MainWindow::SearchButtonClicked()
 {
     ActionSearchTriggered();
+}
+
+void MainWindow::ActionExtractBinaryTriggered()
+{
+    if (InputImage == nullptr) {
+        QMessageBox::critical(this, tr("Extract Binary"), "No Binary Opened!");
+        return;
+    }
+
+    QDialog dialog(this);
+    dialog.setWindowTitle("Extract Binary");
+    QFormLayout form(&dialog);
+    // Offset
+    QString Offset = QString("Offset: ");
+    HexSpinBox *OffsetSpinbox = new HexSpinBox(&dialog);
+    OffsetSpinbox->setFocus();
+    OffsetSpinbox->selectAll();
+    form.addRow(Offset, OffsetSpinbox);
+    // Length
+    QString Length = QString("Length: ");
+    HexSpinBox *LengthSpinbox = new HexSpinBox(&dialog);
+    form.addRow(Length, LengthSpinbox);
+    // Add Cancel and OK button
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+                               Qt::Horizontal, &dialog);
+    form.addRow(&buttonBox);
+    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+
+    // Process when OK button is clicked
+    if (dialog.exec() == QDialog::Accepted) {
+        INT64 InputOffset = OffsetSpinbox->value();
+        INT64 InputLength = LengthSpinbox->value();
+        if (InputOffset < 0 || InputLength <= 0 || InputOffset >= InputImageSize || InputLength + InputLength > InputImageSize) {
+            QMessageBox::critical(this, tr("Extract Binary"), "Invalid offset and size!");
+            return;
+        }
+
+        QFileInfo fileinfo {OpenedFileName};
+        QString outputPath = fileinfo.dir().path() + "/" + fileinfo.baseName() + "_Extract.bin";
+        QString BinaryName = QFileDialog::getSaveFileName(this,
+                                                        tr("Extract Binary"),
+                                                        outputPath,
+                                                        tr("BIOS image(*.rom *.bin *.cap);;All files (*.*)"));
+
+        Buffer::saveBinary(BinaryName.toStdString(), InputImage, InputOffset, InputLength);
+    }
 }

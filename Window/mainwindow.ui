@@ -374,8 +374,9 @@
     </property>
     <addaction name="separator"/>
     <addaction name="actionExtract_BIOS"/>
-    <addaction name="actionSeperate_Binary"/>
     <addaction name="actionReplace_BIOS"/>
+    <addaction name="actionSeperate_Binary"/>
+    <addaction name="actionExtract_Binary"/>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuShow">
@@ -574,6 +575,20 @@
    </property>
    <property name="text">
     <string>Replace BIOS</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionExtract_Binary">
+   <property name="icon">
+    <iconset resource="../logo/Images.qrc">
+     <normaloff>:/box-arrow-up.svg</normaloff>:/box-arrow-up.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Extract Binary</string>
    </property>
    <property name="font">
     <font>

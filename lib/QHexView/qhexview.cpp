@@ -9,6 +9,11 @@
 #include <stdexcept>
 #include <QtGlobal>
 #include <QInputDialog>
+#include <QFormLayout>
+#include <QSpinBox>
+#include <QDialogButtonBox>
+#include <QMessageBox>
+#include "inputdialog.h"
 #include "SearchDialog.h"
 
 // valid character table ascii
@@ -515,15 +520,31 @@ int QHexView::getLineNum()
 }
 
 void QHexView::actionGoto() {
-    bool done;
-    QString offset = QInputDialog::getText ( this, tr ( "Goto..." ),
-                     tr ( "Offset (0x for hexadecimal):" ), QLineEdit::Normal,
-                     nullptr, &done );
+    QDialog dialog(this);
+    dialog.setWindowTitle("Goto ...");
+    QFormLayout form(&dialog);
+    // Offset
+    QString Offset = QString("Offset: ");
+    HexSpinBox *OffsetSpinbox = new HexSpinBox(&dialog);
+    OffsetSpinbox->setFocus();
+    OffsetSpinbox->selectAll();
+    form.addRow(Offset, OffsetSpinbox);
+    // Add Cancel and OK button
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+                               Qt::Horizontal, &dialog);
+    form.addRow(&buttonBox);
+    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
 
-    if ( done && offset[0] == '0' && offset[1] == 'x' )
-      showFromOffset ( offset.toInt ( nullptr, 16 ) );
-    else
-      showFromOffset ( offset.toInt ( nullptr ) );
+    // Process when OK button is clicked
+    if (dialog.exec() == QDialog::Accepted) {
+        INT64 SearchOffset = OffsetSpinbox->value();
+        if (SearchOffset < 0 ||SearchOffset >= m_pdata.size()) {
+            QMessageBox::critical(this, tr("Goto ..."), "Invalid offset!");
+            return;
+        }
+        showFromOffset(SearchOffset);
+    }
 }
 
 void QHexView::actionSearch() {

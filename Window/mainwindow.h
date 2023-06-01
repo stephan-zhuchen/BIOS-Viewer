@@ -100,6 +100,7 @@ private slots:
     void ActionCollapseTriggered();
     void ActionReplaceBIOSTriggered();
     void SearchButtonClicked();
+    void ActionExtractBinaryTriggered();
 
 private:
     Ui::MainWindow *ui;

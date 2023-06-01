@@ -87,6 +87,8 @@ set(WINDOW_SOURCES
         Window/PeCoffInfo.cpp
         Window/UefiDecode.cpp
         Window/RightMenu.cpp
+        Window/inputdialog.h
+        Window/inputdialog.cpp
     )
 
 set(LIBRARY_SOURCES
