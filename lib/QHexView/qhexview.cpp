@@ -77,9 +77,12 @@ QHexView::QHexView(QWidget *parent)
   connect(timer,&QTimer::timeout,[this](){
           showCursor = !showCursor;
       });
+  initRightMenu();
 }
 
-QHexView::~QHexView() {}
+QHexView::~QHexView() {
+  finiRightMenu();
+}
 
 void QHexView::setfileOpened(bool state) {
     fileOpened = state;
@@ -418,6 +421,9 @@ void QHexView::setSelection(int pos)
           m_selectEnd -= 1;
       }
   }
+  if (m_selectEnd >= 2 * m_pdata.size() - 1) {
+      m_selectEnd = 2 * m_pdata.size() - 1;
+  }
 }
 
 void QHexView::setCursorPos(int position)
@@ -562,4 +568,16 @@ void QHexView::setParentWidget(QWidget *pWidget) {
 
 void QHexView::setReadOnly(bool ReadOnlyFlag) {
     ReadOnly = ReadOnlyFlag;
+}
+
+bool QHexView::getSelectedBuffer(QByteArray &buffer, int *length) {
+    int BeginIdx = m_selectBegin / 2;
+    int EndIdx = m_selectEnd / 2;
+    if (BeginIdx > EndIdx) {
+        return false;
+    }
+
+    *length = EndIdx - BeginIdx + 1;
+    buffer = m_pdata.mid(BeginIdx, *length);
+    return true;
 }

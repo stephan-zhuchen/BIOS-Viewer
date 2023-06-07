@@ -56,6 +56,7 @@ set(INCLUDE_FILE
         include/ME.h
         include/GbE.h
         include/descriptor.h
+        include/Acpi.h
 )
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
@@ -68,7 +69,7 @@ set(UI_SOURCES
         Window/SettingsDialog.ui
         Window/InfoWindow.ui
         Window/SearchDialog.ui
-        Window/PeCoffInfo.ui
+        Window/TabWindow.ui
 )
 
 set(WINDOW_SOURCES
@@ -83,12 +84,12 @@ set(WINDOW_SOURCES
         Window/InfoWindow.cpp
         Window/SearchDialog.h
         Window/SearchDialog.cpp
-        Window/PeCoffInfo.h
-        Window/PeCoffInfo.cpp
         Window/UefiDecode.cpp
         Window/RightMenu.cpp
         Window/inputdialog.h
         Window/inputdialog.cpp
+        Window/TabWindow.h
+        Window/TabWindow.cpp
     )
 
 set(LIBRARY_SOURCES

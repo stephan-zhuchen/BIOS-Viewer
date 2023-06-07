@@ -24,14 +24,20 @@ InfoWindow::InfoWindow(QString Dir, QWidget *parent) :
 
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
+    ui->microcodeListWidget->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->MicrocodeTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->acmListWidget->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AcmTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->BtgListWidget->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->BtgTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->flashmapText->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->AcpiListWidget->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->AcpiTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 
     connect(ui->microcodeListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(microcodeListWidgetItemSelectionChanged()));
     connect(ui->acmListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(acmListWidgetItemSelectionChanged()));
     connect(ui->BtgListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(BtgListWidgetItemSelectionChanged()));
+    connect(ui->AcpiListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(AcpiListWidgetItemSelectionChanged()));
 }
 
 InfoWindow::~InfoWindow()
@@ -107,6 +113,7 @@ void InfoWindow::showFitTab() {
     showMicrocodeTab();
     showAcmTab();
     showBtgTab();
+    showAcpiTab();
 }
 
 void InfoWindow::showMicrocodeTab() {
@@ -164,6 +171,16 @@ void InfoWindow::showFlashmapTab(const QString &SectionFlashMap) {
                      "-----------   ---------     ------------  ---------\n\n";
     header += SectionFlashMap;
     ui->flashmapText->setText(header);
+}
+
+void InfoWindow::showAcpiTab() {
+    for (ACPI_Class* AcpiTable:BiosImage->AcpiTables) {
+        string AcpiItemName = AcpiTable->AcpiTableSignature + " - " + AcpiTable->AcpiTableOemID + " - " + AcpiTable->AcpiTableOemTableID;
+        QListWidgetItem *AcpiItem = new QListWidgetItem(QString::fromStdString(AcpiItemName));
+        ui->AcpiListWidget->addItem(AcpiItem);
+    }
+    if (ui->AcpiListWidget->model()->rowCount() != 0)
+        ui->AcpiListWidget->setCurrentRow(0);
 }
 
 void InfoWindow::resizeEvent(QResizeEvent *event) {
@@ -257,3 +274,34 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
     ui->BtgTextBrowser->setText(text);
 }
 
+void InfoWindow::AcpiListWidgetItemSelectionChanged() {
+    using UefiSpace::ACPI_Class;
+    INT32 currentRow = ui->AcpiListWidget->currentRow();
+    ACPI_Class* ACPI_Entry = BiosImage->AcpiTables.at(currentRow);
+
+    QString filepath = appDir + "/tool/temp.bin";
+    QString Dslpath = appDir + "/tool/temp.dsl";
+    QString toolpath = appDir + "/tool/ACPI/iasl.exe";
+    QString AcpiText;
+    Buffer::saveBinary(filepath.toStdString(), ACPI_Entry->data, 0, ACPI_Entry->size);
+    std::ifstream tempFile(filepath.toStdString());
+    if (!tempFile.good()) {
+        AcpiText = "Please run as Administrator!";
+        ui->AcpiTextBrowser->setText(AcpiText);
+        return;
+    }
+    tempFile.close();
+
+    QProcess *process = new QProcess(this);
+    process->start(toolpath, QStringList() << "-d" << filepath);
+    process->waitForFinished();
+
+    QFile DslFile(Dslpath);
+    if(DslFile.exists()) {
+        DslFile.open(QIODevice::ReadOnly | QIODevice::Text);
+        AcpiText = DslFile.readAll();
+        DslFile.close();
+        DslFile.remove();
+    }
+    ui->AcpiTextBrowser->setText(AcpiText);
+}

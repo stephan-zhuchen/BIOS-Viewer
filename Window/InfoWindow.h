@@ -29,6 +29,7 @@ public:
     void showAcmTab();
     void showBtgTab();
     void showFlashmapTab(const QString &SectionFlashMap);
+    void showAcpiTab();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -39,6 +40,7 @@ private slots:
     void microcodeListWidgetItemSelectionChanged();
     void acmListWidgetItemSelectionChanged();
     void BtgListWidgetItemSelectionChanged();
+    void AcpiListWidgetItemSelectionChanged();
 
 private:
     Ui::InfoWindow   *ui;

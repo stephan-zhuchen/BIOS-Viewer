@@ -4,7 +4,7 @@
 #include <QProcess>
 #include "mainwindow.h"
 #include "HexViewDialog.h"
-#include "PeCoffInfo.h"
+#include "TabWindow.h"
 #include "./ui_mainwindow.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
@@ -13,7 +13,9 @@ void MainWindow::initRightMenu() {
     RightMenu = new QMenu;
     DigestMenu = new QMenu("Digest");
     showPeCoff = new QAction("PE/COFF");
+    showAcpiTable = new QAction("ACPI");
     this->connect(showPeCoff,SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
+    this->connect(showAcpiTable,SIGNAL(triggered(bool)),this,SLOT(showAcpiTableView()));
 
     showHex = new QAction("Hex View");
     this->connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
@@ -65,6 +67,8 @@ void MainWindow::finiRightMenu() {
         delete DigestMenu;
     if (showPeCoff != nullptr)
         delete showPeCoff;
+    if (showAcpiTable != nullptr)
+        delete showAcpiTable;
     if (showHex != nullptr)
         delete showHex;
     if (showBodyHex != nullptr)
@@ -124,8 +128,20 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
         if (file.exists()) {
             showPeCoff->setIcon(windows);
             RightMenu->addAction(showPeCoff);
+            file.close();
         }
     }
+
+    if (RightClickeditemModel->getName().mid(0, 10) == "ACPI Table") {
+        QString filepath = appDir + "/tool/ACPI/iasl.exe";
+        QFile file(filepath);
+        if (file.exists()) {
+            showAcpiTable->setIcon(windows);
+            RightMenu->addAction(showAcpiTable);
+            file.close();
+        }
+    }
+
     showHex->setIcon(hexBinary);
     RightMenu->addAction(showHex);
 
@@ -239,25 +255,25 @@ void MainWindow::showPeCoffView() {
         return;
     }
     tempFile.close();
-    PeCoffInfo *PeCoffDialog = new PeCoffInfo();
+    TabWindow *TabView = new TabWindow();
     if (isDarkMode()) {
-        PeCoffDialog->setWindowIcon(QIcon(":/windows_light.svg"));
+        TabView->setWindowIcon(QIcon(":/windows_light.svg"));
     }
     QProcess *process = new QProcess(this);
     process->start(toolpath, QStringList() << "/DISASM" << filepath);
     process->waitForFinished();
     QString DisAssembly = process->readAllStandardOutput();
-    PeCoffDialog->setAsmText(DisAssembly);
+    TabView->SetNewTabAndText("DisAssembly", DisAssembly);
 
     process->start(toolpath, QStringList() << "/HEADERS" << filepath);
     process->waitForFinished();
     QString Header = process->readAllStandardOutput();
-    PeCoffDialog->setHeaderText(Header);
+    TabView->SetNewTabAndText("Header", Header);
 
     process->start(toolpath, QStringList() << "/RELOCATIONS" << filepath);
     process->waitForFinished();
     QString Relocation = process->readAllStandardOutput();
-    PeCoffDialog->setRelocationText(Relocation);
+    TabView->SetNewTabAndText("Relocation", Relocation);
 
     delete process;
 
@@ -266,7 +282,47 @@ void MainWindow::showPeCoffView() {
         file.remove();
     }
 
-    PeCoffDialog->show();
+    TabView->CollectTabAndShow();
+}
+
+void MainWindow::showAcpiTableView() {
+    QString filepath = appDir + "/tool/temp.bin";
+    QString Dslpath = appDir + "/tool/temp.dsl";
+    QString toolpath = appDir + "/tool/ACPI/iasl.exe";
+    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
+    Buffer::saveBinary(filepath.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
+    std::ifstream tempFile(filepath.toStdString());
+    if (!tempFile.good()) {
+        QMessageBox::critical(this, tr("About BIOS Viewer"), "Please run as Administrator!");
+        return;
+    }
+    tempFile.close();
+    TabWindow *TabView = new TabWindow();
+    if (isDarkMode()) {
+        TabView->setWindowIcon(QIcon(":/windows_light.svg"));
+    }
+    QProcess *process = new QProcess(this);
+    process->start(toolpath, QStringList() << "-d" << filepath);
+    process->waitForFinished();
+
+    QString DisAssembly;
+    QFile DslFile(Dslpath);
+    if(DslFile.exists()) {
+        DslFile.open(QIODevice::ReadOnly | QIODevice::Text);
+        DisAssembly = DslFile.readAll();
+        DslFile.close();
+        DslFile.remove();
+    }
+    TabView->SetNewTabAndText("ACPI", DisAssembly);
+
+    delete process;
+
+    QFile file(filepath);
+    if(file.exists()) {
+        file.remove();
+    }
+
+    TabView->CollectTabAndShow();
 }
 
 void MainWindow::extractVolume() {

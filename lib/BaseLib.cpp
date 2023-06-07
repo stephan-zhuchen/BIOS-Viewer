@@ -218,7 +218,7 @@ namespace BaseLibrarySpace {
         return str;
     }
 
-    UINT8 Buffer::CaculateSum8(UINT8 *Buffer, INT64 Size) {
+    UINT8 Buffer::CaculateSum8(const UINT8 *Buffer, INT64 Size) {
         UINT8 Sum = 0;
         //
         // Perform the byte sum for buffer

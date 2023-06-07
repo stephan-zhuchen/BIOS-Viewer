@@ -48,6 +48,7 @@ public:
   void mouseMoveEvent(QMouseEvent *event) override;
   void mousePressEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
+  void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
   QByteArray m_pdata;
@@ -83,6 +84,20 @@ private:
   QSettings setting;
   QSettings SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
+  QMenu*         RightMenu{nullptr};
+  QMenu*         DigestMenu{nullptr};
+  QMenu*         ChecksumMenu{nullptr};
+  QAction*       SaveContent{nullptr};
+  QAction*       CheckSum8{nullptr};
+  QAction*       CheckSum16{nullptr};
+  QAction*       CheckSum32{nullptr};
+  QAction*       md5_Menu{nullptr};
+  QAction*       sha1_Menu{nullptr};
+  QAction*       sha224_Menu{nullptr};
+  QAction*       sha256_Menu{nullptr};
+  QAction*       sha384_Menu{nullptr};
+  QAction*       sha512_Menu{nullptr};
+
   QSize fullSize() const;
   void updatePositions();
   void resetSelection();
@@ -100,6 +115,9 @@ private:
   int  getLineNum();
   void actionGoto();
   void actionSearch();
+  void initRightMenu();
+  void finiRightMenu();
+  bool getSelectedBuffer(QByteArray &buffer, int *length);
   void binaryEdit(char inputChar);
 
 public slots:
@@ -109,4 +127,14 @@ public slots:
   void showFromOffset(int offset, int length=1);
   std::size_t sizeFile();
   void setAddressLength();
+  void SaveSelectedContent();
+  void getChecksum8();
+  void getChecksum16();
+  void getChecksum32();
+  void getMD5();
+  void getSHA1();
+  void getSHA224();
+  void getSHA256();
+  void getSHA384();
+  void getSHA512();
 };

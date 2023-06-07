@@ -12,6 +12,7 @@
 #include "VariableFormat.h"
 #include "BootGuard.h"
 #include "FspHeader.h"
+#include "Acpi.h"
 #include "openssl/sha.h"
 
 class Elf;
@@ -28,6 +29,7 @@ namespace UefiSpace {
     class BootPolicyManifestClass;
     class BpmElement;
     class IBBS_Class;
+    class ACPI_Class;
 
     enum class VolumeType {
         FirmwareVolume,
@@ -130,7 +132,9 @@ namespace UefiSpace {
         bool                      isAprioriRaw{false};
         bool                      isElfFormat{false};
         bool                      isFspHeader{false};
+        bool                      isAcpiHeader{false};
         vector<EFI_GUID>          AprioriList;
+        ACPI_Class                *AcpiTable{nullptr};
         UINT8                     *DecompressedBufferOnHeap{nullptr};
     public:
         CommonSection()=delete;
@@ -241,6 +245,7 @@ namespace UefiSpace {
         pair<INT64, INT64>      OBB_Region;
         pair<INT64, INT64>      IBB_Region;
         pair<INT64, INT64>      IBBR_Region;
+        vector<ACPI_Class*>     AcpiTables;
         UINT8                   ObbDigest[SHA256_DIGEST_LENGTH];
         bool   ObbDigestValid{false};
         bool   foundBiosID{false};
@@ -255,6 +260,7 @@ namespace UefiSpace {
         void getObbDigest();
         void setDebugFlag();
         void decodeBiosRegion();
+        void decodeAcpiTable(Volume* Vol);
         string getFlashmap();
         void setInfoStr() override;
     };
@@ -450,6 +456,22 @@ namespace UefiSpace {
         PMSG_Class()=delete;
         PMSG_Class(UINT8* fv, INT64 length);
         ~PMSG_Class();
+        void setInfoStr() override;
+    };
+
+    class ACPI_Class : public Volume {
+    public:
+        EFI_ACPI_DESCRIPTION_HEADER   AcpiHeader;
+        string                        AcpiTableSignature;
+        string                        AcpiTableOemID;
+        string                        AcpiTableOemTableID;
+        bool                          ValidFlag{false};
+    public:
+        ACPI_Class()=delete;
+        ACPI_Class(UINT8* fv, INT64 length, INT64 offset, bool needValidation=true);
+        ~ACPI_Class();
+        bool isValid() const;
+        static bool isAcpiHeader(const UINT8  *ImageBase, INT64 length);
         void setInfoStr() override;
     };
 

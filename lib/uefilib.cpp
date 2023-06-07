@@ -143,6 +143,8 @@ namespace UefiSpace {
         for(auto file:ChildFile) {
             delete file;
         }
+        if (AcpiTable != nullptr)
+            delete AcpiTable;
         if (DecompressedBufferOnHeap != nullptr)
             delete[] DecompressedBufferOnHeap;
     }
@@ -292,6 +294,13 @@ namespace UefiSpace {
                 if (fspH.isValid()) {
                     fspH.setInfoStr();
                     AdditionalMsg = fspH.InfoStr;
+                }
+            } else if (ACPI_Class::isAcpiHeader(data + HeaderSize, SectionSize - HeaderSize)) {
+                isAcpiHeader = true;
+                AcpiTable = new ACPI_Class(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize, false);
+                if (AcpiTable->isValid()) {
+                    AcpiTable->setInfoStr();
+                    AdditionalMsg = AcpiTable->InfoStr;
                 }
             }
             break;
@@ -451,9 +460,9 @@ namespace UefiSpace {
                 for (auto ApriFile:AprioriList) {
                     ss << guidData->getNameFromGuid(ApriFile) << "\n";
                 }
-            } else if (isElfFormat) {
-                ss << AdditionalMsg.toStdString();
-            } else if (isFspHeader) {
+            } else if (isElfFormat || isFspHeader || isAcpiHeader) {
+                ss.clear();
+                ss.str("");
                 ss << AdditionalMsg.toStdString();
             }
             break;
@@ -974,6 +983,35 @@ namespace UefiSpace {
         } else {
             IBB_Region.first = OBB_Region.first + OBB_Region.second;
             IBB_Region.second = this->size - NV_Region.second - OBB_Region.second;
+        }
+
+        for (FirmwareVolume *fv:*FvData) {
+            decodeAcpiTable(fv);
+        }
+    }
+
+    void BiosImageVolume::decodeAcpiTable(Volume* Vol) {
+        switch (Vol->Type) {
+        case VolumeType::FirmwareVolume:
+            for (FfsFile *ffs:((FirmwareVolume*)Vol)->FfsFiles) {
+                decodeAcpiTable(ffs);
+            }
+            break;
+        case VolumeType::FfsFile:
+            for (CommonSection *sec:((FfsFile*)Vol)->Sections) {
+                decodeAcpiTable(sec);
+            }
+            break;
+        case VolumeType::CommonSection:
+            if (((CommonSection*)Vol)->isAcpiHeader) {
+                AcpiTables.push_back(((CommonSection*)Vol)->AcpiTable);
+            }
+            for (Volume *child:((CommonSection*)Vol)->ChildFile) {
+                decodeAcpiTable(child);
+            }
+            break;
+        default:
+            break;
         }
     }
 

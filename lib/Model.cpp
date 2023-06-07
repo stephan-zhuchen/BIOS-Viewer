@@ -127,6 +127,9 @@ SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
         name = "Raw Section";
         if (section->isElfFormat) {
             name = "ELF";
+        } else if (section->isAcpiHeader) {
+            QString Signature = QString::fromStdString(section->AcpiTable->AcpiTableSignature);
+            name = "ACPI Table - " + Signature;
         }
         subtype = "Raw";
         break;

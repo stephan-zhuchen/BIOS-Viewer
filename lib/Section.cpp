@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "UefiLib.h"
 #include "PiDependency.h"
 #include "GuidDefinition.h"
@@ -167,6 +168,62 @@ namespace UefiSpace {
             break;
         }
         return opStr;
+    }
+
+    ACPI_Class::ACPI_Class(UINT8* fv, INT64 length, INT64 offset, bool needValidation):Volume(fv, length, offset) {
+        if (needValidation && length < sizeof(EFI_ACPI_DESCRIPTION_HEADER)) {
+            ValidFlag = false;
+            return;
+        }
+        UINT32 size = *(UINT32*) (fv + sizeof(UINT32));
+        if (needValidation && size != length) {
+            ValidFlag = false;
+            return;
+        }
+        if (needValidation && Buffer::CaculateSum8(fv, length) != 0) {
+            ValidFlag = false;
+            return;
+        }
+        ValidFlag = true;
+        AcpiHeader = *(EFI_ACPI_DESCRIPTION_HEADER*)fv;
+        AcpiTableSignature = Buffer::charToString((INT8*)fv, sizeof(UINT32), false);
+        AcpiTableOemID = Buffer::charToString((INT8*)&AcpiHeader.OemId, sizeof(UINT32), false);
+        AcpiTableOemTableID = Buffer::charToString((INT8*)&AcpiHeader.OemTableId, sizeof(UINT32), false);
+    }
+
+    ACPI_Class::~ACPI_Class() {}
+
+    bool ACPI_Class::isValid() const {
+        return ValidFlag;
+    }
+
+    bool ACPI_Class::isAcpiHeader(const UINT8  *ImageBase, INT64 length) {
+        if (length < sizeof(EFI_ACPI_DESCRIPTION_HEADER)) {
+            return false;
+        }
+        UINT32 size = *(UINT32*) (ImageBase + sizeof(UINT32));
+        if (size != length) {
+            return false;
+        }
+        if (Buffer::CaculateSum8(ImageBase, length) != 0) {
+            return false;
+        }
+        return true;
+    }
+
+    void ACPI_Class::setInfoStr() {
+        INT64 width = 20;
+        stringstream ss;
+        stringstream guidInfo;
+        ss.setf(ios::left);
+
+        ss << setw(width) << "Signature:"   << AcpiTableSignature << "\n"
+           << setw(width) << "Length:"      << hex << uppercase << AcpiHeader.Length << "h\n"
+           << setw(width) << "Revision:"    << hex << uppercase << (UINT16)AcpiHeader.Revision << "h\n"
+           << setw(width) << "OemId:"       << Buffer::charToString((INT8*)&AcpiHeader.OemId, 6, false) << "\n"
+           << setw(width) << "OemTableId:"  << Buffer::charToString((INT8*)&AcpiHeader.OemTableId, 8, false) << "\n";
+
+        InfoStr = QString::fromStdString(ss.str());
     }
 }
 

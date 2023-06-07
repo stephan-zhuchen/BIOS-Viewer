@@ -525,6 +525,11 @@
        <string>Courier New</string>
       </property>
      </item>
+     <item>
+      <property name="text">
+       <string>IntelOne Mono</string>
+      </property>
+     </item>
     </widget>
     <widget class="QLabel" name="label_22">
      <property name="geometry">

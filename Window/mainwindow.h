@@ -16,7 +16,7 @@
 #include "InfoWindow.h"
 #include "SearchDialog.h"
 
-#define __BiosViewerVersion__ "1.5"
+#define __BiosViewerVersion__ "1.6"
 
 using namespace BaseLibrarySpace;
 using namespace UefiSpace;
@@ -72,6 +72,7 @@ private slots:
     void showBodyHexView();
     void showNvHexView();
     void showPeCoffView();
+    void showAcpiTableView();
     void extractVolume();
     void extractBodyVolume();
     void extractIfwiRegion();
@@ -121,6 +122,7 @@ private:
     QMenu*         RightMenu{nullptr};
     QMenu*         DigestMenu{nullptr};
     QAction*       showPeCoff{nullptr};
+    QAction*       showAcpiTable{nullptr};
     QAction*       showHex{nullptr};
     QAction*       showBodyHex{nullptr};
     QAction*       extractVolumeAction{nullptr};

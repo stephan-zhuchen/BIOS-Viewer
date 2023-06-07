@@ -242,7 +242,6 @@ void SearchDialog::SearchContentTextChanged(const QString &arg1)
 
 void SearchDialog::NextButtonClicked()
 {
-    qDebug("NextButtonClicked");
     int beginOffset = 0;
     int searchLength = 0;
     if (!isBinary && SearchText) {
