@@ -39,9 +39,12 @@ public:
   QHexView(QWidget *parent = nullptr);
   ~QHexView();
 
+  void refresh();
   void setfileOpened(bool state);
-  void setParentWidget(QWidget *pWidget);
+  void setParentWidget(QWidget *pWidget, bool fromMainWindow);
   void setReadOnly(bool ReadOnlyFlag);
+  void actionGoto();
+  void actionSearch();
 
   void paintEvent(QPaintEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
@@ -52,6 +55,7 @@ public:
 
 private:
   QByteArray m_pdata;
+  QByteArray CopiedData;
 
   unsigned int m_posAddr,
       m_charWidth,
@@ -73,11 +77,13 @@ private:
   bool      showCursor;
   bool      startFromAscii;
   bool      fileOpened;
+  bool      startFromMainWindow{false};
   QTimer    *timer;
   QFont     fontSetting;
-  QWidget   *parentWidget;
+  QWidget   *parentWidget{nullptr};
   QColor    selectionColor;
   QColor    EditedColor;
+  QColor    SlectedEditedColor;
   QColor    wordColor;
   QColor    wordColorOpposite;
   QColor    cursorColor;
@@ -87,6 +93,11 @@ private:
   QMenu*         RightMenu{nullptr};
   QMenu*         DigestMenu{nullptr};
   QMenu*         ChecksumMenu{nullptr};
+  QAction*       CopyContent{nullptr};
+  QAction*       PasteInsertContent{nullptr};
+  QAction*       PasteOverlapContent{nullptr};
+  QAction*       EnableEditing{nullptr};
+  QAction*       DiscardChange{nullptr};
   QAction*       SaveContent{nullptr};
   QAction*       CheckSum8{nullptr};
   QAction*       CheckSum16{nullptr};
@@ -113,8 +124,6 @@ private:
   bool isEdited(unsigned int index);
   void restartTimer();
   int  getLineNum();
-  void actionGoto();
-  void actionSearch();
   void initRightMenu();
   void finiRightMenu();
   bool getSelectedBuffer(QByteArray &buffer, int *length);
@@ -127,6 +136,12 @@ public slots:
   void showFromOffset(int offset, int length=1);
   std::size_t sizeFile();
   void setAddressLength();
+  void CopyFromSelectedContent();
+  void PasteToContent();
+  void PasteAndInsertToContent();
+  void PasteAndOverlapToContent();
+  void DiscardChangedContent();
+  void SetEditingState(bool state);
   void SaveSelectedContent();
   void getChecksum8();
   void getChecksum16();

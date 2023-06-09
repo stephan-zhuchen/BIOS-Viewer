@@ -1,4 +1,5 @@
 #include <QTextBrowser>
+#include <QKeyEvent>
 #include "TabWindow.h"
 #include "ui_TabWindow.h"
 
@@ -42,4 +43,10 @@ void TabWindow::SetNewTabAndText(QString tabName, QString txt) {
 void TabWindow::CollectTabAndShow() {
     verticalLayout->addWidget(tabWidget);
     this->show();
+}
+
+void TabWindow::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Escape) {
+        this->close();
+    }
 }

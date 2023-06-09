@@ -1,7 +1,8 @@
 #include <QDebug>
 #include <QRegularExpression>
 #include <QMessageBox>
-#include "mainwindow.h"
+#include <QKeyEvent>
+#include "BiosWindow.h"
 #include "SearchDialog.h"
 #include "QHexView/qhexview.h"
 #include "ui_SearchDialog.h"
@@ -95,7 +96,7 @@ void SearchDialog::SearchFileText() {
         return;
     }
     PreviousItems.push_back(row);
-    ((MainWindow*)parentWidget)->HighlightTreeItem(SearchPositionList.at(row));
+    ((BiosViewerWindow*)parentWidget)->HighlightTreeItem(SearchPositionList.at(row));
 }
 
 bool SearchDialog::SearchBinary(int *begin, int *length) {
@@ -196,7 +197,7 @@ void SearchDialog::keyPressEvent(QKeyEvent *event) {
 }
 
 void SearchDialog::closeEvent(QCloseEvent *event) {
-    ((MainWindow*)parentWidget)->setSearchDialogState(false);
+    ((BiosViewerWindow*)parentWidget)->setSearchDialogState(false);
 }
 
 void SearchDialog::AsciiCheckboxStateChanged(int state)
@@ -278,7 +279,7 @@ void SearchDialog::PreviousButtonClicked()
         if (PreviousItems.size() > 1) {
             int PreviousRow = PreviousItems.at(PreviousItems.size() - 2);
             PreviousItems.pop_back();
-            ((MainWindow*)parentWidget)->HighlightTreeItem(SearchPositionList.at(PreviousRow));
+            ((BiosViewerWindow*)parentWidget)->HighlightTreeItem(SearchPositionList.at(PreviousRow));
         }
     }
 }

@@ -2,14 +2,14 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QProcess>
-#include "mainwindow.h"
+#include "StartWindow.h"
+#include "BiosWindow.h"
 #include "HexViewDialog.h"
 #include "TabWindow.h"
-#include "./ui_mainwindow.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
 
-void MainWindow::initRightMenu() {
+void BiosViewerWindow::initRightMenu() {
     RightMenu = new QMenu;
     DigestMenu = new QMenu("Digest");
     showPeCoff = new QAction("PE/COFF");
@@ -60,7 +60,7 @@ void MainWindow::initRightMenu() {
     this->connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
 }
 
-void MainWindow::finiRightMenu() {
+void BiosViewerWindow::finiRightMenu() {
     if (RightMenu != nullptr)
         delete RightMenu;
     if (DigestMenu != nullptr)
@@ -99,9 +99,9 @@ void MainWindow::finiRightMenu() {
         delete sha512_Menu;
 }
 
-void MainWindow::showTreeRightMenu(QPoint pos) {
+void BiosViewerWindow::showTreeRightMenu(QPoint pos) {
     QIcon hexBinary, box_arrow_up, replace, key, windows;
-    if (DarkmodeFlag) {
+    if (isDarkMode()) {
         hexBinary = QIcon(":/file-binary_light.svg");
         box_arrow_up = QIcon(":/box-arrow-up_light.svg");
         replace = QIcon(":/replace_light.svg");
@@ -114,16 +114,17 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
         key = QIcon(":/key.svg");
         windows = QIcon(":/windows.svg");
     }
-    QModelIndex index = ui->treeWidget->indexAt(pos);
+    QModelIndex index = this->treeWidget->indexAt(pos);
     if (!index.isValid())
         return;
-    QTreeWidgetItem *item = ui->treeWidget->itemAt(pos);
-    RightClickeditemModel = item->data(MainWindow::Name, Qt::UserRole).value<DataModel*>();
+    QTreeWidgetItem *item = this->treeWidget->itemAt(pos);
+    InputData->RightClickeditemModel = item->data(BiosViewerData::Name, Qt::UserRole).value<DataModel*>();
+    DataModel *RightClickeditemModel = InputData->RightClickeditemModel;
 
     RightMenu->clear();
     if (RightClickeditemModel->getSubType() == "PE32 image" ||
         RightClickeditemModel->getSubType() == "PE32+ image") {
-        QString filepath = appDir + "/tool/PECOFF/dumpbin.exe";
+        QString filepath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
         QFile file(filepath);
         if (file.exists()) {
             showPeCoff->setIcon(windows);
@@ -133,7 +134,7 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
     }
 
     if (RightClickeditemModel->getName().mid(0, 10) == "ACPI Table") {
-        QString filepath = appDir + "/tool/ACPI/iasl.exe";
+        QString filepath = WindowData->appDir + "/tool/ACPI/iasl.exe";
         QFile file(filepath);
         if (file.exists()) {
             showAcpiTable->setIcon(windows);
@@ -189,66 +190,66 @@ void MainWindow::showTreeRightMenu(QPoint pos) {
     DigestMenu->addAction(sha512_Menu);
 
     RightMenu->addMenu(DigestMenu);
-    RightMenu->move(ui->treeWidget->cursor().pos());
+    RightMenu->move(this->treeWidget->cursor().pos());
     RightMenu->show();
 }
 
-void MainWindow::showHexView() {
+void BiosViewerWindow::showHexView() {
     HexViewDialog *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
-    UINT8 *itemData = RightClickeditemModel->modelData->data;
-    QByteArray *hexViewData = new QByteArray((char*)itemData, RightClickeditemModel->modelData->size);
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
+    QByteArray *hexViewData = new QByteArray((char*)itemData, InputData->RightClickeditemModel->modelData->size);
     hexDialog->loadBuffer(*hexViewData,
-                          InputImageModel->modelData,
-                          RightClickeditemModel->modelData->offsetFromBegin,
-                          RightClickeditemModel->getName(),
-                          OpenedFileName,
-                          RightClickeditemModel->modelData->isCompressed);
+                          InputData->InputImageModel->modelData,
+                          InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          InputData->RightClickeditemModel->getName(),
+                          WindowData->OpenedFileName,
+                          InputData->RightClickeditemModel->modelData->isCompressed);
     hexDialog->show();
     delete hexViewData;
 }
 
-void MainWindow::showBodyHexView() {
+void BiosViewerWindow::showBodyHexView() {
     HexViewDialog *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
-    UINT8 *itemData = RightClickeditemModel->modelData->data;
-    QByteArray *hexViewData = new QByteArray((char*)itemData, RightClickeditemModel->modelData->size);
-    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
+    QByteArray *hexViewData = new QByteArray((char*)itemData, InputData->RightClickeditemModel->modelData->size);
+    INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
     hexDialog->loadBuffer(BodyHexViewData,
-                          InputImageModel->modelData,
-                          RightClickeditemModel->modelData->offsetFromBegin,
-                          RightClickeditemModel->getName(),
-                          OpenedFileName,
-                          RightClickeditemModel->modelData->isCompressed);
+                          InputData->InputImageModel->modelData,
+                          InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          InputData->RightClickeditemModel->getName(),
+                          WindowData->OpenedFileName,
+                          InputData->RightClickeditemModel->modelData->isCompressed);
     hexDialog->show();
     delete hexViewData;
 }
 
-void MainWindow::showNvHexView() {
+void BiosViewerWindow::showNvHexView() {
     HexViewDialog *hexDialog = new HexViewDialog();
-    UINT8 *NvData = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataPtr;
-    INT64 NvDataSize = ((NvVariableEntry*)(RightClickeditemModel->modelData))->DataSize;
+    UINT8 *NvData = ((NvVariableEntry*)(InputData->RightClickeditemModel->modelData))->DataPtr;
+    INT64 NvDataSize = ((NvVariableEntry*)(InputData->RightClickeditemModel->modelData))->DataSize;
     QByteArray *hexViewData = new QByteArray((char*)NvData, NvDataSize);
     hexDialog->loadBuffer(*hexViewData,
-                          InputImageModel->modelData,
-                          RightClickeditemModel->modelData->offsetFromBegin,
-                          RightClickeditemModel->getName(),
-                          OpenedFileName,
-                          RightClickeditemModel->modelData->isCompressed);
+                          InputData->InputImageModel->modelData,
+                          InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          InputData->RightClickeditemModel->getName(),
+                          WindowData->OpenedFileName,
+                          InputData->RightClickeditemModel->modelData->isCompressed);
     hexDialog->show();
     delete hexViewData;
 }
 
-void MainWindow::showPeCoffView() {
-    QString filepath = appDir + "/tool/temp.bin";
-    QString toolpath = appDir + "/tool/PECOFF/dumpbin.exe";
-    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
-    Buffer::saveBinary(filepath.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
+void BiosViewerWindow::showPeCoffView() {
+    QString filepath = WindowData->appDir + "/tool/temp.bin";
+    QString toolpath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
+    INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
+    Buffer::saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "Please run as Administrator!");
@@ -285,12 +286,12 @@ void MainWindow::showPeCoffView() {
     TabView->CollectTabAndShow();
 }
 
-void MainWindow::showAcpiTableView() {
-    QString filepath = appDir + "/tool/temp.bin";
-    QString Dslpath = appDir + "/tool/temp.dsl";
-    QString toolpath = appDir + "/tool/ACPI/iasl.exe";
-    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
-    Buffer::saveBinary(filepath.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
+void BiosViewerWindow::showAcpiTableView() {
+    QString filepath = WindowData->appDir + "/tool/temp.bin";
+    QString Dslpath = WindowData->appDir + "/tool/temp.dsl";
+    QString toolpath = WindowData->appDir + "/tool/ACPI/iasl.exe";
+    INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
+    Buffer::saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "Please run as Administrator!");
@@ -325,10 +326,10 @@ void MainWindow::showAcpiTableView() {
     TabView->CollectTabAndShow();
 }
 
-void MainWindow::extractVolume() {
-    QString filename = RightClickeditemModel->getName() + "_" + RightClickeditemModel->getType() + ".fd";
+void BiosViewerWindow::extractVolume() {
+    QString filename = InputData->RightClickeditemModel->getName() + "_" + InputData->RightClickeditemModel->getType() + ".fd";
     QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
-    QString DialogTitle = "Extract " + RightClickeditemModel->getType();
+    QString DialogTitle = "Extract " + InputData->RightClickeditemModel->getType();
     QString extractVolumeName = QFileDialog::getSaveFileName(this,
                                                              DialogTitle,
                                                              outputPath,
@@ -336,13 +337,13 @@ void MainWindow::extractVolume() {
     if (extractVolumeName.isEmpty()) {
         return;
     }
-    Buffer::saveBinary(extractVolumeName.toStdString(), RightClickeditemModel->modelData->data, 0, RightClickeditemModel->modelData->size);
+    Buffer::saveBinary(extractVolumeName.toStdString(), InputData->RightClickeditemModel->modelData->data, 0, InputData->RightClickeditemModel->modelData->size);
 }
 
-void MainWindow::extractBodyVolume() {
-    QString filename = RightClickeditemModel->getName() + "_" + RightClickeditemModel->getType() + "_body.fd";
+void BiosViewerWindow::extractBodyVolume() {
+    QString filename = InputData->RightClickeditemModel->getName() + "_" + InputData->RightClickeditemModel->getType() + "_body.fd";
     QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
-    QString DialogTitle = "Extract " + RightClickeditemModel->getType() + " Body";
+    QString DialogTitle = "Extract " + InputData->RightClickeditemModel->getType() + " Body";
     QString extractVolumeName = QFileDialog::getSaveFileName(this,
                                                              DialogTitle,
                                                              outputPath,
@@ -351,14 +352,14 @@ void MainWindow::extractBodyVolume() {
         return;
     }
 
-    INT64 HeaderSize = RightClickeditemModel->modelData->getHeaderSize();
-    Buffer::saveBinary(extractVolumeName.toStdString(), RightClickeditemModel->modelData->data, HeaderSize, RightClickeditemModel->modelData->size - HeaderSize);
+    INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
+    Buffer::saveBinary(extractVolumeName.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
 }
 
-void MainWindow::extractIfwiRegion() {
-    QString filename = RightClickeditemModel->getName() + ".bin";
+void BiosViewerWindow::extractIfwiRegion() {
+    QString filename = InputData->RightClickeditemModel->getName() + ".bin";
     QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
-    QString DialogTitle = "Extract " + RightClickeditemModel->getName() + " " + RightClickeditemModel->getType();
+    QString DialogTitle = "Extract " + InputData->RightClickeditemModel->getName() + " " + InputData->RightClickeditemModel->getType();
     QString extractRegionName = QFileDialog::getSaveFileName(this,
                                                              DialogTitle,
                                                              outputPath,
@@ -367,15 +368,15 @@ void MainWindow::extractIfwiRegion() {
         return;
     }
 
-    Buffer::saveBinary(extractRegionName.toStdString(), RightClickeditemModel->modelData->data, 0, RightClickeditemModel->modelData->size);
+    Buffer::saveBinary(extractRegionName.toStdString(), InputData->RightClickeditemModel->modelData->data, 0, InputData->RightClickeditemModel->modelData->size);
 }
 
-void MainWindow::replaceIfwiRegion() {
+void BiosViewerWindow::replaceIfwiRegion() {
     // only support BIOS replacement
     ActionReplaceBIOSTriggered();
 }
 
-void MainWindow::replaceFfsContent() {
+void BiosViewerWindow::replaceFfsContent() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString FileName = QFileDialog::getOpenFileName(this,
                                                     tr("Replace File"),
@@ -387,7 +388,7 @@ void MainWindow::replaceFfsContent() {
 
     Buffer *FileBuffer = new BaseLibrarySpace::Buffer(new std::ifstream(FileName.toStdString(), std::ios::in | std::ios::binary));
     INT64 NewFileSize = FileBuffer->getBufferSize();
-    INT64 FileSize = ((FfsFile*)RightClickeditemModel->modelData)->FfsSize - ((FfsFile*)RightClickeditemModel->modelData)->getHeaderSize();
+    INT64 FileSize = ((FfsFile*)InputData->RightClickeditemModel->modelData)->FfsSize - ((FfsFile*)InputData->RightClickeditemModel->modelData)->getHeaderSize();
     if (NewFileSize > FileSize) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "File size does not match!");
         delete FileBuffer;
@@ -396,34 +397,31 @@ void MainWindow::replaceFfsContent() {
     UINT8* NewFile = FileBuffer->getBytes(NewFileSize);
     delete FileBuffer;
 
-    INT64 ReplaceOffset = RightClickeditemModel->modelData->offsetFromBegin + ((FfsFile*)RightClickeditemModel->modelData)->getHeaderSize();
-    UINT8* NewImage = new UINT8[InputImageSize];
+    INT64 ReplaceOffset = InputData->RightClickeditemModel->modelData->offsetFromBegin + ((FfsFile*)InputData->RightClickeditemModel->modelData)->getHeaderSize();
+    UINT8* NewImage = new UINT8[WindowData->InputImageSize];
     for (INT64 IfwiIdx = 0; IfwiIdx < ReplaceOffset; ++IfwiIdx) {
-        NewImage[IfwiIdx] = InputImage[IfwiIdx];
+        NewImage[IfwiIdx] = WindowData->InputImage[IfwiIdx];
     }
     for (INT64 FileIdx = 0; FileIdx < NewFileSize; ++FileIdx) {
         NewImage[ReplaceOffset + FileIdx] = NewFile[FileIdx];
     }
-    for (INT64 IfwiIdx = ReplaceOffset + NewFileSize; IfwiIdx < InputImageSize; ++IfwiIdx) {
-        NewImage[IfwiIdx] = InputImage[IfwiIdx];
+    for (INT64 IfwiIdx = ReplaceOffset + NewFileSize; IfwiIdx < WindowData->InputImageSize; ++IfwiIdx) {
+        NewImage[IfwiIdx] = WindowData->InputImage[IfwiIdx];
     }
 
-    QFileInfo fileinfo {OpenedFileName};
+    QFileInfo fileinfo {WindowData->OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_NewAcm.bin";
-    Buffer::saveBinary(outputPath.toStdString(), NewImage, 0, InputImageSize);
+    Buffer::saveBinary(outputPath.toStdString(), NewImage, 0, WindowData->InputImageSize);
 
     delete[] NewFile;
     delete[] NewImage;
 }
 
-void MainWindow::replaceMicrocodeFile() {
 
-}
-
-void MainWindow::getMD5() {
-    UINT8 *itemData = RightClickeditemModel->modelData->data;
+void BiosViewerWindow::getMD5() {
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[MD5_DIGEST_LENGTH];
-    MD5(itemData, RightClickeditemModel->modelData->size, md);
+    MD5(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
     for (INT32 i = 0; i < MD5_DIGEST_LENGTH; i++) {
@@ -432,10 +430,10 @@ void MainWindow::getMD5() {
     QMessageBox::about(this, tr("MD5"), hash);
 }
 
-void MainWindow::getSHA1() {
-    UINT8 *itemData = RightClickeditemModel->modelData->data;
+void BiosViewerWindow::getSHA1() {
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA_DIGEST_LENGTH];
-    SHA1(itemData, RightClickeditemModel->modelData->size, md);
+    SHA1(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
     for (INT32 i = 0; i < SHA_DIGEST_LENGTH; i++) {
@@ -444,10 +442,10 @@ void MainWindow::getSHA1() {
     QMessageBox::about(this, tr("SHA1"), hash);
 }
 
-void MainWindow::getSHA224() {
-    UINT8 *itemData = RightClickeditemModel->modelData->data;
+void BiosViewerWindow::getSHA224() {
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA224_DIGEST_LENGTH];
-    SHA224(itemData, RightClickeditemModel->modelData->size, md);
+    SHA224(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
     for (INT32 i = 0; i < SHA224_DIGEST_LENGTH; i++) {
@@ -456,10 +454,10 @@ void MainWindow::getSHA224() {
     QMessageBox::about(this, tr("SHA224"), hash);
 }
 
-void MainWindow::getSHA256() {
-    UINT8 *itemData = RightClickeditemModel->modelData->data;
+void BiosViewerWindow::getSHA256() {
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA256_DIGEST_LENGTH];
-    SHA256(itemData, RightClickeditemModel->modelData->size, md);
+    SHA256(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
     for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
@@ -468,10 +466,10 @@ void MainWindow::getSHA256() {
     QMessageBox::about(this, tr("SHA256"), hash);
 }
 
-void MainWindow::getSHA384() {
-    UINT8 *itemData = RightClickeditemModel->modelData->data;
+void BiosViewerWindow::getSHA384() {
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA384_DIGEST_LENGTH];
-    SHA384(itemData, RightClickeditemModel->modelData->size, md);
+    SHA384(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
     for (INT32 i = 0; i < SHA384_DIGEST_LENGTH; i++) {
@@ -480,10 +478,10 @@ void MainWindow::getSHA384() {
     QMessageBox::about(this, tr("SHA384"), hash);
 }
 
-void MainWindow::getSHA512() {
-    UINT8 *itemData = RightClickeditemModel->modelData->data;
+void BiosViewerWindow::getSHA512() {
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA512_DIGEST_LENGTH];
-    SHA512(itemData, RightClickeditemModel->modelData->size, md);
+    SHA512(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
     for (INT32 i = 0; i < SHA512_DIGEST_LENGTH; i++) {

@@ -29,9 +29,7 @@ public:
     void saveImage();
     void setNewHexBuffer(QByteArray &buffer);
 
-    QHexView *m_hexview;
-
-private:
+    QHexView    *m_hexview;
     Ui::HexViewDialog *ui;
     QString     title;
     QString     OpenedFileName;

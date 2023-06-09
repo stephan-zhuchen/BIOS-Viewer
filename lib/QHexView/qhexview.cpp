@@ -44,6 +44,7 @@ QHexView::QHexView(QWidget *parent)
       fontSetting("Courier New", 12, QFont::Normal, false),
       selectionColor(COLOR_SELECTION),
       EditedColor(255, 128, 128, 0xff),
+      SlectedEditedColor(143, 122, 46, 0xff),
       wordColor(Qt::black),
       wordColorOpposite(Qt::white),
       cursorColor(COLOR_CURSOR),
@@ -81,7 +82,38 @@ QHexView::QHexView(QWidget *parent)
 }
 
 QHexView::~QHexView() {
+  qDebug() << "QHexView::~QHexView";
   finiRightMenu();
+}
+
+void QHexView::refresh() {
+  // default configs
+  if (setting.contains("HexFont") && setting.contains("HexFontSize")){
+      QString font = setting.value("HexFont").toString();
+      int fontsize = setting.value("HexFontSize").toInt();
+      fontSetting = QFont(font, fontsize, QFont::Normal, false);
+  }
+  setFont(fontSetting); // default font
+
+  if (setting.value("Theme").toString() == "System") {
+      if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
+          wordColor = Qt::white;
+          wordColorOpposite = Qt::black;
+          selectionColor = QColor(38, 79, 120);
+          cursorColor = QColor(235, 235, 235);
+      } else {
+          wordColor = Qt::black;
+          wordColorOpposite = Qt::white;
+          selectionColor = QColor(COLOR_SELECTION);
+          cursorColor = QColor(COLOR_CURSOR);
+      }
+  }
+
+  if (setting.value("EnableHexEditing").toString() == "false") {
+      setReadOnly(true);
+  } else if (setting.value("EnableHexEditing").toString() == "true") {
+      setReadOnly(false);
+  }
 }
 
 void QHexView::setfileOpened(bool state) {
@@ -175,8 +207,8 @@ void QHexView::updatePositions()
 //  int serviceSymbolsWidth = ADR_LENGTH * m_charWidth + GAP_ADR_HEX + GAP_HEX_ASCII;
   //m_bytesPerLine = (width() - serviceSymbolsWidth) / (4 * m_charWidth) - 1; // 4 symbols per byte
 
-    m_posAddr = 0;
-    m_posHex = (m_addressLength + 3) * m_charWidth;
+    m_posAddr = 16;
+    m_posHex = (m_addressLength + 3) * m_charWidth + m_posAddr;
     m_posAscii = m_posHex + (m_bytesPerLine * 3 - 1) * m_charWidth + GAP_HEX_ASCII;
 }
 
@@ -207,7 +239,7 @@ void QHexView::paintEvent(QPaintEvent *event)
   painter.setPen(QPen(Qt::gray, 1));
   painter.drawLine(linePos, horizenLinePosY, linePos, height());
   painter.setPen(QPen(Qt::gray, 1));
-  painter.drawLine(0, horizenLinePosY, m_posAscii + m_bytesPerLine * m_charWidth , horizenLinePosY);
+  painter.drawLine(m_posAddr, horizenLinePosY, m_posAscii + m_bytesPerLine * m_charWidth , horizenLinePosY);
   painter.setPen(wordColor);
 
   // offset drawn
@@ -257,6 +289,12 @@ void QHexView::paintEvent(QPaintEvent *event)
           painter.fillRect(QRectF(xPos, yPos - m_charHeight + 4, m_charWidth, m_charHeight), EditedColor);
           if ((i % 2 == 1) && isEdited(pos + 1) && (i != m_bytesPerLine * 2 - 1)){
               painter.fillRect(QRectF(xPos + m_charWidth, yPos - m_charHeight + 4, m_charWidth, m_charHeight), EditedColor);
+          }
+      }
+      if (isEdited(pos) && isSelected(pos)) {
+          painter.fillRect(QRectF(xPos, yPos - m_charHeight + 4, m_charWidth, m_charHeight), SlectedEditedColor);
+          if ((i % 2 == 1) && isEdited(pos + 1) && (i != m_bytesPerLine * 2 - 1)){
+              painter.fillRect(QRectF(xPos + m_charWidth, yPos - m_charHeight + 4, m_charWidth, m_charHeight), SlectedEditedColor);
           }
       }
 
@@ -562,8 +600,9 @@ void QHexView::actionSearch() {
     settingDialog->exec();
 }
 
-void QHexView::setParentWidget(QWidget *pWidget) {
+void QHexView::setParentWidget(QWidget *pWidget, bool fromMainWindow) {
     parentWidget = pWidget;
+    startFromMainWindow = fromMainWindow;
 }
 
 void QHexView::setReadOnly(bool ReadOnlyFlag) {

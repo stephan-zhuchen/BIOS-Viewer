@@ -10,29 +10,42 @@
 #include <QFileDialog>
 #include "BaseLib.h"
 #include "HexViewDialog.h"
+#include "HexWindow.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
 
 void QHexView::keyPressEvent(QKeyEvent *event) {
-    if (event->key() == Qt::Key_Escape) {
+    if (!startFromMainWindow && event->key() == Qt::Key_Escape) {
         parentWidget->close();
     }
 
     if (!fileOpened)
         return;
 
-    if( (event ->modifiers()& Qt::ControlModifier) != 0 && event ->key() == Qt::Key_F ) {
+    if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_F ) {
+        qDebug() << "Hex search";
         actionSearch();
-    } else if( (event ->modifiers()& Qt::ControlModifier) != 0 && event ->key() == Qt::Key_G ) {
+    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_G ) {
         actionGoto();
-    } else if( (event ->modifiers()& Qt::ControlModifier) != 0 && event ->key() == Qt::Key_S ) {
+    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_S ) {
         BinaryEdited = false;
-        ((HexViewDialog*)parentWidget)->setNewHexBuffer(m_pdata);
-        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
-    } else if ((event ->modifiers()& Qt::ControlModifier) == 0 && event->key() >= Qt::Key_0 && event->key() <= Qt::Key_9) {
+        if (!startFromMainWindow) {
+            ((HexViewDialog*)parentWidget)->setNewHexBuffer(m_pdata);
+            ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+            ((HexViewDialog*)parentWidget)->saveImage();
+        } else {
+            ((HexViewWindow*)parentWidget)->setNewHexBuffer(m_pdata);
+            ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
+            ((HexViewWindow*)parentWidget)->saveImage();
+        }
+    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_C ) {
+        CopyFromSelectedContent();
+    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_V ) {
+        PasteToContent();
+    } else if ((event ->modifiers() & Qt::ControlModifier) == 0 && event->key() >= Qt::Key_0 && event->key() <= Qt::Key_9) {
         inputKey = (event->key() - Qt::Key_0) & 0xF;
         binaryEdit(inputKey);
-    } else if ((event ->modifiers()& Qt::ControlModifier) == 0 && event->key() >= Qt::Key_A && event->key() <= Qt::Key_F) {
+    } else if ((event ->modifiers() & Qt::ControlModifier) == 0 && event->key() >= Qt::Key_A && event->key() <= Qt::Key_F) {
         inputKey = (event->key() - 0x37) & 0xF;
         binaryEdit(inputKey);
     }
@@ -331,6 +344,22 @@ void QHexView::initRightMenu() {
     DigestMenu = new QMenu("Digest");
     ChecksumMenu = new QMenu("CheckSum");
 
+    CopyContent = new QAction("Copy");
+    CopyContent->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+    this->connect(CopyContent, SIGNAL(triggered(bool)), this, SLOT(CopyFromSelectedContent()));
+
+    PasteInsertContent = new QAction("Paste and Insert");
+    this->connect(PasteInsertContent, SIGNAL(triggered(bool)), this, SLOT(PasteAndInsertToContent()));
+
+    PasteOverlapContent = new QAction("Paste and Overlap");
+    this->connect(PasteOverlapContent, SIGNAL(triggered(bool)), this, SLOT(PasteAndOverlapToContent()));
+
+    DiscardChange = new QAction("Discard changes");
+    this->connect(DiscardChange, SIGNAL(triggered(bool)), this, SLOT(DiscardChangedContent()));
+
+    EnableEditing = new QAction("Enable Editing");
+    this->connect(EnableEditing, SIGNAL(toggled(bool)), this, SLOT(SetEditingState(bool)));
+
     SaveContent = new QAction("Save selected content");
     this->connect(SaveContent, SIGNAL(triggered(bool)), this, SLOT(SaveSelectedContent()));
 
@@ -369,6 +398,16 @@ void QHexView::finiRightMenu() {
         delete DigestMenu;
     if (ChecksumMenu != nullptr)
         delete ChecksumMenu;
+    if (CopyContent != nullptr)
+        delete CopyContent;
+    if (PasteInsertContent != nullptr)
+        delete PasteInsertContent;
+    if (PasteOverlapContent != nullptr)
+        delete PasteOverlapContent;
+    if (DiscardChange != nullptr)
+        delete DiscardChange;
+    if (EnableEditing != nullptr)
+        delete EnableEditing;
     if (SaveContent != nullptr)
         delete SaveContent;
     if (CheckSum8 != nullptr)
@@ -393,6 +432,38 @@ void QHexView::finiRightMenu() {
 
 void QHexView::contextMenuEvent(QContextMenuEvent *event) {
     int actPos = cursorPos(event->pos());
+
+    RightMenu->clear();
+    ChecksumMenu->clear();
+    DigestMenu->clear();
+
+    CopyContent->setDisabled(true);
+    RightMenu->addAction(CopyContent);
+
+    if (ReadOnly || CopiedData.size() == 0) {
+        PasteInsertContent->setDisabled(true);
+        PasteOverlapContent->setDisabled(true);
+    } else {
+        PasteInsertContent->setEnabled(true);
+        PasteOverlapContent->setEnabled(true);
+    }
+
+    RightMenu->addAction(PasteInsertContent);
+    RightMenu->addAction(PasteOverlapContent);
+
+    EnableEditing->setCheckable(true);
+    if (ReadOnly)
+        EnableEditing->setChecked(false);
+    else
+        EnableEditing->setChecked(true);
+    RightMenu->addAction(EnableEditing);
+
+    if (BinaryEdited)
+        DiscardChange->setEnabled(true);
+    else
+        DiscardChange->setEnabled(false);
+    RightMenu->addAction(DiscardChange);
+
     if (event->pos().x() < (int)m_posAscii - (GAP_HEX_ASCII / 2) && event->pos().x() > m_posHex && isSelected(actPos)) {
         if (m_selectBegin % 2 != 0) {
             m_selectBegin -= 1;
@@ -401,17 +472,23 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
             m_selectEnd += 1;
         }
 
-        RightMenu->clear();
-        ChecksumMenu->clear();
-        DigestMenu->clear();
+        CopyContent->setEnabled(true);
         RightMenu->addAction(SaveContent);
 //        DigestMenu->setIcon(key);
 
         ChecksumMenu->addAction(CheckSum8);
-        if ((m_selectEnd - m_selectBegin + 1) % 4 == 0)
-            ChecksumMenu->addAction(CheckSum16);
-        if ((m_selectEnd - m_selectBegin + 1) % 8 == 0)
+        ChecksumMenu->addAction(CheckSum16);
         ChecksumMenu->addAction(CheckSum32);
+
+        if ((m_selectEnd - m_selectBegin + 1) % 4 == 0)
+            CheckSum16->setEnabled(true);
+        else
+            CheckSum16->setEnabled(false);
+
+        if ((m_selectEnd - m_selectBegin + 1) % 8 == 0)
+            CheckSum32->setEnabled(true);
+        else
+            CheckSum32->setEnabled(false);
 
         DigestMenu->addAction(md5_Menu);
         DigestMenu->addAction(sha1_Menu);
@@ -422,9 +499,8 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
 
         RightMenu->addMenu(ChecksumMenu);
         RightMenu->addMenu(DigestMenu);
-        RightMenu->exec(QCursor::pos());
     }
-
+    RightMenu->exec(QCursor::pos());
 }
 
 void QHexView::binaryEdit(char inputChar) {
@@ -443,7 +519,132 @@ void QHexView::binaryEdit(char inputChar) {
     m_pdata.replace(idx, 1, QByteArray(&newHex, 1));
     setCursorPos(m_cursorPos + 1);
     BinaryEdited = true;
-    ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+    if (!startFromMainWindow)
+        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+    else
+        ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
+}
+
+void QHexView::CopyFromSelectedContent() {
+    if (m_selectBegin < m_selectEnd) {
+        qDebug() << "CopyFromSelectedContent";
+        if (m_selectBegin % 2 != 0) {
+            m_selectBegin -= 1;
+        }
+        if (m_selectEnd % 2 == 0) {
+            m_selectEnd += 1;
+        }
+        int length {0};
+        getSelectedBuffer(CopiedData, &length);
+    }
+}
+
+void QHexView::PasteToContent() {
+    if (ReadOnly || CopiedData.size() == 0) {
+        return;
+    }
+    if (setting.value("PasteMode").toString() == "Ask Everytime") {
+        QMessageBox msgBox;
+        msgBox.setText("How to Paste your Content ?");
+        QPushButton *InsertButton = msgBox.addButton(tr("Insert"), QMessageBox::ActionRole);
+        QPushButton *OverlapButton = msgBox.addButton(tr("Overlap"), QMessageBox::ActionRole);
+        msgBox.addButton(QMessageBox::Cancel);
+        msgBox.exec();
+
+        if (msgBox.clickedButton() == InsertButton) {
+            PasteAndInsertToContent();
+        } else if (msgBox.clickedButton() == OverlapButton) {
+            PasteAndOverlapToContent();
+        } else {
+            return;
+        }
+    } else if (setting.value("PasteMode").toString() == "Overlap") {
+        PasteAndOverlapToContent();
+    } else if (setting.value("PasteMode").toString() == "Insert") {
+        PasteAndInsertToContent();
+    }
+}
+
+void QHexView::PasteAndInsertToContent() {
+    if (ReadOnly || CopiedData.size() == 0) {
+        return;
+    }
+    qDebug() << "Insert";
+
+    if (m_cursorPos % 2 != 0) {
+        m_cursorPos += 1;
+    }
+    unsigned int idx = (unsigned int)(m_cursorPos / 2);
+    for (int i = 0; i < EditedPos.size(); ++i) {
+        if (EditedPos.at(i) >= m_cursorPos) {
+            EditedPos.at(i) += CopiedData.size() * 2;
+        }
+    }
+    for (unsigned int var = m_cursorPos; var < m_cursorPos + CopiedData.size() * 2; ++var) {
+        EditedPos.push_back(var);
+    }
+    m_pdata.insert(idx, CopiedData);
+    setAddressLength();
+    setCursorPos(m_cursorPos + CopiedData.size() * 2);
+
+    BinaryEdited = true;
+    if (!startFromMainWindow)
+        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+    else
+        ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
+}
+
+void QHexView::PasteAndOverlapToContent() {
+    if (ReadOnly || CopiedData.size() == 0) {
+        return;
+    }
+    if (m_cursorPos + CopiedData.size() * 2 > m_pdata.size() * 2) {
+        int choice = QMessageBox::warning(this,
+                                          tr("Hex Viewer"),
+                                          tr("The pasted content exceeds the end of file, Do you still want to paste? "),
+                                          QMessageBox::Yes | QMessageBox::Cancel,
+                                          QMessageBox::Yes);
+        if (choice == QMessageBox::Cancel) {
+            return;
+        }
+    }
+
+    if (m_cursorPos % 2 != 0) {
+        m_cursorPos += 1;
+    }
+    unsigned int idx = (unsigned int)(m_cursorPos / 2);
+    for (unsigned int var = m_cursorPos; var < m_cursorPos + CopiedData.size() * 2; ++var) {
+        EditedPos.push_back(var);
+    }
+    m_pdata.replace(idx, CopiedData.size(), CopiedData);
+    setAddressLength();
+    setCursorPos(m_cursorPos + CopiedData.size() * 2);
+
+    BinaryEdited = true;
+    if (!startFromMainWindow)
+        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+    else
+        ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
+}
+
+void QHexView::DiscardChangedContent() {
+    BinaryEdited = false;
+    if (!startFromMainWindow) {
+        loadFromBuffer(((HexViewDialog*)parentWidget)->hexBuffer);
+        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+    }
+    else {
+        loadFromBuffer(((HexViewWindow*)parentWidget)->hexBuffer);
+        ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
+    }
+}
+
+void QHexView::SetEditingState(bool state) {
+    ReadOnly = !state;
+    if (ReadOnly)
+        setting.setValue("EnableHexEditing", "false");
+    else
+        setting.setValue("EnableHexEditing", "true");
 }
 
 void QHexView::SaveSelectedContent() {

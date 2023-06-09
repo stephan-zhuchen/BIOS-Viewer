@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(BiosViewer VERSION 0.1 LANGUAGES CXX)
+project(BinaryViewer VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -61,21 +61,19 @@ set(INCLUDE_FILE
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
 
-#link_directories(D:/Code/BiosViewer/lib/LzmaDecompress/Sdk/C)
+#link_directories(D:/Code/BinaryViewer/lib/LzmaDecompress/Sdk/C)
 
 set(UI_SOURCES
-        Window/mainwindow.ui
         Window/HexViewDialog.ui
         Window/SettingsDialog.ui
         Window/InfoWindow.ui
         Window/SearchDialog.ui
         Window/TabWindow.ui
+        Window/StartWindow.ui
 )
 
 set(WINDOW_SOURCES
-        Window/mainwindow.cpp
         Window/BinaryTool.cpp
-        Window/mainwindow.h
         Window/HexViewDialog.h
         Window/HexViewDialog.cpp
         Window/SettingsDialog.h
@@ -90,6 +88,12 @@ set(WINDOW_SOURCES
         Window/inputdialog.cpp
         Window/TabWindow.h
         Window/TabWindow.cpp
+        Window/StartWindow.h
+        Window/StartWindow.cpp
+        Window/BiosWindow.h
+        Window/BiosWindow.cpp
+        Window/HexWindow.h
+        Window/HexWindow.cpp
     )
 
 set(LIBRARY_SOURCES
@@ -124,31 +128,31 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(BiosViewer
+    qt_add_executable(BinaryViewer
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
 # Define target properties for Android with Qt 6 as:
-#    set_property(TARGET BiosViewer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#    set_property(TARGET BinaryViewer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(BiosViewer SHARED
+        add_library(BinaryViewer SHARED
             ${PROJECT_SOURCES}
         )
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(BiosViewer
+        add_executable(BinaryViewer
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
-target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto)
+target_link_libraries(BinaryViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto)
 
-set_target_properties(BiosViewer PROPERTIES
+set_target_properties(BinaryViewer PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -156,10 +160,10 @@ set_target_properties(BiosViewer PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-install(TARGETS BiosViewer
+install(TARGETS BinaryViewer
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(BiosViewer)
+    qt_finalize_executable(BinaryViewer)
 endif()

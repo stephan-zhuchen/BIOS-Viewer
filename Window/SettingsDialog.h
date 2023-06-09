@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include <QSettings>
-#include "mainwindow.h"
+#include "StartWindow.h"
 
 namespace Ui {
 class SettingsDialog;
@@ -17,7 +17,7 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
 
-    void setParentWidget(MainWindow *pWidget);
+    void setParentWidget(StartWindow *pWidget);
 
 private slots:
     void hexFontSizeBoxActivated(int index);
@@ -33,11 +33,13 @@ private slots:
     void showPaddingBoxStateChanged(int state);
     void enableMultiThreadStateChanged(int state);
     void enableEditingBoxStateChanged(int state);
+    void onlyHexViewBoxStateChanged(int state);
+    void pasteModeBoxActivated(int index);
 
 private:
     Ui::SettingsDialog *ui;
     QSettings setting{"Intel", "BiosViewer"};
-    MainWindow *parentWidget;
+    StartWindow *parentWidget;
 
     QString StructureFontSize;
     QString StructureFont;
@@ -51,6 +53,8 @@ private:
     QString ShowPaddingItem;
     QString EnableMultiThread;
     QString EnableHexEditing;
+    QString DisableBiosViewer;
+    QString PasteMode;
     static int lastTabIndex;
 };
 

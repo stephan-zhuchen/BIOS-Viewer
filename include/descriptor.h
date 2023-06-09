@@ -16,6 +16,8 @@ WITHWARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "SymbolDefinition.h"
 // Make sure we use right packing rules
 
+#define V_FLASH_FDBAR_FLVALSIG  0x0FF0A55A
+
 // Flash descriptor header
 typedef struct FLASH_DESCRIPTOR_HEADER_ {
     UINT8  ReservedVector[16];     // Reserved for ARM ResetVector, 0xFFs on x86/x86-64 machines

@@ -2,7 +2,7 @@
 #include <QKeyEvent>
 #include <QFile>
 #include <QProcess>
-#include "mainwindow.h"
+#include "BiosWindow.h"
 #include "InfoWindow.h"
 #include "BaseLib.h"
 #include "ui_InfoWindow.h"
@@ -200,7 +200,7 @@ void InfoWindow::keyPressEvent(QKeyEvent *event) {
 }
 
 void InfoWindow::closeEvent(QCloseEvent *event) {
-    ((MainWindow*)parentWidget)->setInfoWindowState(false);
+    ((BiosViewerWindow*)parentWidget)->setInfoWindowState(false);
 }
 
 void InfoWindow::microcodeListWidgetItemSelectionChanged() {
@@ -283,6 +283,14 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
     QString Dslpath = appDir + "/tool/temp.dsl";
     QString toolpath = appDir + "/tool/ACPI/iasl.exe";
     QString AcpiText;
+
+    QFile ToolFile(toolpath);
+    if(!ToolFile.exists()) {
+        AcpiText = "ACPI tool not found!";
+        ui->AcpiTextBrowser->setText(AcpiText);
+        return;
+    }
+
     Buffer::saveBinary(filepath.toStdString(), ACPI_Entry->data, 0, ACPI_Entry->size);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {

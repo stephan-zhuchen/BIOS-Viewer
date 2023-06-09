@@ -21,6 +21,9 @@ public:
     void SetNewTabAndText(QString tabName, QString txt);
     void CollectTabAndShow();
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private:
     Ui::TabWindow *ui;
     QVBoxLayout *verticalLayout;

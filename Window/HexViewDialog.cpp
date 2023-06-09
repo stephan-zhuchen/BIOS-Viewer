@@ -19,7 +19,7 @@ HexViewDialog::HexViewDialog(QWidget *parent) :
 
     title = windowTitle();
     m_hexview->setFrameShape(QFrame::NoFrame);
-    m_hexview->setParentWidget(this);
+    m_hexview->setParentWidget(this, false);
     m_layout->addWidget( m_hexview );
     this->setLayout ( m_layout );
 }
@@ -110,8 +110,8 @@ void HexViewDialog::closeEvent(QCloseEvent *event) {
 }
 
 void HexViewDialog::setEditedState(bool edited) {
-    if (!edited && BinaryEdited) { // first save
-        saveImage();
+    if (edited == BinaryEdited) { // first save
+        return;
     }
     BinaryEdited = edited;
     if (edited) {
