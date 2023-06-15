@@ -344,6 +344,10 @@ void QHexView::initRightMenu() {
     DigestMenu = new QMenu("Digest");
     ChecksumMenu = new QMenu("CheckSum");
 
+    if (!isDarkMode) {
+        RightMenu->setStyleSheet("QMenu::item:disabled {background: rgb(240, 240, 240, 255); color:rgba(100,100,100,1);}");
+    }
+
     CopyContent = new QAction("Copy");
     CopyContent->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
     this->connect(CopyContent, SIGNAL(triggered(bool)), this, SLOT(CopyFromSelectedContent()));
@@ -389,6 +393,20 @@ void QHexView::initRightMenu() {
 
     sha512_Menu = new QAction("SHA512");
     this->connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
+
+    if (isDarkMode) {
+        CopyContent->setIcon(QIcon(":/copy_light.svg"));
+        PasteInsertContent->setIcon(QIcon(":/paste_light.svg"));
+        PasteOverlapContent->setIcon(QIcon(":/paste_light.svg"));
+        SaveContent->setIcon(QIcon(":/save_light.svg"));
+        DigestMenu->setIcon(QIcon(":/key_light.svg"));
+    } else {
+        CopyContent->setIcon(QIcon(":/copy.svg"));
+        PasteInsertContent->setIcon(QIcon(":/paste.svg"));
+        PasteOverlapContent->setIcon(QIcon(":/paste.svg"));
+        SaveContent->setIcon(QIcon(":/save.svg"));
+        DigestMenu->setIcon(QIcon(":/key.svg"));
+    }
 }
 
 void QHexView::finiRightMenu() {
@@ -674,7 +692,7 @@ void QHexView::getChecksum8() {
     }
     UINT8 *itemData = (UINT8 *)SelectedBuffer.data();
     UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum8(itemData, length);
-    QMessageBox::information(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 2, 16, QLatin1Char('0')).toUpper());
+    QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 2, 16, QLatin1Char('0')).toUpper());
 }
 
 void QHexView::getChecksum16() {
@@ -685,7 +703,7 @@ void QHexView::getChecksum16() {
     }
     UINT16 *itemData = (UINT16 *)SelectedBuffer.data();
     UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum16(itemData, length);
-    QMessageBox::information(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 4, 16, QLatin1Char('0')).toUpper());
+    QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 4, 16, QLatin1Char('0')).toUpper());
 }
 
 void QHexView::getChecksum32() {
@@ -696,7 +714,7 @@ void QHexView::getChecksum32() {
     }
     UINT32 *itemData = (UINT32 *)SelectedBuffer.data();
     UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum32(itemData, length);
-    QMessageBox::information(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 8, 16, QLatin1Char('0')).toUpper());
+    QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 8, 16, QLatin1Char('0')).toUpper());
 }
 
 void QHexView::getMD5() {

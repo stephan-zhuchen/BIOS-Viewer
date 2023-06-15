@@ -27,24 +27,32 @@
 
 class QHexView;
 class StartWindow;
+class BiosViewerWindow;
+class HexViewWindow;
 using UefiSpace::Volume;
+
+namespace Ui {
+class BiosWindow;
+}
 
 enum class WindowMode { None, Hex, BIOS };
 
 class GeneralData {
 public:
-    QString        appDir;
-    QString        OpenedFileName;
-    QString        WindowTitle;
-    Buffer         *buffer;
-    bool           DarkmodeFlag{false};
-    UINT8          *InputImage{nullptr};
-    INT64          InputImageSize;
-    WindowMode     CurrentWindow {WindowMode::None};
+    QString           appDir;
+    QString           OpenedFileName;
+    QString           WindowTitle;
+    Buffer            *buffer;
+    bool              DarkmodeFlag{false};
+    UINT8             *InputImage{nullptr};
+    INT64             InputImageSize;
+    INT32             CurrentTabIndex;
+    WindowMode        CurrentWindow {WindowMode::None};
+    BiosViewerWindow  *BiosViewerUi{nullptr};
+    HexViewWindow     *HexViewerUi{nullptr};
 
     GeneralData(QString dir);
     ~GeneralData();
-    void cleanup();
 };
 
 class BiosViewerData {
@@ -72,30 +80,13 @@ public:
     static bool isValidBIOS(UINT8 *image, INT64 imageLength);
 };
 
+
 class BiosViewerWindow : public QWidget {
     Q_OBJECT
 
 public:
     // UI
-    QWidget        *centralwidget;
-    QVBoxLayout    *CentralwidgetVerticalLayout;
-    QSpacerItem    *verticalSpacer;
-    QHBoxLayout    *TitleHorizontalLayout;
-    QLabel         *titleInfomation;
-    QSpacerItem    *horizontalSpacer;
-    QPushButton    *searchButton;
-    QPushButton    *HexViewButton;
-    QPushButton    *infoButton;
-    QSpacerItem    *verticalSpacer_2;
-    QHBoxLayout    *LittleHorizontalLayout;
-    QLabel         *structureLabel;
-    QLabel         *infoLabel;
-    QSpacerItem    *verticalSpacer_3;
-    QHBoxLayout    *MainHorizontalLayout;
-    QTreeWidget    *treeWidget;
-    QVBoxLayout    *InfoVerticalLayout;
-    QLineEdit      *AddressPanel;
-    QTextBrowser   *infoBrowser;
+    Ui::BiosWindow *ui;
 
     // Menu
     QMenu*         RightMenu{nullptr};
@@ -118,7 +109,6 @@ public:
     QAction*       sha512_Menu{nullptr};
 
     // Parse and show
-    void cleanup();
     void refresh();
     bool detectIfwi(INT64 &BiosOffset);
     void setBiosFvData();
@@ -138,7 +128,6 @@ public:
     void RecursiveSearchOffset(DataModel* model, INT64 offset, vector<INT32> &SearchRows);
 
     // Data
-    bool            UiReady{false};
     StartWindow     *mWindow{nullptr};
     QSettings       setting;
     GeneralData     *WindowData{nullptr};
@@ -147,8 +136,7 @@ public:
     explicit BiosViewerWindow(StartWindow *parent);
     ~BiosViewerWindow();
     void setupUi(QMainWindow *MainWindow, GeneralData *wData);
-    void retranslateUi(QMainWindow *MainWindow);
-    bool TryOpenBios(UINT8 *image, INT64 imageLength);
+    static bool TryOpenBios(UINT8 *image, INT64 imageLength);
     void loadBios(Buffer *buffer);
     void ActionSearchBiosTriggered();
     void ActionGotoTriggered();
@@ -156,7 +144,6 @@ public:
     void ActionReplaceBIOSTriggered();
 
     // Event from Main Window
-    void resizeEvent(QResizeEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
 
@@ -164,7 +151,6 @@ private slots:
     void TreeWidgetItemSelectionChanged();
     void InfoButtonClicked();
     void SearchButtonClicked();
-    void ShowHexViewClicked();
 
     // Menu
     void initRightMenu();

@@ -31,6 +31,14 @@
         <file>key_light.svg</file>
         <file>windows.svg</file>
         <file>windows_light.svg</file>
+        <file>copy.svg</file>
+        <file>copy_light.svg</file>
+        <file>paste.svg</file>
+        <file>paste_light.svg</file>
+        <file>save.svg</file>
+        <file>save_light.svg</file>
+        <file>close.svg</file>
+        <file>close_light.svg</file>
     </qresource>
     <qresource prefix="/sty">
         <file>dark_mode.qss</file>

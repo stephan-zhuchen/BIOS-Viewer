@@ -26,21 +26,18 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
-     <widget class="QLabel" name="HintLabel">
-      <property name="font">
-       <font>
-        <pointsize>24</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Drag and drop or &quot;Start -&gt; Open&quot; any File</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -67,6 +64,7 @@
     <addaction name="OpenInNewWindow"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
+    <addaction name="actionCloseTab"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
@@ -94,15 +92,12 @@
     <addaction name="actionSearch"/>
     <addaction name="actionGoto"/>
     <addaction name="actionCollapse"/>
-    <addaction name="actionHex_View"/>
-    <addaction name="actionBios_View"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menuShow"/>
    <addaction name="menuTool"/>
    <addaction name="menuAbout"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="OpenFile">
    <property name="icon">
     <iconset resource="../logo/Images.qrc">
@@ -162,7 +157,7 @@
     </font>
    </property>
    <property name="shortcut">
-    <string>Ctrl+W</string>
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="OpenInNewWindow">
@@ -324,6 +319,18 @@
    </property>
    <property name="text">
     <string>Bios View</string>
+   </property>
+  </action>
+  <action name="actionCloseTab">
+   <property name="icon">
+    <iconset resource="../logo/Images.qrc">
+     <normaloff>:/close.svg</normaloff>:/close.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Close Tab</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
    </property>
   </action>
  </widget>

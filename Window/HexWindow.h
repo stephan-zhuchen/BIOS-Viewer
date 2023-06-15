@@ -19,7 +19,6 @@ public:
     void refresh();
 
     void closeEvent(QCloseEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
     void setEditedState(bool edited);
     void loadBuffer(UINT8 *image, INT64 imageLength);
     void saveImage();

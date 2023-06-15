@@ -60,16 +60,20 @@ QHexView::QHexView(QWidget *parent)
 
   if (setting.value("Theme").toString() == "System") {
       if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
+          isDarkMode = true;
           wordColor = Qt::white;
           wordColorOpposite = Qt::black;
           selectionColor = QColor(38, 79, 120);
           cursorColor = QColor(235, 235, 235);
       } else {
+          isDarkMode = false;
           wordColor = Qt::black;
           wordColorOpposite = Qt::white;
           selectionColor = QColor(COLOR_SELECTION);
           cursorColor = QColor(COLOR_CURSOR);
       }
+  } else {
+      isDarkMode = false;
   }
 
   this->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);

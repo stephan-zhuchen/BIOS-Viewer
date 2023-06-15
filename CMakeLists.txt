@@ -70,6 +70,7 @@ set(UI_SOURCES
         Window/SearchDialog.ui
         Window/TabWindow.ui
         Window/StartWindow.ui
+        Window/BiosWindow.ui
 )
 
 set(WINDOW_SOURCES

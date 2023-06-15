@@ -35,12 +35,12 @@ class StartWindow : public QMainWindow
 
 public:
     Ui::StartWindow  *ui;
-    QTabWidget       *tabWidget;
-    BiosViewerWindow *BiosViewerUi;
-    HexViewWindow    *HexViewerUi;
-    GeneralData      *WindowData;
+    QTabWidget       *MainTabWidget;
+    vector<GeneralData*> TabData;
     bool             DisableBiosViewer{false};
 
+    QString        appPath;
+    bool           DarkmodeFlag{false};
     QSettings      setting{"Intel", "BiosViewer"};
     QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
@@ -52,10 +52,11 @@ public:
     void refresh();
     void OpenFile(QString path, bool onlyHexView = false);
     void DoubleClickOpenFile(QString path);
+    void showHintWindow();
+    void showTabWindow();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 
@@ -71,10 +72,11 @@ public slots:
     void ActionGotoTriggered();
     void ActionCollapseTriggered();
     void ActionExtractBinaryTriggered();
-    void ActionHexViewTriggered();
-    void ActionBiosViewTriggered();
     void ActionExtractBIOSTriggered();
     void ActionReplaceBIOSTriggered();
+    void MainTabWidgetCloseRequested(int index);
+    void ActionTabWidgetClose();
+    void CurrentTabChanged(int index);
 };
 
 #endif // STARTWINDOW_H

@@ -7,9 +7,11 @@
 #include "StartWindow.h"
 #include "BiosWindow.h"
 #include "inputdialog.h"
+#include "ui_BiosWindow.h"
 
 void StartWindow::ActionSeperateBinaryTriggered()
 {
+    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->InputImage == nullptr) {
         QMessageBox::critical(this, tr("Seperate Binary"), "No Binary Opened!");
         return;
@@ -86,10 +88,11 @@ void BiosViewerWindow::ActionExtractBIOSTriggered()
 
 void StartWindow::ActionSearchTriggered()
 {
+    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        BiosViewerUi->ActionSearchBiosTriggered();
+        WindowData->BiosViewerUi->ActionSearchBiosTriggered();
     } else if (WindowData->CurrentWindow == WindowMode::Hex) {
-        HexViewerUi->ActionSearchHexTriggered();
+        WindowData->HexViewerUi->ActionSearchHexTriggered();
     }
 }
 
@@ -105,17 +108,19 @@ void BiosViewerWindow::RecursiveSearchOffset(DataModel* model, INT64 offset, vec
 
 void StartWindow::ActionGotoTriggered()
 {
+    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        BiosViewerUi->ActionGotoTriggered();
+        WindowData->BiosViewerUi->ActionGotoTriggered();
     } else if (WindowData->CurrentWindow == WindowMode::Hex) {
-        HexViewerUi->ActionGotoTriggered();
+        WindowData->HexViewerUi->ActionGotoTriggered();
     }
 }
 
 void StartWindow::ActionCollapseTriggered()
 {
+    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        BiosViewerUi->treeWidget->collapseAll();
+        WindowData->BiosViewerUi->ui->treeWidget->collapseAll();
     }
 }
 
@@ -213,6 +218,7 @@ void BiosViewerWindow::SearchButtonClicked()
 
 void StartWindow::ActionExtractBinaryTriggered()
 {
+    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->InputImage == nullptr) {
         QMessageBox::critical(this, tr("Extract Binary"), "No Binary Opened!");
         return;

@@ -26,7 +26,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(ui->onlyHexViewBox,        SIGNAL(stateChanged(int)), this, SLOT(onlyHexViewBoxStateChanged(int)));
     connect(ui->pasteModeBox,          SIGNAL(activated(int)),    this, SLOT(pasteModeBoxActivated(int)));
 
-    ui->tabWidget->setCurrentIndex(lastTabIndex);
+    qDebug() << "lastTabIndex = " << lastTabIndex;
+//    ui->tabWidget->setCurrentIndex(lastTabIndex);
     setAttribute(Qt::WA_DeleteOnClose);
 
 //    if (!setting.contains("Theme"))

@@ -14,13 +14,10 @@ HexViewWindow::HexViewWindow(StartWindow *parent) :
 }
 
 HexViewWindow::~HexViewWindow() {
-    if (UiReady) {
-        qDebug() << "~HexViewWindow";
-    }
+    qDebug() << "~HexViewWindow";
 }
 
 void HexViewWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
-    UiReady = true;
     WindowData = wData;
     centralwidget = new QWidget(MainWindow);
     centralwidget->setObjectName("centralwidget");
@@ -58,10 +55,6 @@ void HexViewWindow::closeEvent(QCloseEvent *event) {
             event->ignore();
         }
     }
-}
-
-void HexViewWindow::resizeEvent(QResizeEvent *event) {
-
 }
 
 void HexViewWindow::setEditedState(bool edited) {

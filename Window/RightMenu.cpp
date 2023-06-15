@@ -2,12 +2,12 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QProcess>
-#include "StartWindow.h"
 #include "BiosWindow.h"
 #include "HexViewDialog.h"
 #include "TabWindow.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
+#include "ui_BiosWindow.h"
 
 void BiosViewerWindow::initRightMenu() {
     RightMenu = new QMenu;
@@ -114,10 +114,10 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) {
         key = QIcon(":/key.svg");
         windows = QIcon(":/windows.svg");
     }
-    QModelIndex index = this->treeWidget->indexAt(pos);
+    QModelIndex index = ui->treeWidget->indexAt(pos);
     if (!index.isValid())
         return;
-    QTreeWidgetItem *item = this->treeWidget->itemAt(pos);
+    QTreeWidgetItem *item = ui->treeWidget->itemAt(pos);
     InputData->RightClickeditemModel = item->data(BiosViewerData::Name, Qt::UserRole).value<DataModel*>();
     DataModel *RightClickeditemModel = InputData->RightClickeditemModel;
 
@@ -190,7 +190,7 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) {
     DigestMenu->addAction(sha512_Menu);
 
     RightMenu->addMenu(DigestMenu);
-    RightMenu->move(this->treeWidget->cursor().pos());
+    RightMenu->move(ui->treeWidget->cursor().pos());
     RightMenu->show();
 }
 

@@ -3,7 +3,7 @@
 #include <thread>
 #include "BiosWindow.h"
 #include "iwfi.h"
-
+#include "ui_BiosWindow.h"
 
 bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) {
     using namespace std;
@@ -148,7 +148,7 @@ void BiosViewerWindow::setBiosFvData()
         delete fvHeader;
 
         if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
-            this->titleInfomation->setText("No Firmware Found!");
+            ui->titleInfomation->setText("No Firmware Found!");
             return;
         }
 
@@ -234,11 +234,11 @@ void BiosViewerWindow::pushDataToVector(INT64 offset, INT64 length) {
 void BiosViewerWindow::HighlightTreeItem(vector<INT32> rows) {
     if (rows.size() == 0)
         return;
-    QModelIndex itemIndex =  this->treeWidget->model()->index(rows.at(0), 0, QModelIndex());
+    QModelIndex itemIndex =  ui->treeWidget->model()->index(rows.at(0), 0, QModelIndex());
     for (int var = 1; var < rows.size(); ++var) {
-        itemIndex = this->treeWidget->model()->index(rows.at(var), 0, itemIndex);
+        itemIndex = ui->treeWidget->model()->index(rows.at(var), 0, itemIndex);
     }
-    this->treeWidget->setCurrentIndex(itemIndex);
+    ui->treeWidget->setCurrentIndex(itemIndex);
 }
 
 void BiosViewerWindow::setTreeData() {
@@ -247,7 +247,7 @@ void BiosViewerWindow::setTreeData() {
     ImageOverviewItem->setFont(BiosViewerData::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
     ImageOverviewItem->setFont(BiosViewerData::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
     ImageOverviewItem->setFont(BiosViewerData::SubType, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
-    this->treeWidget->addTopLevelItem(ImageOverviewItem);
+    ui->treeWidget->addTopLevelItem(ImageOverviewItem);
 
     if (setting.value("ShowPaddingItem") == "false") {
         erasePadding(InputData->IFWI_ModelData);
@@ -257,13 +257,13 @@ void BiosViewerWindow::setTreeData() {
         DataModel *FvModel = InputData->IFWI_ModelData.at(i);
         QTreeWidgetItem *fvItem = new QTreeWidgetItem(FvModel->getData());
         fvItem->setData(BiosViewerData::Name, Qt::UserRole, QVariant::fromValue((DataModel*)FvModel));
-        this->treeWidget->addTopLevelItem(fvItem);
+        ui->treeWidget->addTopLevelItem(fvItem);
 
         for (auto FfsModel:FvModel->volumeModelData) {
             addTreeItem(fvItem, FfsModel);
         }
     }
-    this->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void BiosViewerWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData) {
@@ -303,7 +303,7 @@ void BiosViewerWindow::setPanelInfo(INT64 offset, INT64 size)
     Info << hex << uppercase << size;
 
     QString panelInfo = QString::fromStdString(Info.str());
-    this->AddressPanel->setText(panelInfo);
+    ui->AddressPanel->setText(panelInfo);
 }
 
 bool BiosViewerWindow::isDarkMode() {

@@ -74,6 +74,7 @@ private:
   bool ReadOnly{false};
   std::vector<unsigned int> EditedPos;
 
+  bool      isDarkMode{false};
   bool      showCursor;
   bool      startFromAscii;
   bool      fileOpened;
