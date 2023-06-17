@@ -17,6 +17,10 @@ include_directories(include lib lib/Openssl/include Window)
 set(LINK_DIR  lib/Openssl/lib)
 link_directories(${LINK_DIR})
 
+include_directories(lib/VisualLeakDetector/include)
+set(VLD_LINK_DIR  lib/VisualLeakDetector/lib/Win64)
+link_directories(${VLD_LINK_DIR})
+
 set(LZMA_SDK
         lib/LzmaDecompress/Sdk/C/7zTypes.h
         lib/LzmaDecompress/Sdk/C/7zVersion.h
@@ -151,7 +155,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(BinaryViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto)
+target_link_libraries(BinaryViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld)
 
 set_target_properties(BinaryViewer PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

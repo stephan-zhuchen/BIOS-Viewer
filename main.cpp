@@ -1,5 +1,8 @@
 #include "Window/StartWindow.h"
 #include <QApplication>
+#ifdef QT_DEBUG
+#include "vld.h"
+#endif
 
 int main(int argc, char *argv[])
 {
