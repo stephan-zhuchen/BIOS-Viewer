@@ -630,7 +630,8 @@ namespace UefiSpace {
             FirmwareVolumeSize = 0x48;
             isExt = false;
         } else {
-            FirmwareVolumeSize = 0x78;
+            EFI_FFS_FILE_HEADER *ExtFvFfs = (EFI_FFS_FILE_HEADER*)(data + 0x48);
+            FirmwareVolumeSize = 0x48 + FFS_FILE_SIZE(ExtFvFfs);
             if (length < FirmwareVolumeHeader.ExtHeaderOffset) {
                 isCorrupted = true;
                 return;
@@ -671,6 +672,7 @@ namespace UefiSpace {
 
     void FirmwareVolume::decodeFfs(bool multithread) {
         INT64 offset = FirmwareVolumeSize;
+        Buffer::Align(offset, 0, 0x8);
         if (isEmpty || isCorrupted || !checksumValid)
             return;
         if (isNv) {
@@ -683,7 +685,7 @@ namespace UefiSpace {
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
             if (FfsSize == 0xFFFFFF && FfsHeader.State == 0xFF) {
-                freeSpace = new Volume(data + offset, size - offset);
+                freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset);
                 break;
             }
 
@@ -720,7 +722,7 @@ namespace UefiSpace {
                 offset += FfsSize;
                 Buffer::Align(offset, 0, 0x8);
             } else {
-                freeSpace = new Volume(data + offset, size - offset);
+                freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset);
                 break;
             }
         }
@@ -751,7 +753,13 @@ namespace UefiSpace {
            << setw(width) << "Body size:"   << hex << uppercase << FirmwareVolumeHeader.FvLength - FirmwareVolumeSize << "h\n"
            << setw(width) << "Revision:"    << hex << (UINT32)FirmwareVolumeHeader.Revision << "\n"
            << setw(width) << "Attributes:"  << hex << uppercase << FirmwareVolumeHeader.Attributes << "h\n"
-           << setw(width) << "Checksum:"    << hex << uppercase << FirmwareVolumeHeader.Checksum << "h\n";
+           << setw(width) << "Checksum:"    << hex << uppercase << FirmwareVolumeHeader.Checksum << "h";
+
+        if (checksumValid) {
+            ss << " (Valid)\n";
+        } else {
+            ss << " (Invalid)\n";
+        }
 
         if (isExt) {
             ss << "Extended header size:" << hex << FirmwareVolumeExtHeader.ExtHeaderSize << "h\n"
@@ -1068,7 +1076,7 @@ namespace UefiSpace {
         for (size_t idx = FvData->size(); idx > 0; --idx) {
             FirmwareVolume *volume = FvData->at(idx - 1);
             for(auto file:volume->FfsFiles) {
-                if (file->FfsHeader.Name == GuidDatabase::gObbSha256HashFileGuid) {
+                if (file->FfsHeader.Name == GuidDatabase::gObbSha256HashBinGuid) {
                     if (file->Sections.size() == 0)
                         return;
                     CommonSection *sec = file->Sections.at(0);

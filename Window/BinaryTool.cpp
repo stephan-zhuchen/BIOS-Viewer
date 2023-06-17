@@ -11,6 +11,8 @@
 
 void StartWindow::ActionSeperateBinaryTriggered()
 {
+    if (TabData.size() == 0)
+        return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->InputImage == nullptr) {
         QMessageBox::critical(this, tr("Seperate Binary"), "No Binary Opened!");
@@ -88,6 +90,8 @@ void BiosViewerWindow::ActionExtractBIOSTriggered()
 
 void StartWindow::ActionSearchTriggered()
 {
+    if (TabData.size() == 0)
+        return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
         WindowData->BiosViewerUi->ActionSearchBiosTriggered();
@@ -108,6 +112,8 @@ void BiosViewerWindow::RecursiveSearchOffset(DataModel* model, INT64 offset, vec
 
 void StartWindow::ActionGotoTriggered()
 {
+    if (TabData.size() == 0)
+        return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
         WindowData->BiosViewerUi->ActionGotoTriggered();
@@ -118,6 +124,8 @@ void StartWindow::ActionGotoTriggered()
 
 void StartWindow::ActionCollapseTriggered()
 {
+    if (TabData.size() == 0)
+        return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
         WindowData->BiosViewerUi->ui->treeWidget->collapseAll();
@@ -218,6 +226,8 @@ void BiosViewerWindow::SearchButtonClicked()
 
 void StartWindow::ActionExtractBinaryTriggered()
 {
+    if (TabData.size() == 0)
+        return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->InputImage == nullptr) {
         QMessageBox::critical(this, tr("Extract Binary"), "No Binary Opened!");

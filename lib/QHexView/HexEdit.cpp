@@ -465,6 +465,8 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
         PasteInsertContent->setEnabled(true);
         PasteOverlapContent->setEnabled(true);
     }
+    if (!startFromMainWindow)
+        PasteInsertContent->setDisabled(true);
 
     RightMenu->addAction(PasteInsertContent);
     RightMenu->addAction(PasteOverlapContent);
@@ -561,6 +563,12 @@ void QHexView::PasteToContent() {
     if (ReadOnly || CopiedData.size() == 0) {
         return;
     }
+
+    if (!startFromMainWindow) {
+        PasteAndOverlapToContent();
+        return;
+    }
+
     if (setting.value("PasteMode").toString() == "Ask Everytime") {
         QMessageBox msgBox;
         msgBox.setText("How to Paste your Content ?");
@@ -702,7 +710,7 @@ void QHexView::getChecksum16() {
         return;
     }
     UINT16 *itemData = (UINT16 *)SelectedBuffer.data();
-    UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum16(itemData, length);
+    UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum16(itemData, length / 2);
     QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 4, 16, QLatin1Char('0')).toUpper());
 }
 
@@ -713,7 +721,7 @@ void QHexView::getChecksum32() {
         return;
     }
     UINT32 *itemData = (UINT32 *)SelectedBuffer.data();
-    UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum32(itemData, length);
+    UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum32(itemData, length / 4);
     QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 8, 16, QLatin1Char('0')).toUpper());
 }
 

@@ -114,7 +114,6 @@ public:
     void setBiosFvData();
     void setFfsData();
     void setInfoWindowState(bool opened);
-    void setSearchDialogState(bool opened);
     void pushDataToVector(INT64 offset, INT64 length);
     void HighlightTreeItem(vector<INT32> rows);
     bool isDarkMode();
@@ -151,6 +150,7 @@ private slots:
     void TreeWidgetItemSelectionChanged();
     void InfoButtonClicked();
     void SearchButtonClicked();
+    void setSearchDialogState(bool opened);
 
     // Menu
     void initRightMenu();

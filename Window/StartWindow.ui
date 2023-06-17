@@ -46,7 +46,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>21</height>
+     <height>18</height>
     </rect>
    </property>
    <property name="font">
@@ -328,6 +328,11 @@
    </property>
    <property name="text">
     <string>Close Tab</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>

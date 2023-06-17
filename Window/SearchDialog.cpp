@@ -26,11 +26,12 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui->SearchContent->setText(SearchedString);
     ui->SearchContent->selectAll();
     setAttribute(Qt::WA_DeleteOnClose);
-    this->setWindowFlags(Qt::WindowStaysOnTopHint);
+//    this->setWindowFlags(Qt::WindowStaysOnTopHint);
 }
 
 SearchDialog::~SearchDialog()
 {
+    qDebug() << "SearchDialog::~SearchDialog";
     PreviousItems.clear();
     delete ui;
 }
@@ -100,6 +101,8 @@ void SearchDialog::SearchFileText() {
 }
 
 bool SearchDialog::SearchBinary(int *begin, int *length) {
+    if (SearchedString.size() == 0)
+        return false;
     static QRegularExpression re("\\s");
     QString number = SearchedString.remove(re);
     if (number.size() % 2 == 1) {
@@ -139,6 +142,8 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
 }
 
 bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
+    if (SearchedString.size() == 0)
+        return false;
     for (int idx = PreviousOffset + 1; idx < BinaryBuffer->size(); ++idx) {
         bool Found = true;
         bool wFound = true;
@@ -197,7 +202,7 @@ void SearchDialog::keyPressEvent(QKeyEvent *event) {
 }
 
 void SearchDialog::closeEvent(QCloseEvent *event) {
-    ((BiosViewerWindow*)parentWidget)->setSearchDialogState(false);
+    emit closeSignal(false);
 }
 
 void SearchDialog::AsciiCheckboxStateChanged(int state)
@@ -284,9 +289,7 @@ void SearchDialog::PreviousButtonClicked()
     }
 }
 
-
 void SearchDialog::SearchContentReturnPressed()
 {
     NextButtonClicked();
 }
-

@@ -21,7 +21,7 @@
 #include "BiosWindow.h"
 #include "HexWindow.h"
 
-#define __BinaryViewerVersion__ "0.9"
+#define __BinaryViewerVersion__ "1.0"
 
 namespace Ui {
 class StartWindow;

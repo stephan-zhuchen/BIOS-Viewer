@@ -268,25 +268,25 @@ QString FfsModel::getFmpDeviceName() {
     QString FmpName;
     EFI_GUID FmpGuid = ((FfsFile*)modelData)->FfsHeader.Name;
     switch (FmpGuid.Data1) {
-    case guidData->gFmpDevicePlatformMonolithicGuid.Data1:
+    case guidData->gFmpDeviceMonolithicDefaultGuid.Data1:
         FmpName = "Monolithic";
         break;
-    case guidData->gFmpDevicePlatformIfwiGuid.Data1:
+    case guidData->gFmpDeviceIfwiDefaultGuid.Data1:
         FmpName = "IFWI";
         break;
-    case guidData->gFmpDevicePlatformBiosGuid.Data1:
+    case guidData->gFmpDeviceBiosDefaultGuid.Data1:
         FmpName = "Bios";
         break;
-    case guidData->gFmpDevicePlatformMeGuid.Data1:
+    case guidData->gFmpDeviceMeDefaultGuid.Data1:
         FmpName = "Me";
         break;
-    case guidData->gFmpDevicePlatformEcGuid.Data1:
+    case guidData->gFmpDeviceEcDefaultGuid.Data1:
         FmpName = "EC";
         break;
-    case guidData->gFmpDevicePlatformBtGAcmGuid.Data1:
+    case guidData->gFmpDeviceBtGAcmDefaultGuid.Data1:
         FmpName = "BtgAcm";
         break;
-    case guidData->gFmpDevicePlatformuCodeGuid.Data1:
+    case guidData->gFmpDeviceMicrocodeDefaultGuid.Data1:
         FmpName = "uCode";
         break;
     case guidData->gFmpDevicePlatformCypressPDGuid.Data1:
@@ -313,7 +313,7 @@ QString FfsModel::getFmpDeviceName() {
     case guidData->gFmpDeviceMeFwAdlHCorpGuid.Data1:
         FmpName = "MeFwAdlHCorp";
         break;
-    case guidData->gFmpCapsuleIshPdtFileGuid.Data1:
+    case guidData->gFmpDeviceIshPdtDefaultGuid.Data1:
         FmpName = "ISH PDT";
         break;
     default:

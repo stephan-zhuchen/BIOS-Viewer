@@ -88,6 +88,7 @@ BiosViewerWindow::BiosViewerWindow(StartWindow *parent):
 
 BiosViewerWindow::~BiosViewerWindow() {
     qDebug() << "BiosViewerWindow::~BiosViewerWindow";
+    delete ui;
     if (InputData != nullptr) {
         delete InputData;
         InputData = nullptr;
@@ -116,7 +117,7 @@ void BiosViewerWindow::initSetting() {
     ui->treeWidget->header()->setSectionResizeMode(BiosViewerData::Type, QHeaderView::Fixed);
     ui->treeWidget->header()->setSectionResizeMode(BiosViewerData::SubType, QHeaderView::Fixed);
     ui->treeWidget->header()->resizeSection(BiosViewerData::Type, 120);
-    ui->treeWidget->header()->resizeSection(BiosViewerData::SubType, 120);
+    ui->treeWidget->header()->resizeSection(BiosViewerData::SubType, 140);
     ui->treeWidget->header()->setStretchLastSection(false);
 
     ui->infoBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
@@ -129,10 +130,6 @@ void BiosViewerWindow::initSetting() {
 
 void BiosViewerWindow::setInfoWindowState(bool opened) {
     InputData->infoWindowOpened = opened;
-}
-
-void BiosViewerWindow::setSearchDialogState(bool opened) {
-    InputData->searchDialogOpened = opened;
 }
 
 bool BiosViewerWindow::TryOpenBios(UINT8 *image, INT64 imageLength) {
@@ -162,6 +159,10 @@ void BiosViewerWindow::loadBios(Buffer *buffer) {
     resizeEvent(nullptr);
 }
 
+void BiosViewerWindow::setSearchDialogState(bool opened) {
+    InputData->searchDialogOpened = opened;
+}
+
 void BiosViewerWindow::ActionSearchBiosTriggered() {
     if (!InputData->searchDialogOpened) {
         InputData->searchDialogOpened = true;
@@ -172,6 +173,10 @@ void BiosViewerWindow::ActionSearchBiosTriggered() {
         if (isDarkMode())
             InputData->searchDialog->setWindowIcon(QIcon(":/search_light.svg"));
         InputData->searchDialog->show();
+
+        connect(InputData->searchDialog, SIGNAL(closeSignal(bool)), this, SLOT(setSearchDialogState(bool)));
+    } else {
+        InputData->searchDialog->activateWindow();
     }
 }
 
@@ -269,6 +274,8 @@ void BiosViewerWindow::InfoButtonClicked()
             InputData->infoWindow->showFlashmapTab(InputData->flashmap);
         }
         InputData->infoWindow->show();
+    } else {
+        InputData->infoWindow->activateWindow();
     }
 }
 

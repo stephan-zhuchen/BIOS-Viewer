@@ -156,20 +156,19 @@ void StartWindow::OpenFile(QString path, bool onlyHexView) {
         if (!onlyHex && BiosViewerWindow::TryOpenBios(newTabData->InputImage, newTabData->InputImageSize)) {
             newTabData->CurrentWindow = WindowMode::BIOS;
             newTabData->BiosViewerUi->setupUi(tabWidget, newTabData);
-
-            MainTabWidget->addTab(tabWidget, FileInfo.fileName());
             newTabData->BiosViewerUi->loadBios(buffer);
             ui->actionCollapse->setEnabled(true);
             ui->actionHex_View->setEnabled(true);
             ui->actionBios_View->setDisabled(true);
+            MainTabWidget->addTab(tabWidget, FileInfo.fileName());
         } else {
             newTabData->CurrentWindow = WindowMode::Hex;
             newTabData->HexViewerUi->setupUi(tabWidget, newTabData);
-            MainTabWidget->addTab(tabWidget, FileInfo.fileName());
             newTabData->HexViewerUi->loadBuffer(newTabData->InputImage, newTabData->InputImageSize);
             ui->actionCollapse->setDisabled(true);
             ui->actionHex_View->setDisabled(true);
             ui->actionBios_View->setDisabled(true);
+            MainTabWidget->addTab(tabWidget, FileInfo.fileName());
         }
         MainTabWidget->setCurrentIndex(TabData.size() - 1);
         delete buffer;
@@ -213,13 +212,21 @@ void StartWindow::showTabWindow() {
 }
 
 void StartWindow::closeEvent(QCloseEvent *event) {
-    auto CleanTabData = [this, event](){
-        for (GeneralData *WindowData:TabData) {
+    auto CleanTabData = [this, event]() {
+        for (INT32 index = 0; index < TabData.size(); ++index) {
+            GeneralData *WindowData = TabData.at(index);
             if (WindowData->CurrentWindow == WindowMode::Hex)
                 WindowData->HexViewerUi->closeEvent(event);
             else if (WindowData->CurrentWindow == WindowMode::BIOS)
                 WindowData->BiosViewerUi->closeEvent(event);
+
+            if (event->isAccepted()) {
+                delete WindowData;
+                TabData.erase(TabData.begin() + index);
+                index -= 1;
+            }
         }
+
         QSettings windowSettings("Intel", "BiosViewer");
         windowSettings.setValue("mainwindow/geometry", saveGeometry());
     };
@@ -322,6 +329,8 @@ void StartWindow::OpenInNewWindowTriggered()
 }
 
 void StartWindow::ActionExtractBIOSTriggered() {
+    if (TabData.size() == 0)
+        return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
         WindowData->BiosViewerUi->ActionExtractBIOSTriggered();
@@ -329,6 +338,8 @@ void StartWindow::ActionExtractBIOSTriggered() {
 }
 
 void StartWindow::ActionReplaceBIOSTriggered() {
+    if (TabData.size() == 0)
+        return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
         WindowData->BiosViewerUi->ActionReplaceBIOSTriggered();
@@ -361,6 +372,11 @@ void StartWindow::ActionTabWidgetClose() {
 }
 
 void StartWindow::CurrentTabChanged(int index) {
+    for (GeneralData *WindowData:TabData) {
+        if (WindowData->CurrentWindow == WindowMode::BIOS && WindowData->BiosViewerUi->InputData->searchDialogOpened)
+            WindowData->BiosViewerUi->InputData->searchDialog->close();
+    }
+
     if (index >= 0) {
         GeneralData *WindowData = TabData.at(index);
         if (WindowData->HexViewerUi->BinaryEdited)
