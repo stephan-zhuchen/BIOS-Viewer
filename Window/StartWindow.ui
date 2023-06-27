@@ -46,7 +46,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>18</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
@@ -121,7 +121,7 @@
      <normaloff>:/about.svg</normaloff>:/about.svg</iconset>
    </property>
    <property name="text">
-    <string>About BIOS Viewer</string>
+    <string>About Binary Viewer</string>
    </property>
    <property name="font">
     <font>

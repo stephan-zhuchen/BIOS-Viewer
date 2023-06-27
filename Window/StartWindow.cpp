@@ -374,7 +374,7 @@ void StartWindow::ActionTabWidgetClose() {
 void StartWindow::CurrentTabChanged(int index) {
     for (GeneralData *WindowData:TabData) {
         if (WindowData->CurrentWindow == WindowMode::BIOS && WindowData->BiosViewerUi->InputData->searchDialogOpened)
-            WindowData->BiosViewerUi->InputData->searchDialog->close();
+            WindowData->BiosViewerUi->InputData->BiosSearchDialog->close();
     }
 
     if (index >= 0) {

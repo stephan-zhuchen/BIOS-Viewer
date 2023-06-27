@@ -3,7 +3,6 @@
 #include "BaseLib.h"
 
 bool EFI_GUID::operator==(EFI_GUID guid) {
-
     if (this->Data1 != guid.Data1) {
         return false;
     } else if (this->Data2 != guid.Data2) {
@@ -17,6 +16,10 @@ bool EFI_GUID::operator==(EFI_GUID guid) {
         }
     }
     return true;
+}
+
+bool EFI_GUID::operator!=(EFI_GUID guid) {
+    return !operator==(guid);
 }
 
 GuidDatabase::~GuidDatabase() {}

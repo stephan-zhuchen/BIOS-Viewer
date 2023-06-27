@@ -2,7 +2,7 @@
 #include <QRegularExpression>
 #include <QMessageBox>
 #include <QKeyEvent>
-#include "BiosWindow.h"
+#include <algorithm>
 #include "SearchDialog.h"
 #include "QHexView/qhexview.h"
 #include "ui_SearchDialog.h"
@@ -14,13 +14,15 @@ SearchDialog::SearchDialog(QWidget *parent) :
     PreviousOffset(-1)
 {
     ui->setupUi(this);
+    initSetting();
 
     connect(ui->AsciiCheckbox,  SIGNAL(stateChanged(int)),    this, SLOT(AsciiCheckboxStateChanged(int)));
-    connect(ui->TextCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(TextCheckboxStateChanged(int)));
+    connect(ui->CaseCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(CaseCheckboxStateChanged(int)));
     connect(ui->SearchContent,  SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
     connect(ui->NextButton,     SIGNAL(clicked()),            this, SLOT(NextButtonClicked()));
     connect(ui->PreviousButton, SIGNAL(clicked()),            this, SLOT(PreviousButtonClicked()));
     connect(ui->SearchContent,  SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
+    connect(ui->EndianBox,      SIGNAL(activated(int)),       this, SLOT(EndianBoxActivated(int)));
 
     ui->SearchContent->setAttribute(Qt::WA_InputMethodEnabled, false);
     ui->SearchContent->setText(SearchedString);
@@ -32,8 +34,46 @@ SearchDialog::SearchDialog(QWidget *parent) :
 SearchDialog::~SearchDialog()
 {
     qDebug() << "SearchDialog::~SearchDialog";
-    PreviousItems.clear();
     delete ui;
+}
+
+void SearchDialog::initSetting() {
+    if (!setting.contains("Endian"))
+        setting.setValue("Endian", "little");
+    if (!setting.contains("SearchAscii"))
+        setting.setValue("SearchAscii", "false");
+    if (!setting.contains("CaseSensitive"))
+        setting.setValue("CaseSensitive", "false");
+
+    if (setting.value("Endian") == "little") {
+        isLittleEndian = true;
+        ui->EndianBox->setCurrentIndex(EndianMode::LittleEndian);
+    } else if (setting.value("Endian") == "big") {
+        isLittleEndian = false;
+        ui->EndianBox->setCurrentIndex(EndianMode::BigEndian);
+    }
+    if (setting.value("SearchAscii") == "true") {
+        SearchAscii = true;
+        ui->AsciiCheckbox->setCheckState(Qt::Checked);
+    } else if (setting.value("SearchAscii") == "false") {
+        SearchAscii = false;
+        ui->AsciiCheckbox->setCheckState(Qt::Unchecked);
+    }
+    if (setting.value("CaseSensitive") == "true") {
+        CaseSensitive = true;
+        ui->CaseCheckbox->setCheckState(Qt::Checked);
+    } else if (setting.value("CaseSensitive") == "false") {
+        CaseSensitive = false;
+        ui->CaseCheckbox->setCheckState(Qt::Unchecked);
+    }
+
+    if (SearchAscii) {
+        ui->EndianBox->setEnabled(false);
+        ui->CaseCheckbox->setEnabled(true);
+    } else {
+        ui->EndianBox->setEnabled(true);
+        ui->CaseCheckbox->setEnabled(false);
+    }
 }
 
 QString SearchDialog::SearchedString = "";
@@ -43,61 +83,8 @@ void SearchDialog::setParentWidget(QWidget *pWidget) {
     parentWidget = pWidget;
 }
 
-void SearchDialog::SetModelData(vector<DataModel*> *fvModel) {
-    if (!isBinary) {
-        SearchModelData = fvModel;
-        vector<int> pos;
-        setTextList(SearchModelData, pos);
-
-        for (int var = 0; var < SearchPositionList.size(); ++var) {
-            SearchPositionList.at(var).at(0) += 1;
-        }
-    }
-}
-
 void SearchDialog::SetBinaryData(QByteArray *BinaryData) {
-    if (isBinary) {
-        BinaryBuffer = BinaryData;
-    }
-}
-
-void SearchDialog::setTextList(vector<DataModel*> *itemsModel, vector<int> position) {
-    for (int i = 0; i < itemsModel->size(); ++i) {
-        vector<int> parentPos = position;
-        DataModel* item = itemsModel->at(i);
-        parentPos.push_back(i);
-        QString name = item->getName().toLower();
-        SearchTextList.push_back(name);
-        SearchPositionList.push_back(parentPos);
-        setTextList(&(item->volumeModelData), parentPos);
-    }
-}
-
-void SearchDialog::SearchFileText() {
-    int PreviousRow = -1;
-    if (SearchedString != pSearchedString) {
-        PreviousItems.clear();
-    }
-    if (PreviousItems.size() != 0) {
-        PreviousRow = PreviousItems.at(PreviousItems.size() - 1);
-    }
-    if (SearchModelData->size() == 0 || SearchedString == "")
-        return;
-
-    int row = PreviousRow + 1;
-    while (row < SearchTextList.size()) {
-        if (SearchTextList.at(row).contains(SearchedString, Qt::CaseInsensitive)) {
-            break;
-        }
-        row += 1;
-    }
-
-    if (row == SearchTextList.size()) {
-        QMessageBox::about(this, tr("Search"), "Not Found!");
-        return;
-    }
-    PreviousItems.push_back(row);
-    ((BiosViewerWindow*)parentWidget)->HighlightTreeItem(SearchPositionList.at(row));
+    BinaryBuffer = BinaryData;
 }
 
 bool SearchDialog::SearchBinary(int *begin, int *length) {
@@ -116,6 +103,8 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
     for (int var = 0; var < littleEndianNum.size(); ++var) {
         searchNum.push_back(littleEndianNum.at(var).toInt(nullptr, 16));
     }
+    if (isLittleEndian)
+        std::reverse(searchNum.begin(), searchNum.end());
 
     // Search little endian binary
     int matchIdx = PreviousOffset;
@@ -138,6 +127,7 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
             return true;
         }
     }
+    QMessageBox::about(this, tr("Search"), "Not Found!");
     return false;
 }
 
@@ -168,23 +158,12 @@ bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
             }
         }
     }
+    QMessageBox::about(this, tr("Search"), "Not Found!");
     return false;
 }
 
-void SearchDialog::setSearchMode(bool searchBinary) {
-    isBinary = searchBinary;
-    if (isBinary) {
-        ui->TextCheckbox->setCheckState(Qt::Unchecked);
-        ui->TextCheckbox->setDisabled(true);
-    } else {
-        ui->TextCheckbox->setCheckState(Qt::Checked);
-        ui->AsciiCheckbox->setCheckState(Qt::Unchecked);
-        ui->AsciiCheckbox->setDisabled(true);
-    }
-}
-
 char SearchDialog::UpperToLower(char s) {
-    if(s >= 65 && s <= 90)
+    if(!CaseSensitive && s >= 65 && s <= 90)
         s = s + 32;
     return s;
 }
@@ -205,60 +184,40 @@ void SearchDialog::closeEvent(QCloseEvent *event) {
     emit closeSignal(false);
 }
 
-void SearchDialog::AsciiCheckboxStateChanged(int state)
-{
+void SearchDialog::AsciiCheckboxStateChanged(int state) {
     PreviousOffset = -1;
     HistoryResult.clear();
-    if (state == Qt::Checked)
-    {
+    if (state == Qt::Checked) {
         SearchAscii = true;
-        SearchText = false;
-        ui->TextCheckbox->setCheckState(Qt::Unchecked);
+        ui->EndianBox->setEnabled(false);
+        ui->CaseCheckbox->setEnabled(true);
+        setting.setValue("SearchAscii", "true");
     }
-    else if (state == Qt::Unchecked)
-    {
+    else if (state == Qt::Unchecked) {
         SearchAscii = false;
-        SearchText = true;
+        ui->EndianBox->setEnabled(true);
+        ui->CaseCheckbox->setEnabled(false);
+        setting.setValue("SearchAscii", "false");
     }
 }
 
-void SearchDialog::TextCheckboxStateChanged(int state)
-{
+void SearchDialog::SearchContentTextChanged(const QString &text) {
     PreviousOffset = -1;
     HistoryResult.clear();
-    if (state == Qt::Checked)
-    {
-        SearchAscii = false;
-        SearchText = true;
-        ui->AsciiCheckbox->setCheckState(Qt::Unchecked);
-    }
-    else if (state == Qt::Unchecked)
-    {
-        SearchAscii = true;
-        SearchText = false;
-    }
+    SearchedString = text;
+    if (!CaseSensitive)
+        SearchedString = text.toLower();
 }
 
-void SearchDialog::SearchContentTextChanged(const QString &arg1)
-{
-    PreviousOffset = -1;
-    HistoryResult.clear();
-    SearchedString = arg1.toLower();
-}
-
-void SearchDialog::NextButtonClicked()
-{
+void SearchDialog::NextButtonClicked() {
     int beginOffset = 0;
     int searchLength = 0;
-    if (!isBinary && SearchText) {
-        SearchFileText();
-        pSearchedString = SearchedString;
-    } else if (isBinary && SearchAscii) {
+    if (SearchAscii) {
         if (SearchBinaryAscii(&beginOffset, &searchLength)) {
             HistoryResult.push_back(QPair<int, int>(beginOffset, searchLength));
             ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
         }
-    } else if (isBinary) {
+    } else {
         if (SearchBinary(&beginOffset, &searchLength)) {
             HistoryResult.push_back(QPair<int, int>(beginOffset, searchLength));
             ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
@@ -266,30 +225,43 @@ void SearchDialog::NextButtonClicked()
     }
 }
 
-void SearchDialog::PreviousButtonClicked()
-{
-    if (isBinary) {
-        if (HistoryResult.size() <= 1)
-            return;
-        HistoryResult.pop_back();
-        QPair<int, int> lastResult = HistoryResult.back();
-        int beginOffset = lastResult.first;
-        int searchLength = lastResult.second;
-        PreviousOffset = beginOffset;
-        ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
-    } else {
-        if (SearchedString != pSearchedString) {
-            PreviousItems.clear();
-        }
-        if (PreviousItems.size() > 1) {
-            int PreviousRow = PreviousItems.at(PreviousItems.size() - 2);
-            PreviousItems.pop_back();
-            ((BiosViewerWindow*)parentWidget)->HighlightTreeItem(SearchPositionList.at(PreviousRow));
-        }
+void SearchDialog::PreviousButtonClicked() {
+    if (HistoryResult.size() <= 1)
+        return;
+    HistoryResult.pop_back();
+    QPair<int, int> lastResult = HistoryResult.back();
+    int beginOffset = lastResult.first;
+    int searchLength = lastResult.second;
+    PreviousOffset = beginOffset;
+    ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
+}
+
+void SearchDialog::SearchContentReturnPressed() {
+    NextButtonClicked();
+}
+
+void SearchDialog::EndianBoxActivated(int index) {
+    PreviousOffset = -1;
+    HistoryResult.clear();
+    if (ui->EndianBox->currentIndex() == EndianMode::LittleEndian) {
+        isLittleEndian = true;
+        setting.setValue("Endian", "little");
+    } else if (ui->EndianBox->currentIndex() == EndianMode::BigEndian) {
+        isLittleEndian = false;
+        setting.setValue("Endian", "big");
     }
 }
 
-void SearchDialog::SearchContentReturnPressed()
-{
-    NextButtonClicked();
+void SearchDialog::CaseCheckboxStateChanged(int state) {
+    PreviousOffset = -1;
+    HistoryResult.clear();
+    if (state == Qt::Checked) {
+        CaseSensitive = true;
+        setting.setValue("CaseSensitive", "true");
+    }
+    else if (state == Qt::Unchecked) {
+        CaseSensitive = false;
+        setting.setValue("CaseSensitive", "false");
+    }
 }
+

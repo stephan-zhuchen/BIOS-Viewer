@@ -597,7 +597,6 @@ void QHexView::actionGoto() {
 
 void QHexView::actionSearch() {
     SearchDialog *settingDialog = new SearchDialog();
-    settingDialog->setSearchMode(true);
 //    settingDialog->SetModelData(&FvModelData);
     settingDialog->SetBinaryData(&m_pdata);
     settingDialog->setParentWidget(this);

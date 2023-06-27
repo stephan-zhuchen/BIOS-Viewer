@@ -23,7 +23,6 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
         return;
 
     if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_F ) {
-        qDebug() << "Hex search";
         actionSearch();
     } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_G ) {
         actionGoto();

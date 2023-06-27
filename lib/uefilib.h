@@ -55,6 +55,7 @@ namespace UefiSpace {
         Volume(UINT8* fv, INT64 length, INT64 offset=0);
         virtual ~Volume();
 
+        EFI_GUID getVolumeGuid() const;
         EFI_GUID getGUID(INT64 offset);
         UINT8  getUINT8(INT64 offset);
         UINT16 getUINT16(INT64 offset);

@@ -17,6 +17,16 @@ namespace UefiSpace {
     Volume::~Volume() {
     }
 
+    EFI_GUID Volume::getVolumeGuid() const {
+        EFI_GUID VolumeGuid {0};
+        if (Type == VolumeType::FirmwareVolume) {
+            VolumeGuid = ((FirmwareVolume*)this)->getFvGuid().GuidData;
+        } else if (Type == VolumeType::FfsFile) {
+            VolumeGuid = ((FfsFile*)this)->FfsHeader.Name;
+        }
+        return VolumeGuid;
+    }
+
     EFI_GUID Volume::getGUID(INT64 offset) {
         if (offset > size) {
             throw exception(ErrorMsg);

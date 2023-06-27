@@ -6,6 +6,7 @@
 #include <thread>
 #include "inputdialog.h"
 #include "StartWindow.h"
+#include "BiosSearch.h"
 #include "ui_BiosWindow.h"
 
 GeneralData::GeneralData(QString dir):appDir(dir) {}
@@ -32,8 +33,8 @@ BiosViewerData::~BiosViewerData() {
         infoWindow = nullptr;
     }
     if (searchDialogOpened) {
-        searchDialog->close();
-        searchDialog = nullptr;
+        BiosSearchDialog->close();
+        BiosSearchDialog = nullptr;
     }
 
     for (auto IWFI_Model:IFWI_ModelData) {
@@ -166,17 +167,16 @@ void BiosViewerWindow::setSearchDialogState(bool opened) {
 void BiosViewerWindow::ActionSearchBiosTriggered() {
     if (!InputData->searchDialogOpened) {
         InputData->searchDialogOpened = true;
-        InputData->searchDialog = new SearchDialog();
-        InputData->searchDialog->setSearchMode(false);
-        InputData->searchDialog->SetModelData(&InputData->IFWI_ModelData);
-        InputData->searchDialog->setParentWidget(this);
+        InputData->BiosSearchDialog = new BiosSearch;
+        InputData->BiosSearchDialog->setDarkMode(isDarkMode());
+        InputData->BiosSearchDialog->SetModelData(&InputData->IFWI_ModelData);
         if (isDarkMode())
-            InputData->searchDialog->setWindowIcon(QIcon(":/search_light.svg"));
-        InputData->searchDialog->show();
-
-        connect(InputData->searchDialog, SIGNAL(closeSignal(bool)), this, SLOT(setSearchDialogState(bool)));
+            InputData->BiosSearchDialog->setWindowIcon(QIcon(":/search_light.svg"));
+        InputData->BiosSearchDialog->show();
+        connect(InputData->BiosSearchDialog, SIGNAL(closeSignal(bool)), this, SLOT(setSearchDialogState(bool)));
+        connect(InputData->BiosSearchDialog, SIGNAL(Highlight(vector<INT32>)), this, SLOT(HighlightTreeItem(vector<INT32>)));
     } else {
-        InputData->searchDialog->activateWindow();
+        InputData->BiosSearchDialog->activateWindow();
     }
 }
 

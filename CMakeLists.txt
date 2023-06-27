@@ -75,6 +75,7 @@ set(UI_SOURCES
         Window/TabWindow.ui
         Window/StartWindow.ui
         Window/BiosWindow.ui
+        Window/BiosSearch.ui
 )
 
 set(WINDOW_SOURCES
@@ -99,6 +100,8 @@ set(WINDOW_SOURCES
         Window/BiosWindow.cpp
         Window/HexWindow.h
         Window/HexWindow.cpp
+        Window/BiosSearch.h
+        Window/BiosSearch.cpp
     )
 
 set(LIBRARY_SOURCES

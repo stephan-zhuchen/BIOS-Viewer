@@ -29,6 +29,7 @@ struct EFI_GUID {
     UINT16    Data3;
     UINT8     Data4[8];
     bool operator==(EFI_GUID guid);
+    bool operator!=(EFI_GUID guid);
 };
 
 //

@@ -24,6 +24,7 @@
 #include "iwfi.h"
 #include "InfoWindow.h"
 #include "SearchDialog.h"
+#include "BiosSearch.h"
 
 class QHexView;
 class StartWindow;
@@ -72,7 +73,7 @@ public:
     bool           IFWI_exist{false};
     InfoWindow     *infoWindow{nullptr};
     bool           infoWindowOpened{false};
-    SearchDialog   *searchDialog{nullptr};
+    BiosSearch     *BiosSearchDialog{nullptr};
     bool           searchDialogOpened{false};
 
     BiosViewerData()=default;
@@ -115,7 +116,6 @@ public:
     void setFfsData();
     void setInfoWindowState(bool opened);
     void pushDataToVector(INT64 offset, INT64 length);
-    void HighlightTreeItem(vector<INT32> rows);
     bool isDarkMode();
 
     // Tree Widget
@@ -145,6 +145,9 @@ public:
     // Event from Main Window
     bool eventFilter(QObject *obj, QEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+
+public slots:
+    void HighlightTreeItem(vector<INT32> rows);
 
 private slots:
     void TreeWidgetItemSelectionChanged();
