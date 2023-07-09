@@ -8,6 +8,9 @@
 #include <QMessageBox>
 #include <QMenu>
 #include <QFileDialog>
+#include <QClipboard>
+#include <QMimeData>
+#include <QBuffer>
 #include "BaseLib.h"
 #include "HexViewDialog.h"
 #include "HexWindow.h"
@@ -19,7 +22,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
         parentWidget->close();
     }
 
-    if (!fileOpened)
+    if (!FileOpened)
         return;
 
     if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_F ) {
@@ -29,11 +32,11 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
     } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_S ) {
         BinaryEdited = false;
         if (!startFromMainWindow) {
-            ((HexViewDialog*)parentWidget)->setNewHexBuffer(m_pdata);
+            ((HexViewDialog*)parentWidget)->setNewHexBuffer(HexDataArray);
             ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
             ((HexViewDialog*)parentWidget)->saveImage();
         } else {
-            ((HexViewWindow*)parentWidget)->setNewHexBuffer(m_pdata);
+            ((HexViewWindow*)parentWidget)->setNewHexBuffer(HexDataArray);
             ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
             ((HexViewWindow*)parentWidget)->saveImage();
         }
@@ -57,75 +60,75 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
     /*****************************************************************************/
     if (event->matches(QKeySequence::MoveToNextChar))
     {
-        setCursorPos(m_cursorPos + 1);
-        resetSelection(m_cursorPos);
+        setCursorPos(CursorPosition + 1);
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToPreviousChar))
     {
-        setCursorPos(m_cursorPos - 1);
-        resetSelection(m_cursorPos);
+        setCursorPos(CursorPosition - 1);
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToEndOfLine))
     {
-        setCursorPos(m_cursorPos | ((m_bytesPerLine * 2) - 2));
-        resetSelection(m_cursorPos);
+        setCursorPos(CursorPosition | ((BytesPerHexLine * 2) - 2));
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToStartOfLine))
     {
-        setCursorPos(m_cursorPos | (m_cursorPos % (m_bytesPerLine * 2)));
-        resetSelection(m_cursorPos);
+        setCursorPos(CursorPosition | (CursorPosition % (BytesPerHexLine * 2)));
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToPreviousLine))
     {
-        setCursorPos(m_cursorPos - m_bytesPerLine * 2);
-        resetSelection(m_cursorPos);
+        setCursorPos(CursorPosition - BytesPerHexLine * 2);
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToNextLine))
     {
-        setCursorPos(m_cursorPos + m_bytesPerLine * 2);
-        resetSelection(m_cursorPos);
+        setCursorPos(CursorPosition + BytesPerHexLine * 2);
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToNextPage))
     {
-        setCursorPos(m_cursorPos + (viewport()->height() / m_charHeight - 2) *
-                                       2 * m_bytesPerLine);
-        resetSelection(m_cursorPos);
+        setCursorPos(CursorPosition + (viewport()->height() / CharHeight - 2) *
+                                       2 * BytesPerHexLine);
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToPreviousPage))
     {
-        setCursorPos(m_cursorPos - (viewport()->height() / m_charHeight - 2) *
-                                       2 * m_bytesPerLine);
-        resetSelection(m_cursorPos);
+        setCursorPos(CursorPosition - (viewport()->height() / CharHeight - 2) *
+                                       2 * BytesPerHexLine);
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToEndOfDocument))
     {
-        if (m_pdata.size())
-            setCursorPos(m_pdata.size() * 2);
+        if (HexDataArray.size())
+            setCursorPos(HexDataArray.size() * 2);
 
-        resetSelection(m_cursorPos);
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::MoveToStartOfDocument))
     {
         setCursorPos(0);
-        resetSelection(m_cursorPos);
+        resetSelection(CursorPosition);
         setVisible = true;
     }
 
@@ -136,15 +139,15 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
     {
         resetSelection(0);
 
-        if (m_pdata.size())
-            setSelection(2 * m_pdata.size() - 1);
+        if (HexDataArray.size())
+            setSelection(2 * HexDataArray.size() - 1);
 
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::SelectNextChar))
     {
-        int pos = m_cursorPos + 2;
+        INT32 pos = CursorPosition + 2;
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -152,7 +155,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectPreviousChar))
     {
-        int pos = m_cursorPos - 2;
+        INT32 pos = CursorPosition - 2;
         setSelection(pos);
         setCursorPos(pos);
         setVisible = true;
@@ -160,7 +163,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectEndOfLine))
     {
-        int pos = m_cursorPos - (m_cursorPos % (2 * m_bytesPerLine)) + (2 * m_bytesPerLine);
+        INT32 pos = CursorPosition - (CursorPosition % (2 * BytesPerHexLine)) + (2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -168,7 +171,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectStartOfLine))
     {
-        int pos = m_cursorPos - (m_cursorPos % (2 * m_bytesPerLine));
+        INT32 pos = CursorPosition - (CursorPosition % (2 * BytesPerHexLine));
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -176,7 +179,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectPreviousLine))
     {
-        int pos = m_cursorPos - (2 * m_bytesPerLine);
+        INT32 pos = CursorPosition - (2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -184,7 +187,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectNextLine))
     {
-        int pos = m_cursorPos + (2 * m_bytesPerLine);
+        INT32 pos = CursorPosition + (2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -192,8 +195,8 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectNextPage))
     {
-        int pos = m_cursorPos + (((viewport()->height() / m_charHeight) - 2) *
-                                 2 * m_bytesPerLine);
+        INT32 pos = CursorPosition + (((viewport()->height() / CharHeight) - 2) *
+                                 2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -201,8 +204,8 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectPreviousPage))
     {
-        int pos = m_cursorPos - (((viewport()->height() / m_charHeight) - 2) *
-                                 2 * m_bytesPerLine);
+        INT32 pos = CursorPosition - (((viewport()->height() / CharHeight) - 2) *
+                                 2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -210,10 +213,10 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectEndOfDocument))
     {
-        int pos = 0;
+        INT32 pos = 0;
 
-        if (m_pdata.size())
-            pos = m_pdata.size() * 2;
+        if (HexDataArray.size())
+            pos = HexDataArray.size() * 2;
 
         setCursorPos(pos);
         setSelection(pos);
@@ -222,7 +225,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectStartOfDocument))
     {
-        int pos = 0;
+        INT32 pos = 0;
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -230,16 +233,16 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::Copy))
     {
-        if (m_pdata.size())
+        if (HexDataArray.size())
         {
             QString res;
-            int idx = 0;
-            int copyOffset = 0;
+            INT32 idx = 0;
+            INT32 copyOffset = 0;
 
-            QByteArray data = m_pdata.mid(m_selectBegin / 2,
-                                          (m_selectEnd - m_selectBegin) / 2 + 2);
+            QByteArray data = HexDataArray.mid(SelectionBegin / 2,
+                                          (SelectionEnd - SelectionBegin) / 2 + 2);
 
-            if (m_selectBegin % 2)
+            if (SelectionBegin % 2)
             {
                 res += QString::number((data.at((idx + 2) / 2) & 0xF), 16);
                 res += " ";
@@ -247,7 +250,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
                 copyOffset = 1;
             }
 
-            int selectedSize = m_selectEnd - m_selectBegin;
+            INT32 selectedSize = SelectionEnd - SelectionBegin;
 
             for (; idx < selectedSize; idx += 2)
             {
@@ -265,7 +268,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
                     res += val;
 
-                    if ((idx / 2) % m_bytesPerLine == (m_bytesPerLine - 1))
+                    if ((idx / 2) % BytesPerHexLine == (BytesPerHexLine - 1))
                         res += "\n";
                 }
             }
@@ -282,15 +285,15 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 }
 
 void QHexView::mouseMoveEvent(QMouseEvent *event) {
-    if (!fileOpened || event->buttons() & Qt::RightButton)
+    if (!FileOpened || event->buttons() & Qt::RightButton)
         return;
-    int actPos = cursorPos(event->pos());
+    INT32 actPos = cursorPos(event->pos());
 
-    if (actPos >= 0 && actPos < m_pdata.size() * 2)
+    if (actPos >= 0 && actPos < HexDataArray.size() * 2)
     {
         setCursorPos(actPos);
-        if (startFromAscii){
-            if (actPos >= (int)m_selectInit)
+        if (StartFromAscii){
+            if (actPos >= (INT32)SelectionInit)
                 setSelection(actPos + 2);
             else
                 setSelection(actPos);
@@ -302,17 +305,17 @@ void QHexView::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void QHexView::mousePressEvent(QMouseEvent *event) {
-    if (!fileOpened || event->buttons() & Qt::RightButton)
+    if (!FileOpened || event->buttons() & Qt::RightButton)
         return;
-    showCursor = true;
+    ShowCursor = true;
     timer->stop();
 
-    if (event->pos().x() > (int)m_posAscii - (GAP_HEX_ASCII / 2))
-        startFromAscii = true;
+    if (event->pos().x() > (INT32)AsciiCharPosition - (GAP_HEX_ASCII / 2))
+        StartFromAscii = true;
     else
-        startFromAscii = false;
+        StartFromAscii = false;
 
-    int cPos = cursorPos(event->pos());
+    INT32 cPos = cursorPos(event->pos());
 
     if ((QApplication::keyboardModifiers() & Qt::ShiftModifier) && event->button() == Qt::LeftButton)
         setSelection(cPos);
@@ -320,8 +323,8 @@ void QHexView::mousePressEvent(QMouseEvent *event) {
         resetSelection(cPos);
     }
 
-    if (cPos != std::numeric_limits<int>::max()){
-        if (startFromAscii) {
+    if (cPos != std::numeric_limits<INT32>::max()){
+        if (StartFromAscii) {
             setCursorPos(cPos);
             resetSelection(cPos);
             setSelection(cPos + 2);
@@ -333,7 +336,7 @@ void QHexView::mousePressEvent(QMouseEvent *event) {
 }
 
 void QHexView::mouseReleaseEvent(QMouseEvent *event) {
-    if (!fileOpened)
+    if (!FileOpened)
         return;
     restartTimer();
 }
@@ -448,7 +451,7 @@ void QHexView::finiRightMenu() {
 }
 
 void QHexView::contextMenuEvent(QContextMenuEvent *event) {
-    int actPos = cursorPos(event->pos());
+    INT32 actPos = cursorPos(event->pos());
 
     RightMenu->clear();
     ChecksumMenu->clear();
@@ -483,12 +486,12 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
         DiscardChange->setEnabled(false);
     RightMenu->addAction(DiscardChange);
 
-    if (event->pos().x() < (int)m_posAscii - (GAP_HEX_ASCII / 2) && event->pos().x() > m_posHex && isSelected(actPos)) {
-        if (m_selectBegin % 2 != 0) {
-            m_selectBegin -= 1;
+    if (event->pos().x() < (INT32)AsciiCharPosition - (GAP_HEX_ASCII / 2) && event->pos().x() > (INT32)HexCharPosition && isSelected(actPos)) {
+        if (SelectionBegin % 2 != 0) {
+            SelectionBegin -= 1;
         }
-        if (m_selectEnd % 2 == 0) {
-            m_selectEnd += 1;
+        if (SelectionEnd % 2 == 0) {
+            SelectionEnd += 1;
         }
 
         CopyContent->setEnabled(true);
@@ -499,12 +502,12 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
         ChecksumMenu->addAction(CheckSum16);
         ChecksumMenu->addAction(CheckSum32);
 
-        if ((m_selectEnd - m_selectBegin + 1) % 4 == 0)
+        if ((SelectionEnd - SelectionBegin + 1) % 4 == 0)
             CheckSum16->setEnabled(true);
         else
             CheckSum16->setEnabled(false);
 
-        if ((m_selectEnd - m_selectBegin + 1) % 8 == 0)
+        if ((SelectionEnd - SelectionBegin + 1) % 8 == 0)
             CheckSum32->setEnabled(true);
         else
             CheckSum32->setEnabled(false);
@@ -526,17 +529,17 @@ void QHexView::binaryEdit(char inputChar) {
     if (ReadOnly) {
         return;
     }
-    unsigned int idx = (unsigned int)(m_cursorPos / 2);
-    EditedPos.push_back(m_cursorPos);
-    bool leftHex = (m_cursorPos % 2) == 0;
+    INT32 idx = (INT32)(CursorPosition / 2);
+    EditedPos.push_back(CursorPosition);
+    bool leftHex = (CursorPosition % 2) == 0;
     char newHex;
     if (leftHex) {
-        newHex = (inputChar << 4) | (m_pdata.at(idx) & 0xF);
+        newHex = (inputChar << 4) | (HexDataArray.at(idx) & 0xF);
     } else {
-        newHex = (m_pdata.at(idx) & 0xF0) | inputChar;
+        newHex = (HexDataArray.at(idx) & 0xF0) | inputChar;
     }
-    m_pdata.replace(idx, 1, QByteArray(&newHex, 1));
-    setCursorPos(m_cursorPos + 1);
+    HexDataArray.replace(idx, 1, QByteArray(&newHex, 1));
+    setCursorPos(CursorPosition + 1);
     BinaryEdited = true;
     if (!startFromMainWindow)
         ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
@@ -545,17 +548,23 @@ void QHexView::binaryEdit(char inputChar) {
 }
 
 void QHexView::CopyFromSelectedContent() {
-    if (m_selectBegin < m_selectEnd) {
+    if (SelectionBegin < SelectionEnd) {
         qDebug() << "CopyFromSelectedContent";
-        if (m_selectBegin % 2 != 0) {
-            m_selectBegin -= 1;
+        if (SelectionBegin % 2 != 0) {
+            SelectionBegin -= 1;
         }
-        if (m_selectEnd % 2 == 0) {
-            m_selectEnd += 1;
+        if (SelectionEnd % 2 == 0) {
+            SelectionEnd += 1;
         }
-        int length {0};
+        INT32 length {0};
         getSelectedBuffer(CopiedData, &length);
     }
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    QMimeData *mimeData = new QMimeData;
+    mimeData->setData("Hexedit/CopiedData", CopiedData);
+    clipboard->setMimeData(mimeData);
+
 }
 
 void QHexView::PasteToContent() {
@@ -596,21 +605,21 @@ void QHexView::PasteAndInsertToContent() {
     }
     qDebug() << "Insert";
 
-    if (m_cursorPos % 2 != 0) {
-        m_cursorPos += 1;
+    if (CursorPosition % 2 != 0) {
+        CursorPosition += 1;
     }
-    unsigned int idx = (unsigned int)(m_cursorPos / 2);
-    for (int i = 0; i < EditedPos.size(); ++i) {
-        if (EditedPos.at(i) >= m_cursorPos) {
+    INT32 idx = (INT32)(CursorPosition / 2);
+    for (INT32 i = 0; i < EditedPos.size(); ++i) {
+        if (EditedPos.at(i) >= CursorPosition) {
             EditedPos.at(i) += CopiedData.size() * 2;
         }
     }
-    for (unsigned int var = m_cursorPos; var < m_cursorPos + CopiedData.size() * 2; ++var) {
+    for (INT32 var = CursorPosition; var < CursorPosition + CopiedData.size() * 2; ++var) {
         EditedPos.push_back(var);
     }
-    m_pdata.insert(idx, CopiedData);
+    HexDataArray.insert(idx, CopiedData);
     setAddressLength();
-    setCursorPos(m_cursorPos + CopiedData.size() * 2);
+    setCursorPos(CursorPosition + CopiedData.size() * 2);
 
     BinaryEdited = true;
     if (!startFromMainWindow)
@@ -623,8 +632,8 @@ void QHexView::PasteAndOverlapToContent() {
     if (ReadOnly || CopiedData.size() == 0) {
         return;
     }
-    if (m_cursorPos + CopiedData.size() * 2 > m_pdata.size() * 2) {
-        int choice = QMessageBox::warning(this,
+    if (CursorPosition + CopiedData.size() * 2 > HexDataArray.size() * 2) {
+        INT32 choice = QMessageBox::warning(this,
                                           tr("Hex Viewer"),
                                           tr("The pasted content exceeds the end of file, Do you still want to paste? "),
                                           QMessageBox::Yes | QMessageBox::Cancel,
@@ -634,16 +643,16 @@ void QHexView::PasteAndOverlapToContent() {
         }
     }
 
-    if (m_cursorPos % 2 != 0) {
-        m_cursorPos += 1;
+    if (CursorPosition % 2 != 0) {
+        CursorPosition += 1;
     }
-    unsigned int idx = (unsigned int)(m_cursorPos / 2);
-    for (unsigned int var = m_cursorPos; var < m_cursorPos + CopiedData.size() * 2; ++var) {
+    INT32 idx = CursorPosition / 2;
+    for (INT32 var = CursorPosition; var < CursorPosition + CopiedData.size() * 2; ++var) {
         EditedPos.push_back(var);
     }
-    m_pdata.replace(idx, CopiedData.size(), CopiedData);
+    HexDataArray.replace(idx, CopiedData.size(), CopiedData);
     setAddressLength();
-    setCursorPos(m_cursorPos + CopiedData.size() * 2);
+    setCursorPos(CursorPosition + CopiedData.size() * 2);
 
     BinaryEdited = true;
     if (!startFromMainWindow)
@@ -674,7 +683,7 @@ void QHexView::SetEditingState(bool state) {
 
 void QHexView::SaveSelectedContent() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -693,7 +702,7 @@ void QHexView::SaveSelectedContent() {
 
 void QHexView::getChecksum8() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -704,7 +713,7 @@ void QHexView::getChecksum8() {
 
 void QHexView::getChecksum16() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -715,7 +724,7 @@ void QHexView::getChecksum16() {
 
 void QHexView::getChecksum32() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -726,7 +735,7 @@ void QHexView::getChecksum32() {
 
 void QHexView::getMD5() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -743,7 +752,7 @@ void QHexView::getMD5() {
 
 void QHexView::getSHA1() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -760,7 +769,7 @@ void QHexView::getSHA1() {
 
 void QHexView::getSHA224() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -777,7 +786,7 @@ void QHexView::getSHA224() {
 
 void QHexView::getSHA256() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -794,7 +803,7 @@ void QHexView::getSHA256() {
 
 void QHexView::getSHA384() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -811,7 +820,7 @@ void QHexView::getSHA384() {
 
 void QHexView::getSHA512() {
     QByteArray SelectedBuffer;
-    int length {0};
+    INT32 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }

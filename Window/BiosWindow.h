@@ -43,7 +43,7 @@ public:
     QString           appDir;
     QString           OpenedFileName;
     QString           WindowTitle;
-    Buffer            *buffer;
+    Buffer            *buffer{nullptr};
     bool              DarkmodeFlag{false};
     UINT8             *InputImage{nullptr};
     INT64             InputImageSize;

@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QTimer>
 #include <QSettings>
+#include "SymbolDefinition.h"
 
 // config font and colors
 #define FONT "Courier"
@@ -23,134 +24,124 @@
 #define ADR_LENGTH 8
 #define BLANK_LINE_NUM 10
 
-class QOffsetView : public QWidget
+class QHexView : public QAbstractScrollArea
 {
     Q_OBJECT
 public:
-    QOffsetView(QWidget *parent = nullptr);
-    QLabel offset;
-};
+    QHexView(QWidget *parent = nullptr);
+    ~QHexView();
 
-class QHexView : public QAbstractScrollArea
+    void refresh();
+    void setfileOpened(bool state);
+    void setParentWidget(QWidget *pWidget, bool fromMainWindow);
+    void setReadOnly(bool ReadOnlyFlag);
+    void actionGoto();
+    void actionSearch();
 
-{
-  Q_OBJECT
-public:
-  QHexView(QWidget *parent = nullptr);
-  ~QHexView();
-
-  void refresh();
-  void setfileOpened(bool state);
-  void setParentWidget(QWidget *pWidget, bool fromMainWindow);
-  void setReadOnly(bool ReadOnlyFlag);
-  void actionGoto();
-  void actionSearch();
-
-  void paintEvent(QPaintEvent *event) override;
-  void keyPressEvent(QKeyEvent *event) override;
-  void mouseMoveEvent(QMouseEvent *event) override;
-  void mousePressEvent(QMouseEvent *event) override;
-  void mouseReleaseEvent(QMouseEvent *event) override;
-  void contextMenuEvent(QContextMenuEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
-  QByteArray m_pdata;
-  QByteArray CopiedData;
+    QByteArray HexDataArray;
+    QByteArray CopiedData;
 
-  unsigned int m_posAddr,
-      m_charWidth,
-      m_posHex,
-      m_posAscii,
-      m_charHeight,
-      m_selectBegin,
-      m_selectEnd,
-      m_selectInit,
-      m_cursorPos,
-      m_bytesPerLine,
-      m_addressLength;
+    INT32 AddressPosition{0};
+    INT32 CharWidth{0};
+    INT32 HexCharPosition;
+    INT32 AsciiCharPosition;
+    INT32 CharHeight{0};
+    INT32 SelectionBegin{0};
+    INT32 SelectionEnd{0};
+    INT32 SelectionInit{0};
+    INT32 CursorPosition{0};
+    INT32 BytesPerHexLine{MIN_BYTES_PER_LINE};
+    INT32 AddressLength{ADR_LENGTH};
 
-  char inputKey;
-  bool BinaryEdited{false};
-  bool ReadOnly{false};
-  std::vector<unsigned int> EditedPos;
+    char inputKey;
+    bool BinaryEdited{false};
+    bool ReadOnly{false};
+    std::vector<INT32> EditedPos;
 
-  bool      isDarkMode{false};
-  bool      showCursor;
-  bool      startFromAscii;
-  bool      fileOpened;
-  bool      startFromMainWindow{false};
-  QTimer    *timer;
-  QFont     fontSetting;
-  QWidget   *parentWidget{nullptr};
-  QColor    selectionColor;
-  QColor    EditedColor;
-  QColor    SlectedEditedColor;
-  QColor    wordColor;
-  QColor    wordColorOpposite;
-  QColor    cursorColor;
-  QSettings setting;
-  QSettings SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
+    bool isDarkMode{false};
+    bool ShowCursor{true};
+    bool StartFromAscii{false};
+    bool FileOpened{false};
+    bool startFromMainWindow{false};
+    QTimer *timer{nullptr};
+    QFont FontSetting{"Courier New", 12, QFont::Normal, false};
+    QWidget *parentWidget{nullptr};
+    QColor SelectionColor{COLOR_SELECTION};
+    QColor EditedColor{255, 128, 128, 0xff};
+    QColor SlectedEditedColor{143, 122, 46, 0xff};
+    QColor WordColor{Qt::black};
+    QColor WordColorOpposite{Qt::white};
+    QColor CursorColor{COLOR_CURSOR};
+    QSettings setting{QSettings("Intel", "BiosViewer")};
+    QSettings SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
 
-  QMenu*         RightMenu{nullptr};
-  QMenu*         DigestMenu{nullptr};
-  QMenu*         ChecksumMenu{nullptr};
-  QAction*       CopyContent{nullptr};
-  QAction*       PasteInsertContent{nullptr};
-  QAction*       PasteOverlapContent{nullptr};
-  QAction*       EnableEditing{nullptr};
-  QAction*       DiscardChange{nullptr};
-  QAction*       SaveContent{nullptr};
-  QAction*       CheckSum8{nullptr};
-  QAction*       CheckSum16{nullptr};
-  QAction*       CheckSum32{nullptr};
-  QAction*       md5_Menu{nullptr};
-  QAction*       sha1_Menu{nullptr};
-  QAction*       sha224_Menu{nullptr};
-  QAction*       sha256_Menu{nullptr};
-  QAction*       sha384_Menu{nullptr};
-  QAction*       sha512_Menu{nullptr};
+    QMenu *RightMenu{nullptr};
+    QMenu *DigestMenu{nullptr};
+    QMenu *ChecksumMenu{nullptr};
+    QAction *CopyContent{nullptr};
+    QAction *PasteInsertContent{nullptr};
+    QAction *PasteOverlapContent{nullptr};
+    QAction *EnableEditing{nullptr};
+    QAction *DiscardChange{nullptr};
+    QAction *SaveContent{nullptr};
+    QAction *CheckSum8{nullptr};
+    QAction *CheckSum16{nullptr};
+    QAction *CheckSum32{nullptr};
+    QAction *md5_Menu{nullptr};
+    QAction *sha1_Menu{nullptr};
+    QAction *sha224_Menu{nullptr};
+    QAction *sha256_Menu{nullptr};
+    QAction *sha384_Menu{nullptr};
+    QAction *sha512_Menu{nullptr};
 
-  QSize fullSize() const;
-  void updatePositions();
-  void resetSelection();
-  void resetSelection(int pos);
-  void setSelection(int pos);
-  void ensureVisible();
-  void setCursorPos(int pos);
-  int  cursorPos(const QPoint &position);
-  int  getCursorPos();
-  void paintMark(int xpos, int ypos);
-  void confScrollBar();
-  bool isSelected(int index);
-  bool isEdited(unsigned int index);
-  void restartTimer();
-  int  getLineNum();
-  void initRightMenu();
-  void finiRightMenu();
-  bool getSelectedBuffer(QByteArray &buffer, int *length);
-  void binaryEdit(char inputChar);
+    QSize fullSize() const;
+    void updatePositions();
+    void resetSelection();
+    void resetSelection(INT32 pos);
+    void setSelection(INT32 pos);
+    void ensureVisible();
+    void setCursorPos(INT32 pos);
+    int cursorPos(const QPoint &position);
+    int getCursorPos();
+    void confScrollBar();
+    bool isSelected(INT32 index);
+    bool isEdited(INT32 index);
+    void restartTimer();
+    int getLineNum();
+    void initRightMenu();
+    void finiRightMenu();
+    bool getSelectedBuffer(QByteArray &buffer, INT32*length);
+    void binaryEdit(char inputChar);
 
 public slots:
-  void loadFile(QString p_file);
-  void loadFromBuffer(QByteArray &buffer);
-  void clear();
-  void showFromOffset(int offset, int length=1);
-  std::size_t sizeFile();
-  void setAddressLength();
-  void CopyFromSelectedContent();
-  void PasteToContent();
-  void PasteAndInsertToContent();
-  void PasteAndOverlapToContent();
-  void DiscardChangedContent();
-  void SetEditingState(bool state);
-  void SaveSelectedContent();
-  void getChecksum8();
-  void getChecksum16();
-  void getChecksum32();
-  void getMD5();
-  void getSHA1();
-  void getSHA224();
-  void getSHA256();
-  void getSHA384();
-  void getSHA512();
+    void loadFile(QString p_file);
+    void loadFromBuffer(QByteArray &buffer);
+    void clear();
+    void showFromOffset(INT32 offset, INT32 length = 1);
+    std::size_t sizeFile();
+    void setAddressLength();
+    void CopyFromSelectedContent();
+    void PasteToContent();
+    void PasteAndInsertToContent();
+    void PasteAndOverlapToContent();
+    void DiscardChangedContent();
+    void SetEditingState(bool state);
+    void SaveSelectedContent();
+    void getChecksum8();
+    void getChecksum16();
+    void getChecksum32();
+    void getMD5();
+    void getSHA1();
+    void getSHA224();
+    void getSHA256();
+    void getSHA384();
+    void getSHA512();
 };

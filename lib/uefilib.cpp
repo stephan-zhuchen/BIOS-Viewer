@@ -150,7 +150,7 @@ namespace UefiSpace {
             delete peCoffHeader;
         if (dependency != nullptr)
             delete dependency;
-        for(auto file:ChildFile) {
+        for (auto file : ChildFile) {
             delete file;
         }
         if (AcpiTable != nullptr)
@@ -504,19 +504,20 @@ namespace UefiSpace {
         default:
             headerSize = sizeof(EFI_COMMON_SECTION_HEADER);
             break;
-
+        }
         if (isExtend)
             headerSize += sizeof(UINT32);
-        }
         return headerSize;
     }
 
     FfsFile::FfsFile(UINT8* file, INT64 offset):Volume(file, 0, offset) {
         Type = VolumeType::FfsFile;
 
+        // The FFS file header is the first part of the file
         FfsHeader = *(EFI_FFS_FILE_HEADER*)data;
         FfsSize = FFS_FILE_SIZE(&FfsHeader);
 
+        // If the FFS file header's size is zero, then it's an extended header
         if (FfsSize == 0) {
             isExtended = true;
             FfsExtHeader = *(EFI_FFS_FILE_HEADER2*)data;
@@ -525,33 +526,34 @@ namespace UefiSpace {
 
         size = FfsSize;
 
+        // Calculate the header checksum
         UINT8 headerSumValue = 0;
-//        UINT8 dataSumValue = 0;
         if (isExtended) {
             headerSumValue = Buffer::CaculateSum8((UINT8*)&FfsExtHeader, sizeof(EFI_FFS_FILE_HEADER2));
             headerSumValue = headerSumValue + FfsExtHeader.State + FfsExtHeader.IntegrityCheck.Checksum.File;
         } else {
             headerSumValue = Buffer::CaculateSum8((UINT8*)&FfsHeader, sizeof(EFI_FFS_FILE_HEADER));
             headerSumValue = headerSumValue + FfsHeader.State + FfsHeader.IntegrityCheck.Checksum.File;
-
-//            dataSumValue = Buffer::CaculateSum8((UINT8*)(data + sizeof(EFI_FFS_FILE_HEADER)), getSize() - sizeof(EFI_FFS_FILE_HEADER));
-//            dataSumValue -= FfsHeader.IntegrityCheck.Checksum.File;
-//            cout << "ffs dataSumValue = " << hex << (UINT32)dataSumValue << endl;
         }
         if (headerSumValue == 0)
             headerChecksumValid = true;
+
+        // Calculate the data checksum
         if ((FfsHeader.Attributes | FFS_ATTRIB_CHECKSUM) == 0x0)
             dataChecksumValid = true;
+
+        // Check if the file is an Apriori file
         if (FfsHeader.Name.Data1 == GuidDatabase::gPeiAprioriFileNameGuid.Data1 || FfsHeader.Name.Data1 == GuidDatabase::gAprioriGuid.Data1) {
             isApriori = true;
         }
     }
 
     FfsFile::~FfsFile() {
-        for(auto sec:Sections) {
-            delete sec;
+        for(auto section:Sections) {
+            delete section;
         }
     }
+
     UINT8 FfsFile::getType() const {
         if (isExtended) {
             return FfsExtHeader.Type;
@@ -573,6 +575,7 @@ namespace UefiSpace {
             offset = sizeof(EFI_FFS_FILE_HEADER2);
         }
         if (isApriori) {
+            // Apriori files are encoded as raw CommonSections
             CommonSection *Sec = new CommonSection(data + offset, offsetFromBegin + offset, this);
             Sec->isAprioriRaw = true;
             Sec->SelfDecode();
@@ -593,6 +596,7 @@ namespace UefiSpace {
             Sec->SelfDecode();
             Sections.push_back(Sec);
             if (offset + SecSize > offset) {
+                // Align to 4 bytes
                 offset += SecSize;
                 Buffer::Align(offset, 0, 0x4);
             } else {
@@ -620,22 +624,27 @@ namespace UefiSpace {
     }
 
     FirmwareVolume::FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty):Volume(fv, length, offset), isEmpty(empty) {
-        if (length < 0x40) {
+        if (length < 0x40) { // Minimum size of a firmware volume
             isCorrupted = true;
             isEmpty = true;
             return;
         }
+
+        // Check if this is a valid firmware volume, and if not, mark it as empty
         if (!isValidFirmwareVolume((EFI_FIRMWARE_VOLUME_HEADER*)data)) {
             isEmpty = true;
         }
 
+        // Initialize the base class
         Type = VolumeType::FirmwareVolume;
         FirmwareVolumeHeader = *(EFI_FIRMWARE_VOLUME_HEADER*)data;
 
+        // Check that the firmware volume is not longer than the volume
         if (FirmwareVolumeHeader.FvLength > length) {
             isCorrupted = true;
         }
 
+        // Check if the firmware volume has an extended header
         if (FirmwareVolumeHeader.ExtHeaderOffset == 0) {
             FirmwareVolumeSize = 0x48;
             isExt = false;
@@ -650,10 +659,12 @@ namespace UefiSpace {
             isExt = true;
         }
 
+        // Check if the firmware volume is an NV volume
         if (FirmwareVolumeHeader.FileSystemGuid == GuidDatabase::gEfiSystemNvDataFvGuid) {
             isNv = true;
         }
 
+        // Check if the firmware volume has a valid checksum
         UINT16 sumValue = Buffer::CaculateSum16((UINT16*)&FirmwareVolumeHeader, sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof (UINT16));
         if (sumValue == 0)
             checksumValid = true;
@@ -694,6 +705,9 @@ namespace UefiSpace {
         while (offset < size) {
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
+
+            // If the size of the current FFS file is 0xFFFFFF and the file is marked as deleted (0xFF),
+            // then the current FFS file is not used and can be overwritten.
             if (FfsSize == 0xFFFFFF && FfsHeader.State == 0xFF) {
                 freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset);
                 break;
@@ -701,6 +715,8 @@ namespace UefiSpace {
 
             auto FvDecoder = [this, &spinlock](INT64 off) {
                 FfsFile *Ffs = new FfsFile(data + off, offsetFromBegin + off);
+
+                // The following file types have sections that can be decoded:
                 switch (Ffs->getType()) {
                 case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
                 case EFI_FV_FILETYPE_FREEFORM:
@@ -722,16 +738,20 @@ namespace UefiSpace {
                 spinlock.clear();
             };
 
+            // If multithreading is enabled, then create a thread that will decode the sections of the current FFS file.
             if (multithread) {
                 threadPool.emplace_back(FvDecoder, offset);
             } else {
                 FvDecoder(offset);
             }
 
+            // If the current FFS file size is valid, then update the offset to point to the next FFS file.
             if (offset + FfsSize > offset){
                 offset += FfsSize;
                 Buffer::Align(offset, 0, 0x8);
             } else {
+                // Otherwise, the current FFS file is not valid, so create a volume that represents the free space
+                // between the current FFS file and the end of the FV.
                 freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset);
                 break;
             }
@@ -922,7 +942,7 @@ namespace UefiSpace {
         InfoStr = QString::fromStdString(ss.str());
     }
 
-    bool FspHeader::isFspHeader(const UINT8  *ImageBase) {
+    bool FspHeader::isFspHeader(const UINT8 *ImageBase) {
         UINT32 *signature = (UINT32*)ImageBase;
         if (*signature == FSP_INFO_HEADER_SIGNATURE) {
             return true;
@@ -931,10 +951,12 @@ namespace UefiSpace {
     }
 
     BiosImageVolume::BiosImageVolume(UINT8* fv, INT64 length, INT64 offset):Volume(fv, length, offset) {
+        // Initialize the FIT table.
         try {
             FitTable = new FitTableClass(fv, length);
             const INT64 IBB_length = 0x400000;
             if (length >= IBB_length * 2) {
+                // Check for resiliency.
                 INT64 IBB_begin_address = length - IBB_length;
                 INT64 IBBR_begin_address = length - IBB_length * 2;
                 isResiliency = true;

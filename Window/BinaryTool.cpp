@@ -183,7 +183,7 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered()
     FlashRegionBaseArea PaddingRegion = ValidRegionList.at(ValidRegionList.size() - 2);
     FlashRegionBaseArea BiosRegion = ValidRegionList.at(ValidRegionList.size() - 1);
 
-    if (NewBiosSize > PaddingRegion.getSize() + BiosRegion.getSize()) {
+    if (NewBiosSize > (INT64) (PaddingRegion.getSize() + BiosRegion.getSize())) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "Binary size is too large!");
         delete[] NewBios;
         return;

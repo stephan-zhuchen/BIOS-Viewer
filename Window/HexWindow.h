@@ -26,11 +26,11 @@ public:
     void ActionSearchHexTriggered();
     void ActionGotoTriggered();
 
-    bool        UiReady{false};
+    bool        UiReady{ false };
     StartWindow *mWindow;
-    GeneralData *WindowData;
-    QHexView    *m_hexview{nullptr};
-    QWidget     *centralwidget;
+    GeneralData *WindowData{ nullptr };
+    QHexView    *m_hexview{ nullptr };
+    QWidget     *centralwidget{ nullptr };
     QVBoxLayout *CentralwidgetVerticalLayout;
     QByteArray  hexBuffer;
     QByteArray  NewHexBuffer;

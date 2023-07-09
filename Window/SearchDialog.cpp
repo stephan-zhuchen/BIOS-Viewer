@@ -107,7 +107,7 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
         std::reverse(searchNum.begin(), searchNum.end());
 
     // Search little endian binary
-    int matchIdx = PreviousOffset;
+    INT64 matchIdx = PreviousOffset;
     while (true) {
         bool Found = true;
         matchIdx = BinaryBuffer->indexOf(searchNum.at(0), matchIdx + 1);
@@ -134,17 +134,17 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
 bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
     if (SearchedString.size() == 0)
         return false;
-    for (int idx = PreviousOffset + 1; idx < BinaryBuffer->size(); ++idx) {
+    for (INT64 idx = PreviousOffset + 1; idx < BinaryBuffer->size(); ++idx) {
         bool Found = true;
         bool wFound = true;
         if (UpperToLower(BinaryBuffer->at(idx)) == SearchedString.at(0).toLatin1()) {
-            for (int strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
+            for (INT64 strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
                 if (UpperToLower(BinaryBuffer->at(idx + strIdx)) != SearchedString.at(strIdx).toLatin1()) {
                     Found = false;
                     break;
                 }
             }
-            for (int strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
+            for (INT64 strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
                 if (BinaryBuffer->at(idx + strIdx * 2 - 1) != 0 || UpperToLower(BinaryBuffer->at(idx + strIdx * 2)) != SearchedString.at(strIdx).toLatin1()) {
                     wFound = false;
                     break;
@@ -230,9 +230,9 @@ void SearchDialog::PreviousButtonClicked() {
         return;
     HistoryResult.pop_back();
     QPair<int, int> lastResult = HistoryResult.back();
-    int beginOffset = lastResult.first;
-    int searchLength = lastResult.second;
-    PreviousOffset = beginOffset;
+    INT32 beginOffset = lastResult.first;
+    INT32 searchLength = lastResult.second;
+    PreviousOffset = (INT64)beginOffset;
     ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
 }
 

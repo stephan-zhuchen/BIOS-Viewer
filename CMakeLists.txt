@@ -158,7 +158,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(BinaryViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld)
+target_link_libraries(BinaryViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto)
 
 set_target_properties(BinaryViewer PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

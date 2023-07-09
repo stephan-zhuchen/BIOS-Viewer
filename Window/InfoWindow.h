@@ -44,8 +44,8 @@ private slots:
 
 private:
     Ui::InfoWindow   *ui;
-    BiosImageVolume  *BiosImage;
-    QWidget          *parentWidget;
+    BiosImageVolume  *BiosImage{ nullptr };
+    QWidget          *parentWidget{ nullptr };
     QString          appDir;
     QString          OpenedFileName;
     QSettings setting{"Intel", "BiosViewer"};

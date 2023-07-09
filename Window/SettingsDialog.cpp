@@ -30,34 +30,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 //    ui->tabWidget->setCurrentIndex(lastTabIndex);
     setAttribute(Qt::WA_DeleteOnClose);
 
-//    if (!setting.contains("Theme"))
-//        setting.setValue("Theme", "System");
-//    if (!setting.contains("BiosViewerFontSize"))
-//        setting.setValue("BiosViewerFontSize", 12);
-//    if (!setting.contains("BiosViewerFont"))
-//        setting.setValue("BiosViewerFont", "Microsoft YaHei UI");
-
-//    if (!setting.contains("InfoFontSize"))
-//        setting.setValue("InfoFontSize", 12);
-//    if (!setting.contains("InfoFont"))
-//        setting.setValue("InfoFont", "Fira Code");
-//    if (!setting.contains("InfoLineSpacing"))
-//        setting.setValue("InfoLineSpacing", "2");
-
-//    if (!setting.contains("HexFontSize"))
-//        setting.setValue("HexFontSize", 12);
-//    if (!setting.contains("HexFont"))
-//        setting.setValue("HexFont", "Courier");
-//    if (!setting.contains("LineSpacing"))
-//        setting.setValue("LineSpacing", "2");
-
-//    if (!setting.contains("ShowPaddingItem"))
-//        setting.setValue("ShowPaddingItem", "false");
-//    if (!setting.contains("EnableMultiThread"))
-//        setting.setValue("EnableMultiThread", "true");
-//    if (!setting.contains("EnableHexEditing"))
-//        setting.setValue("EnableHexEditing", "true");
-
     Theme = setting.value("Theme").toString();
     StructureFontSize = setting.value("BiosViewerFontSize").toString();
     StructureFont = setting.value("BiosViewerFont").toString();

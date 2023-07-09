@@ -61,7 +61,7 @@ private:
     QSettings        setting{"Intel", "BiosViewer"};
     QWidget          *parentWidget;
     vector<DataModel*> *SearchModelData;
-    int              PreviousOffset;
+    INT64            PreviousOffset;
     QByteArray       *BinaryBuffer;
     static QString   SearchedString;
     static QString   pSearchedString;
@@ -69,7 +69,7 @@ private:
     bool             isLittleEndian{true};
     bool             SearchAscii{false};
     bool             CaseSensitive{false};
-    QVector<QPair<int, int>>  HistoryResult;
+    QVector<QPair<INT32, INT32>>  HistoryResult;
 };
 
 #endif // SEARCHDIALOG_H
