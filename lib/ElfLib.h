@@ -29,7 +29,7 @@ public:
     std::vector<Volume*> UpldFiles;
 public:
     Elf() = delete;
-    Elf(UINT8* fv, INT64 length, INT64 offset);
+    Elf(UINT8* fv, INT64 length, INT64 offset, bool Compressed=false);
     virtual ~Elf();
     bool isValid() const;
     void decodeSections();

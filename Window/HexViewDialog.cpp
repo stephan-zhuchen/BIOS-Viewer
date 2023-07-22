@@ -69,6 +69,19 @@ void HexViewDialog::loadBuffer(QByteArray buffer, Volume *image, INT64 imageOffs
 }
 
 void HexViewDialog::saveImage() {
+    if (isCompressed) {
+        int choice = QMessageBox::warning(this,
+                                          tr("Hex Viewer"),
+                                          tr("Compressed contents can not be edited!"),
+                                          QMessageBox::Discard);
+        if (choice == QMessageBox::Discard) {
+            m_hexview->loadFromBuffer(hexBuffer);
+            BinaryEdited = false;
+            setWindowTitle(title);
+        }
+        return;
+    }
+
     // save backup image
     std::string NewFileName = OpenedFileName.toStdString() + ".bak";
     if (rename(OpenedFileName.toStdString().c_str(), NewFileName.c_str())) {
@@ -86,11 +99,24 @@ void HexViewDialog::setNewHexBuffer(QByteArray &buffer) {
 }
 
 void HexViewDialog::keyPressEvent(QKeyEvent *event) {
-    qDebug("HexViewDialog::keyPressEvent");
 }
 
 void HexViewDialog::closeEvent(QCloseEvent *event) {
-    if (BinaryEdited) {
+    if (BinaryEdited && isCompressed) {
+        int choice = QMessageBox::warning(this,
+                                          tr("Hex Viewer"),
+                                          tr("Compressed contents can not be edited!"),
+                                          QMessageBox::Discard | QMessageBox::Cancel);
+        if (choice == QMessageBox::Discard) {
+            m_hexview->loadFromBuffer(hexBuffer);
+            BinaryEdited = false;
+            setWindowTitle(title);
+        } else {
+            event->ignore();
+        }
+        return;
+    }
+    else if (BinaryEdited) {
         int choice = QMessageBox::warning(this,
                                           tr("Hex Viewer"),
                                           tr("Unsaved changes"),

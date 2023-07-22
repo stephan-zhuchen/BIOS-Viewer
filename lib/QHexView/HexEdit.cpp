@@ -22,14 +22,14 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
         parentWidget->close();
     }
 
-    if (!FileOpened)
+    if (!FileOpened || HexDataArray.size() == 0)
         return;
 
     if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_F ) {
         actionSearch();
     } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_G ) {
         actionGoto();
-    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_S ) {
+    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_S && BinaryEdited ) {
         BinaryEdited = false;
         if (!startFromMainWindow) {
             ((HexViewDialog*)parentWidget)->setNewHexBuffer(HexDataArray);
@@ -285,7 +285,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 }
 
 void QHexView::mouseMoveEvent(QMouseEvent *event) {
-    if (!FileOpened || event->buttons() & Qt::RightButton)
+    if (!FileOpened || HexDataArray.size() == 0 || event->buttons() & Qt::RightButton)
         return;
     INT32 actPos = cursorPos(event->pos());
 
@@ -305,7 +305,7 @@ void QHexView::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void QHexView::mousePressEvent(QMouseEvent *event) {
-    if (!FileOpened || event->buttons() & Qt::RightButton)
+    if (!FileOpened || HexDataArray.size() == 0 || event->buttons() & Qt::RightButton)
         return;
     ShowCursor = true;
     timer->stop();
@@ -336,7 +336,7 @@ void QHexView::mousePressEvent(QMouseEvent *event) {
 }
 
 void QHexView::mouseReleaseEvent(QMouseEvent *event) {
-    if (!FileOpened)
+    if (!FileOpened || HexDataArray.size() == 0)
         return;
     restartTimer();
 }
@@ -451,6 +451,8 @@ void QHexView::finiRightMenu() {
 }
 
 void QHexView::contextMenuEvent(QContextMenuEvent *event) {
+    if (HexDataArray.size() == 0)
+        return;
     INT32 actPos = cursorPos(event->pos());
 
     RightMenu->clear();
@@ -496,8 +498,6 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
 
         CopyContent->setEnabled(true);
         RightMenu->addAction(SaveContent);
-//        DigestMenu->setIcon(key);
-
         ChecksumMenu->addAction(CheckSum8);
         ChecksumMenu->addAction(CheckSum16);
         ChecksumMenu->addAction(CheckSum32);
@@ -747,7 +747,17 @@ void QHexView::getMD5() {
     for (INT32 i = 0; i < MD5_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("MD5"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("MD5"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void QHexView::getSHA1() {
@@ -764,7 +774,17 @@ void QHexView::getSHA1() {
     for (INT32 i = 0; i < SHA_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA1"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA1"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void QHexView::getSHA224() {
@@ -781,7 +801,17 @@ void QHexView::getSHA224() {
     for (INT32 i = 0; i < SHA224_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA224"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA224"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void QHexView::getSHA256() {
@@ -798,7 +828,17 @@ void QHexView::getSHA256() {
     for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA256"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA256"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void QHexView::getSHA384() {
@@ -815,7 +855,17 @@ void QHexView::getSHA384() {
     for (INT32 i = 0; i < SHA384_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA384"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA384"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void QHexView::getSHA512() {
@@ -832,5 +882,15 @@ void QHexView::getSHA512() {
     for (INT32 i = 0; i < SHA512_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA512"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA512"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }

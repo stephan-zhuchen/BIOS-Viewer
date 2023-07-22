@@ -14,7 +14,6 @@ HexViewWindow::HexViewWindow(StartWindow *parent) :
 }
 
 HexViewWindow::~HexViewWindow() {
-    qDebug() << "~HexViewWindow";
 }
 
 void HexViewWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {

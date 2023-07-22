@@ -12,7 +12,11 @@
 
 namespace UefiSpace {
 
-    Volume::Volume(UINT8* fv, INT64 length, INT64 offset):data(fv), size(length), offsetFromBegin(offset) {}
+    Volume::Volume(UINT8* fv, INT64 length, INT64 offset, bool Compressed):
+        data(fv),
+        size(length),
+        offsetFromBegin(offset),
+        isCompressed(Compressed) { }
 
     Volume::~Volume() {
     }
@@ -128,7 +132,7 @@ namespace UefiSpace {
 
     }
 
-    CommonSection::CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs):Volume(file, 0, offset) {
+    CommonSection::CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs, bool Compressed):Volume(file, 0, offset, Compressed) {
         Type = VolumeType::CommonSection;
         ParentFFS = Ffs;
         CommonHeader = *(EFI_COMMON_SECTION_HEADER*)data;
@@ -139,7 +143,7 @@ namespace UefiSpace {
         }
     }
 
-    CommonSection::CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs):Volume(file, length, offset) {
+    CommonSection::CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs, bool Compressed):Volume(file, length, offset, Compressed) {
         Type = VolumeType::CommonSection;
         ParentFFS = Ffs;
         CommonHeader = *(EFI_COMMON_SECTION_HEADER*)data;
@@ -225,7 +229,7 @@ namespace UefiSpace {
                 DataOffset = HeaderSize;
                 offset = HeaderSize;
                 while (offset < SectionSize) {
-                    ChildFile.push_back(new CommonSection(data + offset, offsetFromBegin + offset, this->ParentFFS));
+                    ChildFile.push_back(new CommonSection(data + offset, offsetFromBegin + offset, this->ParentFFS, this->isCompressed));
                     ChildSectionSize = CommonSection::getSectionSize(data + offset);
                     offset += ChildSectionSize;
                     Buffer::Align(offset, 0, 0x4);
@@ -253,7 +257,7 @@ namespace UefiSpace {
             break;
         case EFI_SECTION_PE32:
         case EFI_SECTION_TE:
-            peCoffHeader = new PeCoff(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize);
+            peCoffHeader = new PeCoff(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize, this->isCompressed);
             break;
         case EFI_SECTION_USER_INTERFACE:
             UINT16* char16FileName;
@@ -269,12 +273,12 @@ namespace UefiSpace {
             delete[] char16VersionString;
             break;
         case EFI_SECTION_FIRMWARE_VOLUME_IMAGE:
-            ChildFile.push_back(new FirmwareVolume(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize));
+            ChildFile.push_back(new FirmwareVolume(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize, false, this->isCompressed));
             break;
         case EFI_SECTION_DXE_DEPEX:
         case EFI_SECTION_PEI_DEPEX:
         case EFI_SECTION_MM_DEPEX:
-            dependency = new Depex(data + HeaderSize, SectionSize - HeaderSize);
+            dependency = new Depex(data + HeaderSize, SectionSize - HeaderSize, this->isCompressed);
             break;
         case EFI_SECTION_RAW:
             if (isAprioriRaw) {
@@ -289,7 +293,7 @@ namespace UefiSpace {
             }
             else if (Elf::IsElfFormat(data + HeaderSize)) {
                 isElfFormat = true;
-                Elf elf = Elf(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize);
+                Elf elf = Elf(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize, this->isCompressed);
                 if (elf.isValid()) {
                     elf.decodeSections();
                     elf.setInfoStr();
@@ -480,6 +484,10 @@ namespace UefiSpace {
             break;
         }
 
+        string compressed = "No";
+        if (this->isCompressed)
+            compressed = "Yes";
+        ss << setw(width) << "Compressed:" << compressed;
         InfoStr = QString::fromStdString(guidInfo.str() +  ss.str());
     }
 
@@ -510,7 +518,7 @@ namespace UefiSpace {
         return headerSize;
     }
 
-    FfsFile::FfsFile(UINT8* file, INT64 offset):Volume(file, 0, offset) {
+    FfsFile::FfsFile(UINT8* file, INT64 offset, bool Compressed):Volume(file, 0, offset, Compressed) {
         Type = VolumeType::FfsFile;
 
         // The FFS file header is the first part of the file
@@ -576,7 +584,7 @@ namespace UefiSpace {
         }
         if (isApriori) {
             // Apriori files are encoded as raw CommonSections
-            CommonSection *Sec = new CommonSection(data + offset, offsetFromBegin + offset, this);
+            CommonSection *Sec = new CommonSection(data + offset, offsetFromBegin + offset, this, this->isCompressed);
             Sec->isAprioriRaw = true;
             Sec->SelfDecode();
             Sections.push_back(Sec);
@@ -588,7 +596,7 @@ namespace UefiSpace {
             if (SecSize == 0xFFFFFF) {
                 SecSize = this->getUINT32(offset + sizeof(EFI_COMMON_SECTION_HEADER));
             }
-            CommonSection *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this);
+            CommonSection *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this, this->isCompressed);
             if (!Sec->CheckValidation()) {
                 delete Sec;
                 break;
@@ -620,10 +628,15 @@ namespace UefiSpace {
            << setw(width) << "Header Checksum:" << hex << uppercase << (UINT32)FfsHeader.IntegrityCheck.Checksum.Header << "h" << (headerChecksumValid ? ", valid":", not valid") << "\n"
            << setw(width) << "Data Checksum:"   << hex << uppercase << (UINT32)FfsHeader.IntegrityCheck.Checksum.File << "h" << (headerChecksumValid ? ", valid":", not valid") << "\n";
 
+        string compressed = "No";
+        if (this->isCompressed)
+            compressed = "Yes";
+        ss << setw(width) << "Compressed:" << compressed;
+
         InfoStr = QString::fromStdString(ss.str());
     }
 
-    FirmwareVolume::FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty):Volume(fv, length, offset), isEmpty(empty) {
+    FirmwareVolume::FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty, bool Compressed):Volume(fv, length, offset, Compressed), isEmpty(empty) {
         if (length < 0x40) { // Minimum size of a firmware volume
             isCorrupted = true;
             isEmpty = true;
@@ -709,12 +722,12 @@ namespace UefiSpace {
             // If the size of the current FFS file is 0xFFFFFF and the file is marked as deleted (0xFF),
             // then the current FFS file is not used and can be overwritten.
             if (FfsSize == 0xFFFFFF && FfsHeader.State == 0xFF) {
-                freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset);
+                freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset, this->isCompressed);
                 break;
             }
 
             auto FvDecoder = [this, &spinlock](INT64 off) {
-                FfsFile *Ffs = new FfsFile(data + off, offsetFromBegin + off);
+                FfsFile *Ffs = new FfsFile(data + off, offsetFromBegin + off, this->isCompressed);
 
                 // The following file types have sections that can be decoded:
                 switch (Ffs->getType()) {
@@ -752,7 +765,7 @@ namespace UefiSpace {
             } else {
                 // Otherwise, the current FFS file is not valid, so create a volume that represents the free space
                 // between the current FFS file and the end of the FV.
-                freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset);
+                freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset, this->isCompressed);
                 break;
             }
         }
@@ -795,6 +808,11 @@ namespace UefiSpace {
             ss << "Extended header size:" << hex << FirmwareVolumeExtHeader.ExtHeaderSize << "h\n"
                << "Volume GUID:\n" << GUID(FirmwareVolumeExtHeader.FvName).str(true) << "\n";
         }
+
+        string compressed = "No";
+        if (this->isCompressed)
+            compressed = "Yes";
+        ss << setw(width) << "Compressed:" << compressed;
 
         InfoStr = QString::fromStdString(ss.str());
     }

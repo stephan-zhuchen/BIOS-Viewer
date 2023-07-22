@@ -138,7 +138,7 @@ void StartWindow::OpenFile(QString path, bool onlyHexView) {
 
     BaseLibrarySpace::Buffer *buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
     if (buffer != nullptr) {
-        this->setWindowTitle("Binary Viewer -- " + path);
+        this->setWindowTitle("BIOS Viewer -- " + path);
         GeneralData *newTabData = new GeneralData(appPath);
         TabData.push_back(newTabData);
         newTabData->OpenedFileName = path;
@@ -282,13 +282,11 @@ void StartWindow::OpenFileTriggered() {
     OpenFile(fileName);
 }
 
-void StartWindow::ActionExitTriggered()
-{
+void StartWindow::ActionExitTriggered() {
     this->close();
 }
 
-void StartWindow::ActionSettingsTriggered()
-{
+void StartWindow::ActionSettingsTriggered() {
     SettingsDialog *settingDialog = new SettingsDialog();
     if (DarkmodeFlag) {
         settingDialog->setWindowIcon(QIcon(":/gear_light.svg"));
@@ -297,21 +295,18 @@ void StartWindow::ActionSettingsTriggered()
     settingDialog->exec();
 }
 
-void StartWindow::ActionAboutQtTriggered()
-{
+void StartWindow::ActionAboutQtTriggered() {
     QMessageBox::aboutQt(this, tr("About Qt"));
 }
 
-void StartWindow::ActionAboutBiosViewerTriggered()
-{
-    QString strText= QString("<html><head/><body><p><span style=' font-size:14pt; font-weight:700;'>Binary Viewer %1"
+void StartWindow::ActionAboutBiosViewerTriggered() {
+    QString strText= QString("<html><head/><body><p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1"
                               "</span></p><p>Intel Internal Use Only</p><p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Zhu, Chen")
-                          .arg(__BinaryViewerVersion__).arg(__DATE__);
-    QMessageBox::about(this, tr("About Binary Viewer"), strText);
+                          .arg(__BiosViewerVersion__).arg(__DATE__);
+    QMessageBox::about(this, tr("About BIOS Viewer"), strText);
 }
 
-void StartWindow::OpenInNewWindowTriggered()
-{
+void StartWindow::OpenInNewWindowTriggered() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString fileName = QFileDialog::getOpenFileName(
         this, tr("Open Image File"),
@@ -372,19 +367,28 @@ void StartWindow::ActionTabWidgetClose() {
 }
 
 void StartWindow::CurrentTabChanged(int index) {
+    GeneralData *currentTab = TabData.at(index);
+    if (currentTab->CurrentWindow == WindowMode::BIOS) {
+        ui->actionCollapse->setEnabled(true);
+    } else if (currentTab->CurrentWindow == WindowMode::Hex) {
+        ui->actionCollapse->setEnabled(false);
+    }
+
     for (GeneralData *WindowData:TabData) {
-        if (WindowData->CurrentWindow == WindowMode::BIOS && WindowData->BiosViewerUi->InputData->searchDialogOpened)
+        if (WindowData->CurrentWindow == WindowMode::BIOS && WindowData->BiosViewerUi->InputData->searchDialogOpened) {
             WindowData->BiosViewerUi->InputData->BiosSearchDialog->close();
+        }
+
     }
 
     if (index >= 0) {
         GeneralData *WindowData = TabData.at(index);
         if (WindowData->HexViewerUi->BinaryEdited)
-            this->setWindowTitle("Binary Viewer -- " + WindowData->OpenedFileName + " *");
+            this->setWindowTitle("BIOS Viewer -- " + WindowData->OpenedFileName + " *");
         else
-            this->setWindowTitle("Binary Viewer -- " + WindowData->OpenedFileName);
+            this->setWindowTitle("BIOS Viewer -- " + WindowData->OpenedFileName);
     } else {
-        this->setWindowTitle("Binary Viewer");
+        this->setWindowTitle("BIOS Viewer");
     }
 
 }

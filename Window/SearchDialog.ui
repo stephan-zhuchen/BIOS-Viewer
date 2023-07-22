@@ -144,6 +144,19 @@
     </item>
    </layout>
   </widget>
+  <widget class="QCheckBox" name="WideCheckbox">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>155</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Wide Char</string>
+   </property>
+  </widget>
  </widget>
  <resources>
   <include location="../logo/Images.qrc"/>

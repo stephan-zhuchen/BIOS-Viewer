@@ -18,6 +18,7 @@ SearchDialog::SearchDialog(QWidget *parent) :
 
     connect(ui->AsciiCheckbox,  SIGNAL(stateChanged(int)),    this, SLOT(AsciiCheckboxStateChanged(int)));
     connect(ui->CaseCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(CaseCheckboxStateChanged(int)));
+    connect(ui->WideCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(WideCheckboxStateChanged(int)));
     connect(ui->SearchContent,  SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
     connect(ui->NextButton,     SIGNAL(clicked()),            this, SLOT(NextButtonClicked()));
     connect(ui->PreviousButton, SIGNAL(clicked()),            this, SLOT(PreviousButtonClicked()));
@@ -28,12 +29,9 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui->SearchContent->setText(SearchedString);
     ui->SearchContent->selectAll();
     setAttribute(Qt::WA_DeleteOnClose);
-//    this->setWindowFlags(Qt::WindowStaysOnTopHint);
 }
 
-SearchDialog::~SearchDialog()
-{
-    qDebug() << "SearchDialog::~SearchDialog";
+SearchDialog::~SearchDialog() {
     delete ui;
 }
 
@@ -44,6 +42,8 @@ void SearchDialog::initSetting() {
         setting.setValue("SearchAscii", "false");
     if (!setting.contains("CaseSensitive"))
         setting.setValue("CaseSensitive", "false");
+    if (!setting.contains("WideChar"))
+        setting.setValue("WideChar", "true");
 
     if (setting.value("Endian") == "little") {
         isLittleEndian = true;
@@ -66,13 +66,22 @@ void SearchDialog::initSetting() {
         CaseSensitive = false;
         ui->CaseCheckbox->setCheckState(Qt::Unchecked);
     }
+    if (setting.value("WideChar") == "true") {
+        WideCharacter = true;
+        ui->WideCheckbox->setCheckState(Qt::Checked);
+    } else if (setting.value("WideChar") == "false") {
+        WideCharacter = false;
+        ui->WideCheckbox->setCheckState(Qt::Unchecked);
+    }
 
     if (SearchAscii) {
         ui->EndianBox->setEnabled(false);
         ui->CaseCheckbox->setEnabled(true);
+        ui->WideCheckbox->setEnabled(true);
     } else {
         ui->EndianBox->setEnabled(true);
         ui->CaseCheckbox->setEnabled(false);
+        ui->WideCheckbox->setEnabled(false);
     }
 }
 
@@ -136,7 +145,7 @@ bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
         return false;
     for (INT64 idx = PreviousOffset + 1; idx < BinaryBuffer->size(); ++idx) {
         bool Found = true;
-        bool wFound = true;
+        bool wFound = WideCharacter;
         if (UpperToLower(BinaryBuffer->at(idx)) == SearchedString.at(0).toLatin1()) {
             for (INT64 strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
                 if (UpperToLower(BinaryBuffer->at(idx + strIdx)) != SearchedString.at(strIdx).toLatin1()) {
@@ -144,12 +153,15 @@ bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
                     break;
                 }
             }
-            for (INT64 strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
-                if (BinaryBuffer->at(idx + strIdx * 2 - 1) != 0 || UpperToLower(BinaryBuffer->at(idx + strIdx * 2)) != SearchedString.at(strIdx).toLatin1()) {
-                    wFound = false;
-                    break;
+            if (WideCharacter) {
+                for (INT64 strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
+                    if (BinaryBuffer->at(idx + strIdx * 2 - 1) != 0 || UpperToLower(BinaryBuffer->at(idx + strIdx * 2)) != SearchedString.at(strIdx).toLatin1()) {
+                        wFound = false;
+                        break;
+                    }
                 }
             }
+
             if (Found || wFound) {
                 *begin = idx;
                 *length = SearchedString.size();
@@ -265,3 +277,15 @@ void SearchDialog::CaseCheckboxStateChanged(int state) {
     }
 }
 
+void SearchDialog::WideCheckboxStateChanged(int state) {
+    PreviousOffset = -1;
+    HistoryResult.clear();
+    if (state == Qt::Checked) {
+        WideCharacter = true;
+        setting.setValue("WideChar", "true");
+    }
+    else if (state == Qt::Unchecked) {
+        WideCharacter = false;
+        setting.setValue("WideChar", "false");
+    }
+}

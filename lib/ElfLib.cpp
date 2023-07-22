@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iomanip>
 
-Elf::Elf(UINT8* fv, INT64 length, INT64 offset):Volume(fv, length, offset) {
+Elf::Elf(UINT8* fv, INT64 length, INT64 offset, bool Compressed):Volume(fv, length, offset, Compressed) {
     if (!IsElfFormat(fv)) {
         ValidFlag = false;
         return;
@@ -81,13 +81,13 @@ void Elf::decodeSections() {
             SecName = getStringFromOffset(SectionList.at(idx)->Elf64Shdr->sh_name);
         }
         if (SecName.rfind(".upld_info") == 0) {
-            Volume *SecFile = new Volume(data + SecOff, SecSize, SecOff);
+            Volume *SecFile = new Volume(data + SecOff, SecSize, SecOff, this->isCompressed);
             SecFile->Type = UefiSpace::VolumeType::Other;
             SecFile->AdditionalMsg = "Universal Payload Info";
             UpldFiles.push_back(SecFile);
         }
         if (SecName.rfind(".upld.") == 0) {
-            Volume *SecFile = new UefiSpace::FirmwareVolume(data + SecOff, SecSize, SecOff);
+            Volume *SecFile = new UefiSpace::FirmwareVolume(data + SecOff, SecSize, SecOff, false, this->isCompressed);
             UpldFiles.push_back(SecFile);
         }
     }

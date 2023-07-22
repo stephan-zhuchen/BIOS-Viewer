@@ -12,7 +12,6 @@
 GeneralData::GeneralData(QString dir):appDir(dir) {}
 
 GeneralData::~GeneralData() {
-    qDebug() << "GeneralData::~GeneralData";
     if (BiosViewerUi != nullptr)
         delete BiosViewerUi;
     if (HexViewerUi != nullptr)
@@ -24,7 +23,6 @@ GeneralData::~GeneralData() {
 }
 
 BiosViewerData::~BiosViewerData() {
-    qDebug() << "BiosViewerData::~BiosViewerData";
     BiosValidFlag = true;
     flashmap = "";
 
@@ -88,7 +86,6 @@ BiosViewerWindow::BiosViewerWindow(StartWindow *parent):
 }
 
 BiosViewerWindow::~BiosViewerWindow() {
-    qDebug() << "BiosViewerWindow::~BiosViewerWindow";
     delete ui;
     if (InputData != nullptr) {
         delete InputData;
@@ -270,7 +267,7 @@ void BiosViewerWindow::InfoButtonClicked()
             InputData->infoWindow->setBiosImage(InputData->BiosImage);
             InputData->infoWindow->setOpenedFileName(WindowData->OpenedFileName);
             InputData->infoWindow->setParentWidget(this);
-            InputData->infoWindow->showFitTab();
+            InputData->infoWindow->showTab();
             InputData->infoWindow->showFlashmapTab(InputData->flashmap);
         }
         InputData->infoWindow->show();

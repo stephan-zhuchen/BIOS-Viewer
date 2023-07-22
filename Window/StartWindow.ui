@@ -19,7 +19,7 @@
    <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>Binary Viewer</string>
+   <string>BIOS Viewer</string>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
@@ -121,7 +121,7 @@
      <normaloff>:/about.svg</normaloff>:/about.svg</iconset>
    </property>
    <property name="text">
-    <string>About Binary Viewer</string>
+    <string>About BIOS Viewer</string>
    </property>
    <property name="font">
     <font>

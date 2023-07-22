@@ -55,6 +55,7 @@ private slots:
     void SearchContentReturnPressed();
     void EndianBoxActivated(int index);
     void CaseCheckboxStateChanged(int state);
+    void WideCheckboxStateChanged(int state);
 
 private:
     Ui::SearchDialog *ui;
@@ -69,6 +70,7 @@ private:
     bool             isLittleEndian{true};
     bool             SearchAscii{false};
     bool             CaseSensitive{false};
+    bool             WideCharacter{true};
     QVector<QPair<INT32, INT32>>  HistoryResult;
 };
 

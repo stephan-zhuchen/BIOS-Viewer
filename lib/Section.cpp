@@ -4,7 +4,7 @@
 #include "GuidDefinition.h"
 
 namespace UefiSpace {
-    PeCoff::PeCoff(UINT8* file, INT64 length, INT64 offset):Volume(file, length, offset) {
+    PeCoff::PeCoff(UINT8* file, INT64 length, INT64 offset, bool Compressed):Volume(file, length, offset, Compressed) {
         UINT16 magic = *(UINT16*)file;
         if (magic == EFI_IMAGE_DOS_SIGNATURE) {
             dosHeader = *(EFI_IMAGE_DOS_HEADER*)file;
@@ -96,7 +96,7 @@ namespace UefiSpace {
         return SubSystemName;
     }
 
-    Depex::Depex(UINT8* file, INT64 length):Volume(file, length) {
+    Depex::Depex(UINT8* file, INT64 length, bool Compressed):Volume(file, length, 0, Compressed) {
         INT64 offset = 0;
         UINT8 Opcode = this->getUINT8(offset);
         offset += sizeof(UINT8);

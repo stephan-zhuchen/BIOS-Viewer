@@ -24,12 +24,14 @@ public:
     void setBiosImage(BiosImageVolume *Image);
     void setOpenedFileName(QString name);
     void setParentWidget(QWidget *pWidget);
+    void showTab();
     void showFitTab();
     void showMicrocodeTab();
     void showAcmTab();
     void showBtgTab();
     void showFlashmapTab(const QString &SectionFlashMap);
     void showAcpiTab();
+    void showFceTab();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

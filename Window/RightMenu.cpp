@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QProcess>
+#include <QClipboard>
 #include "BiosWindow.h"
 #include "HexViewDialog.h"
 #include "TabWindow.h"
@@ -212,13 +213,18 @@ void BiosViewerWindow::showHexView() {
 }
 
 void BiosViewerWindow::showBodyHexView() {
+    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
+    INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
+    if (HeaderSize >= InputData->RightClickeditemModel->modelData->size) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "No Body!");
+        return;
+    }
+
     HexViewDialog *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
-    UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     QByteArray *hexViewData = new QByteArray((char*)itemData, InputData->RightClickeditemModel->modelData->size);
-    INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
     hexDialog->loadBuffer(BodyHexViewData,
                           InputData->InputImageModel->modelData,
@@ -252,7 +258,7 @@ void BiosViewerWindow::showPeCoffView() {
     Buffer::saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {
-        QMessageBox::critical(this, tr("About BIOS Viewer"), "Please run as Administrator!");
+        QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
         return;
     }
     tempFile.close();
@@ -294,7 +300,7 @@ void BiosViewerWindow::showAcpiTableView() {
     Buffer::saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {
-        QMessageBox::critical(this, tr("About BIOS Viewer"), "Please run as Administrator!");
+        QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
         return;
     }
     tempFile.close();
@@ -341,6 +347,11 @@ void BiosViewerWindow::extractVolume() {
 }
 
 void BiosViewerWindow::extractBodyVolume() {
+    INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
+    if (HeaderSize >= InputData->RightClickeditemModel->modelData->size) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "No Body!");
+        return;
+    }
     QString filename = InputData->RightClickeditemModel->getName() + "_" + InputData->RightClickeditemModel->getType() + "_body.fd";
     QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
     QString DialogTitle = "Extract " + InputData->RightClickeditemModel->getType() + " Body";
@@ -352,7 +363,6 @@ void BiosViewerWindow::extractBodyVolume() {
         return;
     }
 
-    INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
     Buffer::saveBinary(extractVolumeName.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
 }
 
@@ -390,7 +400,7 @@ void BiosViewerWindow::replaceFfsContent() {
     INT64 NewFileSize = FileBuffer->getBufferSize();
     INT64 FileSize = ((FfsFile*)InputData->RightClickeditemModel->modelData)->FfsSize - ((FfsFile*)InputData->RightClickeditemModel->modelData)->getHeaderSize();
     if (NewFileSize > FileSize) {
-        QMessageBox::critical(this, tr("About BIOS Viewer"), "File size does not match!");
+        QMessageBox::critical(this, tr("BIOS Viewer"), "File size does not match!");
         delete FileBuffer;
         return;
     }
@@ -417,7 +427,6 @@ void BiosViewerWindow::replaceFfsContent() {
     delete[] NewImage;
 }
 
-
 void BiosViewerWindow::getMD5() {
     UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[MD5_DIGEST_LENGTH];
@@ -427,7 +436,17 @@ void BiosViewerWindow::getMD5() {
     for (INT32 i = 0; i < MD5_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("MD5"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("MD5"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void BiosViewerWindow::getSHA1() {
@@ -439,7 +458,18 @@ void BiosViewerWindow::getSHA1() {
     for (INT32 i = 0; i < SHA_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA1"), hash);
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA1"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void BiosViewerWindow::getSHA224() {
@@ -451,7 +481,17 @@ void BiosViewerWindow::getSHA224() {
     for (INT32 i = 0; i < SHA224_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA224"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA224"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void BiosViewerWindow::getSHA256() {
@@ -463,7 +503,17 @@ void BiosViewerWindow::getSHA256() {
     for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA256"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA256"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void BiosViewerWindow::getSHA384() {
@@ -475,7 +525,17 @@ void BiosViewerWindow::getSHA384() {
     for (INT32 i = 0; i < SHA384_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA384"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA384"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }
 
 void BiosViewerWindow::getSHA512() {
@@ -487,5 +547,15 @@ void BiosViewerWindow::getSHA512() {
     for (INT32 i = 0; i < SHA512_DIGEST_LENGTH; i++) {
         hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
     }
-    QMessageBox::about(this, tr("SHA512"), hash);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA512"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }

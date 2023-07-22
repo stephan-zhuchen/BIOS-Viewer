@@ -2,6 +2,7 @@
 #include <QKeyEvent>
 #include <QFile>
 #include <QProcess>
+#include <thread>
 #include "BiosWindow.h"
 #include "InfoWindow.h"
 #include "BaseLib.h"
@@ -57,6 +58,29 @@ void InfoWindow::setParentWidget(QWidget *pWidget) {
     parentWidget = pWidget;
 }
 
+void InfoWindow::showTab() {
+    std::thread showFit(&InfoWindow::showFitTab, this);
+    showFit.detach();
+
+    std::thread showMicrocode(&InfoWindow::showMicrocodeTab, this);
+    showMicrocode.detach();
+
+    std::thread showAcm(&InfoWindow::showAcmTab, this);
+    showAcm.detach();
+
+    std::thread showBtg(&InfoWindow::showBtgTab, this);
+    showBtg.detach();
+
+    std::thread showAcpi(&InfoWindow::showAcpiTab, this);
+    showAcpi.detach();
+
+//    std::thread showFlashmap(&InfoWindow::showFlashmapTab, this);
+//    showFlashmap.detach();
+
+//    std::thread showFce(&InfoWindow::showFceTab, this);
+//    showFce.detach();
+}
+
 void InfoWindow::showFitTab() {
     QTableWidgetItem    *item;
     FIRMWARE_INTERFACE_TABLE_ENTRY  FitHeader = BiosImage->FitTable->FitHeader;
@@ -109,11 +133,6 @@ void InfoWindow::showFitTab() {
         item = new QTableWidgetItem(QString::number(Entry.Checksum, 16).toUpper() + "h");
         ui->tableWidget->setItem(index + 1, InfoWindow::Checksum, item);
     }
-
-    showMicrocodeTab();
-    showAcmTab();
-    showBtgTab();
-    showAcpiTab();
 }
 
 void InfoWindow::showMicrocodeTab() {
@@ -183,9 +202,43 @@ void InfoWindow::showAcpiTab() {
         ui->AcpiListWidget->setCurrentRow(0);
 }
 
+void InfoWindow::showFceTab() {
+    QString text;
+    QString toolpath = appDir + "/tool/FCE/FCE.exe";
+    QFile ToolFile(toolpath);
+    if(!ToolFile.exists()) {
+        text = "FCE tool not found!";
+        ui->fceText->setText(text);
+        return;
+    }
+
+    QProcess *process = new QProcess(this);
+    QString TempFilepath = appDir + "/tool/ClientBios.config";
+    QStringList arguments;
+    arguments << "read" << "-i" << OpenedFileName << "0006" <<  "005C" << "0078" << "0030" << "0034" << "0039" << "0046" << ">" << TempFilepath;
+    QString command = toolpath + " " + arguments.join(" ");
+    qDebug() << "Command:" << command;
+    process->start(toolpath, arguments);
+    process->waitForFinished();
+
+    text = process->readAllStandardOutput();
+    delete process;
+
+//    QFile TempFile(TempFilepath);
+//    if(TempFile.exists()) {
+//        TempFile.open(QIODevice::ReadOnly | QIODevice::Text);
+//        text = TempFile.readAll();
+//        TempFile.close();
+//        TempFile.remove();
+//    } else {
+//        text = "Please run as Administrator!";
+//    }
+
+    ui->fceText->setText(text);
+}
+
 void InfoWindow::resizeEvent(QResizeEvent *event) {
     int length = ui->tableWidget->width() / 6;
-//    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->tableWidget->setColumnWidth(InfoWindow::Address, length * 1.5);
     ui->tableWidget->setColumnWidth(InfoWindow::Size, length);
     ui->tableWidget->setColumnWidth(InfoWindow::Version, length);
@@ -310,6 +363,11 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
         AcpiText = DslFile.readAll();
         DslFile.close();
         DslFile.remove();
+    }
+    QFile TempFile(filepath);
+    if(TempFile.exists()) {
+        TempFile.close();
+        TempFile.remove();
     }
     ui->AcpiTextBrowser->setText(AcpiText);
 }

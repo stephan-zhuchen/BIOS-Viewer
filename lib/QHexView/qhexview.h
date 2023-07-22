@@ -109,13 +109,13 @@ private:
     void setSelection(INT32 pos);
     void ensureVisible();
     void setCursorPos(INT32 pos);
-    int cursorPos(const QPoint &position);
-    int getCursorPos();
+    INT32 cursorPos(const QPoint &position);
+    INT32 getCursorPos();
     void confScrollBar();
     bool isSelected(INT32 index);
     bool isEdited(INT32 index);
     void restartTimer();
-    int getLineNum();
+    INT32 getLineNum();
     void initRightMenu();
     void finiRightMenu();
     bool getSelectedBuffer(QByteArray &buffer, INT32*length);

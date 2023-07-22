@@ -52,7 +52,7 @@ namespace UefiSpace {
     public:
         VolumeType Type;
         Volume() = default;
-        Volume(UINT8* fv, INT64 length, INT64 offset=0);
+        Volume(UINT8* fv, INT64 length, INT64 offset=0, bool Compressed=false);
         virtual ~Volume();
 
         EFI_GUID getVolumeGuid() const;
@@ -89,7 +89,7 @@ namespace UefiSpace {
         bool                      isPe32Plus{false};
     public:
         PeCoff()=delete;
-        PeCoff(UINT8* file, INT64 length, INT64 offset);
+        PeCoff(UINT8* file, INT64 length, INT64 offset, bool Compressed=false);
 
         string getMachineType() const;
         static string getSubsystemName(UINT16 subsystem);
@@ -100,7 +100,7 @@ namespace UefiSpace {
     public:
         vector<string>            OrganizedDepexList;
         Depex()=delete;
-        Depex(UINT8* file, INT64 length);
+        Depex(UINT8* file, INT64 length, bool Compressed=false);
         static string getOpcodeString(UINT8 op);
     };
 
@@ -139,8 +139,8 @@ namespace UefiSpace {
         UINT8                     *DecompressedBufferOnHeap{nullptr};
     public:
         CommonSection()=delete;
-        CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs);
-        CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs);
+        CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs, bool Compressed=false);
+        CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs, bool Compressed=false);
         ~CommonSection();
         void SelfDecode();
         void DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize);
@@ -164,7 +164,7 @@ namespace UefiSpace {
         vector<CommonSection*> Sections;
     public:
         FfsFile() = delete;
-        FfsFile(UINT8* file, INT64 offset);
+        FfsFile(UINT8* file, INT64 offset, bool Compressed=false);
         ~FfsFile();
 
         UINT8 getType() const;
@@ -187,7 +187,7 @@ namespace UefiSpace {
         bool                           checksumValid{false};
     public:
         FirmwareVolume() = delete;
-        FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty=false);
+        FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty=false, bool Compressed=false);
         ~FirmwareVolume();
 
         GUID getFvGuid(bool returnExt=true) const;

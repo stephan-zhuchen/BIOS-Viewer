@@ -512,17 +512,17 @@
      </property>
      <item>
       <property name="text">
-       <string>Fira Code</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
        <string>Courier</string>
       </property>
      </item>
      <item>
       <property name="text">
        <string>Courier New</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Fira Code</string>
       </property>
      </item>
      <item>
