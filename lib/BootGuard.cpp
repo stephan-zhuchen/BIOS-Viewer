@@ -1,6 +1,6 @@
 #include <iomanip>
 #include "UefiLib.h"
-#include "GuidDefinition.h"
+#include "UEFI/GuidDefinition.h"
 
 typedef UINT32 TPM_ALGORITHM_ID;
 typedef UINT16 TPM_ALG_ID;

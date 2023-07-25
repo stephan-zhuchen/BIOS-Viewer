@@ -7,7 +7,7 @@
 #include <QElapsedTimer>
 #include <QProcess>
 #include "SettingsDialog.h"
-#include "GuidDefinition.h"
+#include "UEFI/GuidDefinition.h"
 #include "StartWindow.h"
 #include "ui_StartWindow.h"
 

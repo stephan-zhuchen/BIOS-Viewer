@@ -1,0 +1,423 @@
+/** @file
+  Provides copy memory, fill memory, zero memory, and GUID functions.
+
+  The Base Memory Library provides optimized implementations for common memory-based operations.
+  These functions should be used in place of coding your own loops to do equivalent common functions.
+  This allows optimized library implementations to help increase performance.
+
+Copyright (c) 2006 - 2018, Intel Corporation. All rights reserved.<BR>
+SPDX-License-Identifier: BSD-2-Clause-Patent
+
+**/
+
+#ifndef __BASE_MEMORY_LIB__
+#define __BASE_MEMORY_LIB__
+#include "Base.h"
+
+/**
+  Copies a source buffer to a destination buffer, and returns the destination buffer.
+
+  This function copies Length bytes from SourceBuffer to DestinationBuffer, and returns
+  DestinationBuffer.  The implementation must be reentrant, and it must handle the case
+  where SourceBuffer overlaps DestinationBuffer.
+
+  If Length is greater than (MAX_ADDRESS - DestinationBuffer + 1), then ASSERT().
+  If Length is greater than (MAX_ADDRESS - SourceBuffer + 1), then ASSERT().
+
+  @param  DestinationBuffer   The pointer to the destination buffer of the memory copy.
+  @param  SourceBuffer        The pointer to the source buffer of the memory copy.
+  @param  Length              The number of bytes to copy from SourceBuffer to DestinationBuffer.
+
+  @return DestinationBuffer.
+
+**/
+VOID *
+EFIAPI
+CopyMem (
+  OUT VOID       *DestinationBuffer,
+  IN CONST VOID  *SourceBuffer,
+  IN UINTN       Length
+  );
+
+/**
+  Fills a target buffer with a byte value, and returns the target buffer.
+
+  This function fills Length bytes of Buffer with Value, and returns Buffer.
+
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+
+  @param  Buffer    The memory to set.
+  @param  Length    The number of bytes to set.
+  @param  Value     The value with which to fill Length bytes of Buffer.
+
+  @return Buffer.
+
+**/
+VOID *
+EFIAPI
+SetMem (
+  OUT VOID  *Buffer,
+  IN UINTN  Length,
+  IN UINT8  Value
+  );
+
+/**
+  Fills a target buffer with a 16-bit value, and returns the target buffer.
+
+  This function fills Length bytes of Buffer with the 16-bit value specified by
+  Value, and returns Buffer. Value is repeated every 16-bits in for Length
+  bytes of Buffer.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+  If Buffer is not aligned on a 16-bit boundary, then ASSERT().
+  If Length is not aligned on a 16-bit boundary, then ASSERT().
+
+  @param  Buffer  The pointer to the target buffer to fill.
+  @param  Length  The number of bytes in Buffer to fill.
+  @param  Value   The value with which to fill Length bytes of Buffer.
+
+  @return Buffer.
+
+**/
+VOID *
+EFIAPI
+SetMem16 (
+  OUT VOID   *Buffer,
+  IN UINTN   Length,
+  IN UINT16  Value
+  );
+
+/**
+  Fills a target buffer with a 32-bit value, and returns the target buffer.
+
+  This function fills Length bytes of Buffer with the 32-bit value specified by
+  Value, and returns Buffer. Value is repeated every 32-bits in for Length
+  bytes of Buffer.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+  If Buffer is not aligned on a 32-bit boundary, then ASSERT().
+  If Length is not aligned on a 32-bit boundary, then ASSERT().
+
+  @param  Buffer  The pointer to the target buffer to fill.
+  @param  Length  The number of bytes in Buffer to fill.
+  @param  Value   The value with which to fill Length bytes of Buffer.
+
+  @return Buffer.
+
+**/
+VOID *
+EFIAPI
+SetMem32 (
+  OUT VOID   *Buffer,
+  IN UINTN   Length,
+  IN UINT32  Value
+  );
+
+/**
+  Fills a target buffer with a 64-bit value, and returns the target buffer.
+
+  This function fills Length bytes of Buffer with the 64-bit value specified by
+  Value, and returns Buffer. Value is repeated every 64-bits in for Length
+  bytes of Buffer.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+  If Buffer is not aligned on a 64-bit boundary, then ASSERT().
+  If Length is not aligned on a 64-bit boundary, then ASSERT().
+
+  @param  Buffer  The pointer to the target buffer to fill.
+  @param  Length  The number of bytes in Buffer to fill.
+  @param  Value   The value with which to fill Length bytes of Buffer.
+
+  @return Buffer.
+
+**/
+VOID *
+EFIAPI
+SetMem64 (
+  OUT VOID   *Buffer,
+  IN UINTN   Length,
+  IN UINT64  Value
+  );
+
+/**
+  Fills a target buffer with a value that is size UINTN, and returns the target buffer.
+
+  This function fills Length bytes of Buffer with the UINTN sized value specified by
+  Value, and returns Buffer. Value is repeated every sizeof(UINTN) bytes for Length
+  bytes of Buffer.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+  If Buffer is not aligned on a UINTN boundary, then ASSERT().
+  If Length is not aligned on a UINTN boundary, then ASSERT().
+
+  @param  Buffer  The pointer to the target buffer to fill.
+  @param  Length  The number of bytes in Buffer to fill.
+  @param  Value   The value with which to fill Length bytes of Buffer.
+
+  @return Buffer.
+
+**/
+VOID *
+EFIAPI
+SetMemN (
+  OUT VOID  *Buffer,
+  IN UINTN  Length,
+  IN UINTN  Value
+  );
+
+/**
+  Scans a target buffer for an 8-bit value, and returns a pointer to the matching 8-bit value
+  in the target buffer.
+
+  This function searches target the buffer specified by Buffer and Length from the lowest
+  address to the highest address for an 8-bit value that matches Value.  If a match is found,
+  then a pointer to the matching byte in the target buffer is returned.  If no match is found,
+  then NULL is returned.  If Length is 0, then NULL is returned.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+
+  @param  Buffer      The pointer to the target buffer to scan.
+  @param  Length      The number of bytes in Buffer to scan.
+  @param  Value       The value to search for in the target buffer.
+
+  @return A pointer to the matching byte in the target buffer, otherwise NULL.
+
+**/
+VOID *
+EFIAPI
+ScanMem8 (
+  IN CONST VOID  *Buffer,
+  IN UINTN       Length,
+  IN UINT8       Value
+  );
+
+/**
+  Scans a target buffer for a 16-bit value, and returns a pointer to the matching 16-bit value
+  in the target buffer.
+
+  This function searches target the buffer specified by Buffer and Length from the lowest
+  address to the highest address for a 16-bit value that matches Value.  If a match is found,
+  then a pointer to the matching byte in the target buffer is returned.  If no match is found,
+  then NULL is returned.  If Length is 0, then NULL is returned.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Buffer is not aligned on a 16-bit boundary, then ASSERT().
+  If Length is not aligned on a 16-bit boundary, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+
+  @param  Buffer      The pointer to the target buffer to scan.
+  @param  Length      The number of bytes in Buffer to scan.
+  @param  Value       The value to search for in the target buffer.
+
+  @return A pointer to the matching byte in the target buffer, otherwise NULL.
+
+**/
+VOID *
+EFIAPI
+ScanMem16 (
+  IN CONST VOID  *Buffer,
+  IN UINTN       Length,
+  IN UINT16      Value
+  );
+
+/**
+  Scans a target buffer for a 32-bit value, and returns a pointer to the matching 32-bit value
+  in the target buffer.
+
+  This function searches target the buffer specified by Buffer and Length from the lowest
+  address to the highest address for a 32-bit value that matches Value.  If a match is found,
+  then a pointer to the matching byte in the target buffer is returned.  If no match is found,
+  then NULL is returned.  If Length is 0, then NULL is returned.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Buffer is not aligned on a 32-bit boundary, then ASSERT().
+  If Length is not aligned on a 32-bit boundary, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+
+  @param  Buffer      The pointer to the target buffer to scan.
+  @param  Length      The number of bytes in Buffer to scan.
+  @param  Value       The value to search for in the target buffer.
+
+  @return A pointer to the matching byte in the target buffer, otherwise NULL.
+
+**/
+VOID *
+EFIAPI
+ScanMem32 (
+  IN CONST VOID  *Buffer,
+  IN UINTN       Length,
+  IN UINT32      Value
+  );
+
+/**
+  Scans a target buffer for a 64-bit value, and returns a pointer to the matching 64-bit value
+  in the target buffer.
+
+  This function searches target the buffer specified by Buffer and Length from the lowest
+  address to the highest address for a 64-bit value that matches Value.  If a match is found,
+  then a pointer to the matching byte in the target buffer is returned.  If no match is found,
+  then NULL is returned.  If Length is 0, then NULL is returned.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Buffer is not aligned on a 64-bit boundary, then ASSERT().
+  If Length is not aligned on a 64-bit boundary, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+
+  @param  Buffer      The pointer to the target buffer to scan.
+  @param  Length      The number of bytes in Buffer to scan.
+  @param  Value       The value to search for in the target buffer.
+
+  @return A pointer to the matching byte in the target buffer, otherwise NULL.
+
+**/
+VOID *
+EFIAPI
+ScanMem64 (
+  IN CONST VOID  *Buffer,
+  IN UINTN       Length,
+  IN UINT64      Value
+  );
+
+/**
+  Scans a target buffer for a UINTN sized value, and returns a pointer to the matching
+  UINTN sized value in the target buffer.
+
+  This function searches target the buffer specified by Buffer and Length from the lowest
+  address to the highest address for a UINTN sized value that matches Value.  If a match is found,
+  then a pointer to the matching byte in the target buffer is returned.  If no match is found,
+  then NULL is returned.  If Length is 0, then NULL is returned.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Buffer is not aligned on a UINTN boundary, then ASSERT().
+  If Length is not aligned on a UINTN boundary, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+
+  @param  Buffer      The pointer to the target buffer to scan.
+  @param  Length      The number of bytes in Buffer to scan.
+  @param  Value       The value to search for in the target buffer.
+
+  @return A pointer to the matching byte in the target buffer, otherwise NULL.
+
+**/
+VOID *
+EFIAPI
+ScanMemN (
+  IN CONST VOID  *Buffer,
+  IN UINTN       Length,
+  IN UINTN       Value
+  );
+
+/**
+  Compares two GUIDs.
+
+  This function compares Guid1 to Guid2.  If the GUIDs are identical then TRUE is returned.
+  If there are any bit differences in the two GUIDs, then FALSE is returned.
+
+  If Guid1 is NULL, then ASSERT().
+  If Guid2 is NULL, then ASSERT().
+
+  @param  Guid1       A pointer to a 128 bit GUID.
+  @param  Guid2       A pointer to a 128 bit GUID.
+
+  @retval TRUE        Guid1 and Guid2 are identical.
+  @retval FALSE       Guid1 and Guid2 are not identical.
+
+**/
+BOOLEAN
+EFIAPI
+CompareGuid (
+  IN CONST EFI_GUID  *Guid1,
+  IN CONST EFI_GUID  *Guid2
+  );
+
+/**
+  Checks if the contents of a buffer are all zeros.
+
+  This function checks whether the contents of a buffer are all zeros. If the
+  contents are all zeros, return TRUE. Otherwise, return FALSE.
+
+  If Length > 0 and Buffer is NULL, then ASSERT().
+  If Length is greater than (MAX_ADDRESS - Buffer + 1), then ASSERT().
+
+  @param  Buffer      The pointer to the buffer to be checked.
+  @param  Length      The size of the buffer (in bytes) to be checked.
+
+  @retval TRUE        Contents of the buffer are all zeros.
+  @retval FALSE       Contents of the buffer are not all zeros.
+
+**/
+BOOLEAN
+EFIAPI
+IsZeroBuffer (
+  IN CONST VOID  *Buffer,
+  IN UINTN       Length
+  );
+
+/**
+  Shifts a 64-bit integer left between 0 and 63 bits. The low bits are filled
+  with zeros. The shifted value is returned.
+
+  This function shifts the 64-bit value Operand to the left by Count bits. The
+  low Count bits are set to zero. The shifted value is returned.
+
+  If Count is greater than 63, then ASSERT().
+
+  @param  Operand The 64-bit operand to shift left.
+  @param  Count   The number of bits to shift left.
+
+  @return Operand << Count.
+
+**/
+UINT64
+EFIAPI
+LShiftU64 (
+  IN      UINT64  Operand,
+  IN      UINTN   Count
+  );
+
+/**
+  Shifts a 64-bit integer right between 0 and 63 bits. This high bits are
+  filled with zeros. The shifted value is returned.
+
+  This function shifts the 64-bit value Operand to the right by Count bits. The
+  high Count bits are set to zero. The shifted value is returned.
+
+  If Count is greater than 63, then ASSERT().
+
+  @param  Operand The 64-bit operand to shift right.
+  @param  Count   The number of bits to shift right.
+
+  @return Operand >> Count.
+
+**/
+UINT64
+RShiftU64 (
+    IN      UINT64                    Operand,
+    IN      UINTN                     Count
+    );
+
+/**
+  Reads a 32-bit value from memory that may be unaligned.
+
+  This function returns the 32-bit value pointed to by Buffer. The function
+  guarantees that the read operation does not produce an alignment fault.
+
+  If the Buffer is NULL, then ASSERT().
+
+  @param  Buffer  A pointer to a 32-bit value that may be unaligned.
+
+  @return The 32-bit value read from Buffer.
+
+**/
+UINT32
+EFIAPI
+ReadUnaligned32 (
+  IN CONST UINT32  *Buffer
+  );
+
+#endif

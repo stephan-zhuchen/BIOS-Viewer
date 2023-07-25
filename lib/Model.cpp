@@ -1,5 +1,5 @@
 #include "Model.h"
-#include "GuidDefinition.h"
+#include "UEFI/GuidDefinition.h"
 
 DataModel::DataModel(Volume* model, QString nm, QString typ, QString sbtyp, QString txt, bool recycle):
     name(nm),

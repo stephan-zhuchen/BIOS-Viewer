@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
 #include "UefiLib.h"
-#include "GbE.h"
-#include "ME.h"
-#include "descriptor.h"
+#include "UEFI/GbE.h"
+#include "UEFI/ME.h"
+#include "UEFI/descriptor.h"
 #include "SymbolDefinition.h"
 
 using UefiSpace::Volume;

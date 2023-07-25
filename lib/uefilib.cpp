@@ -3,10 +3,10 @@
 #include <atomic>
 #include <algorithm>
 #include "UefiLib.h"
-#include "Base.h"
-#include "Microcode.h"
+#include "C/Base.h"
+#include "UEFI/Microcode.h"
 #include "ElfLib.h"
-#include "GuidDefinition.h"
+#include "UEFI/GuidDefinition.h"
 #include "LzmaDecompress/LzmaDecompressLibInternal.h"
 #include "BaseUefiDecompress/UefiDecompressLib.h"
 

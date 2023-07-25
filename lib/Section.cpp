@@ -1,7 +1,7 @@
 #include <iomanip>
 #include "UefiLib.h"
-#include "PiDependency.h"
-#include "GuidDefinition.h"
+#include "UEFI/PiDependency.h"
+#include "UEFI/GuidDefinition.h"
 
 namespace UefiSpace {
     PeCoff::PeCoff(UINT8* file, INT64 length, INT64 offset, bool Compressed):Volume(file, length, offset, Compressed) {

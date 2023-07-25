@@ -14,7 +14,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef __UEFI_DECPOMPRESS_LIB_H__
 #define __UEFI_DECPOMPRESS_LIB_H__
 
-#include "../../include/Base.h"
+#include "C/Base.h"
 
 /**
   Given a compressed source buffer, this function retrieves the size of

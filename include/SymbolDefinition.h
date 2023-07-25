@@ -22,14 +22,15 @@ using INT8   = char;
 using INT16  = short;
 using INT32  = int;
 using INT64  = long long;
+using EFI_HANDLE = VOID*;
 
 struct EFI_GUID {
     UINT32    Data1;
     UINT16    Data2;
     UINT16    Data3;
     UINT8     Data4[8];
-    bool operator==(EFI_GUID guid);
-    bool operator!=(EFI_GUID guid);
+    bool operator==(const EFI_GUID guid);
+    bool operator!=(const EFI_GUID guid);
 };
 
 //

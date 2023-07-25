@@ -5,14 +5,14 @@
 #include <stack>
 #include "BaseLib.h"
 #include "SymbolDefinition.h"
-#include "PiFirmwareFile.h"
-#include "PiFirmwareVolume.h"
-#include "PeImage.h"
-#include "Microcode.h"
-#include "VariableFormat.h"
-#include "BootGuard.h"
-#include "FspHeader.h"
-#include "Acpi.h"
+#include "UEFI/PiFirmwareFile.h"
+#include "UEFI/PiFirmwareVolume.h"
+#include "UEFI/PeImage.h"
+#include "UEFI/Microcode.h"
+#include "UEFI/VariableFormat.h"
+#include "UEFI/BootGuard.h"
+#include "UEFI/FspHeader.h"
+#include "UEFI/Acpi.h"
 #include "openssl/sha.h"
 
 class Elf;

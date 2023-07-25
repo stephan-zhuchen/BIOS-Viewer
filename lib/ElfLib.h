@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ELF.h"
+#include "UEFI/ELF.h"
 #include "UefiLib.h"
 #include <vector>
 #include <string>

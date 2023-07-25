@@ -9,6 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_PREFIX_PATH "C:\\Qt\\6.5.1\\msvc2019_64\\")
+
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
@@ -43,24 +45,30 @@ set(UEFI_DECOMPRESS
 )
 
 set(INCLUDE_FILE
-        include/Base.h
-        include/PeImage.h
-        include/ELF.h
-        include/FspHeader.h
-        include/PiFirmwareFile.h
-        include/PiFirmwareVolume.h
-        include/PiDependency.h
         include/SymbolDefinition.h
-        include/GuidDefinition.h
-        include/BaseMemoryLib.h
-        include/BaseMemoryLib.cpp
-        include/Microcode.h
-        include/VariableFormat.h
-        include/BootGuard.h
-        include/ME.h
-        include/GbE.h
-        include/descriptor.h
-        include/Acpi.h
+        include/C/Base.h
+        include/C/BaseMemoryLib.h
+        include/C/Common.h
+        include/UEFI/PeImage.h
+        include/UEFI/ELF.h
+        include/UEFI/FspHeader.h
+        include/UEFI/PiFirmwareFile.h
+        include/UEFI/PiFirmwareVolume.h
+        include/UEFI/PiDependency.h
+        include/UEFI/GuidDefinition.h
+        include/UEFI/Microcode.h
+        include/UEFI/VariableFormat.h
+        include/UEFI/BootGuard.h
+        include/UEFI/ME.h
+        include/UEFI/GbE.h
+        include/UEFI/descriptor.h
+        include/UEFI/Acpi.h
+        include/UEFI/UefiStatus.h
+        include/EDKTool/MdeModuleHii.h
+        include/EDKTool/UefiInternalFormRepresentation.h
+        include/EDKTool/IfrParse.h
+        include/EDKTool/Fce.h
+        include/EDKTool/BinaryParse.h
 )
 
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
@@ -119,6 +127,11 @@ set(LIBRARY_SOURCES
         lib/QHexView/qhexview.cpp
         lib/QHexView/HexEdit.cpp
         lib/QHexView/qhexview.h
+        lib/Compatibility/BaseMemoryLib.cpp
+        lib/Compatibility/Common.cpp
+        lib/FCE/Expression.cpp
+        lib/FCE/IfrParse.cpp
+        lib/FCE/Fce.cpp
 )
 
 set(PROJECT_SOURCES
