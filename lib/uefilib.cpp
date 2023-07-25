@@ -7,8 +7,9 @@
 #include "UEFI/Microcode.h"
 #include "ElfLib.h"
 #include "UEFI/GuidDefinition.h"
-#include "LzmaDecompress/LzmaDecompressLibInternal.h"
+#include "LzmaDecompress/LzmaDecompressLib.h"
 #include "BaseUefiDecompress/UefiDecompressLib.h"
+#include "BrotliDecompress/BrotliDecompressLib.h"
 
 namespace UefiSpace {
 
@@ -237,6 +238,7 @@ namespace UefiSpace {
                 break;
             }
 
+            // Lzma Decompress
             if (SectionDefinitionGuid == GuidDatabase::gLzmaCustomDecompressGuid) {
                 ScratchSize = 0;
                 status = LzmaUefiDecompressGetInfo(data + HeaderSize, SectionSize - HeaderSize, &decompressedSize, &ScratchSize);
@@ -247,6 +249,25 @@ namespace UefiSpace {
                 DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
                 status = LzmaUefiDecompress(data + HeaderSize, SectionSize - HeaderSize, DecompressedBufferOnHeap, scratch);
+                if (status != RETURN_SUCCESS) {
+                    free(scratch);
+                    throw exception();
+                }
+                DecodeDecompressedBuffer(DecompressedBufferOnHeap, decompressedSize);
+                free(scratch);
+            }
+
+            // Brotli Decompress
+            if (SectionDefinitionGuid == GuidDatabase::gBrotliCustomDecompressGuid) {
+                ScratchSize = 0;
+                status = BrotliUefiDecompressGetInfo(data + HeaderSize, SectionSize - HeaderSize, &decompressedSize, &ScratchSize);
+                if (status != RETURN_SUCCESS) {
+                    throw exception();
+                }
+
+                DecompressedBufferOnHeap = new UINT8[decompressedSize];
+                scratch = malloc(ScratchSize);
+                status = BrotliUefiDecompress(data + HeaderSize, SectionSize - HeaderSize, DecompressedBufferOnHeap, scratch);
                 if (status != RETURN_SUCCESS) {
                     free(scratch);
                     throw exception();

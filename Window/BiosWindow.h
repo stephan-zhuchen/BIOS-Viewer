@@ -96,6 +96,7 @@ public:
     QAction*       showAcpiTable{nullptr};
     QAction*       showHex{nullptr};
     QAction*       showBodyHex{nullptr};
+    QAction*       showDecompressedHex{nullptr};
     QAction*       extractVolumeAction{nullptr};
     QAction*       extractBodyVolumeAction{nullptr};
     QAction*       showNvHex{nullptr};
@@ -161,6 +162,7 @@ private slots:
     void showTreeRightMenu(QPoint);
     void showHexView();
     void showBodyHexView();
+    void showDecompressedHexView();
     void showNvHexView();
     void showPeCoffView();
     void showAcpiTableView();

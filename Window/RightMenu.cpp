@@ -24,6 +24,9 @@ void BiosViewerWindow::initRightMenu() {
     showBodyHex = new QAction("Body Hex View");
     this->connect(showBodyHex,SIGNAL(triggered(bool)),this,SLOT(showBodyHexView()));
 
+    showDecompressedHex = new QAction("Decompressed Hex View");
+    this->connect(showDecompressedHex,SIGNAL(triggered(bool)),this,SLOT(showDecompressedHexView()));
+
     extractVolumeAction = new QAction("Extract");
     this->connect(extractVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
 
@@ -74,6 +77,8 @@ void BiosViewerWindow::finiRightMenu() {
         delete showHex;
     if (showBodyHex != nullptr)
         delete showBodyHex;
+    if (showDecompressedHex != nullptr)
+        delete showDecompressedHex;
     if (extractVolumeAction != nullptr)
         delete extractVolumeAction;
     if (extractBodyVolumeAction != nullptr)
@@ -146,6 +151,11 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) {
 
     showHex->setIcon(hexBinary);
     RightMenu->addAction(showHex);
+
+    if (RightClickeditemModel->getType() == "Volume") {
+        showDecompressedHex->setIcon(hexBinary);
+        RightMenu->addAction(showDecompressedHex);
+    }
 
     if (RightClickeditemModel->getType() == "Volume" || RightClickeditemModel->getType() == "File" || RightClickeditemModel->getType() == "Section") {
         showBodyHex->setIcon(hexBinary);
@@ -234,6 +244,10 @@ void BiosViewerWindow::showBodyHexView() {
                           InputData->RightClickeditemModel->modelData->isCompressed);
     hexDialog->show();
     delete hexViewData;
+}
+
+void BiosViewerWindow::showDecompressedHexView() {
+
 }
 
 void BiosViewerWindow::showNvHexView() {

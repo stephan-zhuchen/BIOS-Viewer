@@ -367,10 +367,9 @@ void StartWindow::ActionTabWidgetClose() {
 }
 
 void StartWindow::CurrentTabChanged(int index) {
-    GeneralData *currentTab = TabData.at(index);
-    if (currentTab->CurrentWindow == WindowMode::BIOS) {
+    if (index >= 0 && TabData.at(index)->CurrentWindow == WindowMode::BIOS) {
         ui->actionCollapse->setEnabled(true);
-    } else if (currentTab->CurrentWindow == WindowMode::Hex) {
+    } else if (index >= 0 && TabData.at(index)->CurrentWindow == WindowMode::Hex) {
         ui->actionCollapse->setEnabled(false);
     }
 

@@ -7,7 +7,7 @@
 
 **/
 
-#include "BaseUefiDecompressLibInternals.h"
+#include "BaseUefiDecompressLib.h"
 
 /**
   Read NumOfBit of bits from source into mBitBuf.

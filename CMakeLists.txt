@@ -15,7 +15,7 @@ set(CMAKE_PREFIX_PATH "C:\\Qt\\6.5.1\\msvc2019_64\\")
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-include_directories(include lib lib/Openssl/include Window)
+include_directories(include lib lib/Openssl/include lib/BrotliDecompress/brotli/include Window)
 set(LINK_DIR  lib/Openssl/lib)
 link_directories(${LINK_DIR})
 
@@ -35,13 +35,58 @@ set(LZMA_SDK
         lib/LzmaDecompress/Sdk/C/Precomp.h
         lib/LzmaDecompress/Sdk/C/LzmaDec.cpp
         lib/LzmaDecompress/LzmaDecompress.cpp
-        lib/LzmaDecompress/LzmaDecompressLibInternal.h
+        lib/LzmaDecompress/LzmaDecompressLib.h
 )
 
 set(UEFI_DECOMPRESS
         lib/BaseUefiDecompress/UefiDecompressLib.h
-        lib/BaseUefiDecompress/BaseUefiDecompressLibInternals.h
+        lib/BaseUefiDecompress/BaseUefiDecompressLib.h
         lib/BaseUefiDecompress/BaseUefiDecompressLib.cpp
+)
+
+set(BROTLI_COMMON_C
+    lib/BrotliDecompress/brotli/common/constants.cpp
+    lib/BrotliDecompress/brotli/common/context.cpp
+    lib/BrotliDecompress/brotli/common/dictionary.cpp
+    lib/BrotliDecompress/brotli/common/platform.cpp
+    lib/BrotliDecompress/brotli/common/shared_dictionary.cpp
+    lib/BrotliDecompress/brotli/common/transform.cpp
+)
+
+set(BROTLI_DEC_C
+    lib/BrotliDecompress/brotli/dec/bit_reader.cpp
+    lib/BrotliDecompress/brotli/dec/decode.cpp
+    lib/BrotliDecompress/brotli/dec/huffman.cpp
+    lib/BrotliDecompress/brotli/dec/state.cpp
+)
+
+set(BROTLI_ENC_C
+    lib/BrotliDecompress/brotli/enc/backward_references.cpp
+    lib/BrotliDecompress/brotli/enc/backward_references_hq.cpp
+    lib/BrotliDecompress/brotli/enc/bit_cost.cpp
+    lib/BrotliDecompress/brotli/enc/block_splitter.cpp
+    lib/BrotliDecompress/brotli/enc/brotli_bit_stream.cpp
+    lib/BrotliDecompress/brotli/enc/cluster.cpp
+    lib/BrotliDecompress/brotli/enc/command.cpp
+    lib/BrotliDecompress/brotli/enc/compound_dictionary.cpp
+    lib/BrotliDecompress/brotli/enc/compress_fragment.cpp
+    lib/BrotliDecompress/brotli/enc/compress_fragment_two_pass.cpp
+    lib/BrotliDecompress/brotli/enc/dictionary_hash.cpp
+    lib/BrotliDecompress/brotli/enc/encode.cpp
+    lib/BrotliDecompress/brotli/enc/encoder_dict.cpp
+    lib/BrotliDecompress/brotli/enc/entropy_encode.cpp
+    lib/BrotliDecompress/brotli/enc/fast_log.cpp
+    lib/BrotliDecompress/brotli/enc/histogram.cpp
+    lib/BrotliDecompress/brotli/enc/literal_cost.cpp
+    lib/BrotliDecompress/brotli/enc/memory.cpp
+    lib/BrotliDecompress/brotli/enc/metablock.cpp
+    lib/BrotliDecompress/brotli/enc/static_dict.cpp
+    lib/BrotliDecompress/brotli/enc/utf8_util.cpp
+)
+
+set(BROTI_DECOMPRESS
+        lib/BrotliDecompress/BrotliDecompress.cpp
+        lib/BrotliDecompress/BrotliDecompressLib.h
 )
 
 set(INCLUDE_FILE
@@ -140,8 +185,6 @@ set(PROJECT_SOURCES
         ${LIBRARY_SOURCES}
         ${WINDOW_SOURCES}
         ${INCLUDE_FILE}
-        ${LZMA_SDK}
-        ${UEFI_DECOMPRESS}
         ${app_icon_resource_windows}
         ${UI_SOURCES}
 )
@@ -169,7 +212,15 @@ else()
     endif()
 endif()
 
-target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld)
+add_library(Lzma STATIC ${LZMA_SDK})
+add_library(UefiDecompress STATIC ${UEFI_DECOMPRESS})
+add_library(Brotli STATIC ${BROTI_DECOMPRESS})
+add_library(BrotliCommon STATIC ${BROTLI_COMMON_C})
+add_library(BrotliDec STATIC ${BROTLI_DEC_C})
+add_library(BrotliEnc STATIC ${BROTLI_ENC_C})
+target_link_libraries(Brotli PRIVATE BrotliCommon BrotliDec BrotliEnc)
+
+target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Brotli Lzma UefiDecompress)
 
 set_target_properties(BiosViewer PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

@@ -8,7 +8,7 @@
 #include "Sdk/C/7zTypes.h"
 #include "Sdk/C/7zVersion.h"
 #include "Sdk/C/LzmaDec.h"
-#include "LzmaDecompressLibInternal.h"
+#include "LzmaDecompressLib.h"
 
 typedef struct {
   ISzAlloc    Functions;
