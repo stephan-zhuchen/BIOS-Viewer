@@ -17,7 +17,7 @@ namespace UefiSpace {
             isTE = true;
             teHeader = *(EFI_TE_IMAGE_HEADER*)file;
         } else
-            throw exception("Wrong Magic number");
+            throw BiosException("Wrong Magic number");
     }
 
     string PeCoff::getMachineType() const {
@@ -29,28 +29,20 @@ namespace UefiSpace {
         switch (machine) {
         case IMAGE_FILE_MACHINE_I386:
             return "x86";
-            break;
         case IMAGE_FILE_MACHINE_EBC:
             return "EBC";
-            break;
         case IMAGE_FILE_MACHINE_X64:
             return "x86_64";
-            break;
         case IMAGE_FILE_MACHINE_ARM:
             return "ARM";
-            break;
         case IMAGE_FILE_MACHINE_ARMT:
             return "ARMT";
-            break;
         case IMAGE_FILE_MACHINE_ARM64:
             return "ARM64";
-            break;
         case IMAGE_FILE_MACHINE_RISCV64:
             return "RISC-V";
-            break;
         case IMAGE_FILE_MACHINE_LOONGARCH64:
             return "LoongArch";
-            break;
         default:
             break;
         }
@@ -110,21 +102,25 @@ namespace UefiSpace {
             } else if (Opcode == EFI_DEP_NOT) {
                 string temp = OrganizedDepexList.at(OrganizedDepexList.size() - 1);
                 OrganizedDepexList.pop_back();
-                temp = "NOT " + temp;
+                temp.insert(0, "NOT ");
                 OrganizedDepexList.push_back(temp);
             } else if (Opcode == EFI_DEP_AND) {
                 string top = OrganizedDepexList.at(OrganizedDepexList.size() - 1);
                 OrganizedDepexList.pop_back();
                 string second = OrganizedDepexList.at(OrganizedDepexList.size() - 1);
                 OrganizedDepexList.pop_back();
-                string newDepex = second + "\nAND\n" + top;
+                std::stringstream ss;
+                ss << second << "\nAND\n" << top;
+                string newDepex = ss.str();
                 OrganizedDepexList.push_back(newDepex);
             } else if (Opcode == EFI_DEP_OR) {
                 string top = OrganizedDepexList.at(OrganizedDepexList.size() - 1);
                 OrganizedDepexList.pop_back();
                 string second = OrganizedDepexList.at(OrganizedDepexList.size() - 1);
                 OrganizedDepexList.pop_back();
-                string newDepex = second + "\nOR\n" + top;
+                std::stringstream ss;
+                ss << second << "\nOR\n" << top;
+                string newDepex = ss.str();
                 OrganizedDepexList.push_back(newDepex);
             }
             Opcode = this->getUINT8(offset);
@@ -164,8 +160,7 @@ namespace UefiSpace {
             opStr = "End";
             break;
         default:
-            throw exception("Invalid opcode");
-            break;
+            throw BiosException("Invalid opcode");
         }
         return opStr;
     }
@@ -180,7 +175,7 @@ namespace UefiSpace {
             ValidFlag = false;
             return;
         }
-        if (needValidation && Buffer::CaculateSum8(fv, length) != 0) {
+        if (needValidation && Buffer::CalculateSum8(fv, length) != 0) {
             ValidFlag = false;
             return;
         }
@@ -191,7 +186,7 @@ namespace UefiSpace {
         AcpiTableOemTableID = Buffer::charToString((INT8*)&AcpiHeader.OemTableId, sizeof(UINT32), false);
     }
 
-    ACPI_Class::~ACPI_Class() {}
+    ACPI_Class::~ACPI_Class() = default;
 
     bool ACPI_Class::isValid() const {
         return ValidFlag;
@@ -205,14 +200,14 @@ namespace UefiSpace {
         if (size != length) {
             return false;
         }
-        if (Buffer::CaculateSum8(ImageBase, length) != 0) {
+        if (Buffer::CalculateSum8(ImageBase, length) != 0) {
             return false;
         }
         return true;
     }
 
     void ACPI_Class::setInfoStr() {
-        INT64 width = 20;
+        INT32 width = 20;
         stringstream ss;
         stringstream guidInfo;
         ss.setf(ios::left);

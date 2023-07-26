@@ -11,7 +11,7 @@
 
 void StartWindow::ActionSeperateBinaryTriggered()
 {
-    if (TabData.size() == 0)
+    if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->InputImage == nullptr) {
@@ -24,7 +24,7 @@ void StartWindow::ActionSeperateBinaryTriggered()
     QFormLayout form(&dialog);
     // Offset
     QString Offset = QString("Offset: ");
-    HexSpinBox *OffsetSpinbox = new HexSpinBox(&dialog);
+    auto *OffsetSpinbox = new HexSpinBox(&dialog);
     OffsetSpinbox->setFocus();
     OffsetSpinbox->selectAll();
     form.addRow(Offset, OffsetSpinbox);
@@ -90,7 +90,7 @@ void BiosViewerWindow::ActionExtractBIOSTriggered()
 
 void StartWindow::ActionSearchTriggered()
 {
-    if (TabData.size() == 0)
+    if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
@@ -112,7 +112,7 @@ void BiosViewerWindow::RecursiveSearchOffset(DataModel* model, INT64 offset, vec
 
 void StartWindow::ActionGotoTriggered()
 {
-    if (TabData.size() == 0)
+    if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
@@ -124,7 +124,7 @@ void StartWindow::ActionGotoTriggered()
 
 void StartWindow::ActionCollapseTriggered()
 {
-    if (TabData.size() == 0)
+    if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
@@ -153,7 +153,7 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered()
         return;
     }
 
-    Buffer *NewBiosBuffer = new BaseLibrarySpace::Buffer(new std::ifstream(BiosName.toStdString(), std::ios::in | std::ios::binary));
+    auto *NewBiosBuffer = new BaseLibrarySpace::Buffer(new std::ifstream(BiosName.toStdString(), std::ios::in | std::ios::binary));
     INT64 NewBiosSize = NewBiosBuffer->getBufferSize();
     if (NewBiosSize != InputData->BiosImage->size) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "Do not support replacing BIOS of different size!");
@@ -226,7 +226,7 @@ void BiosViewerWindow::SearchButtonClicked()
 
 void StartWindow::ActionExtractBinaryTriggered()
 {
-    if (TabData.size() == 0)
+    if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->InputImage == nullptr) {
@@ -239,13 +239,13 @@ void StartWindow::ActionExtractBinaryTriggered()
     QFormLayout form(&dialog);
     // Offset
     QString Offset = QString("Offset: ");
-    HexSpinBox *OffsetSpinbox = new HexSpinBox(&dialog);
+    auto *OffsetSpinbox = new HexSpinBox(&dialog);
     OffsetSpinbox->setFocus();
     OffsetSpinbox->selectAll();
     form.addRow(Offset, OffsetSpinbox);
     // Length
     QString Length = QString("Length: ");
-    HexSpinBox *LengthSpinbox = new HexSpinBox(&dialog);
+    auto *LengthSpinbox = new HexSpinBox(&dialog);
     form.addRow(Length, LengthSpinbox);
     // Add Cancel and OK button
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
@@ -263,8 +263,8 @@ void StartWindow::ActionExtractBinaryTriggered()
             return;
         }
 
-        QFileInfo fileinfo {WindowData->OpenedFileName};
-        QString outputPath = fileinfo.dir().path() + "/" + fileinfo.baseName() + "_Extract.bin";
+        QFileInfo fileInfo {WindowData->OpenedFileName};
+        QString outputPath = fileInfo.dir().path() + "/" + fileInfo.baseName() + "_Extract.bin";
         QString BinaryName = QFileDialog::getSaveFileName(this,
                                                         tr("Extract Binary"),
                                                         outputPath,

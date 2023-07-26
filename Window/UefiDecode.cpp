@@ -5,7 +5,7 @@
 #include "iwfi.h"
 #include "ui_BiosWindow.h"
 
-bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) {
+bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     using namespace std;
 
     Buffer *buffer = WindowData->buffer;
@@ -23,7 +23,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) {
     buffer->setOffset(FRBA_address);
     UINT32 temp;
     temp = buffer->getUINT32();
-    FlashRegionBaseArea *FlashRegion = (FlashRegionBaseArea*)(&temp);
+    auto *FlashRegion = (FlashRegionBaseArea*)(&temp);
     if (FlashRegion->getBase() != 0) {
         return false;
     }
@@ -31,7 +31,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) {
         return false;
     }
     buffer->setOffset(0);
-    FlashDescriptorClass *flashDescriptorVolume = new FlashDescriptorClass(buffer->getBytes(FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
+    auto *flashDescriptorVolume = new FlashDescriptorClass(buffer->getBytes(FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
     InputData->flashmap += QString::fromStdString(flashDescriptorVolume->getFlashmap());
     InputData->IFWI_Sections.push_back(flashDescriptorVolume);
     InputData->IFWI_ModelData.push_back(new DataModel(flashDescriptorVolume, "Flash Descriptor", "Region", ""));
@@ -46,7 +46,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) {
         return false;
     if (EcRegion.limit != 0) {
         buffer->setOffset(EcRegion.getBase());
-        EC_RegionClass *EcVolume = new EC_RegionClass(buffer->getBytes(EcRegion.getSize()), EcRegion.getSize(), EcRegion.getBase());
+        auto *EcVolume = new EC_RegionClass(buffer->getBytes(EcRegion.getSize()), EcRegion.getSize(), EcRegion.getBase());
         InputData->flashmap += QString::fromStdString(EcVolume->getFlashmap());
         InputData->IFWI_Sections.push_back(EcVolume);
         InputData->IFWI_ModelData.push_back(new DataModel(EcVolume, "EC", "Region", ""));
@@ -56,7 +56,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) {
         return false;
     if (GbERegion.limit != 0) {
         buffer->setOffset(GbERegion.getBase());
-        GbE_RegionClass *GbEVolume = new GbE_RegionClass(buffer->getBytes(GbERegion.getSize()), GbERegion.getSize(), GbERegion.getBase());
+        auto *GbEVolume = new GbE_RegionClass(buffer->getBytes(GbERegion.getSize()), GbERegion.getSize(), GbERegion.getBase());
         InputData->flashmap += QString::fromStdString(GbEVolume->getFlashmap());
         InputData->IFWI_Sections.push_back(GbEVolume);
         InputData->IFWI_ModelData.push_back(new DataModel(GbEVolume, "GbE", "Region", ""));
@@ -66,22 +66,22 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) {
         return false;
     if (MeRegion.limit != 0) {
         buffer->setOffset(MeRegion.getBase());
-        ME_RegionClass *MeVolume = new ME_RegionClass(buffer->getBytes(MeRegion.getSize()), MeRegion.getSize(), MeRegion.getBase());
+        auto *MeVolume = new ME_RegionClass(buffer->getBytes(MeRegion.getSize()), MeRegion.getSize(), MeRegion.getBase());
         InputData->flashmap += QString::fromStdString(MeVolume->getFlashmap());
         InputData->flashmap += QString::fromStdString(MeVolume->CSE_Layout->getFlashmap());
         InputData->IFWI_Sections.push_back(MeVolume);
-        DataModel *MeModel = new DataModel(MeVolume, "CSE", "Region", "");
+        auto *MeModel = new DataModel(MeVolume, "CSE", "Region", "");
         InputData->IFWI_ModelData.push_back(MeModel);
         if (MeVolume->CSE_Layout->isValid()) {
             MeModel->volumeModelData.push_back(new DataModel(MeVolume->CSE_Layout, "CSE Layout Table", "Partition", ""));
             for (CSE_PartitionClass* Partition:MeVolume->CSE_Layout->CSE_Partitions) {
                 InputData->flashmap += QString::fromStdString(Partition->getFlashmap());
                 QString MeModelName = QString::fromStdString(Partition->PartitionName);
-                DataModel *PartitionModel = new DataModel(Partition, MeModelName, "Partition", "");
+                auto *PartitionModel = new DataModel(Partition, MeModelName, "Partition", "");
                 for (CSE_PartitionClass* ChildPartition:Partition->ChildPartitions) {
                     InputData->flashmap += QString::fromStdString(ChildPartition->getFlashmap());
                     QString ChildPartitionName = QString::fromStdString(ChildPartition->PartitionName);
-                    DataModel *ChildPartitionModel = new DataModel(ChildPartition, ChildPartitionName, "Partition", "");
+                    auto *ChildPartitionModel = new DataModel(ChildPartition, ChildPartitionName, "Partition", "");
                     PartitionModel->volumeModelData.push_back(ChildPartitionModel);
                 }
                 MeModel->volumeModelData.push_back(PartitionModel);
@@ -93,7 +93,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) {
         return false;
     if (OsseRegion.limit != 0) {
         buffer->setOffset(OsseRegion.getBase());
-        OSSE_RegionClass *OsseVolume = new OSSE_RegionClass(buffer->getBytes(OsseRegion.getSize()), OsseRegion.getSize(), OsseRegion.getBase());
+        auto *OsseVolume = new OSSE_RegionClass(buffer->getBytes(OsseRegion.getSize()), OsseRegion.getSize(), OsseRegion.getBase());
         InputData->flashmap += QString::fromStdString(OsseVolume->getFlashmap());
         InputData->IFWI_Sections.push_back(OsseVolume);
         InputData->IFWI_ModelData.push_back(new DataModel(OsseVolume, "OSSE", "Region", ""));
@@ -130,7 +130,7 @@ void BiosViewerWindow::setBiosFvData()
             pushDataToVector(offset, bufferSize - offset);
             return;
         }
-        EFI_FIRMWARE_VOLUME_HEADER *fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
+        auto *fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
         INT64 FvLength = fvHeader->FvLength;
 
         INT64 searchInterval = 0x100;
@@ -191,7 +191,7 @@ void BiosViewerWindow::setFfsData() {
         auto FvDecoder = [this, EnableMultiThread](int index) {
             FirmwareVolume *volume = InputData->FirmwareVolumeData.at(index);
             volume->decodeFfs(EnableMultiThread);
-            FvModel* fvm = new FvModel(volume);
+            auto* fvm = new FvModel(volume);
             if (InputData->IFWI_exist) {
                 InputData->IFWI_ModelData.at(InputData->IFWI_ModelData.size() - 1)->volumeModelData.at(index) = fvm;
             } else {
@@ -207,32 +207,32 @@ void BiosViewerWindow::setFfsData() {
     for (class thread& t:threadPool) {
         t.join();
     }
-    float time = (double)timer.nsecsElapsed()/(double)1000000;
+    double time = (double)timer.nsecsElapsed()/(double)1000000;
     qDebug() << "setFfsData time = " << time << "ms";
 }
 
-void BiosViewerWindow::pushDataToVector(INT64 offset, INT64 length) {
+void BiosViewerWindow::pushDataToVector(INT64 offset, INT64 length) const {
     Buffer *buffer = WindowData->buffer;
     buffer->setOffset(offset);
     INT64 RemainingSize = buffer->getRemainingSize();
     if (RemainingSize < length) {
-        FirmwareVolume *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
+        auto *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
         InputData->FirmwareVolumeData.push_back(volume);
         return;
     }
     try {
         UINT8* fvData = buffer->getBytes(length);  // heap memory
-        FirmwareVolume *volume = new FirmwareVolume(fvData, length, offset);
+        auto *volume = new FirmwareVolume(fvData, length, offset);
         InputData->FirmwareVolumeBuffer.push_back(fvData);
         InputData->FirmwareVolumeData.push_back(volume);
     } catch (...) {
-        FirmwareVolume *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
+        auto *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
         InputData->FirmwareVolumeData.push_back(volume);
     }
 }
 
-void BiosViewerWindow::HighlightTreeItem(vector<INT32> rows) {
-    if (rows.size() == 0)
+void BiosViewerWindow::HighlightTreeItem(vector<INT32> rows) const {
+    if (rows.empty())
         return;
     QModelIndex itemIndex =  ui->treeWidget->model()->index(rows.at(0), 0, QModelIndex());
     for (int var = 1; var < rows.size(); ++var) {
@@ -242,7 +242,7 @@ void BiosViewerWindow::HighlightTreeItem(vector<INT32> rows) {
 }
 
 void BiosViewerWindow::setTreeData() {
-    QTreeWidgetItem *ImageOverviewItem = new QTreeWidgetItem(InputData->InputImageModel->getData());
+    auto *ImageOverviewItem = new QTreeWidgetItem(InputData->InputImageModel->getData());
     ImageOverviewItem->setData(BiosViewerData::Name, Qt::UserRole, QVariant::fromValue((DataModel*)InputData->InputImageModel));
     ImageOverviewItem->setFont(BiosViewerData::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
     ImageOverviewItem->setFont(BiosViewerData::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
@@ -255,7 +255,7 @@ void BiosViewerWindow::setTreeData() {
 
     for (int i = 0; i < InputData->IFWI_ModelData.size(); ++i) {
         DataModel *FvModel = InputData->IFWI_ModelData.at(i);
-        QTreeWidgetItem *fvItem = new QTreeWidgetItem(FvModel->getData());
+        auto *fvItem = new QTreeWidgetItem(FvModel->getData());
         fvItem->setData(BiosViewerData::Name, Qt::UserRole, QVariant::fromValue((DataModel*)FvModel));
         ui->treeWidget->addTopLevelItem(fvItem);
 
@@ -267,7 +267,7 @@ void BiosViewerWindow::setTreeData() {
 }
 
 void BiosViewerWindow::addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData) {
-    QTreeWidgetItem *Item = new QTreeWidgetItem(modelData->getData());
+    auto *Item = new QTreeWidgetItem(modelData->getData());
     Item->setData(BiosViewerData::Name, Qt::UserRole, QVariant::fromValue(modelData));
     parentItem->addChild(Item);
     for (auto volumeModel:modelData->volumeModelData) {
@@ -291,7 +291,7 @@ void BiosViewerWindow::erasePadding(vector<DataModel*> &items) {
     }
 }
 
-void BiosViewerWindow::setPanelInfo(INT64 offset, INT64 size)
+void BiosViewerWindow::setPanelInfo(INT64 offset, INT64 size) const
 {
     stringstream Info;
     Info.setf(ios::left);
@@ -306,6 +306,6 @@ void BiosViewerWindow::setPanelInfo(INT64 offset, INT64 size)
     ui->AddressPanel->setText(panelInfo);
 }
 
-bool BiosViewerWindow::isDarkMode() {
+bool BiosViewerWindow::isDarkMode() const {
     return WindowData->DarkmodeFlag;
 }

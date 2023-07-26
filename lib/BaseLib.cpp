@@ -55,7 +55,7 @@ namespace BaseLibrarySpace {
         offset += 1;
         char value{};
         buffer->read(&value, 1);
-        return (INT16)value;
+        return value;
     }
 
     INT16 Buffer::getINT16() {
@@ -168,7 +168,7 @@ namespace BaseLibrarySpace {
         return length - (FullLength - offset);
     }
 
-    string Buffer::charToString(INT8* address, INT64 length, bool hasZeroEnding) {
+    string Buffer::charToString(const INT8* address, INT64 length, bool hasZeroEnding) {
         INT8 *cStr;
         if (hasZeroEnding)
             cStr = new INT8[length];
@@ -184,7 +184,7 @@ namespace BaseLibrarySpace {
         return result;
     }
 
-    string Buffer::wcharToString(CHAR16* wcharAddress, INT64 length, bool hasZeroEnding) {
+    string Buffer::wcharToString(const CHAR16* wcharAddress, INT64 length, bool hasZeroEnding) {
         UINT8* charAddress;
         INT64 charSize = length / 2;
         if (hasZeroEnding)
@@ -218,7 +218,7 @@ namespace BaseLibrarySpace {
         return str;
     }
 
-    UINT8 Buffer::CaculateSum8(const UINT8 *Buffer, INT64 Size) {
+    UINT8 Buffer::CalculateSum8(const UINT8 *Buffer, INT64 Size) {
         UINT8 Sum = 0;
         //
         // Perform the byte sum for buffer
@@ -230,7 +230,7 @@ namespace BaseLibrarySpace {
         return (UINT8) (0x100 - Sum);
     }
 
-    UINT16 Buffer::CaculateSum16(UINT16 *Buffer, INT64 Size) {
+    UINT16 Buffer::CalculateSum16(const UINT16 *Buffer, INT64 Size) {
         UINT16  Sum = 0;
         //
         // Perform the word sum for buffer
@@ -242,7 +242,7 @@ namespace BaseLibrarySpace {
         return (UINT16) (0x10000 - Sum);
     }
 
-    UINT32 Buffer::CaculateSum32(UINT32 *Buffer, INT64 Size) {
+    UINT32 Buffer::CalculateSum32(const UINT32 *Buffer, INT64 Size) {
         UINT32  Sum;
         UINTN   Count;
         UINTN   Total;
@@ -259,8 +259,8 @@ namespace BaseLibrarySpace {
         return Sum;
     }
 
-    INT32 Buffer::getSizeFromUINT24(UINT8* address) {
-        return *(UINT32*)address & 0xFFFFFF;
+    INT32 Buffer::getSizeFromUINT24(const UINT8* address) {
+        return (INT32)*(UINT32*)address & 0xFFFFFF;
     }
 
     void Buffer::saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size) {
@@ -395,19 +395,12 @@ namespace BaseLibrarySpace {
         return *this;
     }
 
-    CapsuleException::CapsuleException() : message("Error.") {}
+    BiosException::BiosException() : message("Error.") {}
 
-    CapsuleException::CapsuleException(const string& str) : message("Error : " + str) {}
+    BiosException::BiosException(const string& str) : message("Error : " + str) {}
 
-    const char* CapsuleException::what() const noexcept {
+    const char* BiosException::what() const noexcept {
         return message.c_str();
     }
 
-    CapsuleError::CapsuleError() : message("Error.") {}
-
-    CapsuleError::CapsuleError(const string& str) : message(str) {}
-
-    const char* CapsuleError::what() const noexcept {
-        return message.c_str();
-    }
 }

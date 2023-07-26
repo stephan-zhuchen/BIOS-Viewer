@@ -38,9 +38,9 @@ class CSE_PartitionClass;
 struct FlashRegionBaseArea {
     UINT16 base;
     UINT16 limit;
-    UINT32 getBase();
-    UINT32 getLimit();
-    UINT32 getSize();
+    UINT32 getBase() const;
+    UINT32 getLimit() const;
+    UINT32 getSize() const;
     void   setBase(UINT32 address);
     void   setLimit(UINT32 address);
 };
@@ -52,16 +52,16 @@ public:
     FLASH_REGION_TYPE RegionType;
     bool isValid() const;
     IfwiVolume(UINT8* file, INT64 RegionLength, INT64 FlashLength, FLASH_REGION_TYPE Type);
-    ~IfwiVolume();
+    ~IfwiVolume() override;
     virtual std::string getFlashmap();
 };
 
 class FlashDescriptorClass : public IfwiVolume {
 public:
-    FLASH_DESCRIPTOR_HEADER descriptorHeader;
-    FLASH_DESCRIPTOR_MAP    descriptorMap;
-    FLASH_DESCRIPTOR_COMPONENT_SECTION FlashComponentSection;
-    FLASH_DESCRIPTOR_REGION_SECTION    FlashRegionSection;
+    FLASH_DESCRIPTOR_HEADER descriptorHeader{};
+    FLASH_DESCRIPTOR_MAP    descriptorMap{};
+    FLASH_DESCRIPTOR_COMPONENT_SECTION FlashComponentSection{};
+    FLASH_DESCRIPTOR_REGION_SECTION    FlashRegionSection{};
     std::vector<FlashRegionBaseArea> RegionList;
     INT64 FlashTotalSize;
     UINT8 descriptorVersion{2};
@@ -77,8 +77,8 @@ public:
 
 class GbE_RegionClass : public IfwiVolume {
 private:
-    GBE_MAC_ADDRESS MacAddress;
-    GBE_VERSION     GbeVersion;
+    GBE_MAC_ADDRESS MacAddress{};
+    GBE_VERSION     GbeVersion{};
 public:
     GbE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset);
     ~GbE_RegionClass();
@@ -88,7 +88,7 @@ public:
 
 class ME_RegionClass : public IfwiVolume {
 private:
-    ME_VERSION        MeVersion;
+    ME_VERSION        MeVersion{};
 public:
     CSE_LayoutClass   *CSE_Layout{nullptr};
     ME_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset);
@@ -104,7 +104,7 @@ private:
     union IFWI_LAYOUT_HEADER {
         IFWI_16_LAYOUT_HEADER   ifwi16Header;
         IFWI_17_LAYOUT_HEADER   ifwi17Header;
-    } ifwiHeader;
+    } ifwiHeader{};
 public:
     std::vector<CSE_PartitionClass*>  CSE_Partitions;
     CSE_LayoutClass(UINT8* file, INT64 RegionLength, INT64 offset);
@@ -116,14 +116,14 @@ public:
 
 class CSE_PartitionClass : public IfwiVolume {
 private:
-    BPDT_HEADER bpdt_Header;
-    FPT_HEADER  fpt_Header;
+    BPDT_HEADER bpdt_Header{};
+    FPT_HEADER  fpt_Header{};
 public:
     std::string PartitionName;
     enum PartitionLevel {Level1=0, Level2, Level3} level;
     std::vector<CSE_PartitionClass*> ChildPartitions;
     CSE_PartitionClass(UINT8* file, INT64 RegionLength, INT64 offset, std::string name, PartitionLevel lv);
-    ~CSE_PartitionClass();
+    ~CSE_PartitionClass() override;
     void decodeBootPartition();
     void decodeDataPartition();
     static std::string bpdtEntryTypeToString(const UINT16 type);

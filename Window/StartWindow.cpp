@@ -6,6 +6,7 @@
 #include <QInputDialog>
 #include <QElapsedTimer>
 #include <QProcess>
+#include <utility>
 #include "SettingsDialog.h"
 #include "UEFI/GuidDefinition.h"
 #include "StartWindow.h"
@@ -17,7 +18,7 @@ UINT32       OpenedWindow = 0;
 StartWindow::StartWindow(QString appPath, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::StartWindow),
-    appPath(appPath)
+    appPath(std::move(appPath))
 {
     ui->setupUi(this);
     showHintWindow();
@@ -122,7 +123,7 @@ void StartWindow::initSettings() {
 
 void StartWindow::refresh() {
     initSettings();
-    if (TabData.size() == 0)
+    if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
@@ -132,14 +133,14 @@ void StartWindow::refresh() {
     }
 }
 
-void StartWindow::OpenFile(QString path, bool onlyHexView) {
-    if (TabData.size() == 0)
+void StartWindow::OpenFile(const QString& path, bool onlyHexView) {
+    if (TabData.empty())
         showTabWindow();
 
-    BaseLibrarySpace::Buffer *buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
+    auto *buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
     if (buffer != nullptr) {
         this->setWindowTitle("BIOS Viewer -- " + path);
-        GeneralData *newTabData = new GeneralData(appPath);
+        auto *newTabData = new GeneralData(appPath);
         TabData.push_back(newTabData);
         newTabData->OpenedFileName = path;
         newTabData->WindowTitle += this->windowTitle();
@@ -152,7 +153,7 @@ void StartWindow::OpenFile(QString path, bool onlyHexView) {
 
         QFileInfo FileInfo(path);
         bool onlyHex = DisableBiosViewer || onlyHexView;
-        QMainWindow *tabWidget = new QMainWindow;
+        auto *tabWidget = new QMainWindow;
         if (!onlyHex && BiosViewerWindow::TryOpenBios(newTabData->InputImage, newTabData->InputImageSize)) {
             newTabData->CurrentWindow = WindowMode::BIOS;
             newTabData->BiosViewerUi->setupUi(tabWidget, newTabData);
@@ -182,19 +183,19 @@ void StartWindow::DoubleClickOpenFile(QString path) {
 }
 
 void StartWindow::showHintWindow() {
-    QWidget *centralwidget = new QWidget(this);
-    QLabel *HintLabel = new QLabel("Drag and drop or \"Start -> Open\" any File");
+    auto *centralwidget = new QWidget(this);
+    auto *HintLabel = new QLabel("Drag and drop or \"Start -> Open\" any File");
     HintLabel->setStyleSheet("color:grey;");
     HintLabel->setAlignment(Qt::AlignCenter);
     HintLabel->setFont(QFont(setting.value("BiosViewerFont").toString(), 28));
-    QVBoxLayout *StartLayout = new QVBoxLayout(centralwidget);
+    auto *StartLayout = new QVBoxLayout(centralwidget);
     StartLayout->addWidget(HintLabel);
     this->setCentralWidget(centralwidget);
 }
 
 void StartWindow::showTabWindow() {
-    QWidget *centralwidget = new QWidget(this);
-    QVBoxLayout *StartLayout = new QVBoxLayout(centralwidget);
+    auto *centralwidget = new QWidget(this);
+    auto *StartLayout = new QVBoxLayout(centralwidget);
     StartLayout->setObjectName("StartLayout");
     StartLayout->setContentsMargins(0, 0, 0, 0);
     MainTabWidget = new QTabWidget(centralwidget);
@@ -287,7 +288,7 @@ void StartWindow::ActionExitTriggered() {
 }
 
 void StartWindow::ActionSettingsTriggered() {
-    SettingsDialog *settingDialog = new SettingsDialog();
+    auto *settingDialog = new SettingsDialog();
     if (DarkmodeFlag) {
         settingDialog->setWindowIcon(QIcon(":/gear_light.svg"));
     }
@@ -317,14 +318,14 @@ void StartWindow::OpenInNewWindowTriggered() {
     QFileInfo fileinfo {fileName};
     setting.setValue("LastFilePath", fileinfo.path());
 
-    StartWindow *newWindow = new StartWindow(appPath);
+    auto *newWindow = new StartWindow(appPath);
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
     newWindow->show();
     newWindow->OpenFile(fileName);
 }
 
 void StartWindow::ActionExtractBIOSTriggered() {
-    if (TabData.size() == 0)
+    if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
@@ -333,7 +334,7 @@ void StartWindow::ActionExtractBIOSTriggered() {
 }
 
 void StartWindow::ActionReplaceBIOSTriggered() {
-    if (TabData.size() == 0)
+    if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
     if (WindowData->CurrentWindow == WindowMode::BIOS) {
@@ -353,13 +354,13 @@ void StartWindow::MainTabWidgetCloseRequested(int index) {
         delete data;
         TabData.erase(TabData.begin() + index);
         MainTabWidget->removeTab(index);
-        if (TabData.size() == 0)
+        if (TabData.empty())
             showHintWindow();
     }
 }
 
 void StartWindow::ActionTabWidgetClose() {
-    if (TabData.size() == 0) {
+    if (TabData.empty()) {
         ActionExitTriggered();
         return;
     }

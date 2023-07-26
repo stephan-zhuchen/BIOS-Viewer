@@ -19,8 +19,7 @@ namespace UefiSpace {
         offsetFromBegin(offset),
         isCompressed(Compressed) { }
 
-    Volume::~Volume() {
-    }
+    Volume::~Volume() = default;
 
     EFI_GUID Volume::getVolumeGuid() const {
         EFI_GUID VolumeGuid {0};
@@ -34,36 +33,36 @@ namespace UefiSpace {
 
     EFI_GUID Volume::getGUID(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         EFI_GUID guid = *(EFI_GUID*)(data + offset);
         return guid;
     }
 
-    UINT8 Volume::getUINT8(INT64 offset) {
+    UINT8 Volume::getUINT8(INT64 offset)  {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         return data[offset];
     }
 
     UINT16 Volume::getUINT16(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         return *(UINT16*)(data + offset);
     }
 
     UINT32 Volume::getUINT32(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         return *(UINT32*)(data + offset);
     }
 
     UINT8* Volume::getBytes(INT64 offset, INT64 length) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         UINT8 *value = new UINT8[length];
         for (INT64 i = 0; i < length; i++) {
@@ -74,28 +73,28 @@ namespace UefiSpace {
 
     UINT64 Volume::getUINT64(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         return *(UINT64*)(data + offset);
     }
 
     INT8 Volume::getINT8(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         return (INT8) data[offset];
     }
 
     INT16 Volume::getINT16(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         return *(INT16*)(data + offset);
     }
 
     INT32 Volume::getINT24(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         UINT8 value[4] {0};
         for (INT64 i = 0; i < 3; i++) {
@@ -106,14 +105,14 @@ namespace UefiSpace {
 
     INT32 Volume::getINT32(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         return *(INT32*)(data + offset);
     }
 
     INT64 Volume::getINT64(INT64 offset) {
         if (offset > size) {
-            throw exception(ErrorMsg);
+            throw BiosException(ErrorMsg);
         }
         return *(INT64*)(data + offset);
     }
@@ -139,7 +138,7 @@ namespace UefiSpace {
         CommonHeader = *(EFI_COMMON_SECTION_HEADER*)data;
         size = SECTION_SIZE(&CommonHeader);
         if (IS_SECTION2(&CommonHeader)) {
-            EFI_COMMON_SECTION_HEADER2 *ExtHeader = (EFI_COMMON_SECTION_HEADER2*)data;
+            auto *ExtHeader = (EFI_COMMON_SECTION_HEADER2*)data;
             size = SECTION2_SIZE(ExtHeader);
         }
     }
@@ -165,10 +164,10 @@ namespace UefiSpace {
     }
 
     INT64 CommonSection::getSectionSize(UINT8* file) {
-        EFI_COMMON_SECTION_HEADER *Header = (EFI_COMMON_SECTION_HEADER*)file;
+        auto *Header = (EFI_COMMON_SECTION_HEADER*)file;
         INT64 size = SECTION_SIZE(Header);
         if (IS_SECTION2(Header)) {
-            EFI_COMMON_SECTION_HEADER2 *ExtHeader = (EFI_COMMON_SECTION_HEADER2*)file;
+            auto *ExtHeader = (EFI_COMMON_SECTION_HEADER2*)file;
             size = SECTION2_SIZE(ExtHeader);
         }
         return size;
@@ -177,7 +176,7 @@ namespace UefiSpace {
     void CommonSection::SelfDecode() {
         INT64 HeaderSize = sizeof(EFI_COMMON_SECTION_HEADER);
         INT64 offset = sizeof(EFI_COMMON_SECTION_HEADER);
-        INT32 SectionSize = SECTION_SIZE(&CommonHeader);
+        UINT32 SectionSize = SECTION_SIZE(&CommonHeader);
         if (IS_SECTION2(&CommonHeader)) {
             isExtend = true;
             ExtendedSize = this->getUINT32(offset);
@@ -349,10 +348,10 @@ namespace UefiSpace {
     void CommonSection::DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize) {
         INT64 offset = 0;
         while (offset < bufferSize) {
-            EFI_COMMON_SECTION_HEADER *hdr = (EFI_COMMON_SECTION_HEADER*)(DecompressedBuffer + offset);
+            auto *hdr = (EFI_COMMON_SECTION_HEADER*)(DecompressedBuffer + offset);
             INT32 SectionSize = SECTION_SIZE(hdr);
             if (IS_SECTION2(hdr)) {
-                EFI_COMMON_SECTION_HEADER2 *hdr2 = (EFI_COMMON_SECTION_HEADER2*)(DecompressedBuffer + offset);
+                auto *hdr2 = (EFI_COMMON_SECTION_HEADER2*)(DecompressedBuffer + offset);
                 SectionSize = SECTION2_SIZE(hdr2);
             }
             auto DecompressedSection = new CommonSection(DecompressedBuffer + offset, SectionSize, offset, this->ParentFFS);
@@ -384,10 +383,10 @@ namespace UefiSpace {
     }
 
     bool CommonSection::CheckValidation() {
-        UINT8 SecTpye = CommonHeader.Type;
-        if ((SecTpye >= EFI_SECTION_ALL && SecTpye <= EFI_SECTION_DISPOSABLE) ||
-            (SecTpye >= EFI_SECTION_PE32 && SecTpye <= EFI_SECTION_SMM_DEPEX) ||
-            SecTpye != 0x1A) {
+        UINT8 SecType = CommonHeader.Type;
+        if ((SecType >= EFI_SECTION_ALL && SecType <= EFI_SECTION_DISPOSABLE) ||
+            (SecType >= EFI_SECTION_PE32 && SecType <= EFI_SECTION_SMM_DEPEX) ||
+            SecType != 0x1A) {
             if (!IS_SECTION2(&CommonHeader)) {
                 if (SECTION_SIZE(&CommonHeader) < getHeaderSize()) {
                     return false;
@@ -403,7 +402,7 @@ namespace UefiSpace {
     }
 
     void CommonSection::setInfoStr() {
-        INT64 width = 20;
+        INT32 width = 20;
         stringstream ss;
         stringstream guidInfo;
         ss.setf(ios::left);
@@ -558,10 +557,10 @@ namespace UefiSpace {
         // Calculate the header checksum
         UINT8 headerSumValue = 0;
         if (isExtended) {
-            headerSumValue = Buffer::CaculateSum8((UINT8*)&FfsExtHeader, sizeof(EFI_FFS_FILE_HEADER2));
+            headerSumValue = Buffer::CalculateSum8((UINT8 *) &FfsExtHeader, sizeof(EFI_FFS_FILE_HEADER2));
             headerSumValue = headerSumValue + FfsExtHeader.State + FfsExtHeader.IntegrityCheck.Checksum.File;
         } else {
-            headerSumValue = Buffer::CaculateSum8((UINT8*)&FfsHeader, sizeof(EFI_FFS_FILE_HEADER));
+            headerSumValue = Buffer::CalculateSum8((UINT8 *) &FfsHeader, sizeof(EFI_FFS_FILE_HEADER));
             headerSumValue = headerSumValue + FfsHeader.State + FfsHeader.IntegrityCheck.Checksum.File;
         }
         if (headerSumValue == 0)
@@ -605,19 +604,19 @@ namespace UefiSpace {
         }
         if (isApriori) {
             // Apriori files are encoded as raw CommonSections
-            CommonSection *Sec = new CommonSection(data + offset, offsetFromBegin + offset, this, this->isCompressed);
+            auto *Sec = new CommonSection(data + offset, offsetFromBegin + offset, this, this->isCompressed);
             Sec->isAprioriRaw = true;
             Sec->SelfDecode();
             Sections.push_back(Sec);
             return;
         }
         while (offset < size) {
-            EFI_COMMON_SECTION_HEADER *SecHeader = (EFI_COMMON_SECTION_HEADER*)(data + offset);
+            auto *SecHeader = (EFI_COMMON_SECTION_HEADER*)(data + offset);
             INT64 SecSize = SECTION_SIZE(SecHeader);
             if (SecSize == 0xFFFFFF) {
                 SecSize = this->getUINT32(offset + sizeof(EFI_COMMON_SECTION_HEADER));
             }
-            CommonSection *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this, this->isCompressed);
+            auto *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this, this->isCompressed);
             if (!Sec->CheckValidation()) {
                 delete Sec;
                 break;
@@ -635,7 +634,7 @@ namespace UefiSpace {
     }
 
     void FfsFile::setInfoStr() {
-        INT64 width = 18;
+        INT32 width = 18;
         stringstream ss;
         ss.setf(ios::left);
 
@@ -683,7 +682,7 @@ namespace UefiSpace {
             FirmwareVolumeSize = 0x48;
             isExt = false;
         } else {
-            EFI_FFS_FILE_HEADER *ExtFvFfs = (EFI_FFS_FILE_HEADER*)(data + 0x48);
+            auto *ExtFvFfs = (EFI_FFS_FILE_HEADER*)(data + 0x48);
             FirmwareVolumeSize = 0x48 + FFS_FILE_SIZE(ExtFvFfs);
             if (length < FirmwareVolumeHeader.ExtHeaderOffset) {
                 isCorrupted = true;
@@ -699,7 +698,8 @@ namespace UefiSpace {
         }
 
         // Check if the firmware volume has a valid checksum
-        UINT16 sumValue = Buffer::CaculateSum16((UINT16*)&FirmwareVolumeHeader, sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof (UINT16));
+        UINT16 sumValue = Buffer::CalculateSum16((UINT16 *) &FirmwareVolumeHeader,
+                                                 sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof(UINT16));
         if (sumValue == 0)
             checksumValid = true;
     }
@@ -794,7 +794,6 @@ namespace UefiSpace {
             for (thread &t:threadPool) {
                 t.join();
             }
-            // Bug here, occasionally hang
             std::sort(FfsFiles.begin(), FfsFiles.end(), [](FfsFile *f1, FfsFile *f2) { return f1->offsetFromBegin < f2->offsetFromBegin; });
         }
     }
@@ -804,7 +803,7 @@ namespace UefiSpace {
     }
 
     void FirmwareVolume::setInfoStr() {
-        INT64 width = 15;
+        INT32 width = 15;
         stringstream ss;
         ss.setf(ios::left);
         if (isEmpty)
@@ -847,7 +846,8 @@ namespace UefiSpace {
         if (address->FileSystemGuid.Data1 == 0xFFFFFFFF || address->FileSystemGuid.Data1 == 0x0) {
             return false;
         }
-        UINT16 sumValue = Buffer::CaculateSum16((UINT16*)address, sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof (UINT16));
+        UINT16 sumValue = Buffer::CalculateSum16((UINT16 *) address,
+                                                 sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof(UINT16));
         if (sumValue != 0)
             return false;
         return true;
@@ -878,7 +878,7 @@ namespace UefiSpace {
     }
 
     void NvVariableEntry::setInfoStr() {
-        INT64 width = 15;
+        INT32 width = 15;
         stringstream ss;
         ss.setf(ios::left);
 
@@ -904,7 +904,7 @@ namespace UefiSpace {
         while (VariableOffset < size) {
             if (*(UINT16*)(fv + VariableOffset) != 0x55AA)
                 break;
-            NvVariableEntry *VarEntry = new NvVariableEntry(fv + VariableOffset, offsetFromBegin + VariableOffset, AuthFlag);
+            auto *VarEntry = new NvVariableEntry(fv + VariableOffset, offsetFromBegin + VariableOffset, AuthFlag);
             VariableList.push_back(VarEntry);
             VariableOffset += VarEntry->size;
             Buffer::Align(VariableOffset, 0, 4);
@@ -917,7 +917,7 @@ namespace UefiSpace {
     }
 
     void NvStorageVariable::setInfoStr() {
-        INT64 width = 15;
+        INT32 width = 15;
         stringstream ss;
         ss.setf(ios::left);
 
@@ -944,14 +944,14 @@ namespace UefiSpace {
         }
     }
 
-    FspHeader::~FspHeader() {}
+    FspHeader::~FspHeader() = default;
 
     bool FspHeader::isValid() const {
         return validFlag;
     }
 
     void FspHeader::setInfoStr() {
-        INT64 width = 25;
+        INT32 width = 25;
         stringstream ss;
         ss.setf(ios::left);
         ss << setw(width) << "SpecVersion:"      << hex << uppercase << (UINT16)mTable.FspInfoHeader.SpecVersion << "h\n"
@@ -982,7 +982,7 @@ namespace UefiSpace {
     }
 
     bool FspHeader::isFspHeader(const UINT8 *ImageBase) {
-        UINT32 *signature = (UINT32*)ImageBase;
+        auto *signature = (UINT32*)ImageBase;
         if (*signature == FSP_INFO_HEADER_SIGNATURE) {
             return true;
         }
@@ -1018,7 +1018,7 @@ namespace UefiSpace {
     }
 
     void BiosImageVolume::setDebugFlag() {
-        INT64 pos = BiosID.find(".");
+        INT64 pos = BiosID.find('.');
         if (pos != string::npos && pos + 1 < BiosID.size()) {
             if (BiosID[pos + 1] == 'R') {
                 DebugFlag = false;
@@ -1033,7 +1033,7 @@ namespace UefiSpace {
         INT32 NV_index;
         for (NV_index = 0; NV_index < FvData->size(); ++NV_index) {
             FirmwareVolume *fv = FvData->at(NV_index);
-            if (fv->getFvGuid().GuidData == guidData->gEfiSystemNvDataFvGuid) {
+            if (fv->getFvGuid().GuidData == GuidDatabase::gEfiSystemNvDataFvGuid) {
                 NV_Region.first = fv->offsetFromBegin;
                 NV_Region.second = fv->size;
                 break;
@@ -1096,7 +1096,7 @@ namespace UefiSpace {
 
     string BiosImageVolume::getFlashmap() {
         decodeBiosRegion();
-        INT64 width = 8;
+        INT32 width = 8;
         stringstream ss;
         ss.setf(ios::right);
         ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
@@ -1130,10 +1130,10 @@ namespace UefiSpace {
             FirmwareVolume *volume = FvData->at(idx - 1);
             for(auto file:volume->FfsFiles) {
                 if (file->FfsHeader.Name == GuidDatabase::gBiosIdGuid) {
-                    if (file->Sections.size() == 0)
+                    if (file->Sections.empty())
                         return;
                     CommonSection *sec = file->Sections.at(0);
-                    CHAR16 *biosIdStr = (CHAR16*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
+                    auto *biosIdStr = (CHAR16*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
                     BiosID = Buffer::wstringToString(biosIdStr);
                     foundBiosID = true;
                     setDebugFlag();
@@ -1148,12 +1148,12 @@ namespace UefiSpace {
             FirmwareVolume *volume = FvData->at(idx - 1);
             for(auto file:volume->FfsFiles) {
                 if (file->FfsHeader.Name == GuidDatabase::gObbSha256HashBinGuid) {
-                    if (file->Sections.size() == 0)
+                    if (file->Sections.empty())
                         return;
                     CommonSection *sec = file->Sections.at(0);
                     if (sec->getSize() != sizeof(EFI_COMMON_SECTION_HEADER) + SHA256_DIGEST_LENGTH)
                         return;
-                    UINT8 *digest = (UINT8*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER));
+                    auto *digest = (UINT8*)(sec->data + sizeof(EFI_COMMON_SECTION_HEADER));
                     memcpy(ObbDigest, digest, SHA256_DIGEST_LENGTH);
                     ObbDigestValid = true;
                     return;
@@ -1163,7 +1163,7 @@ namespace UefiSpace {
     }
 
     void BiosImageVolume::setInfoStr() {
-        INT64 width = 15;
+        INT32 width = 15;
         stringstream ss;
         ss.setf(ios::left);
 
@@ -1184,7 +1184,7 @@ namespace UefiSpace {
         INT64 FitTableAddress = *(INT64*)(fv + length - DEFAULT_FIT_TABLE_POINTER_OFFSET) & 0xFFFFFF;
         FitTableAddress = Buffer::adjustBufferAddress(0x1000000, FitTableAddress, length); // get the relative address of FIT table
         if (FitTableAddress > length || FitTableAddress < 0) {
-            throw exception("NO FIT table!");
+            throw BiosException("NO FIT table!");
         }
         FitHeader = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(fv + FitTableAddress);
         UINT64 FitSignature = FitHeader.Address;
@@ -1192,7 +1192,8 @@ namespace UefiSpace {
             isValid = true;
             FitEntryNum = *(UINT32*)(FitHeader.Size) & 0xFFFFFF;
 
-            UINT8 Checksum = Buffer::CaculateSum8((UINT8 *)(fv + FitTableAddress), sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * FitEntryNum);
+            UINT8 Checksum = Buffer::CalculateSum8((UINT8 *) (fv + FitTableAddress),
+                                                   sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * FitEntryNum);
             if (Checksum == 0) {
                 isChecksumValid = true;
             }
@@ -1205,14 +1206,14 @@ namespace UefiSpace {
                     UINT64 RelativeMicrocodeAddress = Buffer::adjustBufferAddress(0x1000000, MicrocodeAddress, length);
                     if (RelativeMicrocodeAddress > (UINT64)length)
                         continue;
-                    MicrocodeHeaderClass *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, MicrocodeAddress);
+                    auto *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, MicrocodeAddress);
                     MicrocodeEntries.push_back(MicrocodeEntry);
                 } else if (FitEntry.Type == FIT_TABLE_TYPE_STARTUP_ACM) {
                     UINT64 AcmAddress = FitEntry.Address & 0xFFFFFF;
                     UINT64 RelativeAcmAddress = Buffer::adjustBufferAddress(0x1000000, AcmAddress, length);
                     if (RelativeAcmAddress > (UINT64)length)
                         continue;
-                    AcmHeaderClass *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, AcmAddress);
+                    auto *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, AcmAddress);
                     AcmEntries.push_back(AcmEntry);
                 } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST) {
                     // Use external BpmGen2 tool to parse KM and BPM info
@@ -1234,7 +1235,7 @@ namespace UefiSpace {
             }
         } else {
             isValid = false;
-            throw exception("NO FIT table!");
+            throw BiosException("NO FIT table!");
         }
     }
 
@@ -1301,7 +1302,7 @@ namespace UefiSpace {
             typeName = "Boot Key Manifest";
             break;
         default:
-            typeName = "Unkown";
+            typeName = "Unknown";
             break;
         }
         return typeName;
@@ -1318,12 +1319,12 @@ namespace UefiSpace {
         if (ExtendedTableLength != 0) {
             ExtendedTableHeader = (CPU_MICROCODE_EXTENDED_TABLE_HEADER *)(fv + microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
             if ((ExtendedTableLength > sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) && ((ExtendedTableLength & 0x3) == 0)) {
-                UINT32 CheckSum32 = Buffer::CaculateSum32((UINT32 *)ExtendedTableHeader, ExtendedTableLength);
+                UINT32 CheckSum32 = Buffer::CalculateSum32((UINT32 *) ExtendedTableHeader, ExtendedTableLength);
                 if (CheckSum32 != 0)
                     return;
                 UINT32 ExtendedTableCount = ExtendedTableHeader->ExtendedSignatureCount;
                 if (ExtendedTableCount <= (ExtendedTableLength - sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) / sizeof(CPU_MICROCODE_EXTENDED_TABLE)) {
-                    CPU_MICROCODE_EXTENDED_TABLE *ExtendedTable = (CPU_MICROCODE_EXTENDED_TABLE *)(ExtendedTableHeader + 1);
+                    auto *ExtendedTable = (CPU_MICROCODE_EXTENDED_TABLE *)(ExtendedTableHeader + 1);
                     for (UINT32 Index = 0; Index < ExtendedTableCount; Index++) {
                         ExtendedMicrocodeList.push_back(*ExtendedTable);
                         ExtendedTable += 1;
@@ -1333,10 +1334,10 @@ namespace UefiSpace {
         }
     }
 
-    MicrocodeHeaderClass::~MicrocodeHeaderClass() {}
+    MicrocodeHeaderClass::~MicrocodeHeaderClass() = default;
 
     void MicrocodeHeaderClass::setInfoStr() {
-        INT64 width = 20;
+        INT32 width = 20;
         stringstream ss;
         ss.setf(ios::left);
 
@@ -1354,7 +1355,7 @@ namespace UefiSpace {
                << setw(width) << "TotalSize:" << hex << uppercase << microcodeHeader.TotalSize << "h\n";
         }
 
-        if (ExtendedMicrocodeList.size() != 0) {
+        if (!ExtendedMicrocodeList.empty()) {
             for (auto ExtendedMicrocode:ExtendedMicrocodeList) {
                 ss << "\nExtended Microcode Info:" << "\n"
                    << setw(width) << "ProcessorSignature:" << hex << uppercase << ExtendedMicrocode.ProcessorSignature.Uint32 << "h\n";

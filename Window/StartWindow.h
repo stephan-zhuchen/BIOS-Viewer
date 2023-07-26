@@ -35,22 +35,22 @@ class StartWindow : public QMainWindow
 
 public:
     Ui::StartWindow  *ui;
-    QTabWidget       *MainTabWidget;
+    QTabWidget       *MainTabWidget{};
     vector<GeneralData*> TabData;
     bool             DisableBiosViewer{false};
 
     QString        appPath;
     bool           DarkmodeFlag{false};
     QSettings      setting{"Intel", "BiosViewer"};
-    QSettings      SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
+    QSettings      SysSettings{R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", QSettings::NativeFormat};
 
 
     explicit StartWindow(QString appPath, QWidget *parent = nullptr);
-    ~StartWindow();
+    ~StartWindow() override;
 
     void initSettings();
     void refresh();
-    void OpenFile(QString path, bool onlyHexView = false);
+    void OpenFile(const QString& path, bool onlyHexView = false);
     void DoubleClickOpenFile(QString path);
     void showHintWindow();
     void showTabWindow();

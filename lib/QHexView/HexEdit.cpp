@@ -1,14 +1,11 @@
 #include "qhexview.h"
 #include <QApplication>
 #include <QClipboard>
-#include <QFile>
 #include <QKeyEvent>
-#include <QPaintEvent>
 #include <QPainter>
 #include <QMessageBox>
 #include <QMenu>
 #include <QFileDialog>
-#include <QClipboard>
 #include <QMimeData>
 #include <QBuffer>
 #include "BaseLib.h"
@@ -352,49 +349,49 @@ void QHexView::initRightMenu() {
 
     CopyContent = new QAction("Copy");
     CopyContent->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
-    this->connect(CopyContent, SIGNAL(triggered(bool)), this, SLOT(CopyFromSelectedContent()));
+    connect(CopyContent, SIGNAL(triggered(bool)), this, SLOT(CopyFromSelectedContent()));
 
     PasteInsertContent = new QAction("Paste and Insert");
-    this->connect(PasteInsertContent, SIGNAL(triggered(bool)), this, SLOT(PasteAndInsertToContent()));
+    connect(PasteInsertContent, SIGNAL(triggered(bool)), this, SLOT(PasteAndInsertToContent()));
 
     PasteOverlapContent = new QAction("Paste and Overlap");
-    this->connect(PasteOverlapContent, SIGNAL(triggered(bool)), this, SLOT(PasteAndOverlapToContent()));
+    connect(PasteOverlapContent, SIGNAL(triggered(bool)), this, SLOT(PasteAndOverlapToContent()));
 
     DiscardChange = new QAction("Discard changes");
-    this->connect(DiscardChange, SIGNAL(triggered(bool)), this, SLOT(DiscardChangedContent()));
+    connect(DiscardChange, SIGNAL(triggered(bool)), this, SLOT(DiscardChangedContent()));
 
     EnableEditing = new QAction("Enable Editing");
-    this->connect(EnableEditing, SIGNAL(toggled(bool)), this, SLOT(SetEditingState(bool)));
+    connect(EnableEditing, SIGNAL(toggled(bool)), this, SLOT(SetEditingState(bool)));
 
     SaveContent = new QAction("Save selected content");
-    this->connect(SaveContent, SIGNAL(triggered(bool)), this, SLOT(SaveSelectedContent()));
+    connect(SaveContent, SIGNAL(triggered(bool)), this, SLOT(SaveSelectedContent()));
 
     CheckSum8 = new QAction("CheckSum8");
-    this->connect(CheckSum8, SIGNAL(triggered(bool)), this, SLOT(getChecksum8()));
+    connect(CheckSum8, SIGNAL(triggered(bool)), this, SLOT(getChecksum8()));
 
     CheckSum16 = new QAction("CheckSum16");
-    this->connect(CheckSum16, SIGNAL(triggered(bool)), this, SLOT(getChecksum16()));
+    connect(CheckSum16, SIGNAL(triggered(bool)), this, SLOT(getChecksum16()));
 
     CheckSum32 = new QAction("CheckSum32");
-    this->connect(CheckSum32, SIGNAL(triggered(bool)), this, SLOT(getChecksum32()));
+    connect(CheckSum32, SIGNAL(triggered(bool)), this, SLOT(getChecksum32()));
 
     md5_Menu = new QAction("MD5");
-    this->connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
+    connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
 
     sha1_Menu = new QAction("SHA1");
-    this->connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
+    connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
 
     sha224_Menu = new QAction("SHA224");
-    this->connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
+    connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
 
     sha256_Menu = new QAction("SHA256");
-    this->connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
+    connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
 
     sha384_Menu = new QAction("SHA384");
-    this->connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
+    connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
 
     sha512_Menu = new QAction("SHA512");
-    this->connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
+    connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
 
     if (isDarkMode) {
         CopyContent->setIcon(QIcon(":/copy_light.svg"));
@@ -561,7 +558,7 @@ void QHexView::CopyFromSelectedContent() {
     }
 
     QClipboard *clipboard = QGuiApplication::clipboard();
-    QMimeData *mimeData = new QMimeData;
+    auto *mimeData = new QMimeData;
     mimeData->setData("Hexedit/CopiedData", CopiedData);
     clipboard->setMimeData(mimeData);
 
@@ -609,9 +606,9 @@ void QHexView::PasteAndInsertToContent() {
         CursorPosition += 1;
     }
     INT32 idx = (INT32)(CursorPosition / 2);
-    for (INT32 i = 0; i < EditedPos.size(); ++i) {
-        if (EditedPos.at(i) >= CursorPosition) {
-            EditedPos.at(i) += CopiedData.size() * 2;
+    for (int & Pos : EditedPos) {
+        if (Pos >= CursorPosition) {
+            Pos += CopiedData.size() * 2;
         }
     }
     for (INT32 var = CursorPosition; var < CursorPosition + CopiedData.size() * 2; ++var) {
@@ -706,8 +703,8 @@ void QHexView::getChecksum8() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT8 *itemData = (UINT8 *)SelectedBuffer.data();
-    UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum8(itemData, length);
+    auto *itemData = (UINT8 *)SelectedBuffer.data();
+    UINT8 sum = BaseLibrarySpace::Buffer::CalculateSum8(itemData, length);
     QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 2, 16, QLatin1Char('0')).toUpper());
 }
 
@@ -717,8 +714,8 @@ void QHexView::getChecksum16() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT16 *itemData = (UINT16 *)SelectedBuffer.data();
-    UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum16(itemData, length / 2);
+    auto *itemData = (UINT16 *)SelectedBuffer.data();
+    UINT8 sum = BaseLibrarySpace::Buffer::CalculateSum16(itemData, length / 2);
     QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 4, 16, QLatin1Char('0')).toUpper());
 }
 
@@ -728,8 +725,8 @@ void QHexView::getChecksum32() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT32 *itemData = (UINT32 *)SelectedBuffer.data();
-    UINT8 sum = BaseLibrarySpace::Buffer::CaculateSum32(itemData, length / 4);
+    auto *itemData = (UINT32 *)SelectedBuffer.data();
+    UINT8 sum = BaseLibrarySpace::Buffer::CalculateSum32(itemData, length / 4);
     QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 8, 16, QLatin1Char('0')).toUpper());
 }
 
@@ -739,13 +736,13 @@ void QHexView::getMD5() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT8 *itemData = (UINT8 *)SelectedBuffer.data();
+    auto *itemData = (UINT8 *)SelectedBuffer.data();
     UINT8 md[MD5_DIGEST_LENGTH];
     MD5(itemData, length, md);
 
     QString hash;
-    for (INT32 i = 0; i < MD5_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("MD5"));
@@ -766,13 +763,13 @@ void QHexView::getSHA1() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT8 *itemData = (UINT8 *)SelectedBuffer.data();
+    auto *itemData = (UINT8 *)SelectedBuffer.data();
     UINT8 md[SHA_DIGEST_LENGTH];
     SHA1(itemData, length, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA1"));
@@ -793,13 +790,13 @@ void QHexView::getSHA224() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT8 *itemData = (UINT8 *)SelectedBuffer.data();
+    auto *itemData = (UINT8 *)SelectedBuffer.data();
     UINT8 md[SHA224_DIGEST_LENGTH];
     SHA224(itemData, length, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA224_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA224"));
@@ -820,13 +817,13 @@ void QHexView::getSHA256() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT8 *itemData = (UINT8 *)SelectedBuffer.data();
+    auto *itemData = (UINT8 *)SelectedBuffer.data();
     UINT8 md[SHA256_DIGEST_LENGTH];
     SHA256(itemData, length, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA256"));
@@ -847,13 +844,13 @@ void QHexView::getSHA384() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT8 *itemData = (UINT8 *)SelectedBuffer.data();
+    auto *itemData = (UINT8 *)SelectedBuffer.data();
     UINT8 md[SHA384_DIGEST_LENGTH];
     SHA384(itemData, length, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA384_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA384"));
@@ -874,13 +871,13 @@ void QHexView::getSHA512() {
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
-    UINT8 *itemData = (UINT8 *)SelectedBuffer.data();
+    auto *itemData = (UINT8 *)SelectedBuffer.data();
     UINT8 md[SHA512_DIGEST_LENGTH];
     SHA512(itemData, length, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA512_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA512"));

@@ -15,53 +15,53 @@ void BiosViewerWindow::initRightMenu() {
     DigestMenu = new QMenu("Digest");
     showPeCoff = new QAction("PE/COFF");
     showAcpiTable = new QAction("ACPI");
-    this->connect(showPeCoff,SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
-    this->connect(showAcpiTable,SIGNAL(triggered(bool)),this,SLOT(showAcpiTableView()));
+    connect(showPeCoff,SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
+    connect(showAcpiTable,SIGNAL(triggered(bool)),this,SLOT(showAcpiTableView()));
 
     showHex = new QAction("Hex View");
-    this->connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
+    connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
 
     showBodyHex = new QAction("Body Hex View");
-    this->connect(showBodyHex,SIGNAL(triggered(bool)),this,SLOT(showBodyHexView()));
+    connect(showBodyHex,SIGNAL(triggered(bool)),this,SLOT(showBodyHexView()));
 
     showDecompressedHex = new QAction("Decompressed Hex View");
-    this->connect(showDecompressedHex,SIGNAL(triggered(bool)),this,SLOT(showDecompressedHexView()));
+    connect(showDecompressedHex,SIGNAL(triggered(bool)),this,SLOT(showDecompressedHexView()));
 
     extractVolumeAction = new QAction("Extract");
-    this->connect(extractVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
+    connect(extractVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
 
     extractBodyVolumeAction = new QAction("Extract");
-    this->connect(extractBodyVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractBodyVolume()));
+    connect(extractBodyVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractBodyVolume()));
 
     showNvHex = new QAction("Variable Data Hex View");
-    this->connect(showNvHex,SIGNAL(triggered(bool)),this,SLOT(showNvHexView()));
+    connect(showNvHex,SIGNAL(triggered(bool)),this,SLOT(showNvHexView()));
 
     ExtractRegion = new QAction("Extract");
-    this->connect(ExtractRegion,SIGNAL(triggered(bool)),this,SLOT(extractIfwiRegion()));
+    connect(ExtractRegion,SIGNAL(triggered(bool)),this,SLOT(extractIfwiRegion()));
 
     ReplaceRegion = new QAction("Replace");
-    this->connect(ReplaceRegion,SIGNAL(triggered(bool)),this,SLOT(replaceIfwiRegion()));
+    connect(ReplaceRegion,SIGNAL(triggered(bool)),this,SLOT(replaceIfwiRegion()));
 
     ReplaceFile = new QAction("Replace");
-    this->connect(ReplaceFile,SIGNAL(triggered(bool)),this,SLOT(replaceFfsContent()));
+    connect(ReplaceFile,SIGNAL(triggered(bool)),this,SLOT(replaceFfsContent()));
 
     md5_Menu = new QAction("MD5");
-    this->connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
+    connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
 
     sha1_Menu = new QAction("SHA1");
-    this->connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
+    connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
 
     sha224_Menu = new QAction("SHA224");
-    this->connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
+    connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
 
     sha256_Menu = new QAction("SHA256");
-    this->connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
+    connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
 
     sha384_Menu = new QAction("SHA384");
-    this->connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
+    connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
 
     sha512_Menu = new QAction("SHA512");
-    this->connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
+    connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
 }
 
 void BiosViewerWindow::finiRightMenu() {
@@ -206,12 +206,12 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) {
 }
 
 void BiosViewerWindow::showHexView() {
-    HexViewDialog *hexDialog = new HexViewDialog();
+    auto *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
     UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
-    QByteArray *hexViewData = new QByteArray((char*)itemData, InputData->RightClickeditemModel->modelData->size);
+    auto *hexViewData = new QByteArray((char*)itemData, InputData->RightClickeditemModel->modelData->size);
     hexDialog->loadBuffer(*hexViewData,
                           InputData->InputImageModel->modelData,
                           InputData->RightClickeditemModel->modelData->offsetFromBegin,
@@ -230,11 +230,11 @@ void BiosViewerWindow::showBodyHexView() {
         return;
     }
 
-    HexViewDialog *hexDialog = new HexViewDialog();
+    auto *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
-    QByteArray *hexViewData = new QByteArray((char*)itemData, InputData->RightClickeditemModel->modelData->size);
+    auto *hexViewData = new QByteArray((char*)itemData, InputData->RightClickeditemModel->modelData->size);
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
     hexDialog->loadBuffer(BodyHexViewData,
                           InputData->InputImageModel->modelData,
@@ -250,11 +250,11 @@ void BiosViewerWindow::showDecompressedHexView() {
 
 }
 
-void BiosViewerWindow::showNvHexView() {
-    HexViewDialog *hexDialog = new HexViewDialog();
+void BiosViewerWindow::showNvHexView() const {
+    auto *hexDialog = new HexViewDialog();
     UINT8 *NvData = ((NvVariableEntry*)(InputData->RightClickeditemModel->modelData))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(InputData->RightClickeditemModel->modelData))->DataSize;
-    QByteArray *hexViewData = new QByteArray((char*)NvData, NvDataSize);
+    auto *hexViewData = new QByteArray((char*)NvData, NvDataSize);
     hexDialog->loadBuffer(*hexViewData,
                           InputData->InputImageModel->modelData,
                           InputData->RightClickeditemModel->modelData->offsetFromBegin,
@@ -276,11 +276,11 @@ void BiosViewerWindow::showPeCoffView() {
         return;
     }
     tempFile.close();
-    TabWindow *TabView = new TabWindow();
+    auto *TabView = new TabWindow();
     if (isDarkMode()) {
         TabView->setWindowIcon(QIcon(":/windows_light.svg"));
     }
-    QProcess *process = new QProcess(this);
+    auto *process = new QProcess(this);
     process->start(toolpath, QStringList() << "/DISASM" << filepath);
     process->waitForFinished();
     QString DisAssembly = process->readAllStandardOutput();
@@ -318,11 +318,11 @@ void BiosViewerWindow::showAcpiTableView() {
         return;
     }
     tempFile.close();
-    TabWindow *TabView = new TabWindow();
+    auto *TabView = new TabWindow();
     if (isDarkMode()) {
         TabView->setWindowIcon(QIcon(":/windows_light.svg"));
     }
-    QProcess *process = new QProcess(this);
+    auto *process = new QProcess(this);
     process->start(toolpath, QStringList() << "-d" << filepath);
     process->waitForFinished();
 
@@ -410,7 +410,7 @@ void BiosViewerWindow::replaceFfsContent() {
         return;
     }
 
-    Buffer *FileBuffer = new BaseLibrarySpace::Buffer(new std::ifstream(FileName.toStdString(), std::ios::in | std::ios::binary));
+    auto *FileBuffer = new BaseLibrarySpace::Buffer(new std::ifstream(FileName.toStdString(), std::ios::in | std::ios::binary));
     INT64 NewFileSize = FileBuffer->getBufferSize();
     INT64 FileSize = ((FfsFile*)InputData->RightClickeditemModel->modelData)->FfsSize - ((FfsFile*)InputData->RightClickeditemModel->modelData)->getHeaderSize();
     if (NewFileSize > FileSize) {
@@ -422,7 +422,7 @@ void BiosViewerWindow::replaceFfsContent() {
     delete FileBuffer;
 
     INT64 ReplaceOffset = InputData->RightClickeditemModel->modelData->offsetFromBegin + ((FfsFile*)InputData->RightClickeditemModel->modelData)->getHeaderSize();
-    UINT8* NewImage = new UINT8[WindowData->InputImageSize];
+    auto* NewImage = new UINT8[WindowData->InputImageSize];
     for (INT64 IfwiIdx = 0; IfwiIdx < ReplaceOffset; ++IfwiIdx) {
         NewImage[IfwiIdx] = WindowData->InputImage[IfwiIdx];
     }
@@ -441,14 +441,14 @@ void BiosViewerWindow::replaceFfsContent() {
     delete[] NewImage;
 }
 
-void BiosViewerWindow::getMD5() {
+void BiosViewerWindow::getMD5() const {
     UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[MD5_DIGEST_LENGTH];
     MD5(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
-    for (INT32 i = 0; i < MD5_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("MD5"));
@@ -463,14 +463,14 @@ void BiosViewerWindow::getMD5() {
     }
 }
 
-void BiosViewerWindow::getSHA1() {
+void BiosViewerWindow::getSHA1() const {
     UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA_DIGEST_LENGTH];
     SHA1(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
 
     QMessageBox msgBox;
@@ -486,14 +486,14 @@ void BiosViewerWindow::getSHA1() {
     }
 }
 
-void BiosViewerWindow::getSHA224() {
+void BiosViewerWindow::getSHA224() const {
     UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA224_DIGEST_LENGTH];
     SHA224(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA224_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA224"));
@@ -508,14 +508,14 @@ void BiosViewerWindow::getSHA224() {
     }
 }
 
-void BiosViewerWindow::getSHA256() {
+void BiosViewerWindow::getSHA256() const {
     UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA256_DIGEST_LENGTH];
     SHA256(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA256"));
@@ -530,14 +530,14 @@ void BiosViewerWindow::getSHA256() {
     }
 }
 
-void BiosViewerWindow::getSHA384() {
+void BiosViewerWindow::getSHA384() const {
     UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA384_DIGEST_LENGTH];
     SHA384(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA384_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA384"));
@@ -552,14 +552,14 @@ void BiosViewerWindow::getSHA384() {
     }
 }
 
-void BiosViewerWindow::getSHA512() {
+void BiosViewerWindow::getSHA512() const {
     UINT8 *itemData = InputData->RightClickeditemModel->modelData->data;
     UINT8 md[SHA512_DIGEST_LENGTH];
     SHA512(itemData, InputData->RightClickeditemModel->modelData->size, md);
 
     QString hash;
-    for (INT32 i = 0; i < SHA512_DIGEST_LENGTH; i++) {
-        hash += QString("%1").arg(md[i], 2, 16, QLatin1Char('0'));
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
     }
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("SHA512"));

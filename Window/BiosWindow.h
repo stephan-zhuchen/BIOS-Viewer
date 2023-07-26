@@ -46,8 +46,8 @@ public:
     Buffer            *buffer{nullptr};
     bool              DarkmodeFlag{false};
     UINT8             *InputImage{nullptr};
-    INT64             InputImageSize;
-    INT32             CurrentTabIndex;
+    INT64             InputImageSize{};
+    INT32             CurrentTabIndex{};
     WindowMode        CurrentWindow {WindowMode::None};
     BiosViewerWindow  *BiosViewerUi{nullptr};
     HexViewWindow     *HexViewerUi{nullptr};
@@ -78,7 +78,7 @@ public:
 
     BiosViewerData()=default;
     ~BiosViewerData();
-    static bool isValidBIOS(UINT8 *image, INT64 imageLength);
+    static bool isValidBIOS(const UINT8 *image, INT64 imageLength);
 };
 
 
@@ -111,20 +111,20 @@ public:
     QAction*       sha512_Menu{nullptr};
 
     // Parse and show
-    void refresh();
-    bool detectIfwi(INT64 &BiosOffset);
+    void refresh() const;
+    bool detectIfwi(INT64 &BiosOffset) const;
     void setBiosFvData();
     void setFfsData();
-    void setInfoWindowState(bool opened);
-    void pushDataToVector(INT64 offset, INT64 length);
-    bool isDarkMode();
+    void setInfoWindowState(bool opened) const;
+    void pushDataToVector(INT64 offset, INT64 length) const;
+    bool isDarkMode() const;
 
     // Tree Widget
-    void initSetting();
+    void initSetting() const;
     void erasePadding(vector<DataModel*> &items);
     void setTreeData();
     void addTreeItem(QTreeWidgetItem *parentItem, DataModel *modelData);
-    void setPanelInfo(INT64 offset, INT64 size);
+    void setPanelInfo(INT64 offset, INT64 size) const;
     void RecursiveSearchOffset(DataModel* model, INT64 offset, vector<INT32> &SearchRows);
 
     // Data
@@ -148,13 +148,13 @@ public:
     void closeEvent(QCloseEvent *event) override;
 
 public slots:
-    void HighlightTreeItem(vector<INT32> rows);
+    void HighlightTreeItem(vector<INT32> rows) const;
 
 private slots:
     void TreeWidgetItemSelectionChanged();
     void InfoButtonClicked();
     void SearchButtonClicked();
-    void setSearchDialogState(bool opened);
+    void setSearchDialogState(bool opened) const;
 
     // Menu
     void initRightMenu();
@@ -163,7 +163,7 @@ private slots:
     void showHexView();
     void showBodyHexView();
     void showDecompressedHexView();
-    void showNvHexView();
+    void showNvHexView() const;
     void showPeCoffView();
     void showAcpiTableView();
     void extractVolume();
@@ -171,12 +171,12 @@ private slots:
     void extractIfwiRegion();
     void replaceIfwiRegion();
     void replaceFfsContent();
-    void getMD5();
-    void getSHA1();
-    void getSHA224();
-    void getSHA256();
-    void getSHA384();
-    void getSHA512();
+    void getMD5() const;
+    void getSHA1() const;
+    void getSHA224() const;
+    void getSHA256() const;
+    void getSHA384() const;
+    void getSHA512() const;
 };
 
 class BiosException : public exception {

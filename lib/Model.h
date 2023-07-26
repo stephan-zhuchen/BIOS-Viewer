@@ -18,7 +18,7 @@ protected:
     QString text;
     bool    needRecycle{false};
 public:
-    Volume* modelData;
+    Volume* modelData{};
     vector<DataModel*> volumeModelData;
     DataModel()=default;
     DataModel(Volume* model, QString nm, QString typ = "", QString sbtyp = "", QString txt = "", bool recycle=false);
@@ -56,13 +56,13 @@ class FvModel: public DataModel {
 public:
 //    vector<FfsModel*> FfsModelData;
 public:
-    FvModel(FirmwareVolume *fv);
+    explicit FvModel(FirmwareVolume *fv);
     ~FvModel();
 };
 
 class VariableModel : public DataModel {
 public:
-    VariableModel(NvStorageVariable* Nv);
+    explicit VariableModel(NvStorageVariable* Nv);
     ~VariableModel();
 };
 

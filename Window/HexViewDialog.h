@@ -34,7 +34,7 @@ public:
     QString     title;
     QString     OpenedFileName;
     Volume      *OpenedImage{nullptr};
-    INT64       OpenedImageOffset;
+    INT64       OpenedImageOffset{};
     QByteArray  hexBuffer;
     QByteArray  NewHexBuffer;
     bool        BinaryEdited{false};

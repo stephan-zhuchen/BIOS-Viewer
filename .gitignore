@@ -64,6 +64,11 @@ CMakeLists.txt.user*
 *.Debug
 *.Release
 
+# Clion generated files
+*.idea
+cmake-build-debug/*
+cmake-build-release/*
+
 # Python byte code
 *.pyc
 

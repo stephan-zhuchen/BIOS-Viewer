@@ -26,7 +26,7 @@ Elf::Elf(UINT8* fv, INT64 length, INT64 offset, bool Compressed):Volume(fv, leng
     }
 
     for (UINT32 idx = 0; idx < SectionNum; ++idx) {
-        SectionHeader *sec = new SectionHeader;
+        auto *sec = new SectionHeader;
         if (isElf32) {
             sec->Elf32Shdr = (Elf32_Shdr*)(fv + Ehdr.Elf32Hdr->e_shoff + idx * SectionHdrSize);
         }
@@ -81,7 +81,7 @@ void Elf::decodeSections() {
             SecName = getStringFromOffset(SectionList.at(idx)->Elf64Shdr->sh_name);
         }
         if (SecName.rfind(".upld_info") == 0) {
-            Volume *SecFile = new Volume(data + SecOff, SecSize, SecOff, this->isCompressed);
+            auto *SecFile = new Volume(data + SecOff, SecSize, SecOff, this->isCompressed);
             SecFile->Type = UefiSpace::VolumeType::Other;
             SecFile->AdditionalMsg = "Universal Payload Info";
             UpldFiles.push_back(SecFile);
@@ -108,7 +108,7 @@ std::string Elf::getStringFromOffset(UINT32 off) const {
 
 void Elf::setInfoStr() {
     using namespace std;
-    INT64 width = 25;
+    INT32 width = 25;
     stringstream ss;
     stringstream guidInfo;
     ss.setf(ios::left);
@@ -178,14 +178,14 @@ bool Elf::IsElfFormat (const UINT8  *ImageBase) {
     //
     if (Elf32Hdr->e_ident[EI_CLASS] == ELFCLASS64) {
         Elf64Hdr = (Elf64_Ehdr *)Elf32Hdr;
-        Elf32Hdr = NULL;
+        Elf32Hdr = nullptr;
     } else if (Elf32Hdr->e_ident[EI_CLASS] == ELFCLASS32) {
         Elf64Hdr = NULL;
     } else {
         return FALSE;
     }
 
-    if (Elf64Hdr != NULL) {
+    if (Elf64Hdr != nullptr) {
         //
         // Support intel architecture only for now
         //

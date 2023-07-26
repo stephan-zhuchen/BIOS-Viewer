@@ -39,7 +39,7 @@ private slots:
 private:
     Ui::SettingsDialog *ui;
     QSettings setting{"Intel", "BiosViewer"};
-    StartWindow *parentWidget;
+    StartWindow *parentWidget{};
 
     QString StructureFontSize;
     QString StructureFont;

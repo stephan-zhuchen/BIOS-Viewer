@@ -23,7 +23,7 @@ QString HexSpinBox::textFromValue(int val) const
 
 int HexSpinBox::valueFromText(const QString &text) const
 {
-    return (int)text.toUInt(NULL, 16);
+    return (int)text.toUInt(nullptr, 16);
 }
 
 GuidData1HexLineEdit::GuidData1HexLineEdit(QWidget * parent)
@@ -32,7 +32,7 @@ GuidData1HexLineEdit::GuidData1HexLineEdit(QWidget * parent)
     this->setValidator(&guidValidator);
 }
 
-GuidData1HexLineEdit::~GuidData1HexLineEdit() {}
+GuidData1HexLineEdit::~GuidData1HexLineEdit() = default;
 
 QValidator::State GuidData1HexLineEdit::validate(QString &text, int &pos) const
 {

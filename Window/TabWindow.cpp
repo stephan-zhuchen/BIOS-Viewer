@@ -22,8 +22,8 @@ TabWindow::~TabWindow()
     delete tabWidget;
 }
 
-void TabWindow::SetNewTabAndText(QString tabName, QString txt) {
-    QWidget *NewTab = new QWidget();
+void TabWindow::SetNewTabAndText(const QString& tabName, const QString& txt) {
+    auto *NewTab = new QWidget();
 //    NewTab->setObjectName("NewTab");
     QVBoxLayout *LayoutInThisTab;
     QTextBrowser *TabTextBrowser;

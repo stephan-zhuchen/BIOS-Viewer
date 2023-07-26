@@ -30,7 +30,7 @@ public:
 public:
     Elf() = delete;
     Elf(UINT8* fv, INT64 length, INT64 offset, bool Compressed=false);
-    virtual ~Elf();
+    ~Elf() override;
     bool isValid() const;
     void decodeSections();
     void setInfoStr() override;

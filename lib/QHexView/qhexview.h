@@ -28,8 +28,8 @@ class QHexView : public QAbstractScrollArea
 {
     Q_OBJECT
 public:
-    QHexView(QWidget *parent = nullptr);
-    ~QHexView();
+    explicit QHexView(QWidget *parent = nullptr);
+    ~QHexView() override;
 
     void refresh();
     void setfileOpened(bool state);
@@ -61,7 +61,7 @@ private:
     INT32 BytesPerHexLine{MIN_BYTES_PER_LINE};
     INT32 AddressLength{ADR_LENGTH};
 
-    char inputKey;
+    char inputKey{};
     bool BinaryEdited{false};
     bool ReadOnly{false};
     std::vector<INT32> EditedPos;
@@ -122,7 +122,7 @@ private:
     void binaryEdit(char inputChar);
 
 public slots:
-    void loadFile(QString p_file);
+    void loadFile(const QString& p_file);
     void loadFromBuffer(QByteArray &buffer);
     void clear();
     void showFromOffset(INT32 offset, INT32 length = 1);

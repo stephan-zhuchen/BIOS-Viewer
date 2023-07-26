@@ -3,15 +3,15 @@
 #include <iomanip>
 #include <algorithm>
 
-UINT32 FlashRegionBaseArea::getBase() {
+UINT32 FlashRegionBaseArea::getBase() const {
     return (UINT32)base * 0x1000;
 }
 
-UINT32 FlashRegionBaseArea::getLimit() {
+UINT32 FlashRegionBaseArea::getLimit() const {
     return (UINT32)(limit + 1) * 0x1000;
 }
 
-UINT32 FlashRegionBaseArea::getSize() {
+UINT32 FlashRegionBaseArea::getSize() const {
     return getLimit() - getBase();
 }
 
@@ -25,7 +25,7 @@ void FlashRegionBaseArea::setLimit(UINT32 address) {
 
 IfwiVolume::IfwiVolume(UINT8* file, INT64 RegionLength, INT64 FlashLength, FLASH_REGION_TYPE Type):Volume(file, RegionLength, FlashLength), RegionType(Type) {}
 
-IfwiVolume::~IfwiVolume() {}
+IfwiVolume::~IfwiVolume() = default;
 
 bool IfwiVolume::isValid() const {
     return validFlag;
@@ -87,7 +87,7 @@ FlashDescriptorClass::FlashDescriptorClass(UINT8* file, INT64 RegionLength, INT6
 
 std::string FlashDescriptorClass::getFlashmap() {
     using namespace std;
-    INT64 width = 8;
+    INT32 width = 8;
     stringstream ss;
     ss.setf(ios::right);
     ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
@@ -125,7 +125,7 @@ FlashDescriptorClass::~FlashDescriptorClass() {
 
 void FlashDescriptorClass::setInfoStr() {
     using namespace std;
-    INT64 width = 20;
+    INT32 width = 20;
     stringstream ss;
     ss.setf(ios::left);
 
@@ -153,7 +153,7 @@ GbE_RegionClass::~GbE_RegionClass() {
 
 std::string GbE_RegionClass::getFlashmap() {
     using namespace std;
-    INT64 width = 8;
+    INT32 width = 8;
     stringstream ss;
     ss.setf(ios::right);
     ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
@@ -165,7 +165,7 @@ std::string GbE_RegionClass::getFlashmap() {
 
 void GbE_RegionClass::setInfoStr() {
     using namespace std;
-    INT64 width = 15;
+    INT32 width = 15;
     stringstream ss;
     ss.setf(ios::left);
 
@@ -206,7 +206,7 @@ ME_RegionClass::~ME_RegionClass() {
 
 std::string ME_RegionClass::getFlashmap() {
     using namespace std;
-    INT64 width = 8;
+    INT32 width = 8;
     stringstream ss;
     ss.setf(ios::right);
     ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
@@ -218,7 +218,7 @@ std::string ME_RegionClass::getFlashmap() {
 
 void ME_RegionClass::setInfoStr() {
     using namespace std;
-    INT64 width = 15;
+    INT32 width = 15;
     stringstream ss;
     ss.setf(ios::left);
     ss << setw(width) << "Version Signature:" << hex << BaseLibrarySpace::Buffer::charToString((INT8*)&MeVersion.Signature, sizeof(UINT32), false) << "\n"
@@ -243,11 +243,11 @@ CSE_LayoutClass::CSE_LayoutClass(UINT8* file, INT64 RegionLength, INT64 offset):
         Ver = IFWI_Ver::IFWI_17;
         CSE_Layout_Valid = true;
 
-        CSE_PartitionClass *dataPartition = new CSE_PartitionClass(data + ifwiHeader.ifwi17Header.DataPartition.Offset,
-                                                                   ifwiHeader.ifwi17Header.DataPartition.Size,
-                                                                   offset + ifwiHeader.ifwi17Header.DataPartition.Offset,
-                                                                   "ME Data Partition",
-                                                                   CSE_PartitionClass::Level1);
+        auto *dataPartition = new CSE_PartitionClass(data + ifwiHeader.ifwi17Header.DataPartition.Offset,
+                                                       ifwiHeader.ifwi17Header.DataPartition.Size,
+                                                       offset + ifwiHeader.ifwi17Header.DataPartition.Offset,
+                                                       "ME Data Partition",
+                                                       CSE_PartitionClass::Level1);
         dataPartition->decodeDataPartition();
         CSE_Partitions.push_back(dataPartition);
         for (int i = 0; i < BOOT_PARTITION_NUM; ++i) {
@@ -255,11 +255,11 @@ CSE_LayoutClass::CSE_LayoutClass(UINT8* file, INT64 RegionLength, INT64 offset):
                 continue;
             }
             std::string PartitionName = "Boot Partition " + std::to_string(i + 1);
-            CSE_PartitionClass *BootPartition = new CSE_PartitionClass(data + ifwiHeader.ifwi17Header.BootPartition[i].Offset,
-                                                                       ifwiHeader.ifwi17Header.BootPartition[i].Size,
-                                                                       offset + ifwiHeader.ifwi17Header.BootPartition[i].Offset,
-                                                                       PartitionName,
-                                                                       CSE_PartitionClass::Level1);
+            auto *BootPartition = new CSE_PartitionClass(data + ifwiHeader.ifwi17Header.BootPartition[i].Offset,
+                                                           ifwiHeader.ifwi17Header.BootPartition[i].Size,
+                                                           offset + ifwiHeader.ifwi17Header.BootPartition[i].Offset,
+                                                           PartitionName,
+                                                           CSE_PartitionClass::Level1);
             BootPartition->decodeBootPartition();
             CSE_Partitions.push_back(BootPartition);
         }
@@ -278,7 +278,7 @@ bool CSE_LayoutClass::isValid() const {
 
 std::string CSE_LayoutClass::getFlashmap() {
     using namespace std;
-    INT64 width = 8;
+    INT32 width = 8;
     stringstream ss;
     ss.setf(ios::right);
     ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
@@ -292,7 +292,7 @@ void CSE_LayoutClass::setInfoStr() {
     if (!CSE_Layout_Valid)
         return;
     using namespace std;
-    INT64 width = 15;
+    INT32 width = 15;
     stringstream ss;
     ss.setf(ios::left);
 
@@ -332,7 +332,7 @@ CSE_PartitionClass::CSE_PartitionClass(UINT8* file, INT64 RegionLength, INT64 of
 void CSE_PartitionClass::decodeBootPartition() {
     bpdt_Header = *(BPDT_HEADER*)data;
     UINT16 numEntries = bpdt_Header.NumEntries;
-    BPDT_ENTRY* firstPtEntry = (BPDT_ENTRY*)(data + sizeof(BPDT_HEADER));
+    auto* firstPtEntry = (BPDT_ENTRY*)(data + sizeof(BPDT_HEADER));
     for (UINT16 i = 0; i < numEntries; i++) {
         BPDT_ENTRY* ptEntry = firstPtEntry + i;
         std::string name = bpdtEntryTypeToString(ptEntry->Type);
@@ -346,7 +346,7 @@ void CSE_PartitionClass::decodeBootPartition() {
 void CSE_PartitionClass::decodeDataPartition() {
     fpt_Header = *(FPT_HEADER*)data;
     UINT32 numEntries = fpt_Header.NumEntries;
-    FPT_HEADER_ENTRY* firstPtEntry = (FPT_HEADER_ENTRY*)(data + sizeof(FPT_HEADER));
+    auto* firstPtEntry = (FPT_HEADER_ENTRY*)(data + sizeof(FPT_HEADER));
     for (UINT16 i = 0; i < numEntries; i++) {
         FPT_HEADER_ENTRY* fptEntry = firstPtEntry + i;
         std::string name = UefiSpace::Buffer::charToString(fptEntry->Name, 4, false);
@@ -365,7 +365,7 @@ CSE_PartitionClass::~CSE_PartitionClass() {
 
 std::string CSE_PartitionClass::getFlashmap() {
     using namespace std;
-    INT64 width = 8;
+    INT32 width = 8;
     stringstream ss;
     ss.setf(ios::right);
     ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
@@ -443,7 +443,7 @@ EC_RegionClass::EC_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):If
         searchValue = this->getUINT32(searchOffset);
         if (searchValue == 0x43534b54) // TKSC
         {
-            Signature = searchValue;
+            Signature = "TKSC";
             PlatId = this->getUINT8(searchOffset + 4);
             MajorVer = this->getUINT8(searchOffset + 5);
             MinorVer = this->getUINT8(searchOffset + 6);
@@ -460,7 +460,7 @@ EC_RegionClass::~EC_RegionClass() {
 
 std::string EC_RegionClass::getFlashmap() {
     using namespace std;
-    INT64 width = 8;
+    INT32 width = 8;
     stringstream ss;
     ss.setf(ios::right);
     ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";
@@ -472,11 +472,11 @@ std::string EC_RegionClass::getFlashmap() {
 
 void EC_RegionClass::setInfoStr() {
     using namespace std;
-    INT64 width = 20;
+    INT32 width = 20;
     stringstream ss;
     ss.setf(ios::left);
 
-    ss << setw(width) << "EC signature:"  << "TKSC" << "\n"
+    ss << setw(width) << "EC signature:"  << Signature << "\n"
        << setw(width) << "Plat ID:"       << hex << (INT32)PlatId << "h\n"
        << setw(width) << "Build Version:" << hex << (INT32)BuildVer << "h\n"
        << setw(width) << "EC Version:"    << hex << (INT32)MajorVer << "." << hex << (INT32)MinorVer << "\n";
@@ -494,7 +494,7 @@ OSSE_RegionClass::~OSSE_RegionClass() {
 
 std::string OSSE_RegionClass::getFlashmap() {
     using namespace std;
-    INT64 width = 8;
+    INT32 width = 8;
     stringstream ss;
     ss.setf(ios::right);
     ss << setw(width) << setfill('0') << hex << uppercase << offsetFromBegin << "      ";

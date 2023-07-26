@@ -22,8 +22,8 @@ namespace BaseLibrarySpace {
         EFI_GUID GuidData{};
         GUID() = delete;
         GUID(const GUID& guid);
-        GUID(const char* buffer);
-        GUID(const EFI_GUID& cGuid);
+        explicit GUID(const char* buffer);
+        explicit GUID(const EFI_GUID& cGuid);
         string str(bool upper=false) const;
         friend ostream& operator<<(ostream& out, const GUID* guid);
         bool operator==(const GUID& guid);
@@ -52,7 +52,7 @@ namespace BaseLibrarySpace {
         INT8*  getString(int n);
 
         Buffer();
-        Buffer(ifstream* inFile);
+        explicit Buffer(ifstream* inFile);
         ~Buffer();
 
         void setOffset(INT64 off);
@@ -63,32 +63,24 @@ namespace BaseLibrarySpace {
         static void UAlign(UINT64& address, UINT64 RelativeAddress, UINT64 alignment);
         static void prepareBufferToSave(INT64 offset, INT64 size, const string& name);
         static INT64 adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length);
-        static string charToString(INT8* address, INT64 length, bool hasZeroEnding=false);
-        static string wcharToString(CHAR16* address, INT64 length, bool hasZeroEnding=false);
+        static string charToString(const INT8* address, INT64 length, bool hasZeroEnding=false);
+        static string wcharToString(const CHAR16* address, INT64 length, bool hasZeroEnding=false);
         static string wstringToString(CHAR16* wcharAddress);
-        static UINT8 CaculateSum8(const UINT8 *Buffer, INT64 Size);
-        static UINT16 CaculateSum16(UINT16 *Buffer, INT64 Size);
-        static UINT32 CaculateSum32(UINT32 *Buffer, INT64 Size);
-        static INT32  getSizeFromUINT24(UINT8* address);
+        static UINT8 CalculateSum8(const UINT8 *Buffer, INT64 Size);
+        static UINT16 CalculateSum16(const UINT16 *Buffer, INT64 Size);
+        static UINT32 CalculateSum32(const UINT32 *Buffer, INT64 Size);
+        static INT32  getSizeFromUINT24(const UINT8* address);
         static void   saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size);
         void saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const;
     };
 
-    class CapsuleException : public exception {
+    class BiosException : public exception {
     private:
         string message;
     public:
-        CapsuleException();
-        explicit CapsuleException(const string& str);
+        BiosException();
+        explicit BiosException(const string& str);
         const char* what() const noexcept override;
     };
 
-    class CapsuleError : public exception {
-    private:
-        string message;
-    public:
-        CapsuleError();
-        explicit CapsuleError(const string& str);
-        const char* what() const noexcept override;
-    };
 }

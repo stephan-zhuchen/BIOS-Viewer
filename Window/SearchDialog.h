@@ -10,35 +10,20 @@ namespace Ui {
 class SearchDialog;
 }
 
-class SearchItemTree {
-private:
-    QString name;
-    SearchItemTree *prev  {nullptr};
-    SearchItemTree *next  {nullptr};
-    SearchItemTree *parent{nullptr};
-    SearchItemTree *child {nullptr};
-    vector<int>    position;
-public:
-    SearchItemTree();
-    ~SearchItemTree();
-};
-
 class SearchDialog : public QDialog
 {
     Q_OBJECT
 
 public:
     explicit SearchDialog(QWidget *parent = nullptr);
-    ~SearchDialog();
+    ~SearchDialog() override;
 
     void initSetting();
     void setParentWidget(QWidget *pWidget);
     void SetBinaryData(QByteArray *BinaryData);
-    bool RecursiveSearch(DataModel *model, const QString &str, vector<int> &SearchRow, vector<int> pItem, int depth, bool sameParent=false);
     bool SearchBinary(int *begin, int *length);
     bool SearchBinaryAscii(int *begin, int *length);
-    char UpperToLower(char s);
-    char LowerToUpper(char s);
+    char UpperToLower(char s) const;
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -60,10 +45,10 @@ private slots:
 private:
     Ui::SearchDialog *ui;
     QSettings        setting{"Intel", "BiosViewer"};
-    QWidget          *parentWidget;
+    QWidget          *parentWidget{};
     vector<DataModel*> *SearchModelData;
     INT64            PreviousOffset;
-    QByteArray       *BinaryBuffer;
+    QByteArray       *BinaryBuffer{};
     static QString   SearchedString;
     static QString   pSearchedString;
     enum             EndianMode{LittleEndian=0, BigEndian};

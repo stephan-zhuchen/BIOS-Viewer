@@ -21,7 +21,7 @@ public:
 
     void initSetting();
     void SetModelData(vector<DataModel*> *fvModel);
-    void setTextList(vector<DataModel*> *itemsModel, vector<int> position);
+    void setTextList(vector<DataModel*> *itemsModel, const vector<int>& position);
     void SearchFileText(bool recursive);
     void SearchFileGuid(bool recursive);
     void paintWidget();
@@ -71,7 +71,7 @@ private:
     bool  GuidSearchSection{true};
     bool  GuidRecursiveSearch{false};
 
-    vector<DataModel*> *SearchModelData;
+    vector<DataModel*> *SearchModelData{};
     static QString   SearchedString;
     static QString   pSearchedString;
     static EFI_GUID  SearchedGuid;

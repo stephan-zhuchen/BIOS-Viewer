@@ -13,8 +13,7 @@ HexViewWindow::HexViewWindow(StartWindow *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
-HexViewWindow::~HexViewWindow() {
-}
+HexViewWindow::~HexViewWindow() = default;
 
 void HexViewWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
     WindowData = wData;
@@ -32,7 +31,7 @@ void HexViewWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
     MainWindow->setCentralWidget(centralwidget);
 }
 
-void HexViewWindow::refresh() {
+void HexViewWindow::refresh() const {
     m_hexview->refresh();
 }
 
@@ -83,11 +82,11 @@ void HexViewWindow::setNewHexBuffer(QByteArray &buffer) {
     NewHexBuffer = buffer;
 }
 
-void HexViewWindow::ActionSearchHexTriggered() {
+void HexViewWindow::ActionSearchHexTriggered() const {
     m_hexview->actionSearch();
 }
 
-void HexViewWindow::ActionGotoTriggered() {
+void HexViewWindow::ActionGotoTriggered() const {
     m_hexview->actionGoto();
 }
 

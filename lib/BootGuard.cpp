@@ -156,20 +156,20 @@ namespace UefiSpace {
 
     AcmHeaderClass::AcmHeaderClass(UINT8* fv, INT64 address):BootGuardClass(fv, 0, address) {
         acmHeader = *(ACM_HEADER*)fv;
-        ValidFlag = (acmHeader.ModuleType == ACM_MODULE_TYPE_CHIPSET_ACM) ? true : false;
-        ProdFlag = (acmHeader.Flags & 0x8000) ? false : true;
+        ValidFlag = (acmHeader.ModuleType == ACM_MODULE_TYPE_CHIPSET_ACM);
+        ProdFlag = (acmHeader.Flags & 0x8000) == 0;
         if (acmHeader.HeaderVersion < ACM_HEADER_VERSION_3) {
             ExtAcmHeader = *(Ext_ACM_Header*)(fv + sizeof(ACM_HEADER));
         } else {
             isAcm3 = true;
             ExtAcmHeader3 = *(Ext_ACM_Header3*)(fv + sizeof(ACM_HEADER));
         }
-        UINT8 *AcmPtr = (UINT8 *)fv;
+        auto *AcmPtr = (UINT8 *)fv;
         AcmPtr += acmHeader.HeaderLen * 4;
         AcmPtr += acmHeader.ScratchSize * 4;
         AcmInfoTable = (ACM_INFO_TABLE *)AcmPtr;
         if (AcmInfoTable->AitVersion < ACM_INFO_TABLE_VERSION_9) {
-            if (AcmInfoTable->Guid == guidData->gTxtAcmInfoTableGuid) {
+            if (AcmInfoTable->Guid == GuidDatabase::gTxtAcmInfoTableGuid) {
                 AcmVersion.AcmMajorVersion = AcmInfoTable->AitRevision[0];
                 AcmVersion.AcmMinorVersion = AcmInfoTable->AitRevision[1];
                 AcmVersion.AcmRevision = AcmInfoTable->AitRevision[2];
@@ -178,7 +178,7 @@ namespace UefiSpace {
             AcmPtr += sizeof(ACM_INFO_TABLE);
             UINT8 *StartPtr = AcmPtr;
             bool TableFound = false;
-            while (memcmp(((VAR_LIST *)AcmPtr)->Id, NULL_TERMINATOR_ID, 4) && ((AcmPtr - StartPtr) < 300)) {
+            while (memcmp(((VAR_LIST *)AcmPtr)->Id, NULL_TERMINATOR_ID, 4) != 0 && ((AcmPtr - StartPtr) < 300)) {
                 //
                 // Check if ACM VERSION INFO table found
                 //
@@ -196,7 +196,7 @@ namespace UefiSpace {
         }
     }
 
-    AcmHeaderClass::~AcmHeaderClass() {}
+    AcmHeaderClass::~AcmHeaderClass() = default;
 
     bool AcmHeaderClass::isValid() const {
         return ValidFlag;
@@ -207,7 +207,7 @@ namespace UefiSpace {
     }
 
     void AcmHeaderClass::setInfoStr() {
-        INT64 width = 20;
+        INT32 width = 20;
         stringstream ss;
         ss.setf(ios::left);
         ss << setw(width) << "Guid:"    << GUID(AcmInfoTable->Guid).str(true) << "\n"
@@ -280,12 +280,12 @@ namespace UefiSpace {
         }
     }
 
-    KeyManifestClass::~KeyManifestClass() {}
+    KeyManifestClass::~KeyManifestClass() = default;
 
     void KeyManifestClass::setInfoStr() {
         if (!isValid)
             return;
-        INT64 width = 22;
+        INT32 width = 22;
         stringstream ss;
         ss.setf(ios::left);
         ss << setw(width) << "Structure ID:"    << hex << uppercase << Buffer::charToString((INT8*)(KM_Header.StructureId), 8, false) << "\n"
@@ -350,25 +350,25 @@ namespace UefiSpace {
         while (ElementsOffset < length) {
             string StructID = Buffer::charToString((INT8*)(fv + ElementsOffset), 8, false);
             if (StructID == "__IBBS__") {
-                IBBS_Class *IBBS = new IBBS_Class(fv + ElementsOffset, length - ElementsOffset);
+                auto *IBBS = new IBBS_Class(fv + ElementsOffset, length - ElementsOffset);
                 IBBS->setInfoStr();
                 BpmElementList.push_back(IBBS);
                 ElementsOffset += IBBS->getBpmElementSize();
             }
             else if (StructID == "__TXTS__") {
-                TXTS_Class *TXTS = new TXTS_Class(fv + ElementsOffset, length - ElementsOffset);
+                auto *TXTS = new TXTS_Class(fv + ElementsOffset, length - ElementsOffset);
                 TXTS->setInfoStr();
                 BpmElementList.push_back(TXTS);
                 ElementsOffset += TXTS->getBpmElementSize();
             }
             else if (StructID == "__PCDS__") {
-                PCDS_Class *PCDS = new PCDS_Class(fv + ElementsOffset, length - ElementsOffset);
+                auto *PCDS = new PCDS_Class(fv + ElementsOffset, length - ElementsOffset);
                 PCDS->setInfoStr();
                 BpmElementList.push_back(PCDS);
                 ElementsOffset += PCDS->getBpmElementSize();
             }
             else if (StructID == "__PMSG__") {
-                PMSG_Class *PSMG = new PMSG_Class(fv + ElementsOffset, length - ElementsOffset);
+                auto *PSMG = new PMSG_Class(fv + ElementsOffset, length - ElementsOffset);
                 PSMG->setInfoStr();
                 BpmElementList.push_back(PSMG);
                 ElementsOffset += PSMG->getBpmElementSize();
@@ -396,7 +396,7 @@ namespace UefiSpace {
     void BootPolicyManifestClass::setInfoStr() {
         if (!isValid)
             return;
-        INT64 width = 22;
+        INT32 width = 22;
         stringstream ss;
         ss.setf(ios::left);
         ss << setw(width) << "Structure ID:"  << hex << uppercase << Buffer::charToString((INT8*)(BPM_Header.StructureId), 8, false) << "\n"
@@ -437,7 +437,7 @@ namespace UefiSpace {
 
     BpmElement::BpmElement(UINT8* fv, INT64 length):BootGuardClass(fv, length, 0) {}
 
-    BpmElement::~BpmElement() {}
+    BpmElement::~BpmElement() = default;
 
     void BpmElement::setInfoStr() {}
 
@@ -480,7 +480,7 @@ namespace UefiSpace {
     IBBS_Class::~IBBS_Class() {}
 
     void IBBS_Class::setInfoStr() {
-        INT64 width = 22;
+        INT32 width = 22;
         stringstream ss;
         ss.setf(ios::left);
         if (IbbElementValid) {
@@ -548,7 +548,7 @@ namespace UefiSpace {
     TXTS_Class::~TXTS_Class() {}
 
     void TXTS_Class::setInfoStr() {
-        INT64 width = 22;
+        INT32 width = 22;
         stringstream ss;
         ss.setf(ios::left);
         if (TxtElementValid) {
@@ -609,7 +609,7 @@ namespace UefiSpace {
     PCDS_Class::~PCDS_Class() {}
 
     void PCDS_Class::setInfoStr() {
-        INT64 width = 22;
+        INT32 width = 22;
         stringstream ss;
         ss.setf(ios::left);
         if (PcdElementValid) {
@@ -653,10 +653,10 @@ namespace UefiSpace {
         }
     }
 
-    PMSG_Class::~PMSG_Class() {}
+    PMSG_Class::~PMSG_Class() = default;
 
     void PMSG_Class::setInfoStr() {
-        INT64 width = 22;
+        INT32 width = 22;
         stringstream ss;
         ss.setf(ios::left);
         if (PmsgElementValid) {

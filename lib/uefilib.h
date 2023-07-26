@@ -41,9 +41,9 @@ namespace UefiSpace {
 
     class Volume {
     public:
-        UINT8* data;   // initialized from heap
-        INT64  size;
-        INT64  offsetFromBegin;
+        UINT8* data{};   // initialized from heap
+        INT64  size{};
+        INT64  offsetFromBegin{};
         bool   isCompressed{false};
         bool   isCorrupted{false};
         const char* ErrorMsg = "offset larger than size!";
@@ -81,10 +81,10 @@ namespace UefiSpace {
     class PeCoff : public Volume
     {
     public:
-        EFI_IMAGE_DOS_HEADER      dosHeader;
-        EFI_TE_IMAGE_HEADER       teHeader;
-        EFI_IMAGE_NT_HEADERS32    pe32Header;
-        EFI_IMAGE_NT_HEADERS64    pe32plusHeader;
+        EFI_IMAGE_DOS_HEADER      dosHeader{};
+        EFI_TE_IMAGE_HEADER       teHeader{};
+        EFI_IMAGE_NT_HEADERS32    pe32Header{};
+        EFI_IMAGE_NT_HEADERS64    pe32plusHeader{};
         bool                      isTE{false};
         bool                      isPe32Plus{false};
     public:
@@ -141,12 +141,11 @@ namespace UefiSpace {
         CommonSection()=delete;
         CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs, bool Compressed=false);
         CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs, bool Compressed=false);
-        ~CommonSection();
+        ~CommonSection() override;
         void SelfDecode();
         void DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize);
         void DecodeChildFile();
         bool CheckValidation();
-        void extracted(std::stringstream &ss);
         void setInfoStr() override;
         INT64 getHeaderSize() const override;
         static INT64 getSectionSize(UINT8* file);
@@ -154,8 +153,8 @@ namespace UefiSpace {
 
     class FfsFile: public Volume {
     public:
-        EFI_FFS_FILE_HEADER    FfsHeader;
-        EFI_FFS_FILE_HEADER2   FfsExtHeader;
+        EFI_FFS_FILE_HEADER    FfsHeader{};
+        EFI_FFS_FILE_HEADER2   FfsExtHeader{};
         INT64                  FfsSize;
         bool                   isExtended{false};
         bool                   headerChecksumValid{false};
@@ -165,7 +164,7 @@ namespace UefiSpace {
     public:
         FfsFile() = delete;
         FfsFile(UINT8* file, INT64 offset, bool Compressed=false);
-        ~FfsFile();
+        ~FfsFile() override;
 
         UINT8 getType() const;
         INT64 getHeaderSize() const override;
@@ -175,8 +174,8 @@ namespace UefiSpace {
 
     class FirmwareVolume: public Volume {
     public:
-        EFI_FIRMWARE_VOLUME_HEADER     FirmwareVolumeHeader;
-        EFI_FIRMWARE_VOLUME_EXT_HEADER FirmwareVolumeExtHeader;
+        EFI_FIRMWARE_VOLUME_HEADER     FirmwareVolumeHeader{};
+        EFI_FIRMWARE_VOLUME_EXT_HEADER FirmwareVolumeExtHeader{};
         INT64                          FirmwareVolumeSize;
         vector<FfsFile*>               FfsFiles;
         Volume                         *freeSpace{nullptr};
@@ -188,7 +187,7 @@ namespace UefiSpace {
     public:
         FirmwareVolume() = delete;
         FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty=false, bool Compressed=false);
-        ~FirmwareVolume();
+        ~FirmwareVolume() override;
 
         GUID getFvGuid(bool returnExt=true) const;
         void decodeFfs(bool multithread=false);
@@ -215,23 +214,23 @@ namespace UefiSpace {
 
     class NvStorageVariable : public Volume {
     public:
-        VARIABLE_STORE_HEADER    NvStoreHeader;
+        VARIABLE_STORE_HEADER    NvStoreHeader{};
         vector<NvVariableEntry*> VariableList;
         bool                     AuthFlag;
 
         NvStorageVariable() = delete;
         NvStorageVariable(UINT8* fv, INT64 offset);
-        ~NvStorageVariable();
+        ~NvStorageVariable() override;
         void setInfoStr() override;
     };
 
     class FspHeader : public Volume {
     private:
-        TABLES mTable;
+        TABLES mTable{};
         bool   validFlag{true};
     public:
         FspHeader(UINT8* fv, INT64 length, INT64 offset);
-        ~FspHeader();
+        ~FspHeader() override;
         bool isValid() const;
         void setInfoStr() override;
         static bool isFspHeader(const UINT8  *ImageBase);
@@ -268,7 +267,7 @@ namespace UefiSpace {
 
     class FitTableClass {
     public:
-        FIRMWARE_INTERFACE_TABLE_ENTRY         FitHeader;
+        FIRMWARE_INTERFACE_TABLE_ENTRY         FitHeader{};
         vector<FIRMWARE_INTERFACE_TABLE_ENTRY> FitEntries;
         vector<MicrocodeHeaderClass*>          MicrocodeEntries;
         vector<AcmHeaderClass*>                AcmEntries;
@@ -286,12 +285,12 @@ namespace UefiSpace {
     class MicrocodeHeaderClass {
     private:
         UINT8* data;
-        INT64  size;
+        INT64  size{};
         INT64  offset;
     public:
         bool    isEmpty{false};
         QString InfoStr;
-        CPU_MICROCODE_HEADER                 microcodeHeader;
+        CPU_MICROCODE_HEADER                 microcodeHeader{};
         CPU_MICROCODE_EXTENDED_TABLE_HEADER  *ExtendedTableHeader;
         vector<CPU_MICROCODE_EXTENDED_TABLE> ExtendedMicrocodeList;
 
@@ -322,15 +321,15 @@ namespace UefiSpace {
         bool   ValidFlag{true};
     public:
         QString          InfoStr;
-        ACM_HEADER       acmHeader;
-        Ext_ACM_Header   ExtAcmHeader;
-        Ext_ACM_Header3  ExtAcmHeader3;
+        ACM_HEADER       acmHeader{};
+        Ext_ACM_Header   ExtAcmHeader{};
+        Ext_ACM_Header3  ExtAcmHeader3{};
         ACM_INFO_TABLE   *AcmInfoTable;
-        ACM_VERSION      AcmVersion;
+        ACM_VERSION      AcmVersion{};
         bool             isAcm3{false};
         AcmHeaderClass() = delete;
         AcmHeaderClass(UINT8* fv, INT64 address);
-        ~AcmHeaderClass();
+        ~AcmHeaderClass() override;
         bool isValid() const;
         bool isProd() const;
         void setInfoStr() override;
@@ -338,7 +337,7 @@ namespace UefiSpace {
 
     class KeyManifestClass : public BootGuardClass {
     private:
-        KEY_MANIFEST_STRUCTURE     KM_Header;
+        KEY_MANIFEST_STRUCTURE     KM_Header{};
         vector<SHAX_KMHASH_STRUCT> KmHashList;
         KEY_AND_SIGNATURE_STRUCT   *KeySig;
 
@@ -348,18 +347,18 @@ namespace UefiSpace {
         union Key {
           RSA_PUBLIC_KEY_STRUCT    RsaKey;
           ECC_PUBLIC_KEY_STRUCT    EccKey;
-        } key;
+        } key{};
         union Sig {
           RSASSA_SIGNATURE_STRUCT  SignatureRsa;
           ECC_SIGNATURE_STRUCT     SignatureEcc;
-        } sig;
+        } sig{};
 
     public:
         QString                    InfoStr;
         bool                       isValid{true};
         KeyManifestClass()=delete;
         KeyManifestClass(UINT8* fv, INT64 length);
-        ~KeyManifestClass();
+        ~KeyManifestClass() override;
         void setInfoStr() override;
     };
 
@@ -462,7 +461,7 @@ namespace UefiSpace {
 
     class ACPI_Class : public Volume {
     public:
-        EFI_ACPI_DESCRIPTION_HEADER   AcpiHeader;
+        EFI_ACPI_DESCRIPTION_HEADER   AcpiHeader{};
         string                        AcpiTableSignature;
         string                        AcpiTableOemID;
         string                        AcpiTableOemTableID;
@@ -470,7 +469,7 @@ namespace UefiSpace {
     public:
         ACPI_Class()=delete;
         ACPI_Class(UINT8* fv, INT64 length, INT64 offset, bool needValidation=true);
-        ~ACPI_Class();
+        ~ACPI_Class() override;
         bool isValid() const;
         static bool isAcpiHeader(const UINT8  *ImageBase, INT64 length);
         void setInfoStr() override;

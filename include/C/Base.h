@@ -788,13 +788,7 @@ typedef UINTN *BASE_LIST;
   @param  Message     Raised compiler diagnostic message when expression is false.
 
 **/
-#ifdef MDE_CPU_EBC
-#define STATIC_ASSERT(Expression, Message)
-#elif defined (_MSC_EXTENSIONS)
 #define STATIC_ASSERT  static_assert
-#else
-#define STATIC_ASSERT  _Static_assert
-#endif
 
 //
 // Verify that ProcessorBind.h produced UEFI Data Types that are compliant with

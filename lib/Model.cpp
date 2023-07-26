@@ -1,11 +1,13 @@
 #include "Model.h"
+
+#include <utility>
 #include "UEFI/GuidDefinition.h"
 
 DataModel::DataModel(Volume* model, QString nm, QString typ, QString sbtyp, QString txt, bool recycle):
-    name(nm),
-    type(typ),
-    subtype(sbtyp),
-    text(txt),
+    name(std::move(nm)),
+    type(std::move(typ)),
+    subtype(std::move(sbtyp)),
+    text(std::move(txt)),
     needRecycle(recycle),
     modelData(model)
 {}
@@ -20,19 +22,19 @@ DataModel::~DataModel() {
 }
 
 void DataModel::setName(QString txt) {
-    name = txt;
+    name = std::move(txt);
 }
 
 void DataModel::setType(QString txt) {
-    type = txt;
+    type = std::move(txt);
 }
 
 void DataModel::setSubtype(QString txt) {
-    subtype = txt;
+    subtype = std::move(txt);
 }
 
 void DataModel::setText(QString txt) {
-    text = txt;
+    text = std::move(txt);
 }
 
 QString DataModel::getName() const {
@@ -182,8 +184,7 @@ SectionModel::SectionModel(CommonSection *section, FfsModel *parent) {
     }
 }
 
-SectionModel::~SectionModel() {
-}
+SectionModel::~SectionModel() = default;
 
 FfsModel::FfsModel(FfsFile *ffs, FvModel *parent) {
     parentModel = parent;
@@ -256,13 +257,12 @@ FfsModel::FfsModel(FfsFile *ffs, FvModel *parent) {
     }
 
     for (auto section:ffs->Sections) {
-        SectionModel *secModel = new SectionModel(section, this);
+        auto *secModel = new SectionModel(section, this);
         volumeModelData.push_back(secModel);
     }
 }
 
-FfsModel::~FfsModel() {
-}
+FfsModel::~FfsModel() = default;
 
 QString FfsModel::getFmpDeviceName() {
     QString FmpName;
@@ -351,33 +351,31 @@ FvModel::FvModel(FirmwareVolume *fv) {
     }
 
     for(auto ffs:fv->FfsFiles) {
-        FfsModel *ffsmodel = new FfsModel(ffs, this);
+        auto *ffsmodel = new FfsModel(ffs, this);
         volumeModelData.push_back(ffsmodel);
     }
 
     if (fv->freeSpace != nullptr) {
-        DataModel *freeModel = new DataModel(fv->freeSpace, "Volume free space", "Free space", "Empty");
+        auto *freeModel = new DataModel(fv->freeSpace, "Volume free space", "Free space", "Empty");
         volumeModelData.push_back(freeModel);
     }
 
     if (fv->NvStorage != nullptr) {
-        VariableModel *NvStorageModel = new VariableModel(fv->NvStorage);
+        auto *NvStorageModel = new VariableModel(fv->NvStorage);
         volumeModelData.push_back(NvStorageModel);
     }
 }
 
-FvModel::~FvModel() {
-}
+FvModel::~FvModel() = default;
 
 VariableModel::VariableModel(NvStorageVariable* Nv) {
     modelData = Nv;
     name = "Nv Storage";
     for(NvVariableEntry* NvEntry:Nv->VariableList) {
         QString NvName = QString::fromStdString(NvEntry->VariableName);
-        DataModel *NvEntryModel = new DataModel(NvEntry, NvName, "Variable");
+        auto *NvEntryModel = new DataModel(NvEntry, NvName, "Variable");
         volumeModelData.push_back(NvEntryModel);
     }
 }
 
-VariableModel::~VariableModel() {
-}
+VariableModel::~VariableModel() = default;

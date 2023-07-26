@@ -11,5 +11,5 @@ int main(int argc, char *argv[])
     if (argc == 2){
         w.DoubleClickOpenFile(argv[1]);
     }
-    return a.exec();
+    return QApplication::exec();
 }

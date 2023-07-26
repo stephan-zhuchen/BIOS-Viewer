@@ -16,9 +16,9 @@ class TabWindow : public QWidget
 
 public:
     explicit TabWindow(QWidget *parent = nullptr);
-    ~TabWindow();
+    ~TabWindow() override;
 
-    void SetNewTabAndText(QString tabName, QString txt);
+    void SetNewTabAndText(const QString& tabName, const QString& txt);
     void CollectTabAndShow();
 
 protected:

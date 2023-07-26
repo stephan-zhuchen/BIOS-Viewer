@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QProcess>
 #include <thread>
+#include <utility>
 #include "BiosWindow.h"
 #include "InfoWindow.h"
 #include "BaseLib.h"
@@ -14,7 +15,7 @@ using UefiSpace::FitTableClass;
 InfoWindow::InfoWindow(QString Dir, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::InfoWindow),
-    appDir(Dir)
+    appDir(std::move(Dir))
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
@@ -51,7 +52,7 @@ void InfoWindow::setBiosImage(BiosImageVolume *Image) {
 }
 
 void InfoWindow::setOpenedFileName(QString name) {
-    OpenedFileName = name;
+    OpenedFileName = std::move(name);
 }
 
 void InfoWindow::setParentWidget(QWidget *pWidget) {
@@ -142,7 +143,7 @@ void InfoWindow::showMicrocodeTab() {
             ItemName += " (Empty)";
         else
             ItemName = ItemName + "  " + QString::number(MicrocodeEntry->microcodeHeader.ProcessorSignature.Uint32, 16).toUpper();
-        QListWidgetItem *MicrocodeItem = new QListWidgetItem(ItemName);
+        auto *MicrocodeItem = new QListWidgetItem(ItemName);
         ui->microcodeListWidget->addItem(MicrocodeItem);
     }
 
@@ -159,7 +160,7 @@ void InfoWindow::showAcmTab() {
             ItemName = "Prod ACM";
         else
             ItemName = "Non Prod ACM";
-        QListWidgetItem *AcmItem = new QListWidgetItem(ItemName);
+        auto *AcmItem = new QListWidgetItem(ItemName);
         ui->acmListWidget->addItem(AcmItem);
     }
 
@@ -170,15 +171,15 @@ void InfoWindow::showAcmTab() {
 void InfoWindow::showBtgTab() {
     QString ItemName;
     ItemName = "Key Manifest";
-    QListWidgetItem *KmItem = new QListWidgetItem(ItemName);
+    auto *KmItem = new QListWidgetItem(ItemName);
     ui->BtgListWidget->addItem(KmItem);
 
     ItemName = "Boot Policy Manifest";
-    QListWidgetItem *BpItem = new QListWidgetItem(ItemName);
+    auto *BpItem = new QListWidgetItem(ItemName);
     ui->BtgListWidget->addItem(BpItem);
 
     ItemName = "BPM DEF";
-    QListWidgetItem *BpDefItem = new QListWidgetItem(ItemName);
+    auto *BpDefItem = new QListWidgetItem(ItemName);
     ui->BtgListWidget->addItem(BpDefItem);
 
     if (ui->BtgListWidget->model()->rowCount() != 0)
@@ -195,7 +196,7 @@ void InfoWindow::showFlashmapTab(const QString &SectionFlashMap) {
 void InfoWindow::showAcpiTab() {
     for (ACPI_Class* AcpiTable:BiosImage->AcpiTables) {
         string AcpiItemName = AcpiTable->AcpiTableSignature + " - " + AcpiTable->AcpiTableOemID + " - " + AcpiTable->AcpiTableOemTableID;
-        QListWidgetItem *AcpiItem = new QListWidgetItem(QString::fromStdString(AcpiItemName));
+        auto *AcpiItem = new QListWidgetItem(QString::fromStdString(AcpiItemName));
         ui->AcpiListWidget->addItem(AcpiItem);
     }
     if (ui->AcpiListWidget->model()->rowCount() != 0)
@@ -212,7 +213,7 @@ void InfoWindow::showFceTab() {
         return;
     }
 
-    QProcess *process = new QProcess(this);
+    auto *process = new QProcess(this);
     QString TempFilepath = appDir + "/tool/ClientBios.config";
     QStringList arguments;
     arguments << "read" << "-i" << OpenedFileName << "0006" <<  "005C" << "0078" << "0030" << "0034" << "0039" << "0046" << ">" << TempFilepath;
@@ -291,7 +292,7 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
                         "# Key Manifest #\r\n"
                         "################");
 
-    QProcess *process = new QProcess(this);
+    auto *process = new QProcess(this);
     process->start(toolpath, QStringList() << "INFO" << OpenedFileName);
     process->waitForFinished();
     QString BpmGen2Text = process->readAllStandardOutput();
@@ -308,7 +309,7 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
     } else if (item->text() == "Boot Policy Manifest") {
         text = BpmToolVersion + BpmGen2Text.mid(BpmIndex, KmIndex - BpmIndex);
     } else if (item->text() == "BPM DEF") {
-        QProcess *process = new QProcess(this);
+        process = new QProcess(this);
         QString TempFilepath = appDir + "/tool/temp.txt";
         process->start(toolpath, QStringList() << "PARSE" << OpenedFileName << "-o" << TempFilepath);
         process->waitForFinished();
@@ -353,7 +354,7 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
     }
     tempFile.close();
 
-    QProcess *process = new QProcess(this);
+    auto *process = new QProcess(this);
     process->start(toolpath, QStringList() << "-d" << filepath);
     process->waitForFinished();
 

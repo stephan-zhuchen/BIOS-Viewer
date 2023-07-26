@@ -277,7 +277,7 @@ CopyMem (
   }
 
   ASSERT ((Length - 1) <= (MAX_ADDRESS - (UINTN)DestinationBuffer));
-  ASSERT ((Length - 1) <= (MAX_ADDRESS - (UINTN)SourceBuffer));
+  ASSERT ((Length - 1) <= (MAX_ADDRESS - (UINTN)SourceBuffer))
 
   if (DestinationBuffer == SourceBuffer) {
     return DestinationBuffer;

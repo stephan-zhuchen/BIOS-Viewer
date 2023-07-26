@@ -253,7 +253,7 @@ void BiosSearch::SetModelData(vector<DataModel*> *fvModel) {
     }
 }
 
-void BiosSearch::setTextList(vector<DataModel*> *itemsModel, vector<int> position) {
+void BiosSearch::setTextList(vector<DataModel*> *itemsModel, const vector<int>& position) {
     for (int i = 0; i < itemsModel->size(); ++i) {
         vector<int> parentPos = position;
         DataModel* item = itemsModel->at(i);
@@ -272,10 +272,10 @@ void BiosSearch::SearchFileText(bool recursive) {
     if (SearchedString != pSearchedString) {
         PreviousItems.clear();
     }
-    if (PreviousItems.size() != 0) {
+    if (!PreviousItems.empty()) {
         PreviousRow = PreviousItems.at(PreviousItems.size() - 1);
     }
-    if (SearchModelData->size() == 0 || SearchedString == "")
+    if (SearchModelData->empty() || SearchedString == "")
         return;
 
     int row = PreviousRow + 1;
@@ -316,10 +316,10 @@ void BiosSearch::SearchFileGuid(bool recursive) {
     if (SearchedGuid != pSearchedGuid) {
         PreviousItems.clear();
     }
-    if (PreviousItems.size() != 0) {
+    if (!PreviousItems.empty()) {
         PreviousRow = PreviousItems.at(PreviousItems.size() - 1);
     }
-    if (SearchModelData->size() == 0)
+    if (SearchModelData->empty())
         return;
 
     int row = PreviousRow + 1;
@@ -489,7 +489,7 @@ void BiosSearch::SetGuidDataFromClipboard(const QString &ClipContent) {
     static QRegularExpression GuidPattern1("^0[xX]([0-9a-fA-F]){8}$");
     static QRegularExpression GuidPattern2("^([0-9a-fA-F]){8}$");
     static QRegularExpression GuidPattern3("^[A-F0-9]{8}(-[A-F0-9]{4}){3}-[A-F0-9]{12}$");
-    static QRegularExpression GuidPattern4("^\\{0[xX][0-9a-fA-F]{8},(0[xX][0-9a-fA-F]{4},){2}\\{(0[xX][0-9a-fA-F]{2},){7}0[xX][0-9a-fA-F]{2}\\}\\}");
+    static QRegularExpression GuidPattern4(R"(^\{0[xX][0-9a-fA-F]{8},(0[xX][0-9a-fA-F]{4},){2}\{(0[xX][0-9a-fA-F]{2},){7}0[xX][0-9a-fA-F]{2}\}\})");
 
     QString guidStr = ClipContent;
     guidStr.remove(EmptySpace);

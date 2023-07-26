@@ -16,22 +16,22 @@ public:
     explicit HexViewWindow(StartWindow *parent);
     ~HexViewWindow();
     void setupUi(QMainWindow *MainWindow, GeneralData *wData);
-    void refresh();
+    void refresh() const;
 
     void closeEvent(QCloseEvent *event) override;
     void setEditedState(bool edited);
     void loadBuffer(UINT8 *image, INT64 imageLength);
     void saveImage();
     void setNewHexBuffer(QByteArray &buffer);
-    void ActionSearchHexTriggered();
-    void ActionGotoTriggered();
+    void ActionSearchHexTriggered() const;
+    void ActionGotoTriggered() const;
 
     bool        UiReady{ false };
     StartWindow *mWindow;
     GeneralData *WindowData{ nullptr };
     QHexView    *m_hexview{ nullptr };
     QWidget     *centralwidget{ nullptr };
-    QVBoxLayout *CentralwidgetVerticalLayout;
+    QVBoxLayout *CentralwidgetVerticalLayout{};
     QByteArray  hexBuffer;
     QByteArray  NewHexBuffer;
     bool        BinaryEdited{false};

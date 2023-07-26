@@ -4,12 +4,13 @@
 #include <QFormLayout>
 #include <QDialogButtonBox>
 #include <thread>
+#include <utility>
 #include "inputdialog.h"
 #include "StartWindow.h"
 #include "BiosSearch.h"
 #include "ui_BiosWindow.h"
 
-GeneralData::GeneralData(QString dir):appDir(dir) {}
+GeneralData::GeneralData(QString dir):appDir(std::move(dir)) {}
 
 GeneralData::~GeneralData() {
     if (BiosViewerUi != nullptr)
@@ -61,7 +62,7 @@ BiosViewerData::~BiosViewerData() {
         delete InputImageModel;
 }
 
-bool BiosViewerData::isValidBIOS(UINT8 *image, INT64 imageLength) {
+bool BiosViewerData::isValidBIOS(const UINT8 *image, INT64 imageLength) {
     if (imageLength == 0x2000000) {
         FLASH_DESCRIPTOR_HEADER FDH = *(FLASH_DESCRIPTOR_HEADER*)image;
         if (FDH.Signature == V_FLASH_FDBAR_FLVALSIG) {
@@ -105,7 +106,7 @@ void BiosViewerWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
     connect(ui->treeWidget,       SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showTreeRightMenu(QPoint)));
 }
 
-void BiosViewerWindow::initSetting() {
+void BiosViewerWindow::initSetting() const {
     ui->treeWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->treeWidget->setStyleSheet(QString("QTreeView::item{margin:%1px;}").arg(setting.value("LineSpacing").toInt()));
 
@@ -126,7 +127,7 @@ void BiosViewerWindow::initSetting() {
     }
 }
 
-void BiosViewerWindow::setInfoWindowState(bool opened) {
+void BiosViewerWindow::setInfoWindowState(bool opened) const {
     InputData->infoWindowOpened = opened;
 }
 
@@ -140,7 +141,7 @@ void BiosViewerWindow::loadBios(Buffer *buffer) {
     setBiosFvData();
     setFfsData();
     setTreeData();
-    if (InputData->BiosValidFlag != false && InputData->BiosImage->FitTable != nullptr) {
+    if (InputData->BiosValidFlag && InputData->BiosImage->FitTable != nullptr) {
         InputData->BiosImage->setBiosID();
         InputData->BiosImage->getObbDigest();
         InputData->BiosImage->setInfoStr();
@@ -157,7 +158,7 @@ void BiosViewerWindow::loadBios(Buffer *buffer) {
     resizeEvent(nullptr);
 }
 
-void BiosViewerWindow::setSearchDialogState(bool opened) {
+void BiosViewerWindow::setSearchDialogState(bool opened) const {
     InputData->searchDialogOpened = opened;
 }
 
@@ -186,7 +187,7 @@ void BiosViewerWindow::ActionGotoTriggered() {
     QFormLayout form(&dialog);
     // Offset
     QString Offset = QString("Offset: ");
-    HexSpinBox *OffsetSpinbox = new HexSpinBox(&dialog);
+    auto *OffsetSpinbox = new HexSpinBox(&dialog);
     OffsetSpinbox->setFocus();
     OffsetSpinbox->selectAll();
     form.addRow(Offset, OffsetSpinbox);
@@ -221,7 +222,7 @@ bool BiosViewerWindow::eventFilter(QObject *obj, QEvent *event) {
     if (obj == ui->treeWidget->viewport()) {
         //点击树的空白,取消选中
         if (event->type() == QEvent::MouseButtonPress) {
-            QMouseEvent *e = (QMouseEvent *)event;
+            auto *e = (QMouseEvent *)event;
             if (e->buttons() & Qt::LeftButton) {
                 QModelIndex index = ui->treeWidget->indexAt(e->pos());
                 if (!index.isValid()) {
@@ -245,7 +246,7 @@ void BiosViewerWindow::TreeWidgetItemSelectionChanged()
     if (!index.isValid())
         return;
     QTreeWidgetItem *item = ui->treeWidget->currentItem();
-    DataModel * itemModel = item->data(BiosViewerData::Name, Qt::UserRole).value<DataModel*>();
+    auto * itemModel = item->data(BiosViewerData::Name, Qt::UserRole).value<DataModel*>();
     Volume* volume = itemModel->modelData;
     QPalette pal(ui->AddressPanel->palette());
     //    if (volume->isCompressed) {
@@ -276,7 +277,7 @@ void BiosViewerWindow::InfoButtonClicked()
     }
 }
 
-void BiosViewerWindow::refresh() {
+void BiosViewerWindow::refresh() const {
     ui->treeWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->treeWidget->setStyleSheet(QString("QTreeView::item{margin:%1px;}").arg(setting.value("LineSpacing").toInt()));
 

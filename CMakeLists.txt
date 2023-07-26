@@ -9,9 +9,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_PREFIX_PATH "C:\\Qt\\6.5.1\\msvc2019_64\\")
-
-
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
@@ -219,6 +216,7 @@ add_library(BrotliCommon STATIC ${BROTLI_COMMON_C})
 add_library(BrotliDec STATIC ${BROTLI_DEC_C})
 add_library(BrotliEnc STATIC ${BROTLI_ENC_C})
 target_link_libraries(Brotli PRIVATE BrotliCommon BrotliDec BrotliEnc)
+target_link_libraries(BrotliDec PRIVATE Brotli)
 
 target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Brotli Lzma UefiDecompress)
 

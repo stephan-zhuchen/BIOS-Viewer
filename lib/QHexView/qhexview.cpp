@@ -2,22 +2,19 @@
 #include <QClipboard>
 #include <QFile>
 #include <QKeyEvent>
-#include <QPaintEvent>
 #include <QPainter>
 #include <QScrollBar>
 #include <QSize>
 #include <stdexcept>
 #include <QtGlobal>
-#include <QInputDialog>
 #include <QFormLayout>
-#include <QSpinBox>
 #include <QDialogButtonBox>
 #include <QMessageBox>
 #include "inputdialog.h"
 #include "SearchDialog.h"
 
 // valid character table ascii
-#define CHAR_VALID(caracter) ((caracter < 0x20) || (caracter > 0x7e)) ? caracter = '.' : caracter;
+#define CHAR_VALID(_character) ((_character < 0x20) || (_character > 0x7e)) ? _character = '.' : _character;
 
 QHexView::QHexView(QWidget *parent)
     : QAbstractScrollArea(parent),
@@ -96,7 +93,7 @@ void QHexView::setfileOpened(bool state) {
     FileOpened = state;
 }
 
-void QHexView::loadFile(QString p_file) {
+void QHexView::loadFile(const QString& p_file) {
     QFile qFile;
     qFile.setFileName(p_file);
     qFile.open(QFile::ReadOnly);
@@ -104,13 +101,11 @@ void QHexView::loadFile(QString p_file) {
     if (qFile.isOpen()) {
         setCursorPos(0);
         resetSelection(0);
-
         HexDataArray = qFile.readAll();
-
         qFile.close();
     }
     else
-        throw std::runtime_error("Falied to open file " + p_file.toStdString());
+        throw std::runtime_error("Failed to open file " + p_file.toStdString());
 
     restartTimer();
     setfileOpened(true);
@@ -514,7 +509,7 @@ void QHexView::actionGoto() {
     QFormLayout form(&dialog);
     // Offset
     QString Offset = QString("Offset: ");
-    HexSpinBox *OffsetSpinbox = new HexSpinBox(&dialog);
+    auto *OffsetSpinbox = new HexSpinBox(&dialog);
     OffsetSpinbox->setFocus();
     OffsetSpinbox->selectAll();
     form.addRow(Offset, OffsetSpinbox);
@@ -537,7 +532,7 @@ void QHexView::actionGoto() {
 }
 
 void QHexView::actionSearch() {
-    SearchDialog *searchDialog = new SearchDialog();
+    auto *searchDialog = new SearchDialog();
     searchDialog->SetBinaryData(&HexDataArray);
     searchDialog->setParentWidget(this);
     searchDialog->exec();

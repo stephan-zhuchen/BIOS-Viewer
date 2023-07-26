@@ -109,8 +109,8 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
     for (int idx = 0; idx < number.size(); idx += 2) {
         littleEndianNum.append(number.mid(idx, 2));
     }
-    for (int var = 0; var < littleEndianNum.size(); ++var) {
-        searchNum.push_back(littleEndianNum.at(var).toInt(nullptr, 16));
+    for (const auto & var : littleEndianNum) {
+        searchNum.push_back(var.toInt(nullptr, 16));
     }
     if (isLittleEndian)
         std::reverse(searchNum.begin(), searchNum.end());
@@ -174,15 +174,9 @@ bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
     return false;
 }
 
-char SearchDialog::UpperToLower(char s) {
+char SearchDialog::UpperToLower(char s) const {
     if(!CaseSensitive && s >= 65 && s <= 90)
         s = s + 32;
-    return s;
-}
-
-char SearchDialog::LowerToUpper(char s) {
-    if(s >= 97 && s <= 122)
-        s = s - 32;
     return s;
 }
 
