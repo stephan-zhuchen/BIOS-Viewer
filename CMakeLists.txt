@@ -31,14 +31,23 @@ set(LZMA_SDK
         lib/LzmaDecompress/Sdk/C/LzmaDec.h
         lib/LzmaDecompress/Sdk/C/Precomp.h
         lib/LzmaDecompress/Sdk/C/LzmaDec.cpp
-        lib/LzmaDecompress/LzmaDecompress.cpp
-        lib/LzmaDecompress/LzmaDecompressLib.h
+        lib/LzmaDecompress/Sdk/C/Lzma2DecMt.cpp
+        lib/LzmaDecompress/Sdk/C/Lzma2DecMt.h
+        lib/LzmaDecompress/Sdk/C/Alloc.h
+        lib/LzmaDecompress/Sdk/C/Lzma2Dec.h
+        lib/LzmaDecompress/Sdk/C/MtDec.h
+        lib/LzmaDecompress/Sdk/C/Threads.h
+        lib/LzmaDecompress/Sdk/C/7zWindows.h
 )
 
-set(UEFI_DECOMPRESS
+set(DECOMPRESS_LIB
         lib/BaseUefiDecompress/UefiDecompressLib.h
         lib/BaseUefiDecompress/BaseUefiDecompressLib.h
         lib/BaseUefiDecompress/BaseUefiDecompressLib.cpp
+        lib/BrotliDecompress/BrotliDecompress.cpp
+        lib/BrotliDecompress/BrotliDecompressLib.h
+        lib/LzmaDecompress/LzmaDecompress.cpp
+        lib/LzmaDecompress/LzmaDecompressLib.h
 )
 
 set(BROTLI_COMMON_C
@@ -79,11 +88,6 @@ set(BROTLI_ENC_C
     lib/BrotliDecompress/brotli/enc/metablock.cpp
     lib/BrotliDecompress/brotli/enc/static_dict.cpp
     lib/BrotliDecompress/brotli/enc/utf8_util.cpp
-)
-
-set(BROTI_DECOMPRESS
-        lib/BrotliDecompress/BrotliDecompress.cpp
-        lib/BrotliDecompress/BrotliDecompressLib.h
 )
 
 set(INCLUDE_FILE
@@ -210,15 +214,11 @@ else()
 endif()
 
 add_library(Lzma STATIC ${LZMA_SDK})
-add_library(UefiDecompress STATIC ${UEFI_DECOMPRESS})
-add_library(Brotli STATIC ${BROTI_DECOMPRESS})
-add_library(BrotliCommon STATIC ${BROTLI_COMMON_C})
-add_library(BrotliDec STATIC ${BROTLI_DEC_C})
-add_library(BrotliEnc STATIC ${BROTLI_ENC_C})
-target_link_libraries(Brotli PRIVATE BrotliCommon BrotliDec BrotliEnc)
-target_link_libraries(BrotliDec PRIVATE Brotli)
+add_library(Brotli STATIC ${BROTLI_COMMON_C} ${BROTLI_DEC_C} ${BROTLI_ENC_C})
+add_library(Decompress STATIC ${DECOMPRESS_LIB})
+target_link_libraries(Decompress PRIVATE Lzma Brotli)
 
-target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Brotli Lzma UefiDecompress)
+target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Decompress)
 
 set_target_properties(BiosViewer PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
