@@ -1,4 +1,3 @@
-#include <initializer_list>
 #include "UEFI/GuidDefinition.h"
 #include "BaseLib.h"
 
@@ -22,7 +21,7 @@ bool EFI_GUID::operator!=(const EFI_GUID guid) {
     return !operator==(guid);
 }
 
-GuidDatabase::~GuidDatabase() {}
+GuidDatabase::~GuidDatabase() = default;
 
 std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
     std::string name;
@@ -39,9 +38,6 @@ std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
             break;
         case gFspSiliconFvGuid.Data1:
             name = "FSP-S";
-            break;
-        case gFvExtendedAdvancedFvNameGuid.Data1:
-            name = "FvExtendedAdvanced";
             break;
         case gEfiCertTypeRsa2048Sha256Guid.Data1:
             name = "CertType Rsa2048Sha256";

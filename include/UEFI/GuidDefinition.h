@@ -15,7 +15,6 @@ public:
 public:
     GuidDatabase();
     ~GuidDatabase();
-    void initializeGuidDatabase();
     std::string getNameFromGuid(EFI_GUID guid);
 
     // GUID Definition

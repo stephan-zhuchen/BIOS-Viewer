@@ -268,52 +268,52 @@ QString FfsModel::getFmpDeviceName() {
     QString FmpName;
     EFI_GUID FmpGuid = ((FfsFile*)modelData)->FfsHeader.Name;
     switch (FmpGuid.Data1) {
-    case guidData->gFmpDeviceMonolithicDefaultGuid.Data1:
+        case GuidDatabase::gFmpDeviceMonolithicDefaultGuid.Data1:
         FmpName = "Monolithic";
         break;
-    case guidData->gFmpDeviceIfwiDefaultGuid.Data1:
+    case GuidDatabase::gFmpDeviceIfwiDefaultGuid.Data1:
         FmpName = "IFWI";
         break;
-    case guidData->gFmpDeviceBiosDefaultGuid.Data1:
+    case GuidDatabase::gFmpDeviceBiosDefaultGuid.Data1:
         FmpName = "Bios";
         break;
-    case guidData->gFmpDeviceMeDefaultGuid.Data1:
+    case GuidDatabase::gFmpDeviceMeDefaultGuid.Data1:
         FmpName = "Me";
         break;
-    case guidData->gFmpDeviceEcDefaultGuid.Data1:
+    case GuidDatabase::gFmpDeviceEcDefaultGuid.Data1:
         FmpName = "EC";
         break;
-    case guidData->gFmpDeviceBtGAcmDefaultGuid.Data1:
+    case GuidDatabase::gFmpDeviceBtGAcmDefaultGuid.Data1:
         FmpName = "BtgAcm";
         break;
-    case guidData->gFmpDeviceMicrocodeDefaultGuid.Data1:
+    case GuidDatabase::gFmpDeviceMicrocodeDefaultGuid.Data1:
         FmpName = "uCode";
         break;
-    case guidData->gFmpDevicePlatformCypressPDGuid.Data1:
+    case GuidDatabase::gFmpDevicePlatformCypressPDGuid.Data1:
         FmpName = "CypressPD";
         break;
-    case guidData->gFmpDevicePlatformTiPDGuid.Data1:
+    case GuidDatabase::gFmpDevicePlatformTiPDGuid.Data1:
         FmpName = "TiPD";
         break;
-    case guidData->gFmpDevicePlatformRetimerGuid.Data1:
+    case GuidDatabase::gFmpDevicePlatformRetimerGuid.Data1:
         FmpName = "Retimer";
         break;
-    case guidData->gFmpDevicePlatformDiscreteTBTGuid.Data1:
+    case GuidDatabase::gFmpDevicePlatformDiscreteTBTGuid.Data1:
         FmpName = "DiscreteTBT";
         break;
-    case guidData->gFmpDeviceMeFwAdlLpConsGuid.Data1:
+    case GuidDatabase::gFmpDeviceMeFwAdlLpConsGuid.Data1:
         FmpName = "MeFwAdlLpCons";
         break;
-    case guidData->gFmpDeviceMeFwAdlHConsGuid.Data1:
+    case GuidDatabase::gFmpDeviceMeFwAdlHConsGuid.Data1:
         FmpName = "MeFwAdlHCons";
         break;
-    case guidData->gFmpDeviceMeFwAdlLpCorpGuid.Data1:
+    case GuidDatabase::gFmpDeviceMeFwAdlLpCorpGuid.Data1:
         FmpName = "MeFwAdlLpCorp";
         break;
-    case guidData->gFmpDeviceMeFwAdlHCorpGuid.Data1:
+    case GuidDatabase::gFmpDeviceMeFwAdlHCorpGuid.Data1:
         FmpName = "MeFwAdlHCorp";
         break;
-    case guidData->gFmpDeviceIshPdtDefaultGuid.Data1:
+    case GuidDatabase::gFmpDeviceIshPdtDefaultGuid.Data1:
         FmpName = "ISH PDT";
         break;
     default:

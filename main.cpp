@@ -1,6 +1,8 @@
 #include "Window/StartWindow.h"
 #include <QApplication>
+#ifdef Q_OS_WIN
 #include "vld.h"
+#endif
 
 int main(int argc, char *argv[])
 {
