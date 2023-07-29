@@ -59,6 +59,20 @@ QHexView::~QHexView() {
     finiRightMenu();
 }
 
+/**
+ * @brief Refreshes the QHexView after the settings are changed.
+ *
+ * This function refreshes the QHexView by repainting the visible area with the updated data.
+ * It ensures that any changes in the data are reflected in the view.
+ *
+ * The refreshed view will reflect any modifications made to the data model since the last refresh.
+ *
+ * This function is typically called when there are updates to the underlying data that need to be
+ * displayed in the view.
+ *
+ * @see QHexView, setData()
+ */
+
 void QHexView::refresh() {
     // default configs
     if (setting.contains("HexFont") && setting.contains("HexFontSize")){
@@ -89,7 +103,7 @@ void QHexView::refresh() {
     }
 }
 
-void QHexView::setfileOpened(bool state) {
+void QHexView::setFileOpened(bool state) {
     FileOpened = state;
 }
 
@@ -108,7 +122,7 @@ void QHexView::loadFile(const QString& p_file) {
         throw std::runtime_error("Failed to open file " + p_file.toStdString());
 
     restartTimer();
-    setfileOpened(true);
+    setFileOpened(true);
 
 //  resetSelection(0);
 }
@@ -119,11 +133,23 @@ void QHexView::loadFromBuffer(QByteArray &buffer) {
     resetSelection(0);
     EditedPos.clear();
     setAddressLength();
-    setfileOpened(true);
+    setFileOpened(true);
     restartTimer();
 }
 
-// search and set offset
+
+/**
+ * @brief Sets the starting offset to display in the Hex View.
+ *
+ * This method sets the starting offset to display in the Hex View. The starting
+ * offset determines the first byte to be shown in the Hex View. The offset should
+ * be a non-negative value where 0 indicates the beginning of the data and the
+ * maximum offset is based on the length of the data provided.
+ *
+ * @param offset The starting offset in bytes.
+ * @param length The length of the data.
+ */
+
 void QHexView::showFromOffset(INT32 offset, INT32 length) {
     if (offset + length < HexDataArray.size())
     {
@@ -141,26 +167,60 @@ void QHexView::showFromOffset(INT32 offset, INT32 length) {
     }
 }
 
-// clean all
+
+/**
+ * @brief Clears the content of the QHexView.
+ *
+ * This function removes all the data and clears the display of the QHexView.
+ * It resets the cursor position to the beginning and clears any selection.
+ * After calling this function, the QHexView is empty.
+ */
+
 void QHexView::clear() {
     verticalScrollBar()->setValue(0);
     HexDataArray.clear();
     viewport()->update();
 }
 
+/**
+ * @brief Getter for the full size of the QHexView window.
+ *
+ * This function returns the full size of the QHexView window.
+ *
+ * @return The full size of the QHexView window.
+ */
+
 QSize QHexView::fullSize() const {
     if (HexDataArray.size() == 0)
-        return QSize(0, 0);
+        return {0, 0};
 
     INT32 width = AsciiCharPosition + (BytesPerHexLine * CharWidth);
-    INT32 height = HexDataArray.size() / BytesPerHexLine;
+    INT32 height = (INT32)HexDataArray.size() / BytesPerHexLine;
 
     if (HexDataArray.size() % BytesPerHexLine)
         height++;
 
     height *= CharHeight;
-    return QSize(width, height);
+    return {width, height};
 }
+
+/**
+ * @brief Updates the positions of the QHexView widget.
+ *
+ * This method recalculates the positions of the QHexView's elements
+ * based on the current state of the widget. It should be called whenever
+ * the widget is resized or its contents change.
+ *
+ * The positions that are updated include:
+ * - Hexadecimal and ASCII text labels
+ * - Line numbers
+ * - Vertical and horizontal scrollbars
+ *
+ * Note that this method does not return any value. It modifies the internal
+ * state of the QHexView widget directly.
+ *
+ * @see QHexView
+ */
 
 void QHexView::updatePositions() {
     CharWidth = fontMetrics().horizontalAdvance(QLatin1Char('9'));
@@ -171,11 +231,22 @@ void QHexView::updatePositions() {
     AsciiCharPosition = HexCharPosition + (BytesPerHexLine * 3 - 1) * CharWidth + GAP_HEX_ASCII;
 }
 
-/*****************************************************************************/
-/* Paint Hex View  */
-/*****************************************************************************/
-void QHexView::paintEvent(QPaintEvent *event)
-{
+
+/**
+ * @brief Handles the paint event of the QHexView widget.
+ *
+ * This function is called whenever the QHexView widget needs to be painted,
+ * such as when it becomes visible or is resized. It draws the content of the
+ * widget based on the current state and visual configuration.
+ *
+ * @param event A pointer to the QPaintEvent object containing information
+ *              about the paint event, such as the rectangle area that needs
+ *              to be updated.
+ *
+ * @see QWidget::paintEvent()
+ */
+
+void QHexView::paintEvent(QPaintEvent *event) {
     if (HexDataArray.size() == 0)
         return;
 
@@ -245,9 +316,9 @@ void QHexView::paintEvent(QPaintEvent *event)
                 }
             }
             if (isEdited(pos) && isSelected(pos)) {
-                painter.fillRect(QRectF(xPos, yPos - CharHeight + 4, CharWidth, CharHeight), SlectedEditedColor);
+                painter.fillRect(QRectF(xPos, yPos - CharHeight + 4, CharWidth, CharHeight), SelectedEditedColor);
                 if ((i % 2 == 1) && isEdited(pos + 1) && (i != BytesPerHexLine * 2 - 1)){
-                    painter.fillRect(QRectF(xPos + CharWidth, yPos - CharHeight + 4, CharWidth, CharHeight), SlectedEditedColor);
+                    painter.fillRect(QRectF(xPos + CharWidth, yPos - CharHeight + 4, CharWidth, CharHeight), SelectedEditedColor);
                 }
             }
 
@@ -315,10 +386,20 @@ void QHexView::paintEvent(QPaintEvent *event)
     }
 }
 
+/**
+ * @brief Gets the cursor position in the QHexView widget based on the given position.
+ *
+ * The cursor position is a QPoint object representing the x and y coordinates in the widget's coordinate system.
+ *
+ * @param position The desired cursor position in widget's coordinate system.
+ *
+ * @return the cursor position
+ */
+
 INT32 QHexView::cursorPos(const QPoint &position) {
-    INT32 pos = -1;
-    INT32 x = 0;
-    INT32 y = 0;
+    INT32 pos;
+    INT32 x;
+    INT32 y;
 
     if (!StartFromAscii) {
         if (position.x() < (INT32)HexCharPosition)
@@ -349,7 +430,7 @@ INT32 QHexView::cursorPos(const QPoint &position) {
     INT32 lastLineIdx = viewport()->size().height() / CharHeight + 1;
     INT32 lastDataIdx = getLineNum() - firstLineIdx;
     INT32 lastPageFirstLineIdx = getLineNum() + BLANK_LINE_NUM - viewport()->size().height() / CharHeight;
-    INT32 lastX_Offset = (HexDataArray.size() % BytesPerHexLine) * 2 - 1;
+    INT32 lastX_Offset = ((INT32)HexDataArray.size() % BytesPerHexLine) * 2 - 1;
 
     y = (position.y() / (int)CharHeight);
     if (y < 0) {
@@ -406,8 +487,8 @@ void QHexView::setSelection(INT32 pos) {
             SelectionEnd -= 1;
         }
     }
-    if (SelectionEnd >= 2 * HexDataArray.size() - 1) {
-        SelectionEnd = 2 * HexDataArray.size() - 1;
+    if (SelectionEnd >= HexDataArray.size() * 2 - 1) {
+        SelectionEnd = (INT32)(HexDataArray.size() * 2 - 1);
     }
 }
 
@@ -419,7 +500,7 @@ void QHexView::setCursorPos(INT32 position)
 
     INT32 maxPos = 0;
     if (HexDataArray.size() != 0) {
-        maxPos = (HexDataArray.size() - 1) * 2 + 1;
+        maxPos = (INT32)((HexDataArray.size() - 1) * 2 + 1);
     }
 
     if (position > maxPos)
@@ -429,7 +510,7 @@ void QHexView::setCursorPos(INT32 position)
     CursorPosition = position;
 }
 
-INT32 QHexView::getCursorPos() {
+INT32 QHexView::getCursorPos() const {
     return CursorPosition;
 }
 
@@ -497,7 +578,7 @@ void QHexView::restartTimer()
 }
 
 INT32 QHexView::getLineNum() {
-    INT32 num = HexDataArray.size() / BytesPerHexLine;
+    INT32 num = (INT32)HexDataArray.size() / BytesPerHexLine;
     if (HexDataArray.size() % BytesPerHexLine)
         num += 1;
     return num;
@@ -522,7 +603,7 @@ void QHexView::actionGoto() {
 
     // Process when OK button is clicked
     if (dialog.exec() == QDialog::Accepted) {
-        INT64 SearchOffset = OffsetSpinbox->value();
+        INT32 SearchOffset = OffsetSpinbox->value();
         if (SearchOffset < 0 ||SearchOffset >= HexDataArray.size()) {
             QMessageBox::critical(this, tr("Goto ..."), "Invalid offset!");
             return;

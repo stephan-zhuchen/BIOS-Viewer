@@ -7,6 +7,8 @@
 #include "SymbolDefinition.h"
 
 using UefiSpace::Volume;
+using BaseLibrarySpace::safeDelete;
+using BaseLibrarySpace::safeArrayDelete;
 
 /**
   Flash Region Type
@@ -50,7 +52,8 @@ protected:
     bool validFlag{true};
 public:
     FLASH_REGION_TYPE RegionType;
-    bool isValid() const;
+
+    virtual bool isValid() const;
     IfwiVolume(UINT8* file, INT64 RegionLength, INT64 FlashLength, FLASH_REGION_TYPE Type);
     ~IfwiVolume() override;
     virtual std::string getFlashmap();
@@ -66,11 +69,11 @@ public:
     INT64 FlashTotalSize;
     UINT8 descriptorVersion{2};
     enum TopSwap{_64KB=0, _128KB, _256KB, _512KB, _1MB, _2MB, _4MB, _8MB};
-    std::string topswap_size;
+    std::string topSwapSize;
 public:
     FlashDescriptorClass() = delete;
     FlashDescriptorClass(UINT8* file, INT64 RegionLength, INT64 FlashLength);
-    ~FlashDescriptorClass();
+    ~FlashDescriptorClass() override;
     std::string getFlashmap() override;
     void setInfoStr() override;
 };
@@ -81,7 +84,7 @@ private:
     GBE_VERSION     GbeVersion{};
 public:
     GbE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset);
-    ~GbE_RegionClass();
+    ~GbE_RegionClass() override;
     std::string getFlashmap() override;
     void setInfoStr() override;
 };
@@ -92,7 +95,7 @@ private:
 public:
     CSE_LayoutClass   *CSE_Layout{nullptr};
     ME_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset);
-    ~ME_RegionClass();
+    ~ME_RegionClass() override;
     std::string getFlashmap() override;
     void setInfoStr() override;
 };
@@ -108,8 +111,8 @@ private:
 public:
     std::vector<CSE_PartitionClass*>  CSE_Partitions;
     CSE_LayoutClass(UINT8* file, INT64 RegionLength, INT64 offset);
-    ~CSE_LayoutClass();
-    bool isValid() const;
+    ~CSE_LayoutClass() override;
+    bool isValid() const override;
     std::string getFlashmap() override;
     void setInfoStr() override;
 };
@@ -126,7 +129,7 @@ public:
     ~CSE_PartitionClass() override;
     void decodeBootPartition();
     void decodeDataPartition();
-    static std::string bpdtEntryTypeToString(const UINT16 type);
+    static std::string bpdtEntryTypeToString(UINT16 type);
     std::string getFlashmap() override;
     void setInfoStr() override;
 };
@@ -140,7 +143,7 @@ private:
     UINT8   BuildVer{};
 public:
     EC_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset);
-    ~EC_RegionClass();
+    ~EC_RegionClass() override;
     std::string getFlashmap() override;
     void setInfoStr() override;
 };
@@ -149,7 +152,7 @@ class OSSE_RegionClass : public IfwiVolume {
 private:
 public:
     OSSE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset);
-    ~OSSE_RegionClass();
+    ~OSSE_RegionClass() override;
     std::string getFlashmap() override;
     void setInfoStr() override;
 };

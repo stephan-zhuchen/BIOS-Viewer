@@ -65,47 +65,28 @@ void BiosViewerWindow::initRightMenu() {
 }
 
 void BiosViewerWindow::finiRightMenu() {
-    if (RightMenu != nullptr)
-        delete RightMenu;
-    if (DigestMenu != nullptr)
-        delete DigestMenu;
-    if (showPeCoff != nullptr)
-        delete showPeCoff;
-    if (showAcpiTable != nullptr)
-        delete showAcpiTable;
-    if (showHex != nullptr)
-        delete showHex;
-    if (showBodyHex != nullptr)
-        delete showBodyHex;
-    if (showDecompressedHex != nullptr)
-        delete showDecompressedHex;
-    if (extractVolumeAction != nullptr)
-        delete extractVolumeAction;
-    if (extractBodyVolumeAction != nullptr)
-        delete extractBodyVolumeAction;
-    if (showNvHex != nullptr)
-        delete showNvHex;
-    if (ExtractRegion != nullptr)
-        delete ExtractRegion;
-    if (ReplaceRegion != nullptr)
-        delete ReplaceRegion;
-    if (ReplaceFile != nullptr)
-        delete ReplaceFile;
-    if (md5_Menu != nullptr)
-        delete md5_Menu;
-    if (sha1_Menu != nullptr)
-        delete sha1_Menu;
-    if (sha224_Menu != nullptr)
-        delete sha224_Menu;
-    if (sha256_Menu != nullptr)
-        delete sha256_Menu;
-    if (sha384_Menu != nullptr)
-        delete sha384_Menu;
-    if (sha512_Menu != nullptr)
-        delete sha512_Menu;
+    safeDelete(RightMenu);
+    safeDelete(DigestMenu);
+    safeDelete(showPeCoff);
+    safeDelete(showAcpiTable);
+    safeDelete(showHex);
+    safeDelete(showBodyHex);
+    safeDelete(showDecompressedHex);
+    safeDelete(extractVolumeAction);
+    safeDelete(extractBodyVolumeAction);
+    safeDelete(showNvHex);
+    safeDelete(ExtractRegion);
+    safeDelete(ReplaceRegion);
+    safeDelete(ReplaceFile);
+    safeDelete(md5_Menu);
+    safeDelete(sha1_Menu);
+    safeDelete(sha224_Menu);
+    safeDelete(sha256_Menu);
+    safeDelete(sha384_Menu);
+    safeDelete(sha512_Menu);
 }
 
-void BiosViewerWindow::showTreeRightMenu(QPoint pos) {
+void BiosViewerWindow::showTreeRightMenu(QPoint pos) const {
     QIcon hexBinary, box_arrow_up, replace, key, windows;
     if (isDarkMode()) {
         hexBinary = QIcon(":/file-binary_light.svg");
@@ -205,7 +186,7 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) {
     RightMenu->show();
 }
 
-void BiosViewerWindow::showHexView() {
+void BiosViewerWindow::showHexView() const {
     auto *hexDialog = new HexViewDialog();
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
@@ -415,11 +396,11 @@ void BiosViewerWindow::replaceFfsContent() {
     INT64 FileSize = ((FfsFile*)InputData->RightClickeditemModel->modelData)->FfsSize - ((FfsFile*)InputData->RightClickeditemModel->modelData)->getHeaderSize();
     if (NewFileSize > FileSize) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "File size does not match!");
-        delete FileBuffer;
+        safeDelete(FileBuffer);
         return;
     }
-    UINT8* NewFile = FileBuffer->getBytes(NewFileSize);
-    delete FileBuffer;
+    UINT8* NewFile = FileBuffer->getBytes((INT32)NewFileSize);
+    safeDelete(FileBuffer);
 
     INT64 ReplaceOffset = InputData->RightClickeditemModel->modelData->offsetFromBegin + ((FfsFile*)InputData->RightClickeditemModel->modelData)->getHeaderSize();
     auto* NewImage = new UINT8[WindowData->InputImageSize];
@@ -433,12 +414,12 @@ void BiosViewerWindow::replaceFfsContent() {
         NewImage[IfwiIdx] = WindowData->InputImage[IfwiIdx];
     }
 
-    QFileInfo fileinfo {WindowData->OpenedFileName};
-    QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_NewAcm.bin";
+    QFileInfo fileInfo {WindowData->OpenedFileName};
+    QString outputPath = setting.value("LastFilePath").toString() + "/" + fileInfo.baseName() + "_NewAcm.bin";
     Buffer::saveBinary(outputPath.toStdString(), NewImage, 0, WindowData->InputImageSize);
 
-    delete[] NewFile;
-    delete[] NewImage;
+    safeArrayDelete(NewFile);
+    safeArrayDelete(NewImage);
 }
 
 void BiosViewerWindow::getMD5() const {

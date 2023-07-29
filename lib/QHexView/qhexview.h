@@ -32,7 +32,7 @@ public:
     ~QHexView() override;
 
     void refresh();
-    void setfileOpened(bool state);
+    void setFileOpened(bool state);
     void setParentWidget(QWidget *pWidget, bool fromMainWindow);
     void setReadOnly(bool ReadOnlyFlag);
     void actionGoto();
@@ -76,12 +76,12 @@ private:
     QWidget *parentWidget{nullptr};
     QColor SelectionColor{COLOR_SELECTION};
     QColor EditedColor{255, 128, 128, 0xff};
-    QColor SlectedEditedColor{143, 122, 46, 0xff};
+    QColor SelectedEditedColor{143, 122, 46, 0xff};
     QColor WordColor{Qt::black};
     QColor WordColorOpposite{Qt::white};
     QColor CursorColor{COLOR_CURSOR};
     QSettings setting{QSettings("Intel", "BiosViewer")};
-    QSettings SysSettings{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", QSettings::NativeFormat};
+    QSettings SysSettings{R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", QSettings::NativeFormat};
 
     QMenu *RightMenu{nullptr};
     QMenu *DigestMenu{nullptr};
@@ -110,7 +110,7 @@ private:
     void ensureVisible();
     void setCursorPos(INT32 pos);
     INT32 cursorPos(const QPoint &position);
-    INT32 getCursorPos();
+    INT32 getCursorPos() const;
     void confScrollBar();
     bool isSelected(INT32 index);
     bool isEdited(INT32 index);

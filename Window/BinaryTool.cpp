@@ -157,16 +157,16 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered()
     INT64 NewBiosSize = NewBiosBuffer->getBufferSize();
     if (NewBiosSize != InputData->BiosImage->size) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "Do not support replacing BIOS of different size!");
-        delete NewBiosBuffer;
+        safeDelete(NewBiosBuffer);
         return;
     }
     UINT8* NewBios = NewBiosBuffer->getBytes(NewBiosSize);
-    delete NewBiosBuffer;
+    safeDelete(NewBiosBuffer);
 
     IfwiVolume *FlashDescriptor = InputData->IFWI_Sections.at(0);
     if (FlashDescriptor->RegionType != FLASH_REGION_TYPE::FlashRegionDescriptor) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "Invalid Flash Descriptor!");
-        delete[] NewBios;
+        safeArrayDelete(NewBios);
         return;
     }
 
@@ -185,7 +185,7 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered()
 
     if (NewBiosSize > (INT64) (PaddingRegion.getSize() + BiosRegion.getSize())) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "Binary size is too large!");
-        delete[] NewBios;
+        safeArrayDelete(NewBios);
         return;
     }
 
@@ -215,8 +215,8 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered()
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_IntegratedBIOS.bin";
     Buffer::saveBinary(outputPath.toStdString(), NewIFWI, 0, IFWI_SIZE);
 
-    delete[] NewBios;
-    delete[] NewIFWI;
+    safeArrayDelete(NewBios);
+    safeArrayDelete(NewIFWI);
 }
 
 void BiosViewerWindow::SearchButtonClicked()

@@ -96,6 +96,11 @@ void SearchDialog::SetBinaryData(QByteArray *BinaryData) {
     BinaryBuffer = BinaryData;
 }
 
+/**
+ * @class SearchDialog
+ * @brief A class that represents a search dialog for binary search.
+ */
+
 bool SearchDialog::SearchBinary(int *begin, int *length) {
     if (SearchedString.size() == 0)
         return false;
@@ -139,6 +144,15 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
     QMessageBox::about(this, tr("Search"), "Not Found!");
     return false;
 }
+
+/**
+ * @class SearchDialog
+ * @brief SearchDialog class for performing binary search on ASCII values
+ *
+ * This class provides functionality to perform binary search on the ASCII values of an integer array.
+ * It takes a pointer to the beginning of the array and the length of the array as input, and provides
+ * methods to search for specific ASCII values within the array using the binary search algorithm.
+ */
 
 bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
     if (SearchedString.size() == 0)

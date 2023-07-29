@@ -150,17 +150,14 @@ namespace UefiSpace {
     }
 
     CommonSection::~CommonSection() {
-        if (peCoffHeader != nullptr)
-            delete peCoffHeader;
-        if (dependency != nullptr)
-            delete dependency;
+        safeDelete(peCoffHeader);
+        safeDelete(dependency);
         for (auto file : ChildFile) {
-            delete file;
+            safeDelete(file);
         }
-        if (AcpiTable != nullptr)
-            delete AcpiTable;
+        safeDelete(AcpiTable);
         if (DecompressedBufferOnHeap != nullptr)
-            delete[] DecompressedBufferOnHeap;
+            safeArrayDelete(DecompressedBufferOnHeap);
     }
 
     INT64 CommonSection::getSectionSize(UINT8* file) {
@@ -283,14 +280,14 @@ namespace UefiSpace {
             UINT16* char16FileName;
             char16FileName = (UINT16*)this->getBytes(offset, SectionSize - HeaderSize);
             FileNameString = Buffer::wstringToString(char16FileName);
-            delete[] char16FileName;
+            safeArrayDelete(char16FileName);
             break;
         case EFI_SECTION_VERSION:
             UINT16* char16VersionString;
             BuildNumber = this->getUINT16(offset);
             char16VersionString = (UINT16*)this->getBytes(offset + 2, SectionSize - HeaderSize - 2);
             VersionString = Buffer::wstringToString(char16VersionString);
-            delete[] char16VersionString;
+            safeArrayDelete(char16VersionString);
             break;
         case EFI_SECTION_FIRMWARE_VOLUME_IMAGE:
             ChildFile.push_back(new FirmwareVolume(data + HeaderSize, SectionSize - HeaderSize, offsetFromBegin + HeaderSize, false, this->isCompressed));
@@ -578,7 +575,7 @@ namespace UefiSpace {
 
     FfsFile::~FfsFile() {
         for(auto section:Sections) {
-            delete section;
+            safeDelete(section);
         }
     }
 
@@ -618,7 +615,7 @@ namespace UefiSpace {
             }
             auto *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this, this->isCompressed);
             if (!Sec->CheckValidation()) {
-                delete Sec;
+                safeDelete(Sec);
                 break;
             }
             Sec->SelfDecode();
@@ -706,14 +703,11 @@ namespace UefiSpace {
 
     FirmwareVolume::~FirmwareVolume() {
         for (auto file:FfsFiles) {
-            delete file;
+            safeDelete(file);
         }
-        if (freeSpace != nullptr) {
-            delete freeSpace;
-        }
-        if (NvStorage != nullptr) {
-            delete NvStorage;
-        }
+        safeDelete(freeSpace);
+        safeDelete(NvStorage);
+
     }
 
     GUID FirmwareVolume::getFvGuid(bool returnExt) const {
@@ -725,7 +719,7 @@ namespace UefiSpace {
         return GUID(FirmwareVolumeHeader.FileSystemGuid);
     }
 
-    void FirmwareVolume::decodeFfs(bool multithread) {
+    void FirmwareVolume::decodeFfs(bool multiThread) {
         INT64 offset = FirmwareVolumeSize;
         Buffer::Align(offset, 0, 0x8);
         if (isEmpty || isCorrupted || !checksumValid)
@@ -773,7 +767,7 @@ namespace UefiSpace {
             };
 
             // If multithreading is enabled, then create a thread that will decode the sections of the current FFS file.
-            if (multithread) {
+            if (multiThread) {
                 threadPool.emplace_back(FvDecoder, offset);
             } else {
                 FvDecoder(offset);
@@ -790,7 +784,7 @@ namespace UefiSpace {
                 break;
             }
         }
-        if (multithread) {
+        if (multiThread) {
             for (thread &t:threadPool) {
                 t.join();
             }
@@ -913,7 +907,7 @@ namespace UefiSpace {
 
     NvStorageVariable::~NvStorageVariable() {
         for(NvVariableEntry* VarEntry:VariableList)
-            delete VarEntry;
+            safeDelete(VarEntry);
     }
 
     void NvStorageVariable::setInfoStr() {
@@ -1013,8 +1007,8 @@ namespace UefiSpace {
 
     BiosImageVolume::~BiosImageVolume() {
         if (FitTable != nullptr)
-            delete FitTable;
-        delete[] data;
+            safeDelete(FitTable);
+        safeArrayDelete(data);
     }
 
     void BiosImageVolume::setDebugFlag() {
@@ -1215,22 +1209,9 @@ namespace UefiSpace {
                         continue;
                     auto *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, AcmAddress);
                     AcmEntries.push_back(AcmEntry);
-                } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST) {
+                } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST || FitEntry.Type == FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST) {
                     // Use external BpmGen2 tool to parse KM and BPM info
                     continue;
-//                    UINT64 KmAddress = FitEntry.Address & 0xFFFFFF;
-//                    UINT64 RelativeKmAddress = Buffer::adjustBufferAddress(0x1000000, KmAddress, length);
-//                    if (RelativeKmAddress > (UINT64)length && KmEntry != nullptr)
-//                        continue;
-//                    KmEntry = new KeyManifestClass(fv + RelativeKmAddress, length - RelativeKmAddress);
-                } else if (FitEntry.Type == FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST) {
-                    continue;
-//                    UINT64 BpmAddress = FitEntry.Address & 0xFFFFFF;
-//                    UINT64 RelativeBpmAddress = Buffer::adjustBufferAddress(0x1000000, BpmAddress, length);
-//                    INT64 FitEntrySize = (FitEntry.Size[2] << 16) + (FitEntry.Size[1] << 8) + FitEntry.Size[0];
-//                    if (RelativeBpmAddress > (UINT64)length && BpmEntry != nullptr && RelativeBpmAddress + (UINT64)FitEntrySize > (UINT64)length)
-//                        continue;
-//                    BpmEntry = new BootPolicyManifestClass(fv + RelativeBpmAddress, FitEntrySize);
                 }
             }
         } else {
@@ -1241,13 +1222,9 @@ namespace UefiSpace {
 
     FitTableClass::~FitTableClass() {
         for (auto MicrocodeEntry:MicrocodeEntries)
-            delete MicrocodeEntry;
+            safeDelete(MicrocodeEntry);
         for (auto AcmEntry:AcmEntries)
-            delete AcmEntry;
-        if (KmEntry != nullptr)
-            delete KmEntry;
-        if (BpmEntry != nullptr)
-            delete BpmEntry;
+            safeDelete(AcmEntry);
     }
 
     string FitTableClass::getTypeName(UINT8 type) {

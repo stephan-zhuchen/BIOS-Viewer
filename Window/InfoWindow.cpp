@@ -276,8 +276,6 @@ void InfoWindow::acmListWidgetItemSelectionChanged()
 
 void InfoWindow::BtgListWidgetItemSelectionChanged()
 {
-    using UefiSpace::KeyManifestClass;
-    using UefiSpace::BootPolicyManifestClass;
     QModelIndex index = ui->BtgListWidget->currentIndex();
     if (!index.isValid())
         return;

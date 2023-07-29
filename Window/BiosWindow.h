@@ -159,8 +159,8 @@ private slots:
     // Menu
     void initRightMenu();
     void finiRightMenu();
-    void showTreeRightMenu(QPoint);
-    void showHexView();
+    void showTreeRightMenu(QPoint) const;
+    void showHexView() const;
     void showBodyHexView();
     void showDecompressedHexView();
     void showNvHexView() const;

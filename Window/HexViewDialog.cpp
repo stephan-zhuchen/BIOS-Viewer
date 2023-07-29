@@ -38,7 +38,7 @@ void HexViewDialog::loadFile()
 //  {
 //    m_hexview->loadFile ( m_fileName );
 //    m_hexview->setAddressLength();
-//    m_hexview->setfileOpened(true);
+//    m_hexview->setFileOpened(true);
 //  }
 //  catch ( std::exception &e )
 //  {

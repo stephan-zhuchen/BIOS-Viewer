@@ -136,7 +136,7 @@ void BiosViewerWindow::setBiosFvData()
         INT64 searchInterval = 0x100;
         INT64 EmptyVolumeLength = 0;
         while (!FirmwareVolume::isValidFirmwareVolume(fvHeader)) {
-            delete fvHeader;
+            safeDelete(fvHeader);
             EmptyVolumeLength += searchInterval;
             buffer->setOffset(offset + EmptyVolumeLength);
             if (offset + EmptyVolumeLength >= bufferSize) {
@@ -145,7 +145,7 @@ void BiosViewerWindow::setBiosFvData()
             }
             fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
         }
-        delete fvHeader;
+        safeDelete(fvHeader);
 
         if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
             ui->titleInfomation->setText("No Firmware Found!");
@@ -164,7 +164,7 @@ void BiosViewerWindow::setBiosFvData()
 
 void BiosViewerWindow::setFfsData() {
     if (InputData->FirmwareVolumeData.size() == 1 && InputData->FirmwareVolumeData.at(0)->isEmpty) {
-        delete InputData->FirmwareVolumeData.at(0);
+        safeDelete(InputData->FirmwareVolumeData.at(0));
         InputData->FirmwareVolumeData.clear();
         InputData->InputImageModel->setName("Image Overview");
         InputData->InputImageModel->setType("");
@@ -280,7 +280,7 @@ void BiosViewerWindow::erasePadding(vector<DataModel*> &items) {
         DataModel *FvModel = items.at(i);
 
         if (FvModel->getSubType() == "Empty" || FvModel->getSubType() == "Pad") {
-            delete FvModel;
+            safeDelete(FvModel);
             items.erase(items.begin() + i);
             if (i > 0) {
                 i -= 1;

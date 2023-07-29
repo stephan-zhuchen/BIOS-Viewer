@@ -51,7 +51,7 @@ public:
     void initSettings();
     void refresh();
     void OpenFile(const QString& path, bool onlyHexView = false);
-    void DoubleClickOpenFile(QString path);
+    void DoubleClickOpenFile(const QString& path);
     void showHintWindow();
     void showTabWindow();
 

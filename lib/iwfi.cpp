@@ -59,28 +59,28 @@ FlashDescriptorClass::FlashDescriptorClass(UINT8* file, INT64 RegionLength, INT6
     UINT8 TW = *(data + 0x23C) >> 4;
     switch (TW) {
     case _128KB:
-        topswap_size = "128KB";
+        topSwapSize = "128KB";
         break;
     case _256KB:
-        topswap_size = "256KB";
+        topSwapSize = "256KB";
         break;
     case _512KB:
-        topswap_size = "512KB";
+        topSwapSize = "512KB";
         break;
     case _1MB:
-        topswap_size = "1MB";
+        topSwapSize = "1MB";
         break;
     case _2MB:
-        topswap_size = "2MB";
+        topSwapSize = "2MB";
         break;
     case _4MB:
-        topswap_size = "4MB";
+        topSwapSize = "4MB";
         break;
     case _8MB:
-        topswap_size = "8MB";
+        topSwapSize = "8MB";
         break;
     default:
-        topswap_size = "None";
+        topSwapSize = "None";
         break;
     }
 }
@@ -119,8 +119,7 @@ std::string FlashDescriptorClass::getFlashmap() {
 }
 
 FlashDescriptorClass::~FlashDescriptorClass() {
-    if (data != nullptr)
-        delete[] data;
+    safeArrayDelete(data);
 }
 
 void FlashDescriptorClass::setInfoStr() {
@@ -134,8 +133,8 @@ void FlashDescriptorClass::setInfoStr() {
        << setw(width) << "ME   region offset:"  << hex << RegionList.at(FLASH_REGION_TYPE::FlashRegionMe).getBase() << "h\n"
        << setw(width) << "BIOS region offset:"  << hex << RegionList.at(FLASH_REGION_TYPE::FlashRegionBios).getBase() << "h\n";
 
-    if (topswap_size != "None") {
-        ss << setw(width) << "\nTop Swap Block Size: "  << topswap_size << "\n";
+    if (topSwapSize != "None") {
+        ss << setw(width) << "\nTop Swap Block Size: " << topSwapSize << "\n";
     }
 
     InfoStr = QString::fromStdString(ss.str());
@@ -147,8 +146,7 @@ GbE_RegionClass::GbE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):
 }
 
 GbE_RegionClass::~GbE_RegionClass() {
-    if (data != nullptr)
-        delete[] data;
+    safeArrayDelete(data);
 }
 
 std::string GbE_RegionClass::getFlashmap() {
@@ -198,10 +196,8 @@ ME_RegionClass::ME_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):If
 }
 
 ME_RegionClass::~ME_RegionClass() {
-    if (data != nullptr)
-        delete[] data;
-    if (CSE_Layout != nullptr)
-        delete CSE_Layout;
+    safeArrayDelete(data);
+    safeDelete(CSE_Layout);
 }
 
 std::string ME_RegionClass::getFlashmap() {
@@ -269,7 +265,7 @@ CSE_LayoutClass::CSE_LayoutClass(UINT8* file, INT64 RegionLength, INT64 offset):
 
 CSE_LayoutClass::~CSE_LayoutClass() {
     for (CSE_PartitionClass* partition:CSE_Partitions)
-        delete partition;
+        safeDelete(partition);
 }
 
 bool CSE_LayoutClass::isValid() const {
@@ -359,7 +355,7 @@ void CSE_PartitionClass::decodeDataPartition() {
 
 CSE_PartitionClass::~CSE_PartitionClass() {
     for (CSE_PartitionClass* ChildPartition:ChildPartitions) {
-        delete ChildPartition;
+        safeDelete(ChildPartition);
     }
 }
 
@@ -454,8 +450,7 @@ EC_RegionClass::EC_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset):If
 }
 
 EC_RegionClass::~EC_RegionClass() {
-    if (data != nullptr)
-        delete[] data;
+    safeArrayDelete(data);
 }
 
 std::string EC_RegionClass::getFlashmap() {
@@ -488,8 +483,7 @@ OSSE_RegionClass::OSSE_RegionClass(UINT8* file, INT64 RegionLength, INT64 offset
 }
 
 OSSE_RegionClass::~OSSE_RegionClass() {
-    if (data != nullptr)
-        delete[] data;
+    safeArrayDelete(data);
 }
 
 std::string OSSE_RegionClass::getFlashmap() {

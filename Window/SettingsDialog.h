@@ -15,16 +15,16 @@ class SettingsDialog : public QDialog
 
 public:
     explicit SettingsDialog(QWidget *parent = nullptr);
-    ~SettingsDialog();
+    ~SettingsDialog() override;
 
     void setParentWidget(StartWindow *pWidget);
 
 private slots:
     void hexFontSizeBoxActivated(int index);
     void hexFontBoxActivated(int index);
-    void biosViewerThemeBoxActivated(int index);
-    void biosViewerFontSizeBoxActivated(int index);
-    void biosViewerFontBoxActivated(int index);
+    void BiosViewerThemeBoxActivated(int index);
+    void BiosViewerFontSizeBoxActivated(int index);
+    void BiosViewerFontBoxActivated(int index);
     void buttonBoxAccepted();
     void lineSpacingBoxActivated(int index);
     void infoFontSizeBoxActivated(int index);

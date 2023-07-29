@@ -61,9 +61,6 @@ Elf::~Elf() {
     for(auto sec:SectionList) {
         delete sec;
     }
-//    for (auto file:UpldFiles) {
-//        delete file;
-//    }
 }
 
 bool Elf::isValid() const {

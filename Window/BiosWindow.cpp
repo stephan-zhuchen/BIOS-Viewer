@@ -13,14 +13,9 @@
 GeneralData::GeneralData(QString dir):appDir(std::move(dir)) {}
 
 GeneralData::~GeneralData() {
-    if (BiosViewerUi != nullptr)
-        delete BiosViewerUi;
-    if (HexViewerUi != nullptr)
-        delete HexViewerUi;
-    if (InputImage != nullptr) {
-        delete InputImage;
-        InputImage = nullptr;
-    }
+    safeDelete(BiosViewerUi);
+    safeDelete(HexViewerUi);
+    safeDelete(InputImage);
 }
 
 BiosViewerData::~BiosViewerData() {
@@ -37,29 +32,27 @@ BiosViewerData::~BiosViewerData() {
     }
 
     for (auto IWFI_Model:IFWI_ModelData) {
-        delete IWFI_Model;
+        safeDelete(IWFI_Model);
     }
     IFWI_ModelData.clear();
 
     for (auto FirmwareVolume:FirmwareVolumeData) {
-        delete FirmwareVolume;
+        safeDelete(FirmwareVolume);
     }
     FirmwareVolumeData.clear();
 
     for (auto IWFI_Section:IFWI_Sections) {
-        delete IWFI_Section;
+        safeDelete(IWFI_Section);
     }
     IFWI_Sections.clear();
 
     for (UINT8* fvBuffer:FirmwareVolumeBuffer) {
-        delete[] fvBuffer;
+        safeArrayDelete(fvBuffer);
     }
     FirmwareVolumeBuffer.clear();
 
-    if (BiosImage != nullptr)
-        delete BiosImage;
-    if (InputImageModel != nullptr)
-        delete InputImageModel;
+    safeDelete(BiosImage);
+    safeDelete(InputImageModel);
 }
 
 bool BiosViewerData::isValidBIOS(const UINT8 *image, INT64 imageLength) {
@@ -88,10 +81,7 @@ BiosViewerWindow::BiosViewerWindow(StartWindow *parent):
 
 BiosViewerWindow::~BiosViewerWindow() {
     delete ui;
-    if (InputData != nullptr) {
-        delete InputData;
-        InputData = nullptr;
-    }
+    safeDelete(InputData);
     finiRightMenu();
 }
 

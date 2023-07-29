@@ -12,9 +12,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     connect(ui->hexFontSizeBox,        SIGNAL(activated(int)),    this, SLOT(hexFontSizeBoxActivated(int)));
     connect(ui->hexFontBox,            SIGNAL(activated(int)),    this, SLOT(hexFontBoxActivated(int)));
-    connect(ui->biosViewerThemeBox,    SIGNAL(activated(int)),    this, SLOT(biosViewerThemeBoxActivated(int)));
-    connect(ui->biosViewerFontSizeBox, SIGNAL(activated(int)),    this, SLOT(biosViewerFontSizeBoxActivated(int)));
-    connect(ui->biosViewerFontBox,     SIGNAL(activated(int)),    this, SLOT(biosViewerFontBoxActivated(int)));
+    connect(ui->biosViewerThemeBox,    SIGNAL(activated(int)),    this, SLOT(BiosViewerThemeBoxActivated(int)));
+    connect(ui->biosViewerFontSizeBox, SIGNAL(activated(int)),    this, SLOT(BiosViewerFontSizeBoxActivated(int)));
+    connect(ui->biosViewerFontBox,     SIGNAL(activated(int)),    this, SLOT(BiosViewerFontBoxActivated(int)));
     connect(ui->buttonBox,             SIGNAL(accepted()),        this, SLOT(buttonBoxAccepted()));
     connect(ui->lineSpacingBox,        SIGNAL(activated(int)),    this, SLOT(lineSpacingBoxActivated(int)));
     connect(ui->infoFontSizeBox,       SIGNAL(activated(int)),    this, SLOT(infoFontSizeBoxActivated(int)));
@@ -75,8 +75,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
         ui->onlyHexViewBox->setCheckState(Qt::Unchecked);
 }
 
-SettingsDialog::~SettingsDialog()
-{
+SettingsDialog::~SettingsDialog() {
     delete ui;
 }
 
@@ -92,17 +91,17 @@ void SettingsDialog::hexFontBoxActivated(int index)
     HexFont = ui->hexFontBox->currentText();
 }
 
-void SettingsDialog::biosViewerThemeBoxActivated(int index)
+void SettingsDialog::BiosViewerThemeBoxActivated(int index)
 {
     Theme = ui->biosViewerThemeBox->currentText();
 }
 
-void SettingsDialog::biosViewerFontSizeBoxActivated(int index)
+void SettingsDialog::BiosViewerFontSizeBoxActivated(int index)
 {
     StructureFontSize = ui->biosViewerFontSizeBox->currentText();
 }
 
-void SettingsDialog::biosViewerFontBoxActivated(int index)
+void SettingsDialog::BiosViewerFontBoxActivated(int index)
 {
     StructureFont = ui->biosViewerFontBox->currentText();
 }

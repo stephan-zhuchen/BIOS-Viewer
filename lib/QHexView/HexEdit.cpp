@@ -42,10 +42,10 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
     } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_V ) {
         PasteToContent();
     } else if ((event ->modifiers() & Qt::ControlModifier) == 0 && event->key() >= Qt::Key_0 && event->key() <= Qt::Key_9) {
-        inputKey = (event->key() - Qt::Key_0) & 0xF;
+        inputKey = static_cast<INT8>((event->key() - Qt::Key_0) & 0xF);
         binaryEdit(inputKey);
     } else if ((event ->modifiers() & Qt::ControlModifier) == 0 && event->key() >= Qt::Key_A && event->key() <= Qt::Key_F) {
-        inputKey = (event->key() - 0x37) & 0xF;
+        inputKey = static_cast<INT8>((event->key() - 0x37) & 0xF);
         binaryEdit(inputKey);
     }
 
@@ -116,7 +116,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
     if (event->matches(QKeySequence::MoveToEndOfDocument))
     {
         if (HexDataArray.size())
-            setCursorPos(HexDataArray.size() * 2);
+            setCursorPos((INT32)HexDataArray.size() * 2);
 
         resetSelection(CursorPosition);
         setVisible = true;
@@ -137,7 +137,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
         resetSelection(0);
 
         if (HexDataArray.size())
-            setSelection(2 * HexDataArray.size() - 1);
+            setSelection((INT32)HexDataArray.size() * 2 - 1);
 
         setVisible = true;
     }
@@ -213,7 +213,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
         INT32 pos = 0;
 
         if (HexDataArray.size())
-            pos = HexDataArray.size() * 2;
+            pos = (INT32)HexDataArray.size() * 2;
 
         setCursorPos(pos);
         setSelection(pos);
@@ -409,43 +409,34 @@ void QHexView::initRightMenu() {
 }
 
 void QHexView::finiRightMenu() {
-    if (RightMenu != nullptr)
-        delete RightMenu;
-    if (DigestMenu != nullptr)
-        delete DigestMenu;
-    if (ChecksumMenu != nullptr)
-        delete ChecksumMenu;
-    if (CopyContent != nullptr)
-        delete CopyContent;
-    if (PasteInsertContent != nullptr)
-        delete PasteInsertContent;
-    if (PasteOverlapContent != nullptr)
-        delete PasteOverlapContent;
-    if (DiscardChange != nullptr)
-        delete DiscardChange;
-    if (EnableEditing != nullptr)
-        delete EnableEditing;
-    if (SaveContent != nullptr)
-        delete SaveContent;
-    if (CheckSum8 != nullptr)
-        delete CheckSum8;
-    if (CheckSum16 != nullptr)
-        delete CheckSum16;
-    if (CheckSum32 != nullptr)
-        delete CheckSum32;
-    if (md5_Menu != nullptr)
-        delete md5_Menu;
-    if (sha1_Menu != nullptr)
-        delete sha1_Menu;
-    if (sha224_Menu != nullptr)
-        delete sha224_Menu;
-    if (sha256_Menu != nullptr)
-        delete sha256_Menu;
-    if (sha384_Menu != nullptr)
-        delete sha384_Menu;
-    if (sha512_Menu != nullptr)
-        delete sha512_Menu;
+    safeDelete(RightMenu);
+    safeDelete(DigestMenu);
+    safeDelete(ChecksumMenu);
+    safeDelete(CopyContent);
+    safeDelete(PasteInsertContent);
+    safeDelete(PasteOverlapContent);
+    safeDelete(DiscardChange);
+    safeDelete(EnableEditing);
+    safeDelete(SaveContent);
+    safeDelete(CheckSum8);
+    safeDelete(CheckSum16);
+    safeDelete(CheckSum32);
+    safeDelete(md5_Menu);
+    safeDelete(sha1_Menu);
+    safeDelete(sha224_Menu);
+    safeDelete(sha256_Menu);
+    safeDelete(sha384_Menu);
+    safeDelete(sha512_Menu);
 }
+
+/**
+ * @brief Handles the context menu event for the QHexView class.
+ *
+ * This function is called when a context menu event is triggered in the QHexView.
+ * It allows the user to perform specific actions when the right mouse button is clicked.
+ *
+ * @param event The context menu event that was triggered.
+ */
 
 void QHexView::contextMenuEvent(QContextMenuEvent *event) {
     if (HexDataArray.size() == 0)
@@ -531,9 +522,9 @@ void QHexView::binaryEdit(char inputChar) {
     bool leftHex = (CursorPosition % 2) == 0;
     char newHex;
     if (leftHex) {
-        newHex = (inputChar << 4) | (HexDataArray.at(idx) & 0xF);
+        newHex = static_cast<char>((inputChar << 4) | (HexDataArray.at(idx) & 0xF));
     } else {
-        newHex = (HexDataArray.at(idx) & 0xF0) | inputChar;
+        newHex = static_cast<char>((HexDataArray.at(idx) & 0xF0) | inputChar);
     }
     HexDataArray.replace(idx, 1, QByteArray(&newHex, 1));
     setCursorPos(CursorPosition + 1);
@@ -608,7 +599,7 @@ void QHexView::PasteAndInsertToContent() {
     INT32 idx = (INT32)(CursorPosition / 2);
     for (int & Pos : EditedPos) {
         if (Pos >= CursorPosition) {
-            Pos += CopiedData.size() * 2;
+            Pos += (INT32)CopiedData.size() * 2;
         }
     }
     for (INT32 var = CursorPosition; var < CursorPosition + CopiedData.size() * 2; ++var) {
@@ -616,7 +607,7 @@ void QHexView::PasteAndInsertToContent() {
     }
     HexDataArray.insert(idx, CopiedData);
     setAddressLength();
-    setCursorPos(CursorPosition + CopiedData.size() * 2);
+    setCursorPos(CursorPosition + (INT32)CopiedData.size() * 2);
 
     BinaryEdited = true;
     if (!startFromMainWindow)
@@ -649,7 +640,7 @@ void QHexView::PasteAndOverlapToContent() {
     }
     HexDataArray.replace(idx, CopiedData.size(), CopiedData);
     setAddressLength();
-    setCursorPos(CursorPosition + CopiedData.size() * 2);
+    setCursorPos(CursorPosition + (INT32)CopiedData.size() * 2);
 
     BinaryEdited = true;
     if (!startFromMainWindow)

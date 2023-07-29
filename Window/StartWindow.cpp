@@ -58,6 +58,17 @@ StartWindow::~StartWindow() {
         delete data;
 }
 
+/**
+ * @brief Initializes the settings for the start window.
+ *
+ * This function is responsible for initializing the settings for the start window
+ * in the StartWindow class. It sets up any necessary properties, configurations,
+ * or variables needed for the start window to function properly.
+ *
+ * @param None
+ * @return None
+ */
+
 void StartWindow::initSettings() {
     if (!setting.contains("Theme"))
         setting.setValue("Theme", "System");
@@ -121,6 +132,16 @@ void StartWindow::initSettings() {
     }
 }
 
+/**
+ * @brief This function refreshes the StartWindow after settings are changed
+ *
+ * This function is responsible for refreshing the StartWindow. It updates the
+ * display with the latest content and ensures that any changes made to the
+ * window are reflected immediately.
+ *
+ * @note This function does not return any value.
+ */
+
 void StartWindow::refresh() {
     initSettings();
     if (TabData.empty())
@@ -138,67 +159,62 @@ void StartWindow::OpenFile(const QString& path, bool onlyHexView) {
         showTabWindow();
 
     auto *buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
-    if (buffer != nullptr) {
-        this->setWindowTitle("BIOS Viewer -- " + path);
-        auto *newTabData = new GeneralData(appPath);
-        TabData.push_back(newTabData);
-        newTabData->OpenedFileName = path;
-        newTabData->WindowTitle += this->windowTitle();
-        newTabData->InputImageSize = buffer->getBufferSize();
-        newTabData->InputImage = buffer->getBytes(newTabData->InputImageSize);
-        newTabData->buffer = buffer;
-        newTabData->DarkmodeFlag = DarkmodeFlag;
-        newTabData->BiosViewerUi = new BiosViewerWindow(this);
-        newTabData->HexViewerUi = new HexViewWindow(this);
-
-        QFileInfo FileInfo(path);
-        bool onlyHex = DisableBiosViewer || onlyHexView;
-        auto *tabWidget = new QMainWindow;
-        if (!onlyHex && BiosViewerWindow::TryOpenBios(newTabData->InputImage, newTabData->InputImageSize)) {
-            newTabData->CurrentWindow = WindowMode::BIOS;
-            newTabData->BiosViewerUi->setupUi(tabWidget, newTabData);
-            newTabData->BiosViewerUi->loadBios(buffer);
-            ui->actionCollapse->setEnabled(true);
-            ui->actionHex_View->setEnabled(true);
-            ui->actionBios_View->setDisabled(true);
-            MainTabWidget->addTab(tabWidget, FileInfo.fileName());
-        } else {
-            newTabData->CurrentWindow = WindowMode::Hex;
-            newTabData->HexViewerUi->setupUi(tabWidget, newTabData);
-            newTabData->HexViewerUi->loadBuffer(newTabData->InputImage, newTabData->InputImageSize);
-            ui->actionCollapse->setDisabled(true);
-            ui->actionHex_View->setDisabled(true);
-            ui->actionBios_View->setDisabled(true);
-            MainTabWidget->addTab(tabWidget, FileInfo.fileName());
-        }
-        MainTabWidget->setCurrentIndex(TabData.size() - 1);
-        delete buffer;
+    this->setWindowTitle("BIOS Viewer -- " + path);
+    auto *newTabData = new GeneralData(appPath);
+    TabData.push_back(newTabData);
+    newTabData->OpenedFileName = path;
+    newTabData->WindowTitle += this->windowTitle();
+    newTabData->InputImageSize = buffer->getBufferSize();
+    newTabData->InputImage = buffer->getBytes((INT32)newTabData->InputImageSize);
+    newTabData->buffer = buffer;
+    newTabData->DarkmodeFlag = DarkmodeFlag;
+    newTabData->BiosViewerUi = new BiosViewerWindow(this);
+    newTabData->HexViewerUi = new HexViewWindow(this);
+    QFileInfo FileInfo(path);
+    bool onlyHex = DisableBiosViewer || onlyHexView;
+    auto *tabWidget = new QMainWindow;
+    if (!onlyHex && BiosViewerWindow::TryOpenBios(newTabData->InputImage, newTabData->InputImageSize)) {
+        newTabData->CurrentWindow = WindowMode::BIOS;
+        newTabData->BiosViewerUi->setupUi(tabWidget, newTabData);
+        newTabData->BiosViewerUi->loadBios(buffer);
+        ui->actionCollapse->setEnabled(true);
+        ui->actionHex_View->setEnabled(true);
+        ui->actionBios_View->setDisabled(true);
+        MainTabWidget->addTab(tabWidget, FileInfo.fileName());
     } else {
-        QMessageBox::warning(this, tr("Warning"), tr("Can not open this file!"));
+        newTabData->CurrentWindow = WindowMode::Hex;
+        newTabData->HexViewerUi->setupUi(tabWidget, newTabData);
+        newTabData->HexViewerUi->loadBuffer(newTabData->InputImage, newTabData->InputImageSize);
+        ui->actionCollapse->setDisabled(true);
+        ui->actionHex_View->setDisabled(true);
+        ui->actionBios_View->setDisabled(true);
+        MainTabWidget->addTab(tabWidget, FileInfo.fileName());
     }
+    MainTabWidget->setCurrentIndex((INT32)TabData.size() - 1);
+    safeDelete(buffer);
 }
 
-void StartWindow::DoubleClickOpenFile(QString path) {
+void StartWindow::DoubleClickOpenFile(const QString& path) {
     OpenFile(path);
 }
 
 void StartWindow::showHintWindow() {
-    auto *centralwidget = new QWidget(this);
+    auto *centralWidget = new QWidget(this);
     auto *HintLabel = new QLabel("Drag and drop or \"Start -> Open\" any File");
     HintLabel->setStyleSheet("color:grey;");
     HintLabel->setAlignment(Qt::AlignCenter);
     HintLabel->setFont(QFont(setting.value("BiosViewerFont").toString(), 28));
-    auto *StartLayout = new QVBoxLayout(centralwidget);
+    auto *StartLayout = new QVBoxLayout(centralWidget);
     StartLayout->addWidget(HintLabel);
-    this->setCentralWidget(centralwidget);
+    this->setCentralWidget(centralWidget);
 }
 
 void StartWindow::showTabWindow() {
-    auto *centralwidget = new QWidget(this);
-    auto *StartLayout = new QVBoxLayout(centralwidget);
+    auto *centralWidget = new QWidget(this);
+    auto *StartLayout = new QVBoxLayout(centralWidget);
     StartLayout->setObjectName("StartLayout");
     StartLayout->setContentsMargins(0, 0, 0, 0);
-    MainTabWidget = new QTabWidget(centralwidget);
+    MainTabWidget = new QTabWidget(centralWidget);
     MainTabWidget->setObjectName("MainTabWidget");
     MainTabWidget->setTabsClosable(true);
     MainTabWidget->setCurrentIndex(-1);
@@ -208,7 +224,7 @@ void StartWindow::showTabWindow() {
     connect(MainTabWidget,          SIGNAL(currentChanged(int)), this, SLOT(CurrentTabChanged(int)));
 
     StartLayout->addWidget(MainTabWidget);
-    this->setCentralWidget(centralwidget);
+    this->setCentralWidget(centralWidget);
     this->statusBar()->hide();
 }
 
@@ -222,7 +238,7 @@ void StartWindow::closeEvent(QCloseEvent *event) {
                 WindowData->BiosViewerUi->closeEvent(event);
 
             if (event->isAccepted()) {
-                delete WindowData;
+                safeDelete(WindowData);
                 TabData.erase(TabData.begin() + index);
                 index -= 1;
             }
@@ -301,9 +317,15 @@ void StartWindow::ActionAboutQtTriggered() {
 }
 
 void StartWindow::ActionAboutBiosViewerTriggered() {
-    QString strText= QString("<html><head/><body><p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1"
-                              "</span></p><p>Intel Internal Use Only</p><p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Zhu, Chen")
-                          .arg(__BiosViewerVersion__).arg(__DATE__);
+    QString strText= QString("<html>"
+                             "<head/>"
+                             "<body>"
+                             "<p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1</span></p>"
+                             "<p>Intel Internal Use Only</p>"
+                             "<p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Zhu, Chen</p>"
+                             "</body>"
+                             "</html>")
+            .arg(__BiosViewerVersion__, __DATE__);
     QMessageBox::about(this, tr("About BIOS Viewer"), strText);
 }
 
@@ -315,8 +337,8 @@ void StartWindow::OpenInNewWindowTriggered() {
     if (fileName.isEmpty()){
         return;
     }
-    QFileInfo fileinfo {fileName};
-    setting.setValue("LastFilePath", fileinfo.path());
+    QFileInfo fileInfo {fileName};
+    setting.setValue("LastFilePath", fileInfo.path());
 
     auto *newWindow = new StartWindow(appPath);
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -351,7 +373,7 @@ void StartWindow::MainTabWidgetCloseRequested(int index) {
         data->BiosViewerUi->closeEvent(&event);
 
     if (event.isAccepted()) {
-        delete data;
+        safeDelete(data);
         TabData.erase(TabData.begin() + index);
         MainTabWidget->removeTab(index);
         if (TabData.empty())
@@ -378,7 +400,6 @@ void StartWindow::CurrentTabChanged(int index) {
         if (WindowData->CurrentWindow == WindowMode::BIOS && WindowData->BiosViewerUi->InputData->searchDialogOpened) {
             WindowData->BiosViewerUi->InputData->BiosSearchDialog->close();
         }
-
     }
 
     if (index >= 0) {
@@ -390,5 +411,4 @@ void StartWindow::CurrentTabChanged(int index) {
     } else {
         this->setWindowTitle("BIOS Viewer");
     }
-
 }

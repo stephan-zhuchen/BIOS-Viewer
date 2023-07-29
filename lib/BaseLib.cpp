@@ -16,8 +16,6 @@ namespace BaseLibrarySpace {
         return size;
     }
 
-    vector<pair<array<INT64, 2>, string> > Buffer::saveItem;
-
     UINT8 Buffer::getUINT8() {
         buffer->seekg(offset, ios::beg);
         offset += 1;
@@ -150,20 +148,6 @@ namespace BaseLibrarySpace {
         address += RelativeAddress;
     }
 
-    void Buffer::UAlign(UINT64& address, UINT64 RelativeAddress, UINT64 alignment) {
-        address -= RelativeAddress;
-        address += alignment - 1;
-        address = (UINT64)(address / alignment);
-        address = (UINT64)(address * alignment);
-        address += RelativeAddress;
-    }
-
-    void Buffer::prepareBufferToSave(INT64 offset, INT64 size, const string& name) {
-        array<INT64, 2> temp {offset, size};
-        auto tempPair = make_pair(temp, name);
-        saveItem.push_back(tempPair);
-    }
-
     INT64 Buffer::adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length) {
         return length - (FullLength - offset);
     }
@@ -247,11 +231,6 @@ namespace BaseLibrarySpace {
         UINTN   Count;
         UINTN   Total;
 
-//        ASSERT (Buffer != nullptr);
-//        ASSERT (((UINTN)Buffer & 0x3) == 0);
-//        ASSERT ((Length & 0x3) == 0);
-//        ASSERT (Length <= (MAX_ADDRESS - ((UINTN)Buffer) + 1));
-
         Total = Size / sizeof (*Buffer);
         for (Sum = 0, Count = 0; Count < Total; Count++) {
             Sum = Sum + *(Buffer + Count);
@@ -267,18 +246,6 @@ namespace BaseLibrarySpace {
         ofstream outFile(filename, ios::out | ios::binary);
         outFile.write((INT8*)(address + offset), size);
         outFile.close();
-    }
-
-    void Buffer::saveBufferToFile(string& filename, INT64 beginOffset, INT64 bufferSize) const {
-        buffer->seekg(beginOffset, ios::beg);
-        char* value = new char[bufferSize];
-        buffer->read(value, bufferSize);
-
-        ofstream outFile(filename, ios::out | ios::binary);
-        outFile.write(value, bufferSize);
-        outFile.close();
-        delete[] value;
-        buffer->seekg(offset, ios::beg);
     }
 
     GUID::GUID(const GUID& guid) {
