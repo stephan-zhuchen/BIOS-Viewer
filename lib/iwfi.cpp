@@ -217,7 +217,7 @@ void ME_RegionClass::setInfoStr() {
     INT32 width = 15;
     stringstream ss;
     ss.setf(ios::left);
-    ss << setw(width) << "Version Signature:" << hex << BaseLibrarySpace::Buffer::charToString((INT8*)&MeVersion.Signature, sizeof(UINT32), false) << "\n"
+    ss << setw(width) << "Version Signature:" << hex << BaseLibrarySpace::charToString((INT8*)&MeVersion.Signature, sizeof(UINT32), false) << "\n"
        << setw(width) << "ME Version:" << dec << MeVersion.Major << "." << MeVersion.Minor << "." << MeVersion.Bugfix << "." << MeVersion.Build << "\n";
     InfoStr = QString::fromStdString(ss.str());
 }
@@ -345,7 +345,7 @@ void CSE_PartitionClass::decodeDataPartition() {
     auto* firstPtEntry = (FPT_HEADER_ENTRY*)(data + sizeof(FPT_HEADER));
     for (UINT16 i = 0; i < numEntries; i++) {
         FPT_HEADER_ENTRY* fptEntry = firstPtEntry + i;
-        std::string name = UefiSpace::Buffer::charToString(fptEntry->Name, 4, false);
+        std::string name = UefiSpace::charToString(fptEntry->Name, 4, false);
         if (fptEntry->Size == 0)
             continue;
         ChildPartitions.push_back(new CSE_PartitionClass(data + fptEntry->Offset, fptEntry->Size, offsetFromBegin + fptEntry->Offset, name, CSE_PartitionClass::Level2));

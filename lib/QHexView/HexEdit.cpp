@@ -685,7 +685,7 @@ void QHexView::SaveSelectedContent() {
     if (extractVolumeName.isEmpty()) {
         return;
     }
-    BaseLibrarySpace::Buffer::saveBinary(extractVolumeName.toStdString(), (UINT8*)SelectedBuffer.data(), 0, length);
+    BaseLibrarySpace::saveBinary(extractVolumeName.toStdString(), (UINT8*)SelectedBuffer.data(), 0, length);
 }
 
 void QHexView::getChecksum8() {
@@ -695,7 +695,7 @@ void QHexView::getChecksum8() {
         return;
     }
     auto *itemData = (UINT8 *)SelectedBuffer.data();
-    UINT8 sum = BaseLibrarySpace::Buffer::CalculateSum8(itemData, length);
+    UINT8 sum = BaseLibrarySpace::CalculateSum8(itemData, length);
     QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 2, 16, QLatin1Char('0')).toUpper());
 }
 
@@ -706,7 +706,7 @@ void QHexView::getChecksum16() {
         return;
     }
     auto *itemData = (UINT16 *)SelectedBuffer.data();
-    UINT8 sum = BaseLibrarySpace::Buffer::CalculateSum16(itemData, length / 2);
+    UINT8 sum = BaseLibrarySpace::CalculateSum16(itemData, length / 2);
     QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 4, 16, QLatin1Char('0')).toUpper());
 }
 
@@ -717,7 +717,7 @@ void QHexView::getChecksum32() {
         return;
     }
     auto *itemData = (UINT32 *)SelectedBuffer.data();
-    UINT8 sum = BaseLibrarySpace::Buffer::CalculateSum32(itemData, length / 4);
+    UINT8 sum = BaseLibrarySpace::CalculateSum32(itemData, length / 4);
     QMessageBox::about(this, tr("Checksum"), "0x" + QString("%1").arg(sum, 8, 16, QLatin1Char('0')).toUpper());
 }
 

@@ -54,8 +54,6 @@ public:
 
 class FvModel: public DataModel {
 public:
-//    vector<FfsModel*> FfsModelData;
-public:
     explicit FvModel(FirmwareVolume *fv);
     ~FvModel();
 };

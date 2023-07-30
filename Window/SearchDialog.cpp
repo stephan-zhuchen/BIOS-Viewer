@@ -29,6 +29,9 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ui->SearchContent->setText(SearchedString);
     ui->SearchContent->selectAll();
     setAttribute(Qt::WA_DeleteOnClose);
+
+    QSettings windowSettings("Intel", "BiosViewer");
+    restoreGeometry(windowSettings.value("SearchDialog/geometry").toByteArray());
 }
 
 SearchDialog::~SearchDialog() {
@@ -201,6 +204,8 @@ void SearchDialog::keyPressEvent(QKeyEvent *event) {
 }
 
 void SearchDialog::closeEvent(QCloseEvent *event) {
+    QSettings windowSettings("Intel", "BiosViewer");
+    windowSettings.setValue("SearchDialog/geometry", saveGeometry());
     emit closeSignal(false);
 }
 

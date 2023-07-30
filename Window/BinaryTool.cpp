@@ -51,8 +51,8 @@ void StartWindow::ActionSeperateBinaryTriggered()
         QString upperFilePath = dirName + "/" + fileinfo.baseName() + "_upper.bin";
         QString lowerFilePath = dirName + "/" + fileinfo.baseName() + "_lower.bin";
 
-        Buffer::saveBinary(upperFilePath.toStdString(), WindowData->InputImage, 0, InputOffset);
-        Buffer::saveBinary(lowerFilePath.toStdString(), WindowData->InputImage, InputOffset, WindowData->InputImageSize - InputOffset);
+        saveBinary(upperFilePath.toStdString(), WindowData->InputImage, 0, InputOffset);
+        saveBinary(lowerFilePath.toStdString(), WindowData->InputImage, InputOffset, WindowData->InputImageSize - InputOffset);
     }
 }
 
@@ -85,7 +85,7 @@ void BiosViewerWindow::ActionExtractBIOSTriggered()
         return;
     }
 
-    Buffer::saveBinary(BiosName.toStdString(), WindowData->InputImage, BIOS_Offset, BIOS_Size);
+    saveBinary(BiosName.toStdString(), WindowData->InputImage, BIOS_Offset, BIOS_Size);
 }
 
 void StartWindow::ActionSearchTriggered()
@@ -213,7 +213,7 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered()
 
     QFileInfo fileinfo {WindowData->OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_IntegratedBIOS.bin";
-    Buffer::saveBinary(outputPath.toStdString(), NewIFWI, 0, IFWI_SIZE);
+    saveBinary(outputPath.toStdString(), NewIFWI, 0, IFWI_SIZE);
 
     safeArrayDelete(NewBios);
     safeArrayDelete(NewIFWI);
@@ -270,6 +270,6 @@ void StartWindow::ActionExtractBinaryTriggered()
                                                         outputPath,
                                                         tr("BIOS image(*.rom *.bin *.cap);;All files (*.*)"));
 
-        Buffer::saveBinary(BinaryName.toStdString(), WindowData->InputImage, InputOffset, InputLength);
+        saveBinary(BinaryName.toStdString(), WindowData->InputImage, InputOffset, InputLength);
     }
 }

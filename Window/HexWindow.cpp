@@ -75,7 +75,7 @@ void HexViewWindow::saveImage() {
     }
 
     // save edited image
-    BaseLibrarySpace::Buffer::saveBinary(WindowData->OpenedFileName.toStdString(), (UINT8*)NewHexBuffer.data(), 0, NewHexBuffer.size());
+    BaseLibrarySpace::saveBinary(WindowData->OpenedFileName.toStdString(), (UINT8*)NewHexBuffer.data(), 0, NewHexBuffer.size());
 }
 
 void HexViewWindow::setNewHexBuffer(QByteArray &buffer) {

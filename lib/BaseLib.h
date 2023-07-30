@@ -55,19 +55,9 @@ namespace BaseLibrarySpace {
         ~Buffer();
 
         void setOffset(INT64 off);
-        INT64 getOffset() const;
-        INT64 getBufferSize() const;
-        INT64 getRemainingSize() const;
-        static void   Align(INT64& address, INT64 RelativeAddress, INT64 alignment);
-        static INT64  adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length);
-        static string charToString(const INT8* address, INT64 length, bool hasZeroEnding=false);
-        static string wcharToString(const CHAR16* address, INT64 length, bool hasZeroEnding=false);
-        static string wstringToString(CHAR16* wcharAddress);
-        static UINT8  CalculateSum8(const UINT8 *Buffer, INT64 Size);
-        static UINT16 CalculateSum16(const UINT16 *Buffer, INT64 Size);
-        static UINT32 CalculateSum32(const UINT32 *Buffer, INT64 Size);
-        static INT32  getSizeFromUINT24(const UINT8* address);
-        static void   saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size);
+        [[nodiscard]] INT64 getOffset() const;
+        [[nodiscard]] INT64 getBufferSize() const;
+        [[nodiscard]] INT64 getRemainingSize() const;
     };
 
     class BiosException : public exception {
@@ -80,16 +70,25 @@ namespace BaseLibrarySpace {
     };
 
     template <typename T>
-    void safeDelete(T*& ptr)
-    {
+    void safeDelete(T*& ptr) {
         delete ptr;
         ptr = nullptr; // To avoid dangling pointer issues
     }
 
     template <typename T>
-    void safeArrayDelete(T *&ptr)
-    {
+    void safeArrayDelete(T *&ptr) {
         delete[] ptr;
         ptr = nullptr;
     }
+
+    void   Align(INT64& address, INT64 RelativeAddress, INT64 alignment);
+    INT64  adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length);
+    string charToString(const INT8* address, INT64 length, bool hasZeroEnding=false);
+    string wcharToString(const CHAR16* address, INT64 length, bool hasZeroEnding=false);
+    string wstringToString(CHAR16* wcharAddress);
+    UINT8  CalculateSum8(const UINT8 *Buffer, INT64 Size);
+    UINT16 CalculateSum16(const UINT16 *Buffer, INT64 Size);
+    UINT32 CalculateSum32(const UINT32 *Buffer, INT64 Size);
+    INT32  getSizeFromUINT24(const UINT8* address);
+    void   saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size);
 }

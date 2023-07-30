@@ -25,10 +25,6 @@ namespace UefiSpace {
     class AcmHeaderClass;
     class FfsFile;
     class NvStorageVariable;
-//    class KeyManifestClass;
-//    class BootPolicyManifestClass;
-//    class BpmElement;
-//    class IBBS_Class;
     class ACPI_Class;
 
     enum class VolumeType {
@@ -39,6 +35,12 @@ namespace UefiSpace {
         Other
     };
 
+    struct Decompressed {
+        vector<UINT8> decompressedBuffer;
+        UINT32 decompressedOffset;
+        UINT32 CompressedSize;
+    };
+
     class Volume {
     public:
         UINT8* data{};   // initialized from heap
@@ -46,30 +48,33 @@ namespace UefiSpace {
         INT64  offsetFromBegin{};
         bool   isCompressed{false};
         bool   isCorrupted{false};
-        const char* ErrorMsg = "offset larger than size!";
+        const char* SizeErrorMsg = "offset larger than size!";
         QString AdditionalMsg;
         QString InfoStr;
+        vector<Volume*>    ChildVolume;
     public:
-        VolumeType Type;
+        VolumeType Type{};
         Volume() = default;
         Volume(UINT8* fv, INT64 length, INT64 offset=0, bool Compressed=false);
         virtual ~Volume();
 
-        EFI_GUID getVolumeGuid() const;
-        EFI_GUID getGUID(INT64 offset);
-        UINT8  getUINT8(INT64 offset);
-        UINT16 getUINT16(INT64 offset);
-        UINT32 getUINT32(INT64 offset);
-        UINT64 getUINT64(INT64 offset);
-        INT8   getINT8(INT64 offset);
-        INT16  getINT16(INT64 offset);
-        INT32  getINT24(INT64 offset);
-        INT32  getINT32(INT64 offset);
-        INT64  getINT64(INT64 offset);
-        UINT8* getBytes(INT64 offset, INT64 length);
-        INT64  getSize() const;
-        virtual INT64 getHeaderSize() const;
+        [[nodiscard]] EFI_GUID getVolumeGuid() const;
+        [[nodiscard]] EFI_GUID getGUID(INT64 offset);
+        [[nodiscard]] UINT8  getUINT8(INT64 offset);
+        [[nodiscard]] UINT16 getUINT16(INT64 offset);
+        [[nodiscard]] UINT32 getUINT32(INT64 offset);
+        [[nodiscard]] UINT64 getUINT64(INT64 offset);
+        [[nodiscard]] INT8   getINT8(INT64 offset);
+        [[nodiscard]] INT16  getINT16(INT64 offset);
+        [[nodiscard]] INT32  getINT24(INT64 offset);
+        [[nodiscard]] INT32  getINT32(INT64 offset);
+        [[nodiscard]] INT64  getINT64(INT64 offset);
+        [[nodiscard]] UINT8* getBytes(INT64 offset, INT64 length);
+        [[nodiscard]] INT64  getSize() const;
+        [[nodiscard]] virtual INT64 getHeaderSize() const;
         virtual void setInfoStr();
+        bool  GetDecompressedVolume(vector<UINT8>& DecompressedVolume);
+        void  SearchDecompressedVolume(Volume *volume, vector<Decompressed*>& DecompressedVolumeList);
     };
 
     class EmptyVolume : public Volume {
@@ -91,7 +96,7 @@ namespace UefiSpace {
         PeCoff()=delete;
         PeCoff(UINT8* file, INT64 length, INT64 offset, bool Compressed=false);
 
-        string getMachineType() const;
+        [[nodiscard]] string getMachineType() const;
         static string getSubsystemName(UINT16 subsystem);
     };
 
@@ -123,8 +128,8 @@ namespace UefiSpace {
         UINT16                    BuildNumber;
         string                    VersionString;
 
+        UINT32                    HeaderSize;
         bool                      isExtend{false};
-        UINT32                    decompressedSize{0};
         FfsFile                   *ParentFFS{nullptr};
         vector<Volume*>           ChildFile;
         PeCoff                    *peCoffHeader{nullptr};
@@ -136,6 +141,7 @@ namespace UefiSpace {
         bool                      isAcpiHeader{false};
         vector<EFI_GUID>          AprioriList;
         ACPI_Class                *AcpiTable{nullptr};
+        UINT32                    decompressedSize{0};
         UINT8                     *DecompressedBufferOnHeap{nullptr};
     public:
         CommonSection()=delete;
@@ -147,7 +153,7 @@ namespace UefiSpace {
         void DecodeChildFile();
         bool CheckValidation();
         void setInfoStr() override;
-        INT64 getHeaderSize() const override;
+        [[nodiscard]] INT64 getHeaderSize() const override;
         static INT64 getSectionSize(UINT8* file);
     };
 
@@ -166,8 +172,8 @@ namespace UefiSpace {
         FfsFile(UINT8* file, INT64 offset, bool Compressed=false);
         ~FfsFile() override;
 
-        UINT8 getType() const;
-        INT64 getHeaderSize() const override;
+        [[nodiscard]] UINT8 getType() const;
+        [[nodiscard]] INT64 getHeaderSize() const override;
         void decodeSections();
         void setInfoStr() override;
     };
@@ -189,9 +195,9 @@ namespace UefiSpace {
         FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty=false, bool Compressed=false);
         ~FirmwareVolume() override;
 
-        GUID getFvGuid(bool returnExt=true) const;
+        [[nodiscard]] GUID getFvGuid(bool returnExt=true) const;
         void decodeFfs(bool multiThread=false);
-        INT64 getHeaderSize() const override;
+        [[nodiscard]] INT64 getHeaderSize() const override;
         void setInfoStr() override;
 
         static bool isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER* address);
@@ -208,7 +214,7 @@ namespace UefiSpace {
 
         NvVariableEntry() = delete;
         NvVariableEntry(UINT8* fv, INT64 offset, bool isAuth);
-        INT64 getHeaderSize() const override;
+        [[nodiscard]] INT64 getHeaderSize() const override;
         void setInfoStr() override;
     };
 
@@ -231,7 +237,7 @@ namespace UefiSpace {
     public:
         FspHeader(UINT8* fv, INT64 length, INT64 offset);
         ~FspHeader() override;
-        bool isValid() const;
+        [[nodiscard]] bool isValid() const;
         void setInfoStr() override;
         static bool isFspHeader(const UINT8  *ImageBase);
     };
@@ -254,7 +260,7 @@ namespace UefiSpace {
     public:
         BiosImageVolume()=delete;
         BiosImageVolume(UINT8* fv, INT64 length, INT64 offset=0);
-        ~BiosImageVolume();
+        ~BiosImageVolume() override;
 
         void setBiosID();
         void getObbDigest();
@@ -328,8 +334,8 @@ namespace UefiSpace {
         AcmHeaderClass() = delete;
         AcmHeaderClass(UINT8* fv, INT64 address);
         ~AcmHeaderClass() override;
-        bool isValid() const;
-        bool isProd() const;
+        [[nodiscard]] bool isValid() const;
+        [[nodiscard]] bool isProd() const;
         void setInfoStr() override;
     };
 
@@ -344,7 +350,7 @@ namespace UefiSpace {
         ACPI_Class()=delete;
         ACPI_Class(UINT8* fv, INT64 length, INT64 offset, bool needValidation=true);
         ~ACPI_Class() override;
-        bool isValid() const;
+        [[nodiscard]] bool isValid() const;
         static bool isAcpiHeader(const UINT8  *ImageBase, INT64 length);
         void setInfoStr() override;
     };

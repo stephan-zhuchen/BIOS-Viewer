@@ -24,7 +24,7 @@ public:
     void keyPressEvent(QKeyEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
     void setEditedState(bool edited);
-    void loadFile();
+
     void loadBuffer(QByteArray buffer, Volume *image, INT64 imageOffset, const QString &bufferName, const QString &imageName, bool Compressed);
     void saveImage();
     void setNewHexBuffer(QByteArray &buffer);

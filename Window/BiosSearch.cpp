@@ -16,6 +16,9 @@ BiosSearch::BiosSearch(QWidget *parent) :
     ui->SearchContent->setAttribute(Qt::WA_InputMethodEnabled, false);
     ui->guidTab->installEventFilter(this);
 
+    QSettings windowSettings("Intel", "BiosViewer");
+    restoreGeometry(windowSettings.value("BiosSearchDialog/geometry").toByteArray());
+
     connect(ui->SearchContent,      SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
     connect(ui->FvCheckbox,         SIGNAL(stateChanged(int)),    this, SLOT(FvCheckboxStateChanged(int)));
     connect(ui->FfsCheckbox,        SIGNAL(stateChanged(int)),    this, SLOT(FfsCheckboxStateChanged(int)));
@@ -436,6 +439,8 @@ void BiosSearch::keyPressEvent(QKeyEvent *event) {
 }
 
 void BiosSearch::closeEvent(QCloseEvent *event) {
+    QSettings windowSettings("Intel", "BiosViewer");
+    windowSettings.setValue("BiosSearchDialog/geometry", saveGeometry());
     emit closeSignal(false);
 }
 

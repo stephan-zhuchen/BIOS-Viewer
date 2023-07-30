@@ -175,15 +175,15 @@ namespace UefiSpace {
             ValidFlag = false;
             return;
         }
-        if (needValidation && Buffer::CalculateSum8(fv, length) != 0) {
+        if (needValidation && CalculateSum8(fv, length) != 0) {
             ValidFlag = false;
             return;
         }
         ValidFlag = true;
         AcpiHeader = *(EFI_ACPI_DESCRIPTION_HEADER*)fv;
-        AcpiTableSignature = Buffer::charToString((INT8*)fv, sizeof(UINT32), false);
-        AcpiTableOemID = Buffer::charToString((INT8*)&AcpiHeader.OemId, sizeof(UINT32), false);
-        AcpiTableOemTableID = Buffer::charToString((INT8*)&AcpiHeader.OemTableId, sizeof(UINT32), false);
+        AcpiTableSignature = charToString((INT8*)fv, sizeof(UINT32), false);
+        AcpiTableOemID = charToString((INT8*)&AcpiHeader.OemId, sizeof(UINT32), false);
+        AcpiTableOemTableID = charToString((INT8*)&AcpiHeader.OemTableId, sizeof(UINT32), false);
     }
 
     ACPI_Class::~ACPI_Class() = default;
@@ -200,7 +200,7 @@ namespace UefiSpace {
         if (size != length) {
             return false;
         }
-        if (Buffer::CalculateSum8(ImageBase, length) != 0) {
+        if (CalculateSum8(ImageBase, length) != 0) {
             return false;
         }
         return true;
@@ -215,10 +215,9 @@ namespace UefiSpace {
         ss << setw(width) << "Signature:"   << AcpiTableSignature << "\n"
            << setw(width) << "Length:"      << hex << uppercase << AcpiHeader.Length << "h\n"
            << setw(width) << "Revision:"    << hex << uppercase << (UINT16)AcpiHeader.Revision << "h\n"
-           << setw(width) << "OemId:"       << Buffer::charToString((INT8*)&AcpiHeader.OemId, 6, false) << "\n"
-           << setw(width) << "OemTableId:"  << Buffer::charToString((INT8*)&AcpiHeader.OemTableId, 8, false) << "\n";
+           << setw(width) << "OemId:"       << charToString((INT8*)&AcpiHeader.OemId, 6, false) << "\n"
+           << setw(width) << "OemTableId:"  << charToString((INT8*)&AcpiHeader.OemTableId, 8, false) << "\n";
 
         InfoStr = QString::fromStdString(ss.str());
     }
 }
-

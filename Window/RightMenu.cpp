@@ -27,6 +27,9 @@ void BiosViewerWindow::initRightMenu() {
     showDecompressedHex = new QAction("Decompressed Hex View");
     connect(showDecompressedHex,SIGNAL(triggered(bool)),this,SLOT(showDecompressedHexView()));
 
+    showDecompressedBiosHex = new QAction("Decompressed Hex View");
+    connect(showDecompressedBiosHex,SIGNAL(triggered(bool)),this,SLOT(showDecompressedBiosHexView()));
+
     extractVolumeAction = new QAction("Extract");
     connect(extractVolumeAction,SIGNAL(triggered(bool)),this,SLOT(extractVolume()));
 
@@ -72,6 +75,7 @@ void BiosViewerWindow::finiRightMenu() {
     safeDelete(showHex);
     safeDelete(showBodyHex);
     safeDelete(showDecompressedHex);
+    safeDelete(showDecompressedBiosHex);
     safeDelete(extractVolumeAction);
     safeDelete(extractBodyVolumeAction);
     safeDelete(showNvHex);
@@ -106,11 +110,11 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) const {
         return;
     QTreeWidgetItem *item = ui->treeWidget->itemAt(pos);
     InputData->RightClickeditemModel = item->data(BiosViewerData::Name, Qt::UserRole).value<DataModel*>();
-    DataModel *RightClickeditemModel = InputData->RightClickeditemModel;
+    DataModel *RightClickedItemModel = InputData->RightClickeditemModel;
 
     RightMenu->clear();
-    if (RightClickeditemModel->getSubType() == "PE32 image" ||
-        RightClickeditemModel->getSubType() == "PE32+ image") {
+    if (RightClickedItemModel->getSubType() == "PE32 image" ||
+        RightClickedItemModel->getSubType() == "PE32+ image") {
         QString filepath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
         QFile file(filepath);
         if (file.exists()) {
@@ -120,7 +124,7 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) const {
         }
     }
 
-    if (RightClickeditemModel->getName().mid(0, 10) == "ACPI Table") {
+    if (RightClickedItemModel->getName().mid(0, 10) == "ACPI Table") {
         QString filepath = WindowData->appDir + "/tool/ACPI/iasl.exe";
         QFile file(filepath);
         if (file.exists()) {
@@ -133,41 +137,47 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) const {
     showHex->setIcon(hexBinary);
     RightMenu->addAction(showHex);
 
-    if (RightClickeditemModel->getType() == "Volume") {
+    if (RightClickedItemModel->getType() == "Volume") {
         showDecompressedHex->setIcon(hexBinary);
         RightMenu->addAction(showDecompressedHex);
     }
 
-    if (RightClickeditemModel->getType() == "Volume" || RightClickeditemModel->getType() == "File" || RightClickeditemModel->getType() == "Section") {
+    if (RightClickedItemModel->getName() == "BIOS Image Overview") {
+        showDecompressedBiosHex->setIcon(hexBinary);
+        RightMenu->addAction(showDecompressedBiosHex);
+    }
+
+
+    if (RightClickedItemModel->getType() == "Volume" || RightClickedItemModel->getType() == "File" || RightClickedItemModel->getType() == "Section") {
         showBodyHex->setIcon(hexBinary);
-        extractVolumeAction->setText("Extract " + RightClickeditemModel->getType());
+        extractVolumeAction->setText("Extract " + RightClickedItemModel->getType());
         extractVolumeAction->setIcon(box_arrow_up);
-        extractBodyVolumeAction->setText("Extract " + RightClickeditemModel->getType() + " Body");
+        extractBodyVolumeAction->setText("Extract " + RightClickedItemModel->getType() + " Body");
         extractBodyVolumeAction->setIcon(box_arrow_up);
         RightMenu->addAction(showBodyHex);
         RightMenu->addAction(extractVolumeAction);
         RightMenu->addAction(extractBodyVolumeAction);
     }
 
-    if (RightClickeditemModel->getType() == "Variable") {
+    if (RightClickedItemModel->getType() == "Variable") {
         showNvHex->setIcon(hexBinary);
         RightMenu->addAction(showNvHex);
     }
 
-    QString RegionName = RightClickeditemModel->getName();
-    if (RightClickeditemModel->getType() == "Region") {
+    QString RegionName = RightClickedItemModel->getName();
+    if (RightClickedItemModel->getType() == "Region") {
         ExtractRegion->setText("Extract " + RegionName);
         ExtractRegion->setIcon(box_arrow_up);
         RightMenu->addAction(ExtractRegion);
     }
 
-    if (RightClickeditemModel->getType() == "Region" && RightClickeditemModel->getName() == "BIOS") {
+    if (RightClickedItemModel->getType() == "Region" && RightClickedItemModel->getName() == "BIOS") {
         ReplaceRegion->setText("Replace " + RegionName);
         ReplaceRegion->setIcon(replace);
         RightMenu->addAction(ReplaceRegion);
     }
 
-    if (RightClickeditemModel->getName() == "Startup Acm" && RightClickeditemModel->getType() == "File") {
+    if (RightClickedItemModel->getName() == "Startup Acm" && RightClickedItemModel->getType() == "File") {
         ReplaceFile->setText("Replace " + RegionName);
         ReplaceFile->setIcon(replace);
         RightMenu->addAction(ReplaceFile);
@@ -228,8 +238,57 @@ void BiosViewerWindow::showBodyHexView() {
 }
 
 void BiosViewerWindow::showDecompressedHexView() {
+    Volume *volume = InputData->RightClickeditemModel->modelData;
+    vector<UINT8> DecompressedVector;
+    if (!volume->GetDecompressedVolume(DecompressedVector)) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "No Compressed Section");
+        return;
+    }
 
+    auto *hexViewData = new QByteArray((char*)DecompressedVector.data(), DecompressedVector.size());
+    auto *hexDialog = new HexViewDialog();
+    if (isDarkMode()) {
+        hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
+    }
+
+    hexDialog->loadBuffer(*hexViewData,
+                          InputData->InputImageModel->modelData,
+                          InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          InputData->RightClickeditemModel->getName() + " Decompressed",
+                          WindowData->OpenedFileName,
+                          true);
+
+    hexDialog->show();
+    delete hexViewData;
 }
+
+void BiosViewerWindow::showDecompressedBiosHexView() {
+    vector<UINT8> DecompressedBios;
+    for (Volume *volume:*InputData->BiosImage->FvData) {
+        vector<UINT8> DecompressedVector;
+        if (!volume->GetDecompressedVolume(DecompressedVector)) {
+            DecompressedVector = vector<UINT8>(volume->data, volume->data + volume->size);
+        }
+        DecompressedBios.insert(DecompressedBios.end(), DecompressedVector.begin(), DecompressedVector.end());
+    }
+
+    auto *hexViewData = new QByteArray((char*)DecompressedBios.data(), DecompressedBios.size());
+    auto *hexDialog = new HexViewDialog();
+    if (isDarkMode()) {
+        hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
+    }
+
+    hexDialog->loadBuffer(*hexViewData,
+                          InputData->InputImageModel->modelData,
+                          InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          InputData->RightClickeditemModel->getName() + " Decompressed",
+                          WindowData->OpenedFileName,
+                          true);
+
+    hexDialog->show();
+    delete hexViewData;
+}
+
 
 void BiosViewerWindow::showNvHexView() const {
     auto *hexDialog = new HexViewDialog();
@@ -250,7 +309,7 @@ void BiosViewerWindow::showPeCoffView() {
     QString filepath = WindowData->appDir + "/tool/temp.bin";
     QString toolpath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
     INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
-    Buffer::saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
+    saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
@@ -292,7 +351,7 @@ void BiosViewerWindow::showAcpiTableView() {
     QString Dslpath = WindowData->appDir + "/tool/temp.dsl";
     QString toolpath = WindowData->appDir + "/tool/ACPI/iasl.exe";
     INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
-    Buffer::saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
+    saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
@@ -338,7 +397,7 @@ void BiosViewerWindow::extractVolume() {
     if (extractVolumeName.isEmpty()) {
         return;
     }
-    Buffer::saveBinary(extractVolumeName.toStdString(), InputData->RightClickeditemModel->modelData->data, 0, InputData->RightClickeditemModel->modelData->size);
+    saveBinary(extractVolumeName.toStdString(), InputData->RightClickeditemModel->modelData->data, 0, InputData->RightClickeditemModel->modelData->size);
 }
 
 void BiosViewerWindow::extractBodyVolume() {
@@ -358,7 +417,7 @@ void BiosViewerWindow::extractBodyVolume() {
         return;
     }
 
-    Buffer::saveBinary(extractVolumeName.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
+    saveBinary(extractVolumeName.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
 }
 
 void BiosViewerWindow::extractIfwiRegion() {
@@ -373,7 +432,7 @@ void BiosViewerWindow::extractIfwiRegion() {
         return;
     }
 
-    Buffer::saveBinary(extractRegionName.toStdString(), InputData->RightClickeditemModel->modelData->data, 0, InputData->RightClickeditemModel->modelData->size);
+    saveBinary(extractRegionName.toStdString(), InputData->RightClickeditemModel->modelData->data, 0, InputData->RightClickeditemModel->modelData->size);
 }
 
 void BiosViewerWindow::replaceIfwiRegion() {
@@ -416,7 +475,7 @@ void BiosViewerWindow::replaceFfsContent() {
 
     QFileInfo fileInfo {WindowData->OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileInfo.baseName() + "_NewAcm.bin";
-    Buffer::saveBinary(outputPath.toStdString(), NewImage, 0, WindowData->InputImageSize);
+    saveBinary(outputPath.toStdString(), NewImage, 0, WindowData->InputImageSize);
 
     safeArrayDelete(NewFile);
     safeArrayDelete(NewImage);

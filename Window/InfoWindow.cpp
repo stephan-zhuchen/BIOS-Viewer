@@ -40,6 +40,9 @@ InfoWindow::InfoWindow(QString Dir, QWidget *parent) :
     connect(ui->acmListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(acmListWidgetItemSelectionChanged()));
     connect(ui->BtgListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(BtgListWidgetItemSelectionChanged()));
     connect(ui->AcpiListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(AcpiListWidgetItemSelectionChanged()));
+
+    QSettings windowSettings("Intel", "BiosViewer");
+    restoreGeometry(windowSettings.value("InfoDialog/geometry").toByteArray());
 }
 
 InfoWindow::~InfoWindow()
@@ -74,19 +77,13 @@ void InfoWindow::showTab() {
 
     std::thread showAcpi(&InfoWindow::showAcpiTab, this);
     showAcpi.detach();
-
-//    std::thread showFlashmap(&InfoWindow::showFlashmapTab, this);
-//    showFlashmap.detach();
-
-//    std::thread showFce(&InfoWindow::showFceTab, this);
-//    showFce.detach();
 }
 
 void InfoWindow::showFitTab() {
     QTableWidgetItem    *item;
     FIRMWARE_INTERFACE_TABLE_ENTRY  FitHeader = BiosImage->FitTable->FitHeader;
     UINT64 address = FitHeader.Address;
-    QString FitSignature = QString::fromStdString(Buffer::charToString((INT8*)&address, sizeof(UINT64), false));
+    QString FitSignature = QString::fromStdString(charToString((INT8*)&address, sizeof(UINT64), false));
     INT32 FitNum = BiosImage->FitTable->FitEntryNum;
 
     ui->tableWidget->setColumnCount(6);
@@ -95,7 +92,7 @@ void InfoWindow::showFitTab() {
     item = new QTableWidgetItem(FitSignature);
     ui->tableWidget->setItem(0, InfoWindow::Address, item);
 
-    item = new QTableWidgetItem(QString("%1").arg(Buffer::getSizeFromUINT24(FitHeader.Size), 6, 16, QLatin1Char('0')).toUpper() + "h");
+    item = new QTableWidgetItem(QString("%1").arg(getSizeFromUINT24(FitHeader.Size), 6, 16, QLatin1Char('0')).toUpper() + "h");
     ui->tableWidget->setItem(0, InfoWindow::Size, item);
 
     item = new QTableWidgetItem(QString("%1").arg(FitHeader.Version, 4, 16, QLatin1Char('0')).toUpper() + "h");
@@ -119,7 +116,7 @@ void InfoWindow::showFitTab() {
         item = new QTableWidgetItem(QString("%1").arg(Entry.Address, 8, 16, QLatin1Char('0')).toUpper() + "h");
         ui->tableWidget->setItem(index + 1, InfoWindow::Address, item);
 
-        item = new QTableWidgetItem(QString("%1").arg(Buffer::getSizeFromUINT24(Entry.Size), 6, 16, QLatin1Char('0')).toUpper() + "h");
+        item = new QTableWidgetItem(QString("%1").arg(getSizeFromUINT24(Entry.Size), 6, 16, QLatin1Char('0')).toUpper() + "h");
         ui->tableWidget->setItem(index + 1, InfoWindow::Size, item);
 
         item = new QTableWidgetItem(QString("%1").arg(Entry.Version, 4, 16, QLatin1Char('0')).toUpper() + "h");
@@ -255,6 +252,8 @@ void InfoWindow::keyPressEvent(QKeyEvent *event) {
 
 void InfoWindow::closeEvent(QCloseEvent *event) {
     ((BiosViewerWindow*)parentWidget)->setInfoWindowState(false);
+    QSettings windowSettings("Intel", "BiosViewer");
+    windowSettings.setValue("InfoDialog/geometry", saveGeometry());
 }
 
 void InfoWindow::microcodeListWidgetItemSelectionChanged() {
@@ -343,7 +342,7 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
         return;
     }
 
-    Buffer::saveBinary(filepath.toStdString(), ACPI_Entry->data, 0, ACPI_Entry->size);
+    saveBinary(filepath.toStdString(), ACPI_Entry->data, 0, ACPI_Entry->size);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {
         AcpiText = "Please run as Administrator!";

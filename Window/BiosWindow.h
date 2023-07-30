@@ -97,6 +97,7 @@ public:
     QAction*       showHex{nullptr};
     QAction*       showBodyHex{nullptr};
     QAction*       showDecompressedHex{nullptr};
+    QAction*       showDecompressedBiosHex{nullptr};
     QAction*       extractVolumeAction{nullptr};
     QAction*       extractBodyVolumeAction{nullptr};
     QAction*       showNvHex{nullptr};
@@ -163,6 +164,7 @@ private slots:
     void showHexView() const;
     void showBodyHexView();
     void showDecompressedHexView();
+    void showDecompressedBiosHexView();
     void showNvHexView() const;
     void showPeCoffView();
     void showAcpiTableView();
