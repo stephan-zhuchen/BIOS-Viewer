@@ -22,6 +22,7 @@ public:
 private slots:
     void hexFontSizeBoxActivated(int index);
     void hexFontBoxActivated(int index);
+    void asciiFontBoxActivated(int index);
     void BiosViewerThemeBoxActivated(int index);
     void BiosViewerFontSizeBoxActivated(int index);
     void BiosViewerFontBoxActivated(int index);
@@ -48,6 +49,7 @@ private:
     QString Theme;
     QString HexFontSize;
     QString HexFont;
+    QString AsciiFont;
     QString LineSpacing;
     QString InfoLineSpacing;
     QString ShowPaddingItem;

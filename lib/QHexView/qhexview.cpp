@@ -26,9 +26,11 @@ QHexView::QHexView(QWidget *parent)
     if (setting.contains("HexFont") && setting.contains("HexFontSize")){
         QString font = setting.value("HexFont").toString();
         INT32 fontsize = setting.value("HexFontSize").toInt();
-        FontSetting = QFont(font, fontsize, QFont::Normal, false);
+        HexFontSetting = QFont(font, fontsize);
+        font = setting.value("AsciiFont").toString();
+        AsciiFontSetting = QFont(font, fontsize);
     }
-    setFont(FontSetting); // default font
+    setFont(HexFontSetting); // default font
 
     if (setting.value("Theme").toString() == "System") {
         if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
@@ -75,12 +77,12 @@ QHexView::~QHexView() {
 
 void QHexView::refresh() {
     // default configs
-    if (setting.contains("HexFont") && setting.contains("HexFontSize")){
-        QString font = setting.value("HexFont").toString();
-        INT32 fontsize = setting.value("HexFontSize").toInt();
-        FontSetting = QFont(font, fontsize, QFont::Normal, false);
-    }
-    setFont(FontSetting); // default font
+    QString font = setting.value("HexFont").toString();
+    INT32 fontsize = setting.value("HexFontSize").toInt();
+    HexFontSetting = QFont(font, fontsize);
+    font = setting.value("AsciiFont").toString();
+    AsciiFontSetting = QFont(font, fontsize);
+    setFont(HexFontSetting); // default font
 
     if (setting.value("Theme").toString() == "System") {
         if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
@@ -291,6 +293,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
             painter.fillRect(QRectF(xPosAscii, yPos - CharHeight + 4, CharWidth, CharHeight), SelectionColor);
             }
 
+            painter.setFont(AsciiFontSetting);
             painter.drawText(xPosAscii, yPos, QString(character));
 
             painter.setBackground(painter.brush());
@@ -330,6 +333,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
                 val = QString::number(binaryNum & 0xF, 16);
             }
 
+            painter.setFont(HexFontSetting);
             painter.drawText(xPos, yPos, val.toUpper());
 
             if (i % 2 == 1){
@@ -343,6 +347,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
         // address drawn
         if (lineIdx <= lastDataIdx) {
             QString address = QString("%1h:").arg(lineIdx * BytesPerHexLine, AddressLength, 16, QChar('0'));
+            painter.setFont(HexFontSetting);
             painter.drawText(AddressPosition, yPos, address);
         }
 

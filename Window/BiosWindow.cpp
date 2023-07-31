@@ -8,6 +8,7 @@
 #include "inputdialog.h"
 #include "StartWindow.h"
 #include "BiosSearch.h"
+#include "CapsuleWindow.h"
 #include "ui_BiosWindow.h"
 
 GeneralData::GeneralData(QString dir):appDir(std::move(dir)) {}
@@ -15,6 +16,7 @@ GeneralData::GeneralData(QString dir):appDir(std::move(dir)) {}
 GeneralData::~GeneralData() {
     safeDelete(BiosViewerUi);
     safeDelete(HexViewerUi);
+    safeDelete(CapsuleViewerUi);
     safeDelete(InputImage);
 }
 
@@ -125,7 +127,7 @@ bool BiosViewerWindow::TryOpenBios(UINT8 *image, INT64 imageLength) {
     return BiosViewerData::isValidBIOS(image, imageLength);
 }
 
-void BiosViewerWindow::loadBios(Buffer *buffer) {
+void BiosViewerWindow::loadBios() {
     InputData = new BiosViewerData;
     InputData->InputImageModel = new DataModel(new Volume(WindowData->InputImage, WindowData->InputImageSize), "IFWI Overview", "Image", "UEFI", "", true);
     setBiosFvData();

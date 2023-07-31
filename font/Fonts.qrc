@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/Font">
+        <file>Fira Code.ttf</file>
+        <file>IntelOne Mono.ttf</file>
+        <file>Fira Code Light.ttf</file>
+    </qresource>
+</RCC>

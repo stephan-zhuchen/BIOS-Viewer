@@ -72,7 +72,8 @@ private:
     bool FileOpened{false};
     bool startFromMainWindow{false};
     QTimer *timer{nullptr};
-    QFont FontSetting{"Courier New", 12, QFont::Normal, false};
+    QFont HexFontSetting{"Courier New", 12, QFont::Normal, false};
+    QFont AsciiFontSetting{"Courier New", 12, QFont::Normal, false};
     QWidget *parentWidget{nullptr};
     QColor SelectionColor{COLOR_SELECTION};
     QColor EditedColor{255, 128, 128, 0xff};

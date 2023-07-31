@@ -6,10 +6,12 @@
 #include <QInputDialog>
 #include <QElapsedTimer>
 #include <QProcess>
+#include <QFontDatabase>
 #include <utility>
 #include "SettingsDialog.h"
 #include "UEFI/GuidDefinition.h"
 #include "StartWindow.h"
+#include "CapsuleWindow.h"
 #include "ui_StartWindow.h"
 
 GuidDatabase *guidData = nullptr;
@@ -25,6 +27,9 @@ StartWindow::StartWindow(QString appPath, QWidget *parent) :
 
     QSettings windowSettings("Intel", "BiosViewer");
     restoreGeometry(windowSettings.value("mainwindow/geometry").toByteArray());
+    InstallFonts("Fira Code");
+    InstallFonts("Fira Code Light");
+    InstallFonts("IntelOne Mono");
     initSettings();
 
     connect(ui->OpenFile,           SIGNAL(triggered()), this, SLOT(OpenFileTriggered()));
@@ -83,14 +88,16 @@ void StartWindow::initSettings() {
     if (!setting.contains("InfoFontSize"))
         setting.setValue("InfoFontSize", 12);
     if (!setting.contains("InfoFont"))
-        setting.setValue("InfoFont", "Courier");
+        setting.setValue("InfoFont", "Fira Code");
     if (!setting.contains("InfoLineSpacing"))
         setting.setValue("InfoLineSpacing", "2");
 
     if (!setting.contains("HexFontSize"))
         setting.setValue("HexFontSize", 12);
     if (!setting.contains("HexFont"))
-        setting.setValue("HexFont", "Courier");
+        setting.setValue("HexFont", "IntelOne Mono");
+    if (!setting.contains("AsciiFont"))
+        setting.setValue("AsciiFont", "Fira Code Light");
     if (!setting.contains("LineSpacing"))
         setting.setValue("LineSpacing", "2");
 
@@ -128,6 +135,23 @@ void StartWindow::initSettings() {
         ui->actionReplace_BIOS->setIcon(QIcon(":/replace_light.svg"));
         ui->actionAboutBiosViewer->setIcon(QIcon(":/about_light.svg"));
         ui->actionAboutQt->setIcon(QIcon(":/about_light.svg"));
+    }
+}
+
+void StartWindow::InstallFonts(QString FontName) {
+    INT32 FontID = QFontDatabase::addApplicationFont(FontName);
+    if (FontID == -1) {
+        QString FontSource = ":Font/" + FontName + ".ttf";
+        QFile fontFile(FontSource);
+        fontFile.open(QFile::ReadOnly);
+        QByteArray fontData = fontFile.readAll();
+        fontFile.close();
+
+        FontID = QFontDatabase::addApplicationFontFromData(fontData);
+        QStringList fontFamilies = QFontDatabase::applicationFontFamilies(FontID);
+        if (!fontFamilies.isEmpty()) {
+            qDebug() << fontFamilies << " installed";
+        }
     }
 }
 
@@ -169,18 +193,27 @@ void StartWindow::OpenFile(const QString& path, bool onlyHexView) {
     newTabData->DarkmodeFlag = DarkmodeFlag;
     newTabData->BiosViewerUi = new BiosViewerWindow(this);
     newTabData->HexViewerUi = new HexViewWindow(this);
+    newTabData->CapsuleViewerUi = new CapsuleWindow(this);
     QFileInfo FileInfo(path);
     bool onlyHex = DisableBiosViewer || onlyHexView;
     auto *tabWidget = new QMainWindow;
     if (!onlyHex && BiosViewerWindow::TryOpenBios(newTabData->InputImage, newTabData->InputImageSize)) {
+        // Show BIOS File
         newTabData->CurrentWindow = WindowMode::BIOS;
         newTabData->BiosViewerUi->setupUi(tabWidget, newTabData);
-        newTabData->BiosViewerUi->loadBios(buffer);
+        newTabData->BiosViewerUi->loadBios();
         ui->actionCollapse->setEnabled(true);
         ui->actionHex_View->setEnabled(true);
         ui->actionBios_View->setDisabled(true);
         MainTabWidget->addTab(tabWidget, FileInfo.fileName());
+    } else if (!onlyHex && CapsuleWindow::tryOpenCapsule(newTabData->InputImage, newTabData->InputImageSize)) {
+        // Show Capsule File
+        newTabData->CurrentWindow = WindowMode::CAPSULE;
+        newTabData->CapsuleViewerUi->setupUi(tabWidget, newTabData);
+        newTabData->CapsuleViewerUi->OpenFile(path);
+        MainTabWidget->addTab(tabWidget, FileInfo.fileName());
     } else {
+        // Show Hex View
         newTabData->CurrentWindow = WindowMode::Hex;
         newTabData->HexViewerUi->setupUi(tabWidget, newTabData);
         newTabData->HexViewerUi->loadBuffer(newTabData->InputImage, newTabData->InputImageSize);

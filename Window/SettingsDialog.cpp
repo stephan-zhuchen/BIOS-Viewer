@@ -12,6 +12,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     connect(ui->hexFontSizeBox,        SIGNAL(activated(int)),    this, SLOT(hexFontSizeBoxActivated(int)));
     connect(ui->hexFontBox,            SIGNAL(activated(int)),    this, SLOT(hexFontBoxActivated(int)));
+    connect(ui->asciiFontBox,          SIGNAL(activated(int)),    this, SLOT(asciiFontBoxActivated(int)));
     connect(ui->biosViewerThemeBox,    SIGNAL(activated(int)),    this, SLOT(BiosViewerThemeBoxActivated(int)));
     connect(ui->biosViewerFontSizeBox, SIGNAL(activated(int)),    this, SLOT(BiosViewerFontSizeBoxActivated(int)));
     connect(ui->biosViewerFontBox,     SIGNAL(activated(int)),    this, SLOT(BiosViewerFontBoxActivated(int)));
@@ -25,9 +26,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(ui->enableEditingBox,      SIGNAL(stateChanged(int)), this, SLOT(enableEditingBoxStateChanged(int)));
     connect(ui->onlyHexViewBox,        SIGNAL(stateChanged(int)), this, SLOT(onlyHexViewBoxStateChanged(int)));
     connect(ui->pasteModeBox,          SIGNAL(activated(int)),    this, SLOT(pasteModeBoxActivated(int)));
-
-    qDebug() << "lastTabIndex = " << lastTabIndex;
-//    ui->tabWidget->setCurrentIndex(lastTabIndex);
     setAttribute(Qt::WA_DeleteOnClose);
 
     Theme = setting.value("Theme").toString();
@@ -37,6 +35,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     InfoFont = setting.value("InfoFont").toString();
     HexFontSize = setting.value("HexFontSize").toString();
     HexFont = setting.value("HexFont").toString();
+    AsciiFont = setting.value("AsciiFont").toString();
     LineSpacing = setting.value("LineSpacing").toString();
     InfoLineSpacing = setting.value("InfoLineSpacing").toString();
     PasteMode = setting.value("PasteMode").toString();
@@ -51,6 +50,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     ui->hexFontSizeBox->setCurrentText(HexFontSize);
     ui->hexFontBox->setCurrentText(HexFont);
+    ui->asciiFontBox->setCurrentText(AsciiFont);
     ui->lineSpacingBox->setCurrentText(LineSpacing);
     ui->pasteModeBox->setCurrentText(PasteMode);
 
@@ -90,6 +90,12 @@ void SettingsDialog::hexFontBoxActivated(int index)
 {
     HexFont = ui->hexFontBox->currentText();
 }
+
+void SettingsDialog::asciiFontBoxActivated(int index)
+{
+    AsciiFont = ui->asciiFontBox->currentText();
+}
+
 
 void SettingsDialog::BiosViewerThemeBoxActivated(int index)
 {
@@ -134,6 +140,7 @@ void SettingsDialog::buttonBoxAccepted()
     setting.setValue("InfoFont", InfoFont);
     setting.setValue("HexFontSize", HexFontSize);
     setting.setValue("HexFont", HexFont);
+    setting.setValue("AsciiFont", AsciiFont);
     setting.setValue("LineSpacing", LineSpacing);
     setting.setValue("InfoLineSpacing", InfoLineSpacing);
     setting.setValue("Theme", Theme);
@@ -188,3 +195,5 @@ void SettingsDialog::onlyHexViewBoxStateChanged(int state)
 void SettingsDialog::pasteModeBoxActivated(int index) {
     PasteMode = ui->pasteModeBox->currentText();
 }
+
+

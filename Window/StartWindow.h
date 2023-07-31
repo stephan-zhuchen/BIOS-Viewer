@@ -21,7 +21,7 @@
 #include "BiosWindow.h"
 #include "HexWindow.h"
 
-#define __BiosViewerVersion__ "1.7"
+#define __BiosViewerVersion__ "1.8"
 
 namespace Ui {
 class StartWindow;
@@ -49,6 +49,7 @@ public:
     ~StartWindow() override;
 
     void initSettings();
+    void InstallFonts(QString FontName);
     void refresh();
     void OpenFile(const QString& path, bool onlyHexView = false);
     void DoubleClickOpenFile(const QString& path);

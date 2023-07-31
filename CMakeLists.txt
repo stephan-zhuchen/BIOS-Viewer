@@ -45,6 +45,7 @@ aux_source_directory(lib/BrotliDecompress/brotli/enc BROTLI_ENC_C)
 file(GLOB_RECURSE INCLUDE_FILES "include/*")
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
 file(GLOB UI_SOURCES "Window/*.ui")
+file(GLOB WINDOW_H_SOURCES "Window/*.h")
 aux_source_directory(Window WINDOW_SOURCES)
 
 set(LIBRARY_SOURCES
@@ -61,6 +62,8 @@ set(LIBRARY_SOURCES
         lib/Section.cpp
         lib/ElfLib.cpp
         lib/ElfLib.h
+        lib/CapsuleLib.cpp
+        lib/CapsuleLib.h
         lib/QHexView/qhexview.cpp
         lib/QHexView/HexEdit.cpp
         lib/QHexView/qhexview.h
@@ -74,8 +77,10 @@ set(LIBRARY_SOURCES
 set(PROJECT_SOURCES
         main.cpp
         logo/Images.qrc
+        font/Fonts.qrc
         ${LIBRARY_SOURCES}
         ${WINDOW_SOURCES}
+        ${WINDOW_H_SOURCES}
         ${INCLUDE_FILES}
         ${app_icon_resource_windows}
         ${UI_SOURCES}

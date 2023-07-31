@@ -106,14 +106,16 @@ namespace BaseLibrarySpace {
         return (UINT8*)value;
     }
 
-    INT8* Buffer::getString(int n)
+    string Buffer::getString(int n)
     {
         buffer->seekg(offset, ios::beg);
         offset += n;
         char* value = new char[n + 1];
         buffer->read(value, n);
         value[n] = 0;
-        return value;
+        string str(value);
+        delete[] value;
+        return str;
     }
 
     void Buffer::setOffset(INT64 off) {

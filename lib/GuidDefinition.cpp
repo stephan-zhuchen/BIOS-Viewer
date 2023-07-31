@@ -1,5 +1,6 @@
 #include "UEFI/GuidDefinition.h"
 #include "BaseLib.h"
+#include <iomanip>
 
 bool EFI_GUID::operator==(const EFI_GUID guid) {
     if (this->Data1 != guid.Data1) {
@@ -19,6 +20,26 @@ bool EFI_GUID::operator==(const EFI_GUID guid) {
 
 bool EFI_GUID::operator!=(const EFI_GUID guid) {
     return !operator==(guid);
+}
+
+std::ostream& operator<<(std::ostream& out, const EFI_GUID& guid) {
+    using namespace std;
+    out << hex
+        << setfill('0')
+        << setw(8)
+        << guid.Data1 << "-"
+        << setw(4)
+        << guid.Data2 << "-"
+        << setw(4)
+        << guid.Data3 << "-";
+    for (int i = 0; i < 8; ++i) {
+        if (i == 2) {
+            out << "-";
+        }
+        out << setw(2)
+            << (UINT16)guid.Data4[i];
+    }
+    return out;
 }
 
 GuidDatabase::~GuidDatabase() = default;

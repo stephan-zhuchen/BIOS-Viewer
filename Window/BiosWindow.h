@@ -30,13 +30,14 @@ class QHexView;
 class StartWindow;
 class BiosViewerWindow;
 class HexViewWindow;
+class CapsuleWindow;
 using UefiSpace::Volume;
 
 namespace Ui {
 class BiosWindow;
 }
 
-enum class WindowMode { None, Hex, BIOS };
+enum class WindowMode { None, Hex, BIOS, CAPSULE };
 
 class GeneralData {
 public:
@@ -51,6 +52,7 @@ public:
     WindowMode        CurrentWindow {WindowMode::None};
     BiosViewerWindow  *BiosViewerUi{nullptr};
     HexViewWindow     *HexViewerUi{nullptr};
+    CapsuleWindow     *CapsuleViewerUi{nullptr};
 
     GeneralData(QString dir);
     ~GeneralData();
@@ -138,7 +140,7 @@ public:
     ~BiosViewerWindow();
     void setupUi(QMainWindow *MainWindow, GeneralData *wData);
     static bool TryOpenBios(UINT8 *image, INT64 imageLength);
-    void loadBios(Buffer *buffer);
+    void loadBios();
     void ActionSearchBiosTriggered();
     void ActionGotoTriggered();
     void ActionExtractBIOSTriggered();

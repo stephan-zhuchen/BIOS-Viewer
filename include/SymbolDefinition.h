@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 #define CONST   const
 #define STATIC  static
@@ -31,6 +32,7 @@ struct EFI_GUID {
     UINT8     Data4[8];
     bool operator==(const EFI_GUID guid);
     bool operator!=(const EFI_GUID guid);
+    friend std::ostream& operator<<(std::ostream& out, const EFI_GUID& guid);
 };
 
 //

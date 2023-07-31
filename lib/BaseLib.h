@@ -48,7 +48,7 @@ namespace BaseLibrarySpace {
         INT32  getINT32();
         INT64  getINT64();
         UINT8* getBytes(int n);
-        INT8*  getString(int n);
+        string getString(int n);
 
         Buffer();
         explicit Buffer(ifstream* inFile);
