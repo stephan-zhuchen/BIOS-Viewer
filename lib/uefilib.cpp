@@ -216,7 +216,7 @@ namespace UefiSpace {
         return size;
     }
 
-    void CommonSection::SelfDecode() {
+    bool CommonSection::SelfDecode() {
         HeaderSize = sizeof(EFI_COMMON_SECTION_HEADER);
         INT64 offset = sizeof(EFI_COMMON_SECTION_HEADER);
         UINT32 SectionSize = SECTION_SIZE(&CommonHeader);
@@ -382,7 +382,8 @@ namespace UefiSpace {
             }
             break;
         default:
-            break;
+            // Invalid Section Type
+            return false;
         }
 
         for (Volume* volume:ChildFile) {
@@ -390,6 +391,7 @@ namespace UefiSpace {
         }
 
         DecodeChildFile();
+        return true;
     }
 
     void CommonSection::DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize) {
@@ -653,30 +655,50 @@ namespace UefiSpace {
             // Apriori files are encoded as raw CommonSections
             auto *Sec = new CommonSection(data + offset, offsetFromBegin + offset, this, this->isCompressed);
             Sec->isAprioriRaw = true;
-            Sec->SelfDecode();
+            if (!Sec->SelfDecode()) {
+                safeDelete(Sec);
+                return;
+            }
             Sections.push_back(Sec);
+            for (Volume* volume:Sections) {
+                ChildVolume.push_back(volume);
+            }
             return;
         }
         while (offset < size) {
             auto *SecHeader = (EFI_COMMON_SECTION_HEADER*)(data + offset);
-            INT64 SecSize = SECTION_SIZE(SecHeader);
+            UINT64 SecSize = SECTION_SIZE(SecHeader);
             if (SecSize == 0xFFFFFF) {
                 SecSize = this->getUINT32(offset + sizeof(EFI_COMMON_SECTION_HEADER));
             }
+
+            if (SecSize + offset > size) {
+                // Invalid Section, clear all sections under this FFS
+                for(auto section:Sections) {
+                    safeDelete(section);
+                }
+                Sections.clear();
+                break;
+            }
+
             auto *Sec = new CommonSection(data + offset, SecSize, offsetFromBegin + offset, this, this->isCompressed);
             if (!Sec->CheckValidation()) {
                 safeDelete(Sec);
                 break;
             }
-            Sec->SelfDecode();
-            Sections.push_back(Sec);
-            if (offset + SecSize > offset) {
-                // Align to 4 bytes
-                offset += SecSize;
-                Align(offset, 0, 0x4);
-            } else {
+            if (!Sec->SelfDecode()) {
+                // Invalid Section, clear all sections under this FFS
+                safeDelete(Sec);
+                for(auto section:Sections) {
+                    safeDelete(section);
+                }
+                Sections.clear();
                 break;
             }
+            Sections.push_back(Sec);
+            // Align to 4 bytes
+            offset += SecSize;
+            Align(offset, 0, 0x4);
         }
         for (Volume* volume:Sections) {
             ChildVolume.push_back(volume);

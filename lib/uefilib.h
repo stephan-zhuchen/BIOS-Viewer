@@ -148,7 +148,7 @@ namespace UefiSpace {
         CommonSection(UINT8* file, INT64 offset, FfsFile *Ffs, bool Compressed=false);
         CommonSection(UINT8* file, INT64 length, INT64 offset, FfsFile *Ffs, bool Compressed=false);
         ~CommonSection() override;
-        void SelfDecode();
+        bool SelfDecode();
         void DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize);
         void DecodeChildFile();
         bool CheckValidation();
