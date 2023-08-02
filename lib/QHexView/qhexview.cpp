@@ -230,7 +230,7 @@ void QHexView::updatePositions() {
 
     AddressPosition = 16;
     HexCharPosition = (AddressLength + 3) * CharWidth + AddressPosition;
-    AsciiCharPosition = HexCharPosition + (BytesPerHexLine * 3 - 1) * CharWidth + GAP_HEX_ASCII;
+    AsciiCharPosition = HexCharPosition + (BytesPerHexLine * 3 - 1) * CharWidth + GAP_HEX_ASCII + BytesPerHexLine;
 }
 
 
@@ -272,6 +272,8 @@ void QHexView::paintEvent(QPaintEvent *event) {
 
   // offset drawn
     for (INT32 offsetX = HexCharPosition, i = 0; i < BytesPerHexLine; ++i, offsetX += CharWidth * 3) {
+        if (offsetX == HexCharPosition + CharWidth * 3 * (BytesPerHexLine / 2))
+            offsetX += CharWidth;
         QString offsetVal = QString::number(i, 16);
         painter.drawText(offsetX + CharWidth / 2, CharHeight - 2, offsetVal);
     }
@@ -290,7 +292,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
 
             INT32 pos = ((lineIdx * BytesPerHexLine + i) * 2) + 1;
             if (isSelected(pos)) {
-            painter.fillRect(QRectF(xPosAscii, yPos - CharHeight + 4, CharWidth, CharHeight), SelectionColor);
+                painter.fillRect(QRectF(xPosAscii, yPos - CharHeight + 4, CharWidth, CharHeight), SelectionColor);
             }
 
             painter.setFont(AsciiFontSetting);
@@ -305,22 +307,31 @@ void QHexView::paintEvent(QPaintEvent *event) {
             ((lineIdx - firstLineIdx) * BytesPerHexLine + i / 2) < data.size();
              i++, xPos += CharWidth)
         {
-            INT32 pos = ((lineIdx * BytesPerHexLine) * 2) + i;
-            if (isSelected(pos)) {
+            INT32 HexByteIndex = ((lineIdx * BytesPerHexLine) * 2) + i;
+            if (isSelected(HexByteIndex)) {
                 painter.fillRect(QRectF(xPos, yPos - CharHeight + 4, CharWidth, CharHeight), SelectionColor);
-                if ((i % 2 == 1) && isSelected(pos + 1) && (i != BytesPerHexLine * 2 - 1)){
+                if ((i == BytesPerHexLine - 1) && isSelected(HexByteIndex + 1)) {
+                    painter.fillRect(QRectF(xPos + CharWidth, yPos - CharHeight + 4, CharWidth * 2, CharHeight), SelectionColor);
+                }
+                else if ((i % 2 == 1) && isSelected(HexByteIndex + 1) && (i != BytesPerHexLine * 2 - 1)) {
                     painter.fillRect(QRectF(xPos + CharWidth, yPos - CharHeight + 4, CharWidth, CharHeight), SelectionColor);
                 }
             }
-            if (isEdited(pos)) {
+            if (isEdited(HexByteIndex)) {
                 painter.fillRect(QRectF(xPos, yPos - CharHeight + 4, CharWidth, CharHeight), EditedColor);
-                if ((i % 2 == 1) && isEdited(pos + 1) && (i != BytesPerHexLine * 2 - 1)){
+                if ((i == BytesPerHexLine - 1) && isEdited(HexByteIndex + 1)) {
+                    painter.fillRect(QRectF(xPos + CharWidth, yPos - CharHeight + 4, CharWidth * 2, CharHeight), EditedColor);
+                }
+                else if ((i % 2 == 1) && isEdited(HexByteIndex + 1) && (i != BytesPerHexLine * 2 - 1)) {
                     painter.fillRect(QRectF(xPos + CharWidth, yPos - CharHeight + 4, CharWidth, CharHeight), EditedColor);
                 }
             }
-            if (isEdited(pos) && isSelected(pos)) {
+            if (isEdited(HexByteIndex) && isSelected(HexByteIndex)) {
                 painter.fillRect(QRectF(xPos, yPos - CharHeight + 4, CharWidth, CharHeight), SelectedEditedColor);
-                if ((i % 2 == 1) && isEdited(pos + 1) && (i != BytesPerHexLine * 2 - 1)){
+                if ((i == BytesPerHexLine - 1) && isEdited(HexByteIndex + 1)) {
+                    painter.fillRect(QRectF(xPos + CharWidth, yPos - CharHeight + 4, CharWidth * 2, CharHeight), SelectedEditedColor);
+                }
+                else if ((i % 2 == 1) && isEdited(HexByteIndex + 1) && (i != BytesPerHexLine * 2 - 1)) {
                     painter.fillRect(QRectF(xPos + CharWidth, yPos - CharHeight + 4, CharWidth, CharHeight), SelectedEditedColor);
                 }
             }
@@ -336,9 +347,8 @@ void QHexView::paintEvent(QPaintEvent *event) {
             painter.setFont(HexFontSetting);
             painter.drawText(xPos, yPos, val.toUpper());
 
-            if (i % 2 == 1){
-                xPos += CharWidth;
-            }
+            if (i % 2 == 1) xPos += CharWidth;
+            if (i == BytesPerHexLine - 1) xPos += CharWidth;
 
             painter.setBackground(painter.brush());
             painter.setBackgroundMode(Qt::OpaqueMode);
@@ -365,8 +375,12 @@ void QHexView::paintEvent(QPaintEvent *event) {
         INT32 cursorX;
         if (StartFromAscii)
             cursorX = (x / 2) * CharWidth + AsciiCharPosition;
-        else
+        else {
             cursorX = (((x / 2) * 3) + (x % 2)) * CharWidth + HexCharPosition;
+            if (cursorX >= (BytesPerHexLine / 2 * 3) * CharWidth + HexCharPosition)
+                cursorX += CharWidth;
+        }
+
         INT32 cursorY = y * CharHeight + 4;
         painter.fillRect(cursorX, cursorY + horizenLinePosY, CharWidth, CharHeight, CursorColor);
 
@@ -409,11 +423,13 @@ INT32 QHexView::cursorPos(const QPoint &position) {
     if (!StartFromAscii) {
         if (position.x() < (INT32)HexCharPosition)
             x = 0;
-        else if (position.x() >= (INT32)(HexCharPosition + (BytesPerHexLine * 3 - 1) * CharWidth))
-            x = BytesPerHexLine * 3 - 2;
+        else if (position.x() >= (INT32)(HexCharPosition + (BytesPerHexLine * 3) * CharWidth))
+            x = BytesPerHexLine * 3 - 1;
         else
             x = (position.x() - HexCharPosition) / CharWidth;
 
+        if (x > BytesPerHexLine / 2 * 3)
+            x -= 1;
         if ((x % 3) == 0)
             x = (x / 3) * 2;
         else if((x % 3) == 1)
