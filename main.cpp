@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     StartWindow w = StartWindow(dir_path);
     w.show();
     if (argc == 2){
-        w.DoubleClickOpenFile(argv[1]);
+        w.OpenFile(argv[1]);
     }
     return QApplication::exec();
 }

@@ -15,6 +15,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include "uefilib.h"
 #include "CapsuleLib.h"
 #include "./ui_CapsuleWindow.h"
 
@@ -37,7 +38,9 @@ public:
     ~CapsuleWindow();
     void setupUi(QMainWindow *MainWindow, GeneralData *wData);
 
-    Buffer* buffer{nullptr};
+    Buffer          *buffer{nullptr};
+    UefiSpace::Volume  *data{nullptr};
+    GeneralData     *WindowData{nullptr};
 
     shared_ptr<UefiCapsuleHeaderClass>    UefiCapsuleHeader;
     shared_ptr<FmpCapsuleHeaderClass>     FmpCapsuleHeader;
@@ -55,10 +58,23 @@ public:
 
     vector<shared_ptr<CPUMicrocodeHeaderClass>> MicrocodeHeaderVector;
     vector<shared_ptr<EntryHeaderClass>> EntryList;
-    int currentRow;
-    QString LabelText;
-    stringstream CapsuleInfo;
-    QSettings    setting{"Intel", "BiosViewer"};
+    int             currentRow;
+    QString         LabelText;
+    stringstream    CapsuleInfo;
+    QSettings       setting{"Intel", "BiosViewer"};
+
+    // Menu
+    QMenu*         RightMenu{nullptr};
+    QMenu*         DigestMenu{nullptr};
+    QAction*       showHex{nullptr};
+    QAction*       openTab{nullptr};
+    QAction*       ExtractRegion{nullptr};
+    QAction*       md5_Menu{nullptr};
+    QAction*       sha1_Menu{nullptr};
+    QAction*       sha224_Menu{nullptr};
+    QAction*       sha256_Menu{nullptr};
+    QAction*       sha384_Menu{nullptr};
+    QAction*       sha512_Menu{nullptr};
 
     void closeEvent(QCloseEvent *event) override;
     static bool tryOpenCapsule(UINT8 *image, INT64 imageLength);
@@ -75,6 +91,8 @@ public:
 
     void initSetting();
     void fini();
+    void initRightMenu();
+    void finiRightMenu();
     void setPanelInfo(INT64 offset, INT64 size);
     void addList(const shared_ptr<EntryHeaderClass>& EntryHeader);
 
@@ -82,6 +100,16 @@ private slots:
     void listWidget_itemClicked(QListWidgetItem *item);
     void listWidget_itemSelectionChanged();
     void itemBox_activated(int index);
+    void showListRightMenu(const QPoint &pos);
+    void showHexView();
+    void openInNewTab();
+    void extractCapsuleRegion();
+    void getMD5();
+    void getSHA1();
+    void getSHA224();
+    void getSHA256();
+    void getSHA384();
+    void getSHA512();
 
 private:
     Ui::CapsuleViewWindow *ui;

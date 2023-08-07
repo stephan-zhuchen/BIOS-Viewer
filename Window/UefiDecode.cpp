@@ -8,21 +8,17 @@
 bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     using namespace std;
 
-    Buffer *buffer = WindowData->buffer;
+    Volume buffer = Volume(WindowData->InputImage, WindowData->InputImageSize);
     INT64 bufferSize = WindowData->InputImageSize;
     if (bufferSize < 0x4000) {
         return false;
     }
-    buffer->setOffset(0x10);
-    UINT32 FlashDescriptorSignature = buffer->getUINT32();
+    UINT32 FlashDescriptorSignature = buffer.getUINT32(0x10);
     if (FlashDescriptorSignature != V_FLASH_FDBAR_FLVALSIG) {
         return false;
     }
-    buffer->setOffset(0x16);
-    UINT32 FRBA_address = buffer->getUINT8() * 0x10;
-    buffer->setOffset(FRBA_address);
-    UINT32 temp;
-    temp = buffer->getUINT32();
+    UINT32 FRBA_address = buffer.getUINT8(0x16) * 0x10;
+    UINT32 temp = buffer.getUINT32(FRBA_address);
     auto *FlashRegion = (FlashRegionBaseArea*)(&temp);
     if (FlashRegion->getBase() != 0) {
         return false;
@@ -30,8 +26,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     if (bufferSize < FlashRegion->getLimit()) {
         return false;
     }
-    buffer->setOffset(0);
-    auto *flashDescriptorVolume = new FlashDescriptorClass(buffer->getBytes(FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
+    auto *flashDescriptorVolume = new FlashDescriptorClass(buffer.getBytes(0, FlashRegion->getSize()), FlashRegion->getSize(), bufferSize);
     InputData->flashmap += QString::fromStdString(flashDescriptorVolume->getFlashmap());
     InputData->IFWI_Sections.push_back(flashDescriptorVolume);
     InputData->IFWI_ModelData.push_back(new DataModel(flashDescriptorVolume, "Flash Descriptor", "Region", ""));
@@ -45,8 +40,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     if (EcRegion.getLimit() > bufferSize)
         return false;
     if (EcRegion.limit != 0) {
-        buffer->setOffset(EcRegion.getBase());
-        auto *EcVolume = new EC_RegionClass(buffer->getBytes(EcRegion.getSize()), EcRegion.getSize(), EcRegion.getBase());
+        auto *EcVolume = new EC_RegionClass(buffer.getBytes(EcRegion.getBase(), EcRegion.getSize()), EcRegion.getSize(), EcRegion.getBase());
         InputData->flashmap += QString::fromStdString(EcVolume->getFlashmap());
         InputData->IFWI_Sections.push_back(EcVolume);
         InputData->IFWI_ModelData.push_back(new DataModel(EcVolume, "EC", "Region", ""));
@@ -55,8 +49,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     if (GbERegion.getLimit() > bufferSize)
         return false;
     if (GbERegion.limit != 0) {
-        buffer->setOffset(GbERegion.getBase());
-        auto *GbEVolume = new GbE_RegionClass(buffer->getBytes(GbERegion.getSize()), GbERegion.getSize(), GbERegion.getBase());
+        auto *GbEVolume = new GbE_RegionClass(buffer.getBytes(GbERegion.getBase(), GbERegion.getSize()), GbERegion.getSize(), GbERegion.getBase());
         InputData->flashmap += QString::fromStdString(GbEVolume->getFlashmap());
         InputData->IFWI_Sections.push_back(GbEVolume);
         InputData->IFWI_ModelData.push_back(new DataModel(GbEVolume, "GbE", "Region", ""));
@@ -65,8 +58,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     if (MeRegion.getLimit() > bufferSize)
         return false;
     if (MeRegion.limit != 0) {
-        buffer->setOffset(MeRegion.getBase());
-        auto *MeVolume = new ME_RegionClass(buffer->getBytes(MeRegion.getSize()), MeRegion.getSize(), MeRegion.getBase());
+        auto *MeVolume = new ME_RegionClass(buffer.getBytes(MeRegion.getBase(), MeRegion.getSize()), MeRegion.getSize(), MeRegion.getBase());
         InputData->flashmap += QString::fromStdString(MeVolume->getFlashmap());
         InputData->flashmap += QString::fromStdString(MeVolume->CSE_Layout->getFlashmap());
         InputData->IFWI_Sections.push_back(MeVolume);
@@ -92,8 +84,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     if (OsseRegion.getLimit() > bufferSize)
         return false;
     if (OsseRegion.limit != 0) {
-        buffer->setOffset(OsseRegion.getBase());
-        auto *OsseVolume = new OSSE_RegionClass(buffer->getBytes(OsseRegion.getSize()), OsseRegion.getSize(), OsseRegion.getBase());
+        auto *OsseVolume = new OSSE_RegionClass(buffer.getBytes(OsseRegion.getBase(), OsseRegion.getSize()), OsseRegion.getSize(), OsseRegion.getBase());
         InputData->flashmap += QString::fromStdString(OsseVolume->getFlashmap());
         InputData->IFWI_Sections.push_back(OsseVolume);
         InputData->IFWI_ModelData.push_back(new DataModel(OsseVolume, "OSSE", "Region", ""));
@@ -102,8 +93,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     if (BiosRegion.getLimit() > bufferSize)
         return false;
     if (BiosRegion.limit != 0) {
-        buffer->setOffset(BiosRegion.getBase());
-        InputData->BiosImage = new BiosImageVolume(buffer->getBytes(BiosRegion.getSize()), BiosRegion.getSize(), BiosRegion.getBase());
+        InputData->BiosImage = new BiosImageVolume(buffer.getBytes(BiosRegion.getBase(), BiosRegion.getSize()), BiosRegion.getSize(), BiosRegion.getBase());
         InputData->IFWI_ModelData.push_back(new DataModel(InputData->BiosImage, "BIOS", "Region", ""));
         BiosOffset = BiosRegion.getBase();
     }
@@ -113,39 +103,33 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
 void BiosViewerWindow::setBiosFvData()
 {
     using namespace std;
-    Buffer *buffer = WindowData->buffer;
     INT64 offset = 0;
-    INT64 bufferSize = buffer->getBufferSize();
+    INT64 bufferSize = WindowData->InputImageSize;
     InputData->IFWI_exist = detectIfwi(offset);
 
     if (!InputData->IFWI_exist) {
-        buffer->setOffset(offset);
-        InputData->BiosImage = new BiosImageVolume(buffer->getBytes(bufferSize), bufferSize);
+        InputData->BiosImage = new BiosImageVolume(WindowData->InputImage + offset, bufferSize);
         InputData->InputImageModel->setName("BIOS Image Overview");
     }
 
     while (offset < bufferSize) {
-        buffer->setOffset(offset);
         if (bufferSize - offset < 0x40) {
             pushDataToVector(offset, bufferSize - offset);
             return;
         }
-        auto *fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
+        auto *fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(WindowData->InputImage + offset);
         INT64 FvLength = fvHeader->FvLength;
 
         INT64 searchInterval = 0x100;
         INT64 EmptyVolumeLength = 0;
         while (!FirmwareVolume::isValidFirmwareVolume(fvHeader)) {
-            safeDelete(fvHeader);
             EmptyVolumeLength += searchInterval;
-            buffer->setOffset(offset + EmptyVolumeLength);
             if (offset + EmptyVolumeLength >= bufferSize) {
                 pushDataToVector(offset, bufferSize - offset);
                 return;
             }
-            fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(0x40);
+            fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(WindowData->InputImage + offset + EmptyVolumeLength);
         }
-        safeDelete(fvHeader);
 
         if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
             ui->titleInfomation->setText("No Firmware Found!");
@@ -209,21 +193,19 @@ void BiosViewerWindow::setFfsData() {
 }
 
 void BiosViewerWindow::pushDataToVector(INT64 offset, INT64 length) const {
-    Buffer *buffer = WindowData->buffer;
-    buffer->setOffset(offset);
-    INT64 RemainingSize = buffer->getRemainingSize();
+    INT64 RemainingSize = WindowData->InputImageSize - offset;
     if (RemainingSize < length) {
-        auto *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
+        auto *volume = new FirmwareVolume(WindowData->InputImage + offset, RemainingSize, offset, true);
         InputData->FirmwareVolumeData.push_back(volume);
         return;
     }
     try {
-        UINT8* fvData = buffer->getBytes(length);  // heap memory
+        UINT8* fvData = WindowData->InputImage + offset;
         auto *volume = new FirmwareVolume(fvData, length, offset);
         InputData->FirmwareVolumeBuffer.push_back(fvData);
         InputData->FirmwareVolumeData.push_back(volume);
     } catch (...) {
-        auto *volume = new FirmwareVolume(buffer->getBytes(RemainingSize), RemainingSize, offset, true);
+        auto *volume = new FirmwareVolume(WindowData->InputImage + offset, RemainingSize, offset, true);
         InputData->FirmwareVolumeData.push_back(volume);
     }
 }

@@ -53,7 +53,7 @@ public:
     void InstallFonts(QString FontName);
     void refresh();
     void OpenFile(const QString& path, bool onlyHexView = false);
-    void DoubleClickOpenFile(const QString& path);
+    void OpenBuffer(UINT8* data, UINT64 length, const QString& path, bool onlyHexView=false);
     void showHintWindow();
     void showTabWindow();
 

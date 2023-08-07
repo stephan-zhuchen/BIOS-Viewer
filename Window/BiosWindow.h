@@ -44,12 +44,12 @@ public:
     QString           appDir;
     QString           OpenedFileName;
     QString           WindowTitle;
-    Buffer            *buffer{nullptr};
     bool              DarkmodeFlag{false};
     UINT8             *InputImage{nullptr};
     INT64             InputImageSize{};
     INT32             CurrentTabIndex{};
     WindowMode        CurrentWindow {WindowMode::None};
+    StartWindow       *parentWindow{nullptr};
     BiosViewerWindow  *BiosViewerUi{nullptr};
     HexViewWindow     *HexViewerUi{nullptr};
     CapsuleWindow     *CapsuleViewerUi{nullptr};

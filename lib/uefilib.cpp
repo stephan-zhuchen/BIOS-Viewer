@@ -1084,7 +1084,7 @@ namespace UefiSpace {
     BiosImageVolume::~BiosImageVolume() {
         if (FitTable != nullptr)
             safeDelete(FitTable);
-        safeArrayDelete(data);
+//        safeArrayDelete(data);
     }
 
     void BiosImageVolume::setDebugFlag() {

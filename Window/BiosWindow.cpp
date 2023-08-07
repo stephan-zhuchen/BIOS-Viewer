@@ -48,9 +48,9 @@ BiosViewerData::~BiosViewerData() {
     }
     IFWI_Sections.clear();
 
-    for (UINT8* fvBuffer:FirmwareVolumeBuffer) {
-        safeArrayDelete(fvBuffer);
-    }
+//    for (UINT8* fvBuffer:FirmwareVolumeBuffer) {
+//        safeArrayDelete(fvBuffer);
+//    }
     FirmwareVolumeBuffer.clear();
 
     safeDelete(BiosImage);

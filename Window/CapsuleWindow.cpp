@@ -1,24 +1,34 @@
+#include <QClipboard>
 #include "CapsuleWindow.h"
 #include "StartWindow.h"
 #include "UEFI/GuidDefinition.h"
+#include "HexViewDialog.h"
+#include "openssl/sha.h"
+#include "openssl/md5.h"
 
 CapsuleWindow::CapsuleWindow(StartWindow *parent):
     QWidget(parent),
     ui(new Ui::CapsuleViewWindow)
 {
+    initRightMenu();
 }
 
 CapsuleWindow::~CapsuleWindow() {
     delete ui;
+    safeDelete(data);
     fini();
+    finiRightMenu();
 }
 
 void CapsuleWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
+    WindowData = wData;
     ui->setupUi(MainWindow);
     initSetting();
+    ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(listWidget_itemClicked(QListWidgetItem*)));
     connect(ui->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(listWidget_itemSelectionChanged()));
-    connect(ui->itemBox, SIGNAL(activated(int)), this, SLOT(itemBox_activated(int)));
+    connect(ui->itemBox,    SIGNAL(activated(int)), this, SLOT(itemBox_activated(int)));
+    connect(ui->listWidget, SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showListRightMenu(QPoint)));
 }
 
 void CapsuleWindow::initSetting()
@@ -39,6 +49,52 @@ void CapsuleWindow::fini()
     if (buffer != nullptr){
         delete buffer;
     }
+}
+
+void CapsuleWindow::initRightMenu() {
+    RightMenu = new QMenu;
+    DigestMenu = new QMenu("Digest");
+
+    showHex = new QAction("Hex View");
+    connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
+
+    openTab = new QAction("Open in BIOS Viewer");
+    connect(openTab,SIGNAL(triggered(bool)),this,SLOT(openInNewTab()));
+
+    ExtractRegion = new QAction("Extract Binary");
+    connect(ExtractRegion,SIGNAL(triggered(bool)),this,SLOT(extractCapsuleRegion()));
+
+    md5_Menu = new QAction("MD5");
+    connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
+
+    sha1_Menu = new QAction("SHA1");
+    connect(sha1_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA1()));
+
+    sha224_Menu = new QAction("SHA224");
+    connect(sha224_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA224()));
+
+    sha256_Menu = new QAction("SHA256");
+    connect(sha256_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA256()));
+
+    sha384_Menu = new QAction("SHA384");
+    connect(sha384_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA384()));
+
+    sha512_Menu = new QAction("SHA512");
+    connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
+}
+
+void CapsuleWindow::finiRightMenu() {
+    safeDelete(RightMenu);
+    safeDelete(DigestMenu);
+    safeDelete(showHex);
+    safeDelete(openTab);
+    safeDelete(ExtractRegion);
+    safeDelete(md5_Menu);
+    safeDelete(sha1_Menu);
+    safeDelete(sha224_Menu);
+    safeDelete(sha256_Menu);
+    safeDelete(sha384_Menu);
+    safeDelete(sha512_Menu);
 }
 
 void CapsuleWindow::setPanelInfo(INT64 offset, INT64 size)
@@ -491,4 +547,286 @@ void CapsuleWindow::showPayloadInfomation(QString filePath)
 
     parsePayloadAtIndex(0);
     return;
+}
+
+void CapsuleWindow::showListRightMenu(const QPoint &pos) {
+    QIcon hexBinary, box_arrow_up, open, key;
+    if (WindowData->DarkmodeFlag) {
+        hexBinary = QIcon(":/file-binary_light.svg");
+        box_arrow_up = QIcon(":/box-arrow-up_light.svg");
+        open = QIcon(":/open_light.svg");
+        key = QIcon(":/key_light.svg");
+    } else {
+        hexBinary = QIcon(":/file-binary.svg");
+        box_arrow_up = QIcon(":/box-arrow-up.svg");
+        open = QIcon(":/open.svg");
+        key = QIcon(":/key.svg");
+    }
+
+    QModelIndex index = ui->listWidget->indexAt(pos);
+    if (!index.isValid())
+        return;
+
+    RightMenu->clear();
+    showHex->setIcon(hexBinary);
+    RightMenu->addAction(showHex);
+
+    ExtractRegion->setIcon(box_arrow_up);
+    RightMenu->addAction(ExtractRegion);
+
+    openTab->setIcon(open);
+    RightMenu->addAction(openTab);
+
+    DigestMenu->setIcon(key);
+    DigestMenu->addAction(md5_Menu);
+    DigestMenu->addAction(sha1_Menu);
+    DigestMenu->addAction(sha224_Menu);
+    DigestMenu->addAction(sha256_Menu);
+    DigestMenu->addAction(sha384_Menu);
+    DigestMenu->addAction(sha512_Menu);
+    RightMenu->addMenu(DigestMenu);
+
+    RightMenu->move(ui->listWidget->cursor().pos());
+    RightMenu->show();
+}
+
+void CapsuleWindow::showHexView() {
+    auto *hexDialog = new HexViewDialog();
+    if (WindowData->DarkmodeFlag) {
+        hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
+    }
+
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+    auto *hexViewData = new QByteArray((char*)itemData, size);
+
+    data = new UefiSpace::Volume(WindowData->InputImage, WindowData->InputImageSize);
+    hexDialog->loadBuffer(*hexViewData,
+                          data,
+                          offset,
+                          QString::fromStdString(EntryHeader->getEntryName()),
+                          WindowData->OpenedFileName,
+                          false);
+    hexDialog->show();
+    delete[] itemData;
+    delete hexViewData;
+}
+
+void CapsuleWindow::openInNewTab() {
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+
+    WindowData->parentWindow->OpenBuffer(itemData, size, QString::fromStdString(EntryHeader->getEntryName()));
+}
+
+void CapsuleWindow::extractCapsuleRegion() {
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+
+    QString filename = QString::fromStdString(EntryHeader->getEntryName()) + ".bin";
+    QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
+    QString DialogTitle = "Extract " + QString::fromStdString(EntryHeader->getEntryName());
+    QString extractVolumeName = QFileDialog::getSaveFileName(this,
+                                                             DialogTitle,
+                                                             outputPath,
+                                                             tr("Files(*.rom *.bin *.fd);;All files (*.*)"));
+    if (extractVolumeName.isEmpty()) {
+        return;
+    }
+    saveBinary(extractVolumeName.toStdString(), itemData, 0, size);
+    delete[] itemData;
+}
+
+void CapsuleWindow::getMD5() {
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+
+    UINT8 md[MD5_DIGEST_LENGTH];
+    MD5(itemData, size, md);
+    delete[] itemData;
+
+    QString hash;
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
+    }
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("MD5"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
+}
+
+void CapsuleWindow::getSHA1() {
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+
+    UINT8 md[SHA_DIGEST_LENGTH];
+    SHA1(itemData, size, md);
+    delete[] itemData;
+
+    QString hash;
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
+    }
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA1"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
+}
+
+void CapsuleWindow::getSHA224(){
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+
+    UINT8 md[SHA224_DIGEST_LENGTH];
+    SHA224(itemData, size, md);
+    delete[] itemData;
+
+    QString hash;
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
+    }
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA224"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
+}
+
+void CapsuleWindow::getSHA256() {
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+
+    UINT8 md[SHA256_DIGEST_LENGTH];
+    SHA256(itemData, size, md);
+    delete[] itemData;
+
+    QString hash;
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
+    }
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA256"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
+}
+
+void CapsuleWindow::getSHA384() {
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+
+    UINT8 md[SHA384_DIGEST_LENGTH];
+    SHA384(itemData, size, md);
+    delete[] itemData;
+
+    QString hash;
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
+    }
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA384"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
+}
+
+void CapsuleWindow::getSHA512() {
+    currentRow = ui->listWidget->currentRow();
+    shared_ptr<EntryHeaderClass> EntryHeader = EntryList.at(currentRow);
+    INT64 offset = EntryHeader->panelGetOffset();
+    INT64 size = EntryHeader->panelGetSize();
+    buffer->setOffset(offset);
+    UINT8 *itemData = buffer->getBytes(size);
+
+    UINT8 md[SHA512_DIGEST_LENGTH];
+    SHA512(itemData, size, md);
+    delete[] itemData;
+
+    QString hash;
+    for (UINT8 i : md) {
+        hash += QString("%1").arg(i, 2, 16, QLatin1Char('0'));
+    }
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("SHA512"));
+    msgBox.setText(hash);
+
+    QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == copyButton) {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(hash);
+    }
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <QString>
 
 using namespace std;
 using namespace BaseLibrarySpace;
@@ -298,9 +299,8 @@ namespace CapsuleToolSpace {
 
     class AcmClass : public EntryHeaderClass {
     private:
-        UINT8 VERSION_NUMBER;
-        UINT8 VERSION_MAJOR;
-        UINT8 VERSION_MINOR;
+        string InfoStr;
+        string AcmVersion;
     public:
         AcmClass() = default;
         void    Decode(Buffer& buffer, INT64 offset, INT64 DataLength);

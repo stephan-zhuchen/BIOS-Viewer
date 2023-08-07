@@ -167,19 +167,27 @@ void StartWindow::refresh() {
 }
 
 void StartWindow::OpenFile(const QString& path, bool onlyHexView) {
+    auto *buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
+    INT32 bufferSize = buffer->getBufferSize();
+    UINT8* data = buffer->getBytes(bufferSize);
+    safeDelete(buffer);
+
+    OpenBuffer(data, bufferSize, path, onlyHexView);
+}
+
+void StartWindow::OpenBuffer(UINT8* data, UINT64 length, const QString& path, bool onlyHexView) {
     if (TabData.empty())
         showTabWindow();
 
-    auto *buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
     this->setWindowTitle("BIOS Viewer -- " + path);
     auto *newTabData = new GeneralData(appPath);
     TabData.push_back(newTabData);
     newTabData->OpenedFileName = path;
     newTabData->WindowTitle += this->windowTitle();
-    newTabData->InputImageSize = buffer->getBufferSize();
-    newTabData->InputImage = buffer->getBytes((INT32)newTabData->InputImageSize);
-    newTabData->buffer = buffer;
+    newTabData->InputImageSize = length;
+    newTabData->InputImage = data;
     newTabData->DarkmodeFlag = DarkmodeFlag;
+    newTabData->parentWindow = this;
     newTabData->BiosViewerUi = new BiosViewerWindow(this);
     newTabData->HexViewerUi = new HexViewWindow(this);
     newTabData->CapsuleViewerUi = new CapsuleWindow(this);
@@ -212,11 +220,6 @@ void StartWindow::OpenFile(const QString& path, bool onlyHexView) {
         MainTabWidget->addTab(tabWidget, FileInfo.fileName());
     }
     MainTabWidget->setCurrentIndex((INT32)TabData.size() - 1);
-    safeDelete(buffer);
-}
-
-void StartWindow::DoubleClickOpenFile(const QString& path) {
-    OpenFile(path);
 }
 
 void StartWindow::showHintWindow() {

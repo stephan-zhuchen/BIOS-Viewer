@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <vector>
 #include "CapsuleLib.h"
+#include "uefilib.h"
 #include "UEFI/GuidDefinition.h"
 
 using namespace std;
@@ -860,61 +861,40 @@ namespace CapsuleToolSpace {
                  << " uCode Size = 0x" << hex << uCodeEntryList[i].TotalSize << "\n";
         }
 
-        Info << "\n";
-        Acm.collectInfo(Info);
+        Info << "\n" << Acm.getAcmVersion();
     }
 
     void AcmClass::Decode(Buffer& buffer, INT64 offset, INT64 DataLength)
     {
-        INT64 searchOffset;
-        bool BtGAcmHeaderFound = false;
-        GUID BtGAcmHeader { "7fc03aaa-46a7-18db-2eac-698f8d417f5a" }; //This is not GUID, only for search convenience
-
         buffer.setOffset(offset);
         if (buffer.getRemainingSize() < DataLength) {
             throw CapsuleError("Buffer size smaller than Ffs data!");
         }
 
-        for (searchOffset = 0; searchOffset < DataLength; searchOffset += 0x10)
-        {
-            buffer.setOffset(offset + searchOffset);
-            GUID temp = GUID(buffer.getGUID());
-            if (temp == BtGAcmHeader)
-            {
-                BtGAcmHeaderFound = true;
-                break;
-            }
-        }
-        if (!BtGAcmHeaderFound)
-        {
-            throw CapsuleError("BtGAcmHeader not Found!");
-        }
+        buffer.setOffset(offset);
+        UINT8* AcmBuffer = buffer.getBytes(DataLength);
+        auto *AcmEntry = new UefiSpace::AcmHeaderClass(AcmBuffer, 0);
+        AcmEntry->setInfoStr();
+        InfoStr = AcmEntry->InfoStr.toStdString();
+
+        stringstream Info;
+        Info << "Acm Version:"   << (UINT32)AcmEntry->AcmVersion.AcmMajorVersion << "." << (UINT32)AcmEntry->AcmVersion.AcmMinorVersion << "." << (UINT32)AcmEntry->AcmVersion.AcmRevision << "\n";
+        AcmVersion = Info.str();
+        safeDelete(AcmEntry);
+        safeArrayDelete(AcmBuffer);
 
         panelOffset = offset;
         panelSize = DataLength;
-
-        buffer.setOffset(offset + searchOffset + 0x25);     // 0x25 is from line 60 in Intel\AlderLakePlatSamplePkg\Features\CapsuleUpdate\Tools\GetFwVersionFromBin\GetBtGAcmIdFromBin.py
-        VERSION_NUMBER = buffer.getUINT8();
-        VERSION_MAJOR = buffer.getUINT8();
-        VERSION_MINOR = buffer.getUINT8();
     }
 
     void AcmClass::collectInfo(stringstream& Info)
     {
-        Info << "ACM version: " << hex << setfill('0') << setw(2)
-             << (UINT16)VERSION_NUMBER << "."
-             << setfill('0') << setw(2)
-             << (UINT16)VERSION_MAJOR << "."
-             << setfill('0') << setw(2)
-             << (UINT16)VERSION_MINOR
-             << endl;
+        Info << InfoStr;
     }
 
     string AcmClass::getAcmVersion()
     {
-        stringstream Info;
-        collectInfo(Info);
-        return Info.str();
+        return AcmVersion;
     }
 
     void EcClass::Decode(Buffer& buffer, INT64 offset, INT64 DataLength)
