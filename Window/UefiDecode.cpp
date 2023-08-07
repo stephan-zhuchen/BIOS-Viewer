@@ -183,21 +183,18 @@ void BiosViewerWindow::setFfsData() {
         }
     }
 
-    bool EnableMultiThread = false;
-    if (setting.value("EnableMultiThread") == "true") {
-        EnableMultiThread = true;
-    }
+    bool EnableMultiThread = true;
+    auto FvDecoder = [this, EnableMultiThread](int index) {
+        FirmwareVolume *volume = InputData->FirmwareVolumeData.at(index);
+        volume->decodeFfs(EnableMultiThread);
+        auto* fvm = new FvModel(volume);
+        if (InputData->IFWI_exist) {
+            InputData->IFWI_ModelData.at(InputData->IFWI_ModelData.size() - 1)->volumeModelData.at(index) = fvm;
+        } else {
+            InputData->IFWI_ModelData.at(index) = fvm;
+        }
+    };
     for (int idx = 0; idx < InputData->FirmwareVolumeData.size(); ++idx) {
-        auto FvDecoder = [this, EnableMultiThread](int index) {
-            FirmwareVolume *volume = InputData->FirmwareVolumeData.at(index);
-            volume->decodeFfs(EnableMultiThread);
-            auto* fvm = new FvModel(volume);
-            if (InputData->IFWI_exist) {
-                InputData->IFWI_ModelData.at(InputData->IFWI_ModelData.size() - 1)->volumeModelData.at(index) = fvm;
-            } else {
-                InputData->IFWI_ModelData.at(index) = fvm;
-            }
-        };
         if (EnableMultiThread) {
             threadPool.emplace_back(FvDecoder, idx);
         } else {

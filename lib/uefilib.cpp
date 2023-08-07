@@ -1,6 +1,6 @@
 #include <iomanip>
 #include <thread>
-#include <atomic>
+#include <mutex>
 #include <algorithm>
 #include "UefiLib.h"
 #include "C/Base.h"
@@ -745,7 +745,7 @@ namespace UefiSpace {
         FirmwareVolumeHeader = *(EFI_FIRMWARE_VOLUME_HEADER*)data;
 
         // Check that the firmware volume is not longer than the volume
-        if (FirmwareVolumeHeader.FvLength > length) {
+        if (FirmwareVolumeHeader.FvLength > (UINT64)length) {
             isCorrupted = true;
         }
 
@@ -804,7 +804,30 @@ namespace UefiSpace {
             return;
         }
         vector<thread> threadPool;
-        atomic_flag spinlock = ATOMIC_FLAG_INIT;
+        std::mutex mtx;
+        auto FvDecoder = [this, &mtx](INT64 off) {
+            FfsFile *Ffs = new FfsFile(data + off, offsetFromBegin + off, this->isCompressed);
+
+            // The following file types have sections that can be decoded:
+            switch (Ffs->getType()) {
+            case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
+            case EFI_FV_FILETYPE_FREEFORM:
+            case EFI_FV_FILETYPE_SECURITY_CORE:
+            case EFI_FV_FILETYPE_PEI_CORE:
+            case EFI_FV_FILETYPE_DXE_CORE:
+            case EFI_FV_FILETYPE_PEIM:
+            case EFI_FV_FILETYPE_DRIVER:
+            case EFI_FV_FILETYPE_APPLICATION:
+            case EFI_FV_FILETYPE_MM:
+            case EFI_FV_FILETYPE_RAW:
+                Ffs->decodeSections();
+                break;
+            default:
+                break;
+            }
+            std::lock_guard<std::mutex> lock(mtx);
+            FfsFiles.push_back(Ffs);
+        };
         while (offset < size) {
             EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
             INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
@@ -815,31 +838,6 @@ namespace UefiSpace {
                 freeSpace = new Volume(data + offset, size - offset, offsetFromBegin + offset, this->isCompressed);
                 break;
             }
-
-            auto FvDecoder = [this, &spinlock](INT64 off) {
-                FfsFile *Ffs = new FfsFile(data + off, offsetFromBegin + off, this->isCompressed);
-
-                // The following file types have sections that can be decoded:
-                switch (Ffs->getType()) {
-                case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
-                case EFI_FV_FILETYPE_FREEFORM:
-                case EFI_FV_FILETYPE_SECURITY_CORE:
-                case EFI_FV_FILETYPE_PEI_CORE:
-                case EFI_FV_FILETYPE_DXE_CORE:
-                case EFI_FV_FILETYPE_PEIM:
-                case EFI_FV_FILETYPE_DRIVER:
-                case EFI_FV_FILETYPE_APPLICATION:
-                case EFI_FV_FILETYPE_MM:
-                case EFI_FV_FILETYPE_RAW:
-                    Ffs->decodeSections();
-                    break;
-                default:
-                    break;
-                }
-                while (spinlock.test_and_set()) {}
-                FfsFiles.push_back(Ffs);
-                spinlock.clear();
-            };
 
             // If multithreading is enabled, then create a thread that will decode the sections of the current FFS file.
             if (multiThread) {
@@ -1090,7 +1088,7 @@ namespace UefiSpace {
     }
 
     void BiosImageVolume::setDebugFlag() {
-        INT64 pos = BiosID.find('.');
+        UINT64 pos = BiosID.find('.');
         if (pos != string::npos && pos + 1 < BiosID.size()) {
             if (BiosID[pos + 1] == 'R') {
                 DebugFlag = false;

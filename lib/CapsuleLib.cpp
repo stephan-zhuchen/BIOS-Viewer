@@ -168,7 +168,7 @@ namespace CapsuleToolSpace {
         Info.setf(ios::left);
 
         Info << setw(width) << "Version:"              << hex << uppercase << Version << "h\n"
-             << setw(width) << "UpdateImageTypeId:"    << GUID(UpdateImageTypeId).str(true) << "h\n"
+             << setw(width) << "UpdateImageTypeId:"    << GUID(UpdateImageTypeId).str(true) << "\n"
              << setw(width) << "UpdateImageIndex:"     << hex << uppercase << (UINT32)UpdateImageIndex << "h\n"
              << setw(width) << "UpdateImageSize:"      << hex << uppercase << UpdateImageSize << "h\n"
              << setw(width) << "UpdateVendorCodeSize:" << hex << uppercase << UpdateVendorCodeSize << "h\n";
@@ -304,7 +304,7 @@ namespace CapsuleToolSpace {
         INT32 width = 25;
         Info.setf(ios::left);
 
-        Info << setw(width) << "Signature:"              << Signature << "h\n"
+        Info << setw(width) << "Signature:"              << Signature << "\n"
              << setw(width) << "HeaderSize:"             << hex << uppercase << HeaderSize << "h\n"
              << setw(width) << "FwVersion:"              << hex << uppercase << FwVersion << "h\n"
              << setw(width) << "LowestSupportedVersion:" << hex << uppercase << LowestSupportedVersion << "h\n";
@@ -360,7 +360,7 @@ namespace CapsuleToolSpace {
         INT32 width = 25;
         Info.setf(ios::left);
 
-        Info << setw(width) << "FileSystemGuid:" << GUID(FileSystemGuid).str(true) << "h\n"
+        Info << setw(width) << "FileSystemGuid:" << GUID(FileSystemGuid).str(true) << "\n"
              << setw(width) << "Checksum:"       << hex << uppercase << Checksum << "h\n"
              << setw(width) << "NumBlocks:"      << hex << uppercase << NumBlocks << "h\n"
              << setw(width) << "Length:"         << hex << uppercase << Length << "h\n";
@@ -539,7 +539,7 @@ namespace CapsuleToolSpace {
 
         Info << setw(width) << "FwVersion:"              << hex << uppercase << FwVersion << "h\n"
              << setw(width) << "LowestSupportedVersion:" << hex << uppercase << LowestSupportedVersion << "h\n"
-             << setw(width) << "FwVersionString:"        << FwVersionString << "h\n";
+             << setw(width) << "FwVersionString:"        << FwVersionString << "\n";
     }
 
     string MicrocodeVersionClass::getFwVersion() const {
@@ -590,10 +590,10 @@ namespace CapsuleToolSpace {
         INT32 width = 20;
         Info.setf(ios::left);
 
-        Info << setw(width) << "CPU ID:"             << hex << uppercase << ProcessorSignature << "h\n"
+        Info << setw(width) << "CPU ID:"             << hex << uppercase << ProcessorSignature << "\n"
              << setw(width) << "HeaderVersion:"      << hex << uppercase << HeaderVersion << "h\n"
              << setw(width) << "UpdateRevision:"     << hex << uppercase << UpdateRevision << "h\n"
-             << setw(width) << "Date:"               << hex << uppercase << Date << "h\n"
+             << setw(width) << "Date:"               << hex << uppercase << Date << "\n"
              << setw(width) << "ProcessorSignature:" << hex << uppercase << ProcessorSignature << "h\n"
              << setw(width) << "Checksum:"           << hex << uppercase << Checksum << "h\n"
              << setw(width) << "LoaderRevision:"     << hex << uppercase << LoaderRevision << "h\n"
@@ -712,7 +712,7 @@ namespace CapsuleToolSpace {
         Info.setf(ios::left);
 
         Info << setw(width) << "Version:"          << hex << uppercase << Version << "h\n"
-             << setw(width) << "PlatId:"           << hex << uppercase << PlatId << "h\n"
+             << setw(width) << "PlatId:"           << hex << uppercase << PlatId << "\n"
              << setw(width) << "PkgAttributes:"    << hex << uppercase << PkgAttributes << "h\n"
              << setw(width) << "PslMajorVer:"      << hex << uppercase << PslMajorVer << "h\n"
              << setw(width) << "PslMinorVer:"      << hex << uppercase << PslMinorVer << "h\n"

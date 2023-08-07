@@ -38,6 +38,7 @@ public:
     QTabWidget       *MainTabWidget{};
     vector<GeneralData*> TabData;
     bool             DisableBiosViewer{false};
+    QList<QPair<QString, QString>> DefaultSettings;
 
     QString        appPath;
     bool           DarkmodeFlag{false};

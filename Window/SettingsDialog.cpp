@@ -22,47 +22,41 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(ui->infoLineSpacingBox,    SIGNAL(activated(int)),    this, SLOT(infoLineSpacingBoxActivated(int)));
     connect(ui->infoFontBox,           SIGNAL(activated(int)),    this, SLOT(infoFontBoxActivated(int)));
     connect(ui->showPaddingBox,        SIGNAL(stateChanged(int)), this, SLOT(showPaddingBoxStateChanged(int)));
-    connect(ui->EnableMultiThread,     SIGNAL(stateChanged(int)), this, SLOT(enableMultiThreadStateChanged(int)));
     connect(ui->enableEditingBox,      SIGNAL(stateChanged(int)), this, SLOT(enableEditingBoxStateChanged(int)));
     connect(ui->onlyHexViewBox,        SIGNAL(stateChanged(int)), this, SLOT(onlyHexViewBoxStateChanged(int)));
     connect(ui->pasteModeBox,          SIGNAL(activated(int)),    this, SLOT(pasteModeBoxActivated(int)));
     setAttribute(Qt::WA_DeleteOnClose);
 
-    Theme = setting.value("Theme").toString();
-    StructureFontSize = setting.value("BiosViewerFontSize").toString();
-    StructureFont = setting.value("BiosViewerFont").toString();
-    InfoFontSize = setting.value("InfoFontSize").toString();
-    InfoFont = setting.value("InfoFont").toString();
-    HexFontSize = setting.value("HexFontSize").toString();
-    HexFont = setting.value("HexFont").toString();
-    AsciiFont = setting.value("AsciiFont").toString();
-    LineSpacing = setting.value("LineSpacing").toString();
-    InfoLineSpacing = setting.value("InfoLineSpacing").toString();
-    PasteMode = setting.value("PasteMode").toString();
+    CurrentSettings.Theme = setting.value("Theme").toString();
+    CurrentSettings.BiosViewerFontSize = setting.value("BiosViewerFontSize").toString();
+    CurrentSettings.BiosViewerFont = setting.value("BiosViewerFont").toString();
+    CurrentSettings.InfoFontSize = setting.value("InfoFontSize").toString();
+    CurrentSettings.InfoFont = setting.value("InfoFont").toString();
+    CurrentSettings.HexFontSize = setting.value("HexFontSize").toString();
+    CurrentSettings.HexFont = setting.value("HexFont").toString();
+    CurrentSettings.AsciiFont = setting.value("AsciiFont").toString();
+    CurrentSettings.LineSpacing = setting.value("LineSpacing").toString();
+    CurrentSettings.InfoLineSpacing = setting.value("InfoLineSpacing").toString();
+    CurrentSettings.PasteMode = setting.value("PasteMode").toString();
 
-    ui->biosViewerThemeBox->setCurrentText(Theme);
-    ui->biosViewerFontSizeBox->setCurrentText(StructureFontSize);
-    ui->biosViewerFontBox->setCurrentText(StructureFont);
+    ui->biosViewerThemeBox->setCurrentText(CurrentSettings.Theme);
+    ui->biosViewerFontSizeBox->setCurrentText(CurrentSettings.BiosViewerFontSize);
+    ui->biosViewerFontBox->setCurrentText(CurrentSettings.BiosViewerFont);
 
-    ui->infoFontSizeBox->setCurrentText(InfoFontSize);
-    ui->infoFontBox->setCurrentText(InfoFont);
-    ui->infoLineSpacingBox->setCurrentText(InfoLineSpacing);
+    ui->infoFontSizeBox->setCurrentText(CurrentSettings.InfoFontSize);
+    ui->infoFontBox->setCurrentText(CurrentSettings.InfoFont);
+    ui->infoLineSpacingBox->setCurrentText(CurrentSettings.InfoLineSpacing);
 
-    ui->hexFontSizeBox->setCurrentText(HexFontSize);
-    ui->hexFontBox->setCurrentText(HexFont);
-    ui->asciiFontBox->setCurrentText(AsciiFont);
-    ui->lineSpacingBox->setCurrentText(LineSpacing);
-    ui->pasteModeBox->setCurrentText(PasteMode);
+    ui->hexFontSizeBox->setCurrentText(CurrentSettings.HexFontSize);
+    ui->hexFontBox->setCurrentText(CurrentSettings.HexFont);
+    ui->asciiFontBox->setCurrentText(CurrentSettings.AsciiFont);
+    ui->lineSpacingBox->setCurrentText(CurrentSettings.LineSpacing);
+    ui->pasteModeBox->setCurrentText(CurrentSettings.PasteMode);
 
     if (setting.value("ShowPaddingItem") == "true")
         ui->showPaddingBox->setCheckState(Qt::Checked);
     else if (setting.value("ShowPaddingItem") == "false")
         ui->showPaddingBox->setCheckState(Qt::Unchecked);
-
-    if (setting.value("EnableMultiThread") == "true")
-        ui->EnableMultiThread->setCheckState(Qt::Checked);
-    else if (setting.value("EnableMultiThread") == "false")
-        ui->EnableMultiThread->setCheckState(Qt::Unchecked);
 
     if (setting.value("EnableHexEditing") == "true")
         ui->enableEditingBox->setCheckState(Qt::Checked);
@@ -83,72 +77,71 @@ int SettingsDialog::lastTabIndex = 0;
 
 void SettingsDialog::hexFontSizeBoxActivated(int index)
 {
-    HexFontSize = ui->hexFontSizeBox->currentText();
+    CurrentSettings.HexFontSize = ui->hexFontSizeBox->currentText();
 }
 
 void SettingsDialog::hexFontBoxActivated(int index)
 {
-    HexFont = ui->hexFontBox->currentText();
+    CurrentSettings.HexFont = ui->hexFontBox->currentText();
 }
 
 void SettingsDialog::asciiFontBoxActivated(int index)
 {
-    AsciiFont = ui->asciiFontBox->currentText();
+    CurrentSettings.AsciiFont = ui->asciiFontBox->currentText();
 }
-
 
 void SettingsDialog::BiosViewerThemeBoxActivated(int index)
 {
-    Theme = ui->biosViewerThemeBox->currentText();
+    CurrentSettings.Theme = ui->biosViewerThemeBox->currentText();
 }
 
 void SettingsDialog::BiosViewerFontSizeBoxActivated(int index)
 {
-    StructureFontSize = ui->biosViewerFontSizeBox->currentText();
+    CurrentSettings.BiosViewerFontSize = ui->biosViewerFontSizeBox->currentText();
 }
 
 void SettingsDialog::BiosViewerFontBoxActivated(int index)
 {
-    StructureFont = ui->biosViewerFontBox->currentText();
+    CurrentSettings.BiosViewerFont = ui->biosViewerFontBox->currentText();
 }
 
 void SettingsDialog::lineSpacingBoxActivated(int index)
 {
-    LineSpacing = ui->lineSpacingBox->currentText();
+    CurrentSettings.LineSpacing = ui->lineSpacingBox->currentText();
 }
 
 void SettingsDialog::infoFontSizeBoxActivated(int index)
 {
-    InfoFontSize = ui->infoFontSizeBox->currentText();
+    CurrentSettings.InfoFontSize = ui->infoFontSizeBox->currentText();
 }
 
 void SettingsDialog::infoLineSpacingBoxActivated(int index)
 {
-    InfoLineSpacing = ui->infoLineSpacingBox->currentText();
+    CurrentSettings.InfoLineSpacing = ui->infoLineSpacingBox->currentText();
 }
 
 void SettingsDialog::infoFontBoxActivated(int index)
 {
-    InfoFont = ui->infoFontBox->currentText();
+    CurrentSettings.InfoFont = ui->infoFontBox->currentText();
 }
 
 void SettingsDialog::buttonBoxAccepted()
 {
-    setting.setValue("BiosViewerFontSize", StructureFontSize);
-    setting.setValue("BiosViewerFont", StructureFont);
-    setting.setValue("InfoFontSize", InfoFontSize);
-    setting.setValue("InfoFont", InfoFont);
-    setting.setValue("HexFontSize", HexFontSize);
-    setting.setValue("HexFont", HexFont);
-    setting.setValue("AsciiFont", AsciiFont);
-    setting.setValue("LineSpacing", LineSpacing);
-    setting.setValue("InfoLineSpacing", InfoLineSpacing);
-    setting.setValue("Theme", Theme);
-    setting.setValue("ShowPaddingItem", ShowPaddingItem);
-    setting.setValue("EnableMultiThread", EnableMultiThread);
-    setting.setValue("EnableHexEditing", EnableHexEditing);
-    setting.setValue("DisableBiosViewer", DisableBiosViewer);
-    setting.setValue("PasteMode", PasteMode);
+    setting.setValue("BiosViewerFontSize", CurrentSettings.BiosViewerFontSize);
+    setting.setValue("BiosViewerFont", CurrentSettings.BiosViewerFont);
+    setting.setValue("InfoFontSize", CurrentSettings.InfoFontSize);
+    setting.setValue("InfoFont", CurrentSettings.InfoFont);
+    setting.setValue("HexFontSize", CurrentSettings.HexFontSize);
+    setting.setValue("HexFont", CurrentSettings.HexFont);
+    setting.setValue("AsciiFont", CurrentSettings.AsciiFont);
+    setting.setValue("LineSpacing", CurrentSettings.LineSpacing);
+    setting.setValue("InfoLineSpacing", CurrentSettings.InfoLineSpacing);
+    setting.setValue("Theme", CurrentSettings.Theme);
+    setting.setValue("ShowPaddingItem", CurrentSettings.ShowPaddingItem);
+    setting.setValue("EnableHexEditing", CurrentSettings.EnableHexEditing);
+    setting.setValue("DisableBiosViewer", CurrentSettings.DisableBiosViewer);
+    setting.setValue("PasteMode", CurrentSettings.PasteMode);
+
     lastTabIndex = ui->tabWidget->currentIndex();
     parentWidget->refresh();
 }
@@ -160,40 +153,32 @@ void SettingsDialog::setParentWidget(StartWindow *pWidget) {
 void SettingsDialog::showPaddingBoxStateChanged(int state)
 {
     if (state == Qt::Checked) {
-        ShowPaddingItem = "true";
+        CurrentSettings.ShowPaddingItem = "true";
     } else if (state == Qt::Unchecked) {
-        ShowPaddingItem = "false";
-    }
-}
-
-void SettingsDialog::enableMultiThreadStateChanged(int state) {
-    if (state == Qt::Checked) {
-        EnableMultiThread = "true";
-    } else if (state == Qt::Unchecked) {
-        EnableMultiThread = "false";
+        CurrentSettings.ShowPaddingItem = "false";
     }
 }
 
 void SettingsDialog::enableEditingBoxStateChanged(int state)
 {
     if (state == Qt::Checked) {
-        EnableHexEditing = "true";
+        CurrentSettings.EnableHexEditing = "true";
     } else if (state == Qt::Unchecked) {
-        EnableHexEditing = "false";
+        CurrentSettings.EnableHexEditing = "false";
     }
 }
 
 void SettingsDialog::onlyHexViewBoxStateChanged(int state)
 {
     if (state == Qt::Checked) {
-        DisableBiosViewer = "true";
+        CurrentSettings.DisableBiosViewer = "true";
     } else if (state == Qt::Unchecked) {
-        DisableBiosViewer = "false";
+        CurrentSettings.DisableBiosViewer = "false";
     }
 }
 
 void SettingsDialog::pasteModeBoxActivated(int index) {
-    PasteMode = ui->pasteModeBox->currentText();
+    CurrentSettings.PasteMode = ui->pasteModeBox->currentText();
 }
 
 

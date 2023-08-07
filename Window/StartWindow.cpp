@@ -74,39 +74,28 @@ StartWindow::~StartWindow() {
  */
 
 void StartWindow::initSettings() {
-    if (!setting.contains("Theme"))
-        setting.setValue("Theme", "System");
-    if (!setting.contains("BiosViewerFontSize"))
-        setting.setValue("BiosViewerFontSize", 12);
-    if (!setting.contains("BiosViewerFont"))
-        setting.setValue("BiosViewerFont", "Microsoft YaHei UI");
-    if (!setting.contains("ShowPaddingItem"))
-        setting.setValue("ShowPaddingItem", "false");
-    if (!setting.contains("EnableMultiThread"))
-        setting.setValue("EnableMultiThread", "true");
+    DefaultSettings = {
+        {"Theme",               "System"},
+        {"BiosViewerFontSize",  "12"},
+        {"BiosViewerFont",      "Microsoft YaHei UI"},
+        {"ShowPaddingItem",     "false"},
+        {"InfoFontSize",        "12"},
+        {"InfoFont",            "Fira Code"},
+        {"InfoLineSpacing",     "2"},
+        {"HexFontSize",         "12"},
+        {"HexFont",             "IntelOne Mono"},
+        {"AsciiFont",           "Fira Code Light"},
+        {"LineSpacing",         "2"},
+        {"EnableHexEditing",    "true"},
+        {"DisableBiosViewer",   "false"},
+        {"PasteMode",           "Ask Everytime"}
+    };
 
-    if (!setting.contains("InfoFontSize"))
-        setting.setValue("InfoFontSize", 12);
-    if (!setting.contains("InfoFont"))
-        setting.setValue("InfoFont", "Fira Code");
-    if (!setting.contains("InfoLineSpacing"))
-        setting.setValue("InfoLineSpacing", "2");
-
-    if (!setting.contains("HexFontSize"))
-        setting.setValue("HexFontSize", 12);
-    if (!setting.contains("HexFont"))
-        setting.setValue("HexFont", "IntelOne Mono");
-    if (!setting.contains("AsciiFont"))
-        setting.setValue("AsciiFont", "Fira Code Light");
-    if (!setting.contains("LineSpacing"))
-        setting.setValue("LineSpacing", "2");
-
-    if (!setting.contains("EnableHexEditing"))
-        setting.setValue("EnableHexEditing", "true");
-    if (!setting.contains("DisableBiosViewer"))
-        setting.setValue("DisableBiosViewer", "false");
-    if (!setting.contains("PasteMode"))
-        setting.setValue("PasteMode", "Ask Everytime");
+    for (const auto& defaultSetting : DefaultSettings) {
+        if (!setting.contains(defaultSetting.first)) {
+            setting.setValue(defaultSetting.first, defaultSetting.second);
+        }
+    }
 
     if (setting.value("DisableBiosViewer").toString() == "true") {
         DisableBiosViewer = true;

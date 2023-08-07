@@ -32,7 +32,6 @@ private slots:
     void infoLineSpacingBoxActivated(int index);
     void infoFontBoxActivated(int index);
     void showPaddingBoxStateChanged(int state);
-    void enableMultiThreadStateChanged(int state);
     void enableEditingBoxStateChanged(int state);
     void onlyHexViewBoxStateChanged(int state);
     void pasteModeBoxActivated(int index);
@@ -42,21 +41,22 @@ private:
     QSettings setting{"Intel", "BiosViewer"};
     StartWindow *parentWidget{};
 
-    QString StructureFontSize;
-    QString StructureFont;
-    QString InfoFontSize;
-    QString InfoFont;
-    QString Theme;
-    QString HexFontSize;
-    QString HexFont;
-    QString AsciiFont;
-    QString LineSpacing;
-    QString InfoLineSpacing;
-    QString ShowPaddingItem;
-    QString EnableMultiThread;
-    QString EnableHexEditing;
-    QString DisableBiosViewer;
-    QString PasteMode;
+    struct _CurrentSettings {
+        QString Theme;
+        QString BiosViewerFontSize;
+        QString BiosViewerFont;
+        QString ShowPaddingItem;
+        QString InfoFontSize;
+        QString InfoFont;
+        QString InfoLineSpacing;
+        QString HexFontSize;
+        QString HexFont;
+        QString AsciiFont;
+        QString LineSpacing;
+        QString EnableHexEditing;
+        QString DisableBiosViewer;
+        QString PasteMode;
+    } CurrentSettings;
     static int lastTabIndex;
 };
 

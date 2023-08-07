@@ -552,19 +552,6 @@
       <string>Show Padding and Empty Volume</string>
      </property>
     </widget>
-    <widget class="QCheckBox" name="EnableMultiThread">
-     <property name="geometry">
-      <rect>
-       <x>360</x>
-       <y>130</y>
-       <width>311</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Enable Multi-Thread</string>
-     </property>
-    </widget>
    </widget>
    <widget class="QWidget" name="hexTab">
     <attribute name="title">
