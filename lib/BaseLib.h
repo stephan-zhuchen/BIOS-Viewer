@@ -81,6 +81,20 @@ namespace BaseLibrarySpace {
         ptr = nullptr;
     }
 
+    template <typename T>
+    T swapEndian(T num) {
+        T result = 0;
+        unsigned char* src = reinterpret_cast<unsigned char*>(&num);
+        unsigned char* dest = reinterpret_cast<unsigned char*>(&result);
+        size_t size = sizeof(T);
+
+        for (size_t i = 0; i < size; ++i) {
+            dest[i] = src[size - 1 - i];
+        }
+
+        return result;
+    }
+
     void   Align(INT64& address, INT64 RelativeAddress, INT64 alignment);
     INT64  adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length);
     string charToString(const INT8* address, INT64 length, bool hasZeroEnding=false);
@@ -90,5 +104,6 @@ namespace BaseLibrarySpace {
     UINT16 CalculateSum16(const UINT16 *Buffer, INT64 Size);
     UINT32 CalculateSum32(const UINT32 *Buffer, INT64 Size);
     INT32  getSizeFromUINT24(const UINT8* address);
+    string DumpHex(UINT8* HexData, INT64 length, bool SingleLine = false);
     void   saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size);
 }

@@ -31,7 +31,7 @@
 
 @par Specification
 **/
-
+#pragma once
 #include "C/Base.h"
 
 //

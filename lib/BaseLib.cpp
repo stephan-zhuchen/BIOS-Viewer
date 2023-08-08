@@ -99,6 +99,8 @@ namespace BaseLibrarySpace {
     }
 
     UINT8* Buffer::getBytes(int n) {
+        if (n <= 0)
+            return nullptr;
         buffer->seekg(offset, ios::beg);
         offset += n;
         char* value = new char[n];
@@ -467,6 +469,37 @@ namespace BaseLibrarySpace {
     */
     INT32 getSizeFromUINT24(const UINT8* address) {
         return (INT32)*(UINT32*)address & 0xFFFFFF;
+    }
+
+    string DumpHex(UINT8* HexData, INT64 length, bool SingleLine) {
+        const INT64 COLUME_SIZE = 16;
+        auto InternalDumpData = [](stringstream &ss, UINT8* Data, INT64 Size) {
+            for (INT64 Index = 0; Index < Size; Index++) {
+                ss << setw(2) << setfill('0') << hex << (UINT16)Data[Index] << " ";
+            }
+        };
+        stringstream ss;
+        if (SingleLine) {
+            for (int i = 0; i < length; ++i) {
+                ss << setw(2) << setfill('0') << hex << (UINT16)HexData[i];
+            }
+            return ss.str();
+        }
+
+        INT64 Index;
+        INT64 Count = length / COLUME_SIZE;
+        INT64 Left  = length % COLUME_SIZE;
+        for (Index = 0; Index < Count; Index++) {
+            ss << setw(3) << setfill('0') << hex << Index * COLUME_SIZE << ": ";
+            InternalDumpData(ss, HexData + Index * COLUME_SIZE, COLUME_SIZE);
+            ss << "\n";
+        }
+        if (Left != 0) {
+            ss << setw(3) << setfill('0') << hex << Index * COLUME_SIZE << ": ";
+            InternalDumpData (ss, HexData + Index * COLUME_SIZE, Left);
+            ss << "\n";
+        }
+        return ss.str();
     }
 
     /**

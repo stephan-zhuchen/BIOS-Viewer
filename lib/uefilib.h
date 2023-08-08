@@ -309,12 +309,10 @@ namespace UefiSpace {
         UINT8* data;
         INT64  size;
         INT64  offset;
-        static void InternalDumpData(stringstream &ss, UINT8* Data, INT64 Size);
     public:
         BootGuardClass()=delete;
         BootGuardClass(UINT8* fv, INT64 length, INT64 address);
         virtual void setInfoStr();
-        static string DumpHex(UINT8* HexData, INT64 length, bool SingleLine = false);
         static string getAlgName(UINT16 Alg);
         virtual ~BootGuardClass();
     };

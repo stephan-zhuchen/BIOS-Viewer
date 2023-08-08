@@ -39,6 +39,19 @@ namespace CapsuleToolSpace {
     EntryHeaderClass::~EntryHeaderClass() {
     }
 
+    void CapsuleOverviewClass::Decode(Buffer& buffer, INT64 offset, INT64 length) {
+        panelOffset = offset;
+        panelSize = length;
+    }
+
+    void CapsuleOverviewClass::collectInfo(stringstream& Info) {
+        Info << OverviewMsg;
+    }
+
+    void CapsuleOverviewClass::setOverviewMsg(string msg) {
+        OverviewMsg = msg;
+    }
+
     UefiCapsuleHeaderClass::~UefiCapsuleHeaderClass() {
     }
 
@@ -649,6 +662,47 @@ namespace CapsuleToolSpace {
         buffer.setOffset(offset);
         iniContext = buffer.getString(contextLength);
         ConfigFileName = ConfigName;
+
+        std::stringstream ss(iniContext);
+        std::string currentSection;
+
+        std::string line;
+        while (std::getline(ss, line))
+        {
+            if (!line.empty() && line[line.length() - 1] == '\r') {
+                line = line.substr(0, line.length() - 1);
+            }
+
+            if (line[0] == '[' && line[line.size() - 1] == ']') {
+                currentSection = line.substr(1, line.size() - 2);
+                continue;
+            }
+
+            if (currentSection.empty())
+                continue;
+
+            std::size_t sepPos = line.find('=');
+            if (sepPos != std::string::npos) {
+                std::string key = TrimString(line.substr(0, sepPos));
+                std::string value = TrimString(line.substr(sepPos + 1));
+                iniData[currentSection][key] = value;
+            }
+        }
+
+        string NumOfUpdateStr = GetIniValue("Head", "NumOfUpdate");
+        NumOfUpdate = std::stoi(NumOfUpdateStr);
+
+        for (int idx = 0; idx < NumOfUpdate; ++idx) {
+            string UpdateIdx = "Update" + std::to_string(idx);
+            string SecionName = GetIniValue("Head", UpdateIdx);
+            // todo: assert
+            UINT32 BgupOffset = std::stoul(GetIniValue(SecionName, "HelperOffset"), nullptr, 16);
+            UINT32 BgupSize = std::stoul(GetIniValue(SecionName, "HelperLength"), nullptr, 16);
+            BgupList.push_back({SecionName, BgupOffset, BgupSize});
+        }
+
+        std::sort(BgupList.begin(), BgupList.end(), [](BgupConfig &config1, BgupConfig &config2) { return config1.BgupOffset < config2.BgupOffset; });
+
         return buffer.offset;
     }
 
@@ -657,7 +711,24 @@ namespace CapsuleToolSpace {
         Info << iniContext;
     }
 
-    bool BgupHeaderClass::SearchBgup(Buffer& buffer, INT64 BgupOffset) {
+    string ConfigIniClass::TrimString(const string& inputString) {
+        std::size_t start = inputString.find_first_not_of(" \t\r\n");
+        std::size_t end = inputString.find_last_not_of(" \t\r\n");
+
+        if (start == std::string::npos || end == std::string::npos)
+            return "";
+
+        return inputString.substr(start, end - start + 1);
+    }
+
+    string ConfigIniClass::GetIniValue(const string& section, const string& key) {
+        if (iniData.count(section) && iniData[section].count(key))
+            return iniData[section][key];
+
+        return "";
+    }
+
+    bool BgupHeaderClass::SearchBgup(Buffer& buffer, INT64 BgupOffset, UINT32 &BgupSize) {
         INT64 BufferSize = buffer.getBufferSize();
         if (BgupOffset > BufferSize)
         {
@@ -667,44 +738,104 @@ namespace CapsuleToolSpace {
         {
             return false;
         }
-        buffer.setOffset(BgupOffset + XDRSize);
-        Version = buffer.getUINT16();
+        buffer.setOffset(BgupOffset);
+        UINT32 XDRValue = buffer.getUINT32();
+        BgupSize = swapEndian<UINT32>(XDRValue);
+
+        UINT16 Version = buffer.getUINT16();
         if (Version == 0x0002) {
             return true;
         }
         return false;
     }
 
-    void BgupHeaderClass::Decode(Buffer& buffer, INT64 offset)
+    void BgupHeaderClass::Decode(Buffer& buffer, INT64 offset, INT64 length, string content)
     {
-        panelOffset = offset;
-        panelSize = 0x22;
-
+        Content = content;
         buffer.setOffset(offset);
-        Version = buffer.getUINT16();
-        Reserved3 = buffer.getUINT16();
-        char* cPlatId = (char*)buffer.getBytes(16);
-        PkgAttributes = buffer.getUINT16();
-        Reserved4 = buffer.getUINT16();
-        PslMajorVer = buffer.getUINT16();
-        PslMinorVer = buffer.getUINT16();
-        ScriptSectionSize = buffer.getUINT32();
-        DataSectionSize = buffer.getUINT32();
-        BiosSvn = buffer.getUINT32();
-        EcSvn = buffer.getUINT32();
-        VendorSpecific = buffer.getUINT32();
+        UINT8* BgupHeaderData = buffer.getBytes(sizeof(BGUP_HEADER));
+        BgupHeader = *(BGUP_HEADER*)BgupHeaderData;
+        delete[] BgupHeaderData;
 
-        char arrayPlatId[17]{ 0 };
-        for (int i = 0; i < 16; i++) {
-            arrayPlatId[i] = cPlatId[i];
+        buffer.setOffset(offset + sizeof(BGUP_HEADER) + BgupHeader.ScriptSectionSize);
+        INT64 BgupCSize = length - sizeof(BGUP_HEADER) - BgupHeader.ScriptSectionSize;
+        UINT8* BgupCHeaderData = buffer.getBytes(sizeof(BGUPC_HEADER));
+        BgupCHeader = *(BGUPC_HEADER*)BgupCHeaderData;
+        safeArrayDelete(BgupCHeaderData);
+
+        ModulusSize = 0;
+        RSAKeySize = 0;
+        switch (BgupCHeader.Algorithm) {
+        case BGUPC_ALG_PKCS1_15_SHA256_RSA2048:
+            Algorithm = "PKCS1 1.5, SHA-256 hash, RSA 2048 key";
+            ModulusSize = 256;
+            RSAKeySize = 256;
+            break;
+        case BGUPC_ALG_PKCS1_21_SHA256_RSA2048:
+            Algorithm = "PKCS1 2.1, SHA-256 hash, RSA 2048 key";
+            ModulusSize = 256;
+            RSAKeySize = 256;
+            break;
+        case BGUPC_ALG_PKCS1_15_SHA256_RSA3072:
+            Algorithm = "PKCS1 1.5, SHA-256 hash, RSA 3072 key";
+            ModulusSize = 384;
+            RSAKeySize = 384;
+            break;
+        case BGUPC_ALG_PKCS1_21_SHA256_RSA3072:
+            Algorithm = "PKCS1 2.1, SHA-256 hash, RSA 3072 key";
+            ModulusSize = 384;
+            RSAKeySize = 384;
+            break;
+        case BGUPC_ALG_PKCS1_15_SHA384_RSA3072:
+            Algorithm = "PKCS1 1.5, SHA-384 hash, RSA 3072 key";
+            ModulusSize = 384;
+            RSAKeySize = 384;
+            break;
+        case BGUPC_ALG_PKCS1_21_SHA384_RSA3072:
+            Algorithm = "PKCS1 2.1, SHA-384 hash, RSA 3072 key";
+            ModulusSize = 384;
+            RSAKeySize = 384;
+            break;
+        default:
+            Algorithm = "";
+            break;
         }
-        PlatId = (char*)arrayPlatId;
-        delete[] cPlatId;
+
+        if (BgupCSize != sizeof(BGUPC_HEADER) + ModulusSize + sizeof(UINT32) + RSAKeySize) {
+            cout << "Invalid BGUPC" << endl;
+        }
+
+        // todo: assert ModulusSize == 0
+        UINT8* Temp = buffer.getBytes(ModulusSize);
+        ModulusData = new UINT8[ModulusSize];
+        for (int idx = 0; idx < ModulusSize; ++idx) {
+            ModulusData[idx] = Temp[ModulusSize - idx - 1];
+        }
+        safeArrayDelete(Temp);
+
+        UINT32 ModulusTail = buffer.getUINT32();
+        if (ModulusTail != 0x00010001) {
+            cout << "invalid Algorithm" << endl;
+        }
+
+        UpdatePackageDigest = buffer.getBytes(RSAKeySize);
+
+        panelOffset = offset;
+        panelSize = length;
     }
 
     string BgupHeaderClass::getPlatId() const
     {
-        return PlatId;
+        return charToString((INT8*)BgupHeader.PlatId, 16);
+    }
+
+    BgupHeaderClass::~BgupHeaderClass() {
+        safeArrayDelete(ModulusData);
+        safeArrayDelete(UpdatePackageDigest);
+    }
+
+    string BgupHeaderClass::getEntryName() {
+        return "BGUP - " + Content;
     }
 
     void BgupHeaderClass::collectInfo(stringstream& Info)
@@ -712,16 +843,26 @@ namespace CapsuleToolSpace {
         INT32 width = 20;
         Info.setf(ios::left);
 
-        Info << setw(width) << "Version:"          << hex << uppercase << Version << "h\n"
-             << setw(width) << "PlatId:"           << hex << uppercase << PlatId << "\n"
-             << setw(width) << "PkgAttributes:"    << hex << uppercase << PkgAttributes << "h\n"
-             << setw(width) << "PslMajorVer:"      << hex << uppercase << PslMajorVer << "h\n"
-             << setw(width) << "PslMinorVer:"      << hex << uppercase << PslMinorVer << "h\n"
-             << setw(width) << "ScriptSectionSize:" << hex << uppercase << ScriptSectionSize << "h\n"
-             << setw(width) << "DataSectionSize:"  << hex << uppercase << DataSectionSize << "h\n"
-             << setw(width) << "BiosSvn:"          << hex << uppercase << BiosSvn << "h\n"
-             << setw(width) << "EcSvn:"            << hex << uppercase << EcSvn << "h\n"
-             << setw(width) << "VendorSpecific:"   << hex << uppercase << VendorSpecific << "h\n";
+        Info << "BGUP_HEADER\n";
+        Info << setw(width) << "Version:"          << hex << uppercase << BgupHeader.Version << "h\n"
+             << setw(width) << "PlatId:"           << hex << uppercase << charToString((INT8*)BgupHeader.PlatId, 16) << "\n"
+             << setw(width) << "PkgAttributes:"    << hex << uppercase << BgupHeader.PkgAttributes << "h\n"
+             << setw(width) << "PslMajorVer:"      << hex << uppercase << BgupHeader.PslMajorVer << "h\n"
+             << setw(width) << "PslMinorVer:"      << hex << uppercase << BgupHeader.PslMinorVer << "h\n"
+             << setw(width) << "ScriptSectionSize:" << hex << uppercase << BgupHeader.ScriptSectionSize << "h\n"
+             << setw(width) << "DataSectionSize:"  << hex << uppercase << BgupHeader.DataSectionSize << "h\n"
+             << setw(width) << "BiosSvn:"          << hex << uppercase << BgupHeader.BiosSvn << "h\n"
+             << setw(width) << "EcSvn:"            << hex << uppercase << BgupHeader.EcSvn << "h\n"
+             << setw(width) << "VendorSpecific:"   << hex << uppercase << BgupHeader.VendorSpecific << "h\n";
+
+        Info << "\n\nBGUPC_HEADER\n";
+        width = 12;
+        Info << setw(width) << "Version:"   << hex << uppercase << BgupCHeader.Version << "h\n"
+             << setw(width) << "Algorithm:" << hex << uppercase << BgupCHeader.Algorithm << "h (" << Algorithm << ")\n"
+             << "Modulus=\n"
+             << DumpHex(ModulusData, ModulusSize) << "\n\n"
+             << "Update Package Digest:\n"
+             << DumpHex(UpdatePackageDigest, RSAKeySize);
     }
 
     void BiosIdClass::Decode(Buffer& buffer, INT64 offset, INT64 length) {

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "BaseLib.h"
 #include <string>
 #include <sstream>
 #include <map>
 #include <QString>
+#include "BaseLib.h"
+#include "UEFI/BiosGuard.h"
 
 using namespace std;
 using namespace BaseLibrarySpace;
@@ -39,6 +40,17 @@ namespace CapsuleToolSpace {
         virtual INT64  panelGetOffset();
         virtual INT64  panelGetSize();
         virtual ~EntryHeaderClass();
+    };
+
+    class CapsuleOverviewClass : public EntryHeaderClass {
+    public:
+        string OverviewMsg;
+        CapsuleOverviewClass() = default;
+        void Decode(Buffer& buffer, INT64 offset, INT64 length);
+        void collectInfo(stringstream& Info) override;
+        ~CapsuleOverviewClass() = default;
+        void setOverviewMsg(string msg);
+        inline string getEntryName() override {return "Capsule Overview";};
     };
 
     class UefiCapsuleHeaderClass : public EntryHeaderClass {
@@ -231,42 +243,49 @@ namespace CapsuleToolSpace {
         static vector<INT64> SearchMicrocodeEntryNum(Buffer& buffer, INT64 MicrocodeOffset, INT64 MicrocodeDataSize);
     };
 
+    struct BgupConfig {
+        string BgupContent;
+        UINT32 BgupOffset;
+        UINT32 BgupSize;
+    };
+
     class ConfigIniClass : public EntryHeaderClass {
     private:
         string ConfigFileName{};
+        std::map<std::string, std::map<std::string, std::string>> iniData;
     public:
         string iniContext{};
+        INT32  NumOfUpdate;
+        vector<BgupConfig> BgupList;
 
         ConfigIniClass() = default;
         INT64   Decode(Buffer& buffer, INT64 offset, int contextLength, string&& ConfigName);
         void    collectInfo(stringstream& Info) override;
         virtual ~ConfigIniClass() = default;
         inline string getEntryName() override {return ConfigFileName;};
+        string TrimString(const string& inputString);
+        string GetIniValue(const string& section, const string& key);
     };
 
     class BgupHeaderClass : public EntryHeaderClass {
     private:
-        const INT64 XDRSize = 4;
-        UINT16 Version{};
-        UINT16 Reserved3{};
-        string PlatId{};
-        UINT16 PkgAttributes{};
-        UINT16 Reserved4{};
-        UINT16 PslMajorVer{};
-        UINT16 PslMinorVer{};
-        UINT32 ScriptSectionSize{};
-        UINT32 DataSectionSize{};
-        UINT32 BiosSvn{};
-        UINT32 EcSvn{};
-        UINT32 VendorSpecific{};
+        const INT64   XDRSize = 4;
+        BGUP_HEADER   BgupHeader;
+        BGUPC_HEADER  BgupCHeader;
+        string        Algorithm;
+        string        Content;
+        INT32         ModulusSize;
+        UINT8         *ModulusData{nullptr};
+        INT32         RSAKeySize;
+        UINT8         *UpdatePackageDigest{nullptr};
     public:
         BgupHeaderClass() = default;
-        bool    SearchBgup(Buffer& buffer, INT64 BgupOffset);
-        void    Decode(Buffer& buffer, INT64 offset);
+        bool    SearchBgup(Buffer& buffer, INT64 BgupOffset, UINT32 &BgupSize);
+        void    Decode(Buffer& buffer, INT64 offset, INT64 length, string content);
         void    collectInfo(stringstream& Info) override;
         string  getPlatId() const;
-        virtual ~BgupHeaderClass() = default;
-        inline string getEntryName() override {return "BGUP_HEADER";};
+        virtual ~BgupHeaderClass();
+        string getEntryName() override;
     };
 
     class BiosIdClass {

@@ -61,39 +61,6 @@ namespace UefiSpace {
 
     void BootGuardClass::setInfoStr() {}
 
-    void BootGuardClass::InternalDumpData(stringstream &ss, UINT8* Data, INT64 Size) {
-        for (INT64 Index = 0; Index < Size; Index++) {
-            ss << setw(2) << setfill('0') << hex << (UINT16)Data[Index] << " ";
-        }
-    }
-
-    string BootGuardClass::DumpHex(UINT8* HexData, INT64 length, bool SingleLine) {
-        #define COLUME_SIZE  16
-        stringstream ss;
-
-        if (SingleLine) {
-            for (int i = 0; i < length; ++i) {
-                ss << setw(2) << setfill('0') << hex << (UINT16)HexData[i];
-            }
-            return ss.str();
-        }
-
-        INT64 Index;
-        INT64 Count = length / COLUME_SIZE;
-        INT64 Left  = length % COLUME_SIZE;
-        for (Index = 0; Index < Count; Index++) {
-            ss << setw(3) << setfill('0') << hex << Index * COLUME_SIZE << ": ";
-            InternalDumpData(ss, HexData + Index * COLUME_SIZE, COLUME_SIZE);
-            ss << "\n";
-        }
-        if (Left != 0) {
-            ss << setw(3) << setfill('0') << hex << Index * COLUME_SIZE << ": ";
-            InternalDumpData (ss, HexData + Index * COLUME_SIZE, Left);
-            ss << "\n";
-        }
-        return ss.str();
-    }
-
     string BootGuardClass::getAlgName(UINT16 Alg) {
         string AlgName;
         switch (Alg) {

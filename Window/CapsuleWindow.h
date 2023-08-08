@@ -42,6 +42,7 @@ public:
     UefiSpace::Volume  *data{nullptr};
     GeneralData     *WindowData{nullptr};
 
+    shared_ptr<CapsuleOverviewClass>      CapsuleOverview;
     shared_ptr<UefiCapsuleHeaderClass>    UefiCapsuleHeader;
     shared_ptr<FmpCapsuleHeaderClass>     FmpCapsuleHeader;
     shared_ptr<FmpAuthHeaderClass>        FmpAuthHeader;
@@ -51,6 +52,7 @@ public:
     shared_ptr<MicrocodeVersionClass>     MicrocodeVersion;
     shared_ptr<ConfigIniClass>            ConfigIni;
     shared_ptr<BgupHeaderClass>           BgupHeader;
+    vector<shared_ptr<BgupHeaderClass>>   BgupHeaderVector;
     shared_ptr<BiosClass>                 BiosInstance;
     shared_ptr<AcmClass>                  AcmInstance;
     shared_ptr<EcClass>                   EcInstance;
@@ -97,7 +99,6 @@ public:
     void addList(const shared_ptr<EntryHeaderClass>& EntryHeader);
 
 private slots:
-    void listWidget_itemClicked(QListWidgetItem *item);
     void listWidget_itemSelectionChanged();
     void itemBox_activated(int index);
     void showListRightMenu(const QPoint &pos);

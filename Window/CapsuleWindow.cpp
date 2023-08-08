@@ -25,7 +25,6 @@ void CapsuleWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
     ui->setupUi(MainWindow);
     initSetting();
     ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(listWidget_itemClicked(QListWidgetItem*)));
     connect(ui->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(listWidget_itemSelectionChanged()));
     connect(ui->itemBox,    SIGNAL(activated(int)), this, SLOT(itemBox_activated(int)));
     connect(ui->listWidget, SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showListRightMenu(QPoint)));
@@ -117,12 +116,12 @@ void CapsuleWindow::addList(const shared_ptr<EntryHeaderClass>& EntryHeader)
     EntryList.push_back(EntryHeader);
     QString itemName = QString::fromStdString(EntryHeader->getEntryName());
 
-    QListWidgetItem *item2 = new QListWidgetItem;
-    item2->setText(itemName);
-    ui->listWidget->addItem(item2);
+    QListWidgetItem *item = new QListWidgetItem;
+    item->setText(itemName);
+    ui->listWidget->addItem(item);
 }
 
-void CapsuleWindow::listWidget_itemClicked(QListWidgetItem *item)
+void CapsuleWindow::listWidget_itemSelectionChanged()
 {
     stringstream Info;
 
@@ -133,15 +132,6 @@ void CapsuleWindow::listWidget_itemClicked(QListWidgetItem *item)
     INT64 offset = EntryHeader->panelGetOffset();
     INT64 size = EntryHeader->panelGetSize();
     setPanelInfo(offset, size);
-}
-
-void CapsuleWindow::listWidget_itemSelectionChanged()
-{
-    if (ui->listWidget->currentRow() == currentRow)
-    {
-        ui->AddressPanel->clear();
-        ui->textBrowser->setText(QString::fromStdString(CapsuleInfo.str()));
-    }
 }
 
 bool CapsuleWindow::tryOpenCapsule(UINT8 *image, INT64 imageLength) {
@@ -174,54 +164,36 @@ void CapsuleWindow::itemBox_activated(int index)
 
 void CapsuleWindow::parseMicrocodeCapsuleInfo(INT64 offset, QString& labelMode, stringstream& CapsuleInfo)
 {
-    INT64 PayloadOffset = offset;
-    QString CapsuleMode = "uCodeFull";
-    try {
-        // Try to find FV header.
-        PayloadOffset = FirmwareVolumeHeader->Decode(*buffer, PayloadOffset, "uCode", true);
-        addList(FirmwareVolumeHeader);
-        FfsFileHeaderClass FfsFileHeaderUcodeVersion;
-        PayloadOffset = FfsFileHeaderUcodeVersion.Decode(*buffer, PayloadOffset, false); //FFS that includes microcode version data
-    }
-    catch (CapsuleException&) {
-        // If there is no FV header, then this is slot mode.
-        PayloadOffset = FirmwareVolumeHeader->Decode(*buffer, PayloadOffset, "uCode", false);
-        CapsuleMode = "uCodeSlot";
-    }
-    catch (CapsuleError& err) {
-        cout << err.what() << endl;
-        labelMode = "Binary corrupted!";
-        return;
-    }
+    enum Capsule_Mode {FULL = 0, BGUP, SLOT};
+    Capsule_Mode CapsuleMode = FULL;
 
-    try {
-        // Find microcode version data. It looks like this:
-        // FwVersion = 0x0001
-        // LowestSupportedVersion = 0x0001
-        // FwVersionString = "Version 0.0.0.1"
-        PayloadOffset = MicrocodeVersion->Decode(*buffer, PayloadOffset);
-        addList(MicrocodeVersion);
+    buffer->setOffset(offset);
+    UINT32 XDR = buffer->getUINT32();
+    EFI_FIRMWARE_VOLUME_HEADER *MicrocodeFvData = (EFI_FIRMWARE_VOLUME_HEADER*)buffer->getBytes(sizeof(EFI_FIRMWARE_VOLUME_HEADER));
+    buffer->getUINT64();
+    if (FirmwareVolume::isValidFirmwareVolume(MicrocodeFvData)) {
+        UINT32 FvSize = swapEndian<UINT32>(XDR);
+        if (offset + sizeof(XDR) + FvSize <= buffer->getBufferSize()) {
+            CapsuleMode = FULL;
 
-        CapsuleInfo << "FwVersion = " << MicrocodeVersion->getFwVersion()
-                    << "\nLowestSupportedVersion = " << MicrocodeVersion->getLSV()
-                    << "\nFwVersionString = " << MicrocodeVersion->getFwVersionString() << "\n\n";
+            EFI_FFS_FILE_HEADER *MicrocodeVersionFfs = (EFI_FFS_FILE_HEADER*)buffer->getBytes(sizeof(EFI_FFS_FILE_HEADER));
+            // Find microcode version data. It looks like this:
+            // FwVersion = 0x0001
+            // LowestSupportedVersion = 0x0001
+            // FwVersionString = "Version 0.0.0.1"
+            MicrocodeVersion->Decode(*buffer, buffer->getOffset());
+            addList(MicrocodeVersion);
+            CapsuleInfo << "FwVersion = " << MicrocodeVersion->getFwVersion()
+                        << "\nLowestSupportedVersion = " << MicrocodeVersion->getLSV()
+                        << "\nFwVersionString = " << MicrocodeVersion->getFwVersionString() << "\n\n";
+            safeDelete(MicrocodeVersionFfs);
 
-        if (CapsuleMode == "uCodeSlot") {
-            auto SlotMicrocodeEntry = make_shared<CPUMicrocodeHeaderClass>();
-            SlotMicrocodeEntry->Decode(*buffer, PayloadOffset + 4);
-            MicrocodeHeaderVector.push_back(SlotMicrocodeEntry);
-            CapsuleInfo << "uCode Version = " << SlotMicrocodeEntry->getUcodeRevision()
-                        << " CPU ID = " << SlotMicrocodeEntry->getUcodeSignature()
-                        << " uCode Size = 0x" << hex << SlotMicrocodeEntry->TotalSize << "\n\n";
-            addList(MicrocodeHeaderVector.at(0));
-        }
-        else {
             // Assume there are more then one uCode in the FFS data area
             FfsFileHeaderClass FfsFileHeaderUcode;
-            INT64 FfsUcodeOffset = FirmwareVolumeHeader->uCodeBeginOffset - 0x18;
-            PayloadOffset = FfsFileHeaderUcode.Decode(*buffer, FfsUcodeOffset, false); //FFS that includes microcode binary
+            INT64 FfsUcodeOffset = offset + sizeof(XDR) + 0x1000 - 0x18;
+            FfsFileHeaderUcode.Decode(*buffer, FfsUcodeOffset, false); //FFS that includes microcode binary
             INT64 FfsDataSize = FfsFileHeaderUcode.getSize() - FfsFileHeaderUcode.getFfsHeaderSize();
-            vector<INT64> MicrocodeOffsetVector = CPUMicrocodeHeaderClass::SearchMicrocodeEntryNum(*buffer, FirmwareVolumeHeader->uCodeBeginOffset, FfsDataSize);
+            vector<INT64> MicrocodeOffsetVector = CPUMicrocodeHeaderClass::SearchMicrocodeEntryNum(*buffer, offset + sizeof(XDR) + 0x1000, FfsDataSize);
             INT64 uCodeEntryNum = MicrocodeOffsetVector.size();
             INT64 SlotSize = (INT64)(FfsDataSize / uCodeEntryNum);
             if (SlotSize * uCodeEntryNum != FfsDataSize)
@@ -241,30 +213,58 @@ void CapsuleWindow::parseMicrocodeCapsuleInfo(INT64 offset, QString& labelMode, 
                             << " uCode Size = 0x" << hex << uCodeEntry->TotalSize << "\n";
                 addList(MicrocodeHeaderVector.at(i));
             }
-        }
 
-        if (CapsuleMode != "uCodeSlot") {
-            // Try to find Bgup data, if Bgup data doesn't exist, throw CapsuleException
-            INT64 BgupOffset = FirmwareVolumeHeader->FvBeginOffset + FirmwareVolumeHeader->getFvLength();
-            if (BgupHeader->SearchBgup(*buffer, BgupOffset))
-            {
-                CapsuleMode = "uCodeBgup";
-                BgupHeader->Decode(*buffer, BgupOffset + 4);
+            // Get Bgup data
+            if (offset + sizeof(XDR) + FvSize < buffer->getBufferSize()) {
+                CapsuleMode = BGUP;
+                buffer->setOffset(offset + sizeof(XDR) + FvSize);
+                UINT32 BgupXDR = buffer->getUINT32();
+                BgupXDR = swapEndian<UINT32>(BgupXDR);
+
+                INT64 BgupOffset = offset + sizeof(XDR) + FvSize + sizeof(BgupXDR);
+                BgupHeader->Decode(*buffer, BgupOffset, BgupXDR, "uCode");
                 addList(BgupHeader);
                 CapsuleInfo << "\nPlat ID: " << BgupHeader->getPlatId() << endl;
             }
-            else
-            {
-                CapsuleMode = "uCodeFull";
-            }
         }
+    } else {
+        //Slot Mode
+        CapsuleMode = SLOT;
+        buffer->setOffset(offset + 8);
+        UINT32 MicrocodeVersionXDR = buffer->getUINT32();
+        MicrocodeVersionXDR = swapEndian<UINT32>(MicrocodeVersionXDR);
+
+        MicrocodeVersion->Decode(*buffer, offset + 8 + sizeof(MicrocodeVersionXDR));
+        addList(MicrocodeVersion);
+        CapsuleInfo << "FwVersion = " << MicrocodeVersion->getFwVersion()
+                    << "\nLowestSupportedVersion = " << MicrocodeVersion->getLSV()
+                    << "\nFwVersionString = " << MicrocodeVersion->getFwVersionString() << "\n\n";
+
+        auto SlotMicrocodeEntry = make_shared<CPUMicrocodeHeaderClass>();
+        SlotMicrocodeEntry->Decode(*buffer, offset + 8 + sizeof(MicrocodeVersionXDR) + MicrocodeVersionXDR);
+        MicrocodeHeaderVector.push_back(SlotMicrocodeEntry);
+        CapsuleInfo << "uCode Version = " << SlotMicrocodeEntry->getUcodeRevision()
+                    << " CPU ID = " << SlotMicrocodeEntry->getUcodeSignature()
+                    << " uCode Size = 0x" << hex << SlotMicrocodeEntry->TotalSize << "\n\n";
+        addList(MicrocodeHeaderVector.at(0));
     }
-    catch (CapsuleError& err) {
-        cout << err.what() << endl;
-        labelMode = QString::fromStdString(err.what());
-        return;
+
+    safeDelete(MicrocodeFvData);
+
+    switch (CapsuleMode) {
+    case FULL:
+        labelMode = "uCode Full Mode";
+        break;
+    case BGUP:
+        labelMode = "uCode BGUP Mode";
+        break;
+    case SLOT:
+        labelMode = "uCode Slot Mode";
+        break;
+    default:
+        labelMode = "Unknown";
+        break;
     }
-    labelMode = CapsuleMode;
 }
 
 void CapsuleWindow::parseACMCapsuleInfo(INT64 offset, QString &labelMode, stringstream &CapsuleInfo)
@@ -291,8 +291,12 @@ void CapsuleWindow::parseACMCapsuleInfo(INT64 offset, QString &labelMode, string
 
     //decode FFS for BtGAcmBgup.bin
     PayloadOffset = FfsFileHeader->Decode(*buffer, PayloadOffset + FfsDataSize, true, offset);
-    BgupHeader->Decode(*buffer, PayloadOffset);
-    addList(BgupHeader);
+    for (BgupConfig &config : ConfigIni->BgupList) {
+        auto BgupHeader = make_shared<BgupHeaderClass>();
+        BgupHeader->Decode(*buffer, PayloadOffset + config.BgupOffset, config.BgupSize, config.BgupContent);
+        BgupHeaderVector.emplace_back(BgupHeader);
+        addList(BgupHeader);
+    }
 
     CapsuleInfo << AcmInstance->getAcmVersion()
                 << "\n\nPlat ID: " << BgupHeader->getPlatId() << endl;
@@ -343,8 +347,12 @@ void CapsuleWindow::parseBiosCapsuleInfo(INT64& offset, QString& labelMode, stri
     //decode FFS for BiosBgup.bin
     FfsFileHeaderClass FfsFileHeaderBiosBgup;
     INT64 BiosBgupPayloadOffset = FfsFileHeaderBiosBgup.Decode(*buffer, ClientBiosPayloadOffset + ClientBiosPayloadSize, true, offset);
-    BgupHeader->Decode(*buffer, BiosBgupPayloadOffset);
-    addList(BgupHeader);
+    for (BgupConfig &config : ConfigIni->BgupList) {
+        auto BgupHeader = make_shared<BgupHeaderClass>();
+        BgupHeader->Decode(*buffer, BiosBgupPayloadOffset + config.BgupOffset, config.BgupSize, config.BgupContent);
+        BgupHeaderVector.emplace_back(BgupHeader);
+        addList(BgupHeader);
+    }
 
     offset = FfsFileHeaderBiosBgup.getSize() + BiosBgupPayloadOffset - FfsFileHeaderBiosBgup.getFfsHeaderSize();
 
@@ -422,8 +430,12 @@ void CapsuleWindow::parseIfwiCapsuleInfo(INT64& offset, QString& labelMode, stri
     //decode FFS for IfwiBgup.bin
     FfsFileHeaderClass FfsFileHeaderIfwiBgup;
     INT64 BiosBgupPayloadOffset = FfsFileHeaderIfwiBgup.Decode(*buffer, IfwiPayloadOffset + IfwiPayloadSize);
-    BgupHeader->Decode(*buffer, BiosBgupPayloadOffset);
-    addList(BgupHeader);
+    for (BgupConfig &config : ConfigIni->BgupList) {
+        auto BgupHeader = make_shared<BgupHeaderClass>();
+        BgupHeader->Decode(*buffer, BiosBgupPayloadOffset + config.BgupOffset, config.BgupSize, config.BgupContent);
+        BgupHeaderVector.emplace_back(BgupHeader);
+        addList(BgupHeader);
+    }
 
     CapsuleInfo << "BIOS ID : " << BiosInstance->getBiosIDString()
                 << "\n\nPlat ID: " << BgupHeader->getPlatId() << "\n"
@@ -439,6 +451,7 @@ void CapsuleWindow::parsePayloadAtIndex(INT64 index){
     CapsuleInfo.str("");
     MicrocodeHeaderVector.clear();
     ui->listWidget->clear();
+    addList(CapsuleOverview);
     addList(UefiCapsuleHeader);
     addList(FmpCapsuleHeader);
     addList(FmpCapsuleHeader->FmpCapsuleImageHeaderList[index]);
@@ -479,7 +492,7 @@ void CapsuleWindow::parsePayloadAtIndex(INT64 index){
         else {
             labelMode = "Not supported!";
         }
-        ui->textBrowser->setText(QString::fromStdString(CapsuleInfo.str()));
+        CapsuleOverview->setOverviewMsg(CapsuleInfo.str());
     }
     catch (CapsuleError& err) {
         cout << err.what() << endl;
@@ -487,6 +500,7 @@ void CapsuleWindow::parsePayloadAtIndex(INT64 index){
         labelMode = QString::fromStdString(err.what());
     }
     ui->label_mode->setText(LabelText + labelMode);
+    ui->listWidget->setCurrentRow(0);
 }
 
 void CapsuleWindow::showPayloadInfomation(QString filePath)
@@ -495,6 +509,7 @@ void CapsuleWindow::showPayloadInfomation(QString filePath)
     string path = filePath.toStdString();
     buffer = new Buffer(new ifstream(path, ios::in | ios::binary));
 
+    CapsuleOverview      = make_shared<CapsuleOverviewClass>();
     UefiCapsuleHeader    = make_shared<UefiCapsuleHeaderClass>();
     FmpCapsuleHeader     = make_shared<FmpCapsuleHeaderClass>();
     FmpAuthHeader        = make_shared<FmpAuthHeaderClass>();
@@ -508,6 +523,8 @@ void CapsuleWindow::showPayloadInfomation(QString filePath)
     AcmInstance          = make_shared<AcmClass>();
     EcInstance           = make_shared<EcClass>();
     MeInstance           = make_shared<MeClass>();
+
+    CapsuleOverview->Decode(*buffer, 0, buffer->getBufferSize());
 
     try {
         INT64 offset = UefiCapsuleHeader->Decode(*buffer, 0);
