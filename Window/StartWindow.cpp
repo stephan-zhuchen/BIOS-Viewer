@@ -33,6 +33,7 @@ StartWindow::StartWindow(QString appPath, QWidget *parent) :
     initSettings();
 
     connect(ui->OpenFile,           SIGNAL(triggered()), this, SLOT(OpenFileTriggered()));
+    connect(ui->OpenInHexView,      SIGNAL(triggered()), this, SLOT(OpenInHexViewTriggered()));
     connect(ui->actionExit,         SIGNAL(triggered()), this, SLOT(ActionExitTriggered()));
     connect(ui->actionSettings,     SIGNAL(triggered()), this, SLOT(ActionSettingsTriggered()));
     connect(ui->actionAboutQt,      SIGNAL(triggered()), this, SLOT(ActionAboutQtTriggered()));
@@ -99,6 +100,8 @@ void StartWindow::initSettings() {
 
     if (setting.value("DisableBiosViewer").toString() == "true") {
         DisableBiosViewer = true;
+    } else if (setting.value("DisableBiosViewer").toString() == "false") {
+        DisableBiosViewer = false;
     }
 
     if (setting.value("Theme").toString() == "System") {
@@ -111,6 +114,7 @@ void StartWindow::initSettings() {
 
     if (DarkmodeFlag) {
         ui->OpenFile->setIcon(QIcon(":/open_light.svg"));
+        ui->OpenInHexView->setIcon(QIcon(":/file-binary_light.svg"));
         ui->OpenInNewWindow->setIcon(QIcon(":/open_light.svg"));
         ui->actionSettings->setIcon(QIcon(":/gear_light.svg"));
         ui->actionCloseTab->setIcon(QIcon(":/close_light.svg"));
@@ -167,6 +171,11 @@ void StartWindow::refresh() {
 }
 
 void StartWindow::OpenFile(const QString& path, bool onlyHexView) {
+    QFileInfo fileInfo(path);
+    if (!fileInfo.exists() || !fileInfo.isFile()) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "Invalid File Path!");
+        return;
+    }
     auto *buffer = new BaseLibrarySpace::Buffer(new std::ifstream(path.toStdString(), std::ios::in | std::ios::binary));
     INT32 bufferSize = buffer->getBufferSize();
     UINT8* data = buffer->getBytes(bufferSize);
@@ -321,6 +330,20 @@ void StartWindow::OpenFileTriggered() {
     QFileInfo fileinfo {fileName};
     setting.setValue("LastFilePath", fileinfo.path());
     OpenFile(fileName);
+}
+
+void StartWindow::OpenInHexViewTriggered() {
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    tr("Open Image File"),
+                                                    lastPath,
+                                                    tr("All files (*.*);;Image files(*.rom *.bin *.fd *.fv)"));
+    if (fileName.isEmpty()){
+        return;
+    }
+    QFileInfo fileinfo {fileName};
+    setting.setValue("LastFilePath", fileinfo.path());
+    OpenFile(fileName, true);
 }
 
 void StartWindow::ActionExitTriggered() {

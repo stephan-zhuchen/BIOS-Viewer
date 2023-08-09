@@ -61,6 +61,7 @@
     <addaction name="separator"/>
     <addaction name="separator"/>
     <addaction name="OpenFile"/>
+    <addaction name="OpenInHexView"/>
     <addaction name="OpenInNewWindow"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
@@ -336,6 +337,20 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="OpenInHexView">
+   <property name="icon">
+    <iconset resource="../logo/Images.qrc">
+     <normaloff>:/file-binary.svg</normaloff>:/file-binary.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Open in Hex View</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
   </action>
  </widget>

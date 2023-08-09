@@ -64,6 +64,7 @@ protected:
 
 public slots:
     void OpenFileTriggered();
+    void OpenInHexViewTriggered();
     void ActionExitTriggered();
     void ActionSettingsTriggered();
     void ActionAboutQtTriggered();
