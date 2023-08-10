@@ -57,6 +57,7 @@ set(LIBRARY_SOURCES
         lib/iwfi.h
         lib/iwfi.cpp
         lib/BootGuard.cpp
+        lib/BiosGuard.cpp
         lib/Model.h
         lib/Model.cpp
         lib/Section.cpp

@@ -19,6 +19,7 @@ public:
     ~TabWindow() override;
 
     void SetNewTabAndText(const QString& tabName, const QString& txt);
+    void SetTabViewTitle(const QString& title);
     void CollectTabAndShow();
 
 protected:

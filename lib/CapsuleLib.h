@@ -5,6 +5,7 @@
 #include <map>
 #include <QString>
 #include "BaseLib.h"
+#include "UefiLib.h"
 #include "UEFI/BiosGuard.h"
 
 using namespace std;
@@ -269,15 +270,9 @@ namespace CapsuleToolSpace {
 
     class BgupHeaderClass : public EntryHeaderClass {
     private:
-        const INT64   XDRSize = 4;
         BGUP_HEADER   BgupHeader;
-        BGUPC_HEADER  BgupCHeader;
-        string        Algorithm;
         string        Content;
-        INT32         ModulusSize;
-        UINT8         *ModulusData{nullptr};
-        INT32         RSAKeySize;
-        UINT8         *UpdatePackageDigest{nullptr};
+        UefiSpace::BiosGuardClass *bgup{nullptr};
     public:
         BgupHeaderClass() = default;
         bool    SearchBgup(Buffer& buffer, INT64 BgupOffset, UINT32 &BgupSize);

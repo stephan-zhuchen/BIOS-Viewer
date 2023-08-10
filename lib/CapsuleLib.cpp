@@ -751,74 +751,20 @@ namespace CapsuleToolSpace {
 
     void BgupHeaderClass::Decode(Buffer& buffer, INT64 offset, INT64 length, string content)
     {
+        using UefiSpace::BiosGuardClass;
+
+        buffer.setOffset(offset);
+        UINT8 *BgupBuffer = buffer.getBytes(length);
+        bgup = new BiosGuardClass(BgupBuffer, 0, length);
+        bgup->setInfoStr();
+        safeArrayDelete(BgupBuffer);
+
         Content = content;
+
         buffer.setOffset(offset);
         UINT8* BgupHeaderData = buffer.getBytes(sizeof(BGUP_HEADER));
         BgupHeader = *(BGUP_HEADER*)BgupHeaderData;
         delete[] BgupHeaderData;
-
-        buffer.setOffset(offset + sizeof(BGUP_HEADER) + BgupHeader.ScriptSectionSize);
-        INT64 BgupCSize = length - sizeof(BGUP_HEADER) - BgupHeader.ScriptSectionSize;
-        UINT8* BgupCHeaderData = buffer.getBytes(sizeof(BGUPC_HEADER));
-        BgupCHeader = *(BGUPC_HEADER*)BgupCHeaderData;
-        safeArrayDelete(BgupCHeaderData);
-
-        ModulusSize = 0;
-        RSAKeySize = 0;
-        switch (BgupCHeader.Algorithm) {
-        case BGUPC_ALG_PKCS1_15_SHA256_RSA2048:
-            Algorithm = "PKCS1 1.5, SHA-256 hash, RSA 2048 key";
-            ModulusSize = 256;
-            RSAKeySize = 256;
-            break;
-        case BGUPC_ALG_PKCS1_21_SHA256_RSA2048:
-            Algorithm = "PKCS1 2.1, SHA-256 hash, RSA 2048 key";
-            ModulusSize = 256;
-            RSAKeySize = 256;
-            break;
-        case BGUPC_ALG_PKCS1_15_SHA256_RSA3072:
-            Algorithm = "PKCS1 1.5, SHA-256 hash, RSA 3072 key";
-            ModulusSize = 384;
-            RSAKeySize = 384;
-            break;
-        case BGUPC_ALG_PKCS1_21_SHA256_RSA3072:
-            Algorithm = "PKCS1 2.1, SHA-256 hash, RSA 3072 key";
-            ModulusSize = 384;
-            RSAKeySize = 384;
-            break;
-        case BGUPC_ALG_PKCS1_15_SHA384_RSA3072:
-            Algorithm = "PKCS1 1.5, SHA-384 hash, RSA 3072 key";
-            ModulusSize = 384;
-            RSAKeySize = 384;
-            break;
-        case BGUPC_ALG_PKCS1_21_SHA384_RSA3072:
-            Algorithm = "PKCS1 2.1, SHA-384 hash, RSA 3072 key";
-            ModulusSize = 384;
-            RSAKeySize = 384;
-            break;
-        default:
-            Algorithm = "";
-            break;
-        }
-
-        if (BgupCSize != sizeof(BGUPC_HEADER) + ModulusSize + sizeof(UINT32) + RSAKeySize) {
-            cout << "Invalid BGUPC" << endl;
-        }
-
-        // todo: assert ModulusSize == 0
-        UINT8* Temp = buffer.getBytes(ModulusSize);
-        ModulusData = new UINT8[ModulusSize];
-        for (int idx = 0; idx < ModulusSize; ++idx) {
-            ModulusData[idx] = Temp[ModulusSize - idx - 1];
-        }
-        safeArrayDelete(Temp);
-
-        UINT32 ModulusTail = buffer.getUINT32();
-        if (ModulusTail != 0x00010001) {
-            cout << "invalid Algorithm" << endl;
-        }
-
-        UpdatePackageDigest = buffer.getBytes(RSAKeySize);
 
         panelOffset = offset;
         panelSize = length;
@@ -830,8 +776,7 @@ namespace CapsuleToolSpace {
     }
 
     BgupHeaderClass::~BgupHeaderClass() {
-        safeArrayDelete(ModulusData);
-        safeArrayDelete(UpdatePackageDigest);
+        safeDelete(bgup);
     }
 
     string BgupHeaderClass::getEntryName() {
@@ -840,29 +785,7 @@ namespace CapsuleToolSpace {
 
     void BgupHeaderClass::collectInfo(stringstream& Info)
     {
-        INT32 width = 20;
-        Info.setf(ios::left);
-
-        Info << "BGUP_HEADER\n";
-        Info << setw(width) << "Version:"          << hex << uppercase << BgupHeader.Version << "h\n"
-             << setw(width) << "PlatId:"           << hex << uppercase << charToString((INT8*)BgupHeader.PlatId, 16) << "\n"
-             << setw(width) << "PkgAttributes:"    << hex << uppercase << BgupHeader.PkgAttributes << "h\n"
-             << setw(width) << "PslMajorVer:"      << hex << uppercase << BgupHeader.PslMajorVer << "h\n"
-             << setw(width) << "PslMinorVer:"      << hex << uppercase << BgupHeader.PslMinorVer << "h\n"
-             << setw(width) << "ScriptSectionSize:" << hex << uppercase << BgupHeader.ScriptSectionSize << "h\n"
-             << setw(width) << "DataSectionSize:"  << hex << uppercase << BgupHeader.DataSectionSize << "h\n"
-             << setw(width) << "BiosSvn:"          << hex << uppercase << BgupHeader.BiosSvn << "h\n"
-             << setw(width) << "EcSvn:"            << hex << uppercase << BgupHeader.EcSvn << "h\n"
-             << setw(width) << "VendorSpecific:"   << hex << uppercase << BgupHeader.VendorSpecific << "h\n";
-
-        Info << "\n\nBGUPC_HEADER\n";
-        width = 12;
-        Info << setw(width) << "Version:"   << hex << uppercase << BgupCHeader.Version << "h\n"
-             << setw(width) << "Algorithm:" << hex << uppercase << BgupCHeader.Algorithm << "h (" << Algorithm << ")\n"
-             << "Modulus=\n"
-             << DumpHex(ModulusData, ModulusSize) << "\n\n"
-             << "Update Package Digest:\n"
-             << DumpHex(UpdatePackageDigest, RSAKeySize);
+        Info << bgup->InfoStr.toStdString();
     }
 
     void BiosIdClass::Decode(Buffer& buffer, INT64 offset, INT64 length) {

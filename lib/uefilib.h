@@ -13,6 +13,7 @@
 #include "UEFI/BootGuard.h"
 #include "UEFI/FspHeader.h"
 #include "UEFI/Acpi.h"
+#include "UEFI/BiosGuard.h"
 #include "openssl/sha.h"
 
 class Elf;
@@ -350,6 +351,32 @@ namespace UefiSpace {
         ~ACPI_Class() override;
         [[nodiscard]] bool isValid() const;
         static bool isAcpiHeader(const UINT8  *ImageBase, INT64 length);
+        void setInfoStr() override;
+    };
+
+    struct BgslOperation {
+        UINT16 OpCode;
+        UINT8  Op1;
+        UINT8  Op2;
+        UINT32 OpNum;
+        QString getOperation();
+    };
+
+    class BiosGuardClass : public Volume {
+    private:
+        BGUP_HEADER   BgupHeader;
+        string        BiosGuardScript;
+        BGUPC_HEADER  BgupCHeader;
+        string        Algorithm;
+        INT32         ModulusSize;
+        UINT8         *ModulusData{nullptr};
+        INT32         RSAKeySize;
+        UINT8         *UpdatePackageDigest{nullptr};
+    public:
+        BiosGuardClass()=delete;
+        BiosGuardClass(UINT8* fv, INT64 address, INT64 length);
+        ~BiosGuardClass() override;
+        void decodeBgsl(UINT8* fv, INT64 length);
         void setInfoStr() override;
     };
 

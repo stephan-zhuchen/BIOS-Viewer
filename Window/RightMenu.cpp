@@ -15,8 +15,10 @@ void BiosViewerWindow::initRightMenu() {
     DigestMenu = new QMenu("Digest");
     showPeCoff = new QAction("PE/COFF");
     showAcpiTable = new QAction("ACPI");
-    connect(showPeCoff,SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
-    connect(showAcpiTable,SIGNAL(triggered(bool)),this,SLOT(showAcpiTableView()));
+    showBgup = new QAction("BGUP");
+    connect(showPeCoff,     SIGNAL(triggered(bool)),this,SLOT(showPeCoffView()));
+    connect(showAcpiTable,  SIGNAL(triggered(bool)),this,SLOT(showAcpiTableView()));
+    connect(showBgup,       SIGNAL(triggered(bool)),this,SLOT(showBgupView()));
 
     showHex = new QAction("Hex View");
     connect(showHex,SIGNAL(triggered(bool)),this,SLOT(showHexView()));
@@ -72,6 +74,7 @@ void BiosViewerWindow::finiRightMenu() {
     safeDelete(DigestMenu);
     safeDelete(showPeCoff);
     safeDelete(showAcpiTable);
+    safeDelete(showBgup);
     safeDelete(showHex);
     safeDelete(showBodyHex);
     safeDelete(showDecompressedHex);
@@ -132,6 +135,11 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) const {
             RightMenu->addAction(showAcpiTable);
             file.close();
         }
+    }
+
+    if (RightClickedItemModel->getName().right(4).toLower() == "bgsl") {
+        showBgup->setIcon(windows);
+        RightMenu->addAction(showBgup);
     }
 
     showHex->setIcon(hexBinary);
@@ -317,6 +325,7 @@ void BiosViewerWindow::showPeCoffView() {
     }
     tempFile.close();
     auto *TabView = new TabWindow();
+    TabView->SetTabViewTitle("PE/COFF");
     if (isDarkMode()) {
         TabView->setWindowIcon(QIcon(":/windows_light.svg"));
     }
@@ -359,6 +368,7 @@ void BiosViewerWindow::showAcpiTableView() {
     }
     tempFile.close();
     auto *TabView = new TabWindow();
+    TabView->SetTabViewTitle("ACPI Table");
     if (isDarkMode()) {
         TabView->setWindowIcon(QIcon(":/windows_light.svg"));
     }
@@ -383,6 +393,21 @@ void BiosViewerWindow::showAcpiTableView() {
         file.remove();
     }
 
+    TabView->CollectTabAndShow();
+}
+
+void BiosViewerWindow::showBgupView() {
+    Volume *ClickedItemVolume = InputData->RightClickeditemModel->modelData;
+    INT64 HeaderSize = ClickedItemVolume->getHeaderSize() + sizeof(EFI_COMMON_SECTION_HEADER);
+    UINT8* BgupData = ClickedItemVolume->data + HeaderSize;
+    BiosGuardClass bgup = BiosGuardClass(BgupData, ClickedItemVolume->offsetFromBegin + HeaderSize, ClickedItemVolume->size - HeaderSize);
+    bgup.setInfoStr();
+    auto *TabView = new TabWindow();
+    TabView->SetTabViewTitle("BIOS Guard Update Package");
+    if (isDarkMode()) {
+        TabView->setWindowIcon(QIcon(":/windows_light.svg"));
+    }
+    TabView->SetNewTabAndText("BGUP", bgup.InfoStr);
     TabView->CollectTabAndShow();
 }
 

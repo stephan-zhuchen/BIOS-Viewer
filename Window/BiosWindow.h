@@ -96,6 +96,7 @@ public:
     QMenu*         DigestMenu{nullptr};
     QAction*       showPeCoff{nullptr};
     QAction*       showAcpiTable{nullptr};
+    QAction*       showBgup{nullptr};
     QAction*       showHex{nullptr};
     QAction*       showBodyHex{nullptr};
     QAction*       showDecompressedHex{nullptr};
@@ -170,6 +171,7 @@ private slots:
     void showNvHexView() const;
     void showPeCoffView();
     void showAcpiTableView();
+    void showBgupView();
     void extractVolume();
     void extractBodyVolume();
     void extractIfwiRegion();
