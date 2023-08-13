@@ -608,7 +608,7 @@ void CapsuleWindow::showListRightMenu(const QPoint &pos) {
 }
 
 void CapsuleWindow::showHexView() {
-    auto *hexDialog = new HexViewDialog();
+    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
     if (WindowData->DarkmodeFlag) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }

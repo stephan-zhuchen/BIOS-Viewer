@@ -16,11 +16,12 @@
 // valid character table ascii
 #define CHAR_VALID(_character) ((_character < 0x20) || (_character > 0x7e)) ? _character = '.' : _character;
 
-QHexView::QHexView(QWidget *parent)
+QHexView::QHexView(QWidget *parent, bool darkMode)
     : QAbstractScrollArea(parent),
       HexDataArray(nullptr),
       HexCharPosition(ADR_LENGTH * CharWidth + GAP_ADR_HEX),
-      AsciiCharPosition(HexCharPosition + MIN_HEXCHARS_IN_LINE * CharWidth + GAP_HEX_ASCII)
+      AsciiCharPosition(HexCharPosition + MIN_HEXCHARS_IN_LINE * CharWidth + GAP_HEX_ASCII),
+      isDarkMode(darkMode)
 {
     // default configs
     if (setting.contains("HexFont") && setting.contains("HexFontSize")){
@@ -32,22 +33,16 @@ QHexView::QHexView(QWidget *parent)
     }
     setFont(HexFontSetting); // default font
 
-    if (setting.value("Theme").toString() == "System") {
-        if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
-            isDarkMode = true;
-            WordColor = Qt::white;
-            WordColorOpposite = Qt::black;
-            SelectionColor = QColor(38, 79, 120);
-            CursorColor = QColor(235, 235, 235);
-        } else {
-            isDarkMode = false;
-            WordColor = Qt::black;
-            WordColorOpposite = Qt::white;
-            SelectionColor = QColor(COLOR_SELECTION);
-            CursorColor = QColor(COLOR_CURSOR);
-        }
+    if (isDarkMode) {
+        WordColor = Qt::white;
+        WordColorOpposite = Qt::black;
+        SelectionColor = QColor(38, 79, 120);
+        CursorColor = QColor(235, 235, 235);
     } else {
-        isDarkMode = false;
+        WordColor = Qt::black;
+        WordColorOpposite = Qt::white;
+        SelectionColor = QColor(COLOR_SELECTION);
+        CursorColor = QColor(COLOR_CURSOR);
     }
 
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);

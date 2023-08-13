@@ -28,7 +28,7 @@ class QHexView : public QAbstractScrollArea
 {
     Q_OBJECT
 public:
-    explicit QHexView(QWidget *parent = nullptr);
+    explicit QHexView(QWidget *parent = nullptr, bool darkMode = false);
     ~QHexView() override;
 
     void refresh();

@@ -205,7 +205,7 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) const {
 }
 
 void BiosViewerWindow::showHexView() const {
-    auto *hexDialog = new HexViewDialog();
+    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -230,7 +230,7 @@ void BiosViewerWindow::showBodyHexView() {
         return;
     }
 
-    auto *hexDialog = new HexViewDialog();
+    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -256,7 +256,7 @@ void BiosViewerWindow::showDecompressedHexView() {
     }
 
     auto *hexViewData = new QByteArray((char*)DecompressedVector.data(), DecompressedVector.size());
-    auto *hexDialog = new HexViewDialog();
+    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -284,7 +284,7 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
     }
 
     auto *hexViewData = new QByteArray((char*)DecompressedBios.data(), DecompressedBios.size());
-    auto *hexDialog = new HexViewDialog();
+    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -303,7 +303,7 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
 
 
 void BiosViewerWindow::showNvHexView() const {
-    auto *hexDialog = new HexViewDialog();
+    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
     UINT8 *NvData = ((NvVariableEntry*)(InputData->RightClickeditemModel->modelData))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(InputData->RightClickeditemModel->modelData))->DataSize;
     auto *hexViewData = new QByteArray((char*)NvData, NvDataSize);

@@ -23,7 +23,7 @@ void HexViewWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
     CentralwidgetVerticalLayout->setObjectName("CentralwidgetVerticalLayout");
     CentralwidgetVerticalLayout->setContentsMargins(0, 0, 0, 0);
 
-    m_hexview =  new QHexView(this);
+    m_hexview =  new QHexView(this, WindowData->DarkmodeFlag);
     m_hexview->setFrameShape(QFrame::NoFrame);
     m_hexview->setParentWidget(this, true);
     CentralwidgetVerticalLayout->addWidget( m_hexview );

@@ -9,9 +9,9 @@
 #include "QHexView/qhexview.h"
 #include "BaseLib.h"
 
-HexViewDialog::HexViewDialog(QWidget *parent) :
+HexViewDialog::HexViewDialog(bool darkMode, QWidget *parent) :
     QDialog(parent),
-    m_hexview ( new QHexView() ),
+    m_hexview ( new QHexView(this, darkMode) ),
     ui(new Ui::HexViewDialog),
     m_layout ( new QVBoxLayout ),
     setting(QSettings("Intel", "BiosViewer"))
