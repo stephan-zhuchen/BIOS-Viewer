@@ -116,7 +116,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
     if (event->matches(QKeySequence::MoveToEndOfDocument))
     {
         if (HexDataArray.size())
-            setCursorPos((INT32)HexDataArray.size() * 2);
+            setCursorPos((INT64)HexDataArray.size() * 2);
 
         resetSelection(CursorPosition);
         setVisible = true;
@@ -137,14 +137,14 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
         resetSelection(0);
 
         if (HexDataArray.size())
-            setSelection((INT32)HexDataArray.size() * 2 - 1);
+            setSelection((INT64)HexDataArray.size() * 2 - 1);
 
         setVisible = true;
     }
 
     if (event->matches(QKeySequence::SelectNextChar))
     {
-        INT32 pos = CursorPosition + 2;
+        INT64 pos = CursorPosition + 2;
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -152,7 +152,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectPreviousChar))
     {
-        INT32 pos = CursorPosition - 2;
+        INT64 pos = CursorPosition - 2;
         setSelection(pos);
         setCursorPos(pos);
         setVisible = true;
@@ -160,7 +160,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectEndOfLine))
     {
-        INT32 pos = CursorPosition - (CursorPosition % (2 * BytesPerHexLine)) + (2 * BytesPerHexLine);
+        INT64 pos = CursorPosition - (CursorPosition % (2 * BytesPerHexLine)) + (2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -168,7 +168,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectStartOfLine))
     {
-        INT32 pos = CursorPosition - (CursorPosition % (2 * BytesPerHexLine));
+        INT64 pos = CursorPosition - (CursorPosition % (2 * BytesPerHexLine));
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -176,7 +176,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectPreviousLine))
     {
-        INT32 pos = CursorPosition - (2 * BytesPerHexLine);
+        INT64 pos = CursorPosition - (2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -184,7 +184,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectNextLine))
     {
-        INT32 pos = CursorPosition + (2 * BytesPerHexLine);
+        INT64 pos = CursorPosition + (2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -192,7 +192,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectNextPage))
     {
-        INT32 pos = CursorPosition + (((viewport()->height() / CharHeight) - 2) *
+        INT64 pos = CursorPosition + (((viewport()->height() / CharHeight) - 2) *
                                  2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
@@ -201,7 +201,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectPreviousPage))
     {
-        INT32 pos = CursorPosition - (((viewport()->height() / CharHeight) - 2) *
+        INT64 pos = CursorPosition - (((viewport()->height() / CharHeight) - 2) *
                                  2 * BytesPerHexLine);
         setCursorPos(pos);
         setSelection(pos);
@@ -210,10 +210,10 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectEndOfDocument))
     {
-        INT32 pos = 0;
+        INT64 pos = 0;
 
         if (HexDataArray.size())
-            pos = (INT32)HexDataArray.size() * 2;
+            pos = (INT64)HexDataArray.size() * 2;
 
         setCursorPos(pos);
         setSelection(pos);
@@ -222,7 +222,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 
     if (event->matches(QKeySequence::SelectStartOfDocument))
     {
-        INT32 pos = 0;
+        INT64 pos = 0;
         setCursorPos(pos);
         setSelection(pos);
         setVisible = true;
@@ -233,8 +233,8 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
         if (HexDataArray.size())
         {
             QString res;
-            INT32 idx = 0;
-            INT32 copyOffset = 0;
+            INT64 idx = 0;
+            INT64 copyOffset = 0;
 
             QByteArray data = HexDataArray.mid(SelectionBegin / 2,
                                           (SelectionEnd - SelectionBegin) / 2 + 2);
@@ -247,7 +247,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
                 copyOffset = 1;
             }
 
-            INT32 selectedSize = SelectionEnd - SelectionBegin;
+            INT64 selectedSize = SelectionEnd - SelectionBegin;
 
             for (; idx < selectedSize; idx += 2)
             {
@@ -284,13 +284,13 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
 void QHexView::mouseMoveEvent(QMouseEvent *event) {
     if (!FileOpened || HexDataArray.size() == 0 || event->buttons() & Qt::RightButton)
         return;
-    INT32 actPos = cursorPos(event->pos());
+    INT64 actPos = cursorPos(event->pos());
 
     if (actPos >= 0 && actPos < HexDataArray.size() * 2)
     {
         setCursorPos(actPos);
         if (StartFromAscii){
-            if (actPos >= (INT32)SelectionInit)
+            if (actPos >= (INT64)SelectionInit)
                 setSelection(actPos + 2);
             else
                 setSelection(actPos);
@@ -307,12 +307,12 @@ void QHexView::mousePressEvent(QMouseEvent *event) {
     ShowCursor = true;
     timer->stop();
 
-    if (event->pos().x() > (INT32)AsciiCharPosition - (GAP_HEX_ASCII / 2))
+    if (event->pos().x() > (INT64)AsciiCharPosition - (GAP_HEX_ASCII / 2))
         StartFromAscii = true;
     else
         StartFromAscii = false;
 
-    INT32 cPos = cursorPos(event->pos());
+    INT64 cPos = cursorPos(event->pos());
 
     if ((QApplication::keyboardModifiers() & Qt::ShiftModifier) && event->button() == Qt::LeftButton)
         setSelection(cPos);
@@ -320,7 +320,7 @@ void QHexView::mousePressEvent(QMouseEvent *event) {
         resetSelection(cPos);
     }
 
-    if (cPos != std::numeric_limits<INT32>::max()){
+    if (cPos != std::numeric_limits<INT64>::max()){
         if (StartFromAscii) {
             setCursorPos(cPos);
             resetSelection(cPos);
@@ -441,7 +441,7 @@ void QHexView::finiRightMenu() {
 void QHexView::contextMenuEvent(QContextMenuEvent *event) {
     if (HexDataArray.size() == 0)
         return;
-    INT32 actPos = cursorPos(event->pos());
+    INT64 actPos = cursorPos(event->pos());
 
     RightMenu->clear();
     ChecksumMenu->clear();
@@ -476,7 +476,7 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
         DiscardChange->setEnabled(false);
     RightMenu->addAction(DiscardChange);
 
-    if (event->pos().x() < (INT32)AsciiCharPosition - (GAP_HEX_ASCII / 2) && event->pos().x() > (INT32)HexCharPosition && isSelected(actPos)) {
+    if (event->pos().x() < (INT64)AsciiCharPosition - (GAP_HEX_ASCII / 2) && event->pos().x() > (INT64)HexCharPosition && isSelected(actPos)) {
         if (SelectionBegin % 2 != 0) {
             SelectionBegin -= 1;
         }
@@ -517,7 +517,7 @@ void QHexView::binaryEdit(char inputChar) {
     if (ReadOnly) {
         return;
     }
-    INT32 idx = (INT32)(CursorPosition / 2);
+    INT64 idx = (INT64)(CursorPosition / 2);
     EditedPos.push_back(CursorPosition);
     bool leftHex = (CursorPosition % 2) == 0;
     char newHex;
@@ -544,7 +544,7 @@ void QHexView::CopyFromSelectedContent() {
         if (SelectionEnd % 2 == 0) {
             SelectionEnd += 1;
         }
-        INT32 length {0};
+        INT64 length {0};
         getSelectedBuffer(CopiedData, &length);
     }
 
@@ -596,18 +596,18 @@ void QHexView::PasteAndInsertToContent() {
     if (CursorPosition % 2 != 0) {
         CursorPosition += 1;
     }
-    INT32 idx = (INT32)(CursorPosition / 2);
-    for (int & Pos : EditedPos) {
+    INT64 idx = (INT64)(CursorPosition / 2);
+    for (INT64 & Pos : EditedPos) {
         if (Pos >= CursorPosition) {
-            Pos += (INT32)CopiedData.size() * 2;
+            Pos += (INT64)CopiedData.size() * 2;
         }
     }
-    for (INT32 var = CursorPosition; var < CursorPosition + CopiedData.size() * 2; ++var) {
+    for (INT64 var = CursorPosition; var < CursorPosition + CopiedData.size() * 2; ++var) {
         EditedPos.push_back(var);
     }
     HexDataArray.insert(idx, CopiedData);
     setAddressLength();
-    setCursorPos(CursorPosition + (INT32)CopiedData.size() * 2);
+    setCursorPos(CursorPosition + (INT64)CopiedData.size() * 2);
 
     BinaryEdited = true;
     if (!startFromMainWindow)
@@ -621,7 +621,7 @@ void QHexView::PasteAndOverlapToContent() {
         return;
     }
     if (CursorPosition + CopiedData.size() * 2 > HexDataArray.size() * 2) {
-        INT32 choice = QMessageBox::warning(this,
+        INT64 choice = QMessageBox::warning(this,
                                           tr("Hex Viewer"),
                                           tr("The pasted content exceeds the end of file, Do you still want to paste? "),
                                           QMessageBox::Yes | QMessageBox::Cancel,
@@ -634,13 +634,13 @@ void QHexView::PasteAndOverlapToContent() {
     if (CursorPosition % 2 != 0) {
         CursorPosition += 1;
     }
-    INT32 idx = CursorPosition / 2;
-    for (INT32 var = CursorPosition; var < CursorPosition + CopiedData.size() * 2; ++var) {
+    INT64 idx = CursorPosition / 2;
+    for (INT64 var = CursorPosition; var < CursorPosition + CopiedData.size() * 2; ++var) {
         EditedPos.push_back(var);
     }
     HexDataArray.replace(idx, CopiedData.size(), CopiedData);
     setAddressLength();
-    setCursorPos(CursorPosition + (INT32)CopiedData.size() * 2);
+    setCursorPos(CursorPosition + (INT64)CopiedData.size() * 2);
 
     BinaryEdited = true;
     if (!startFromMainWindow)
@@ -671,7 +671,7 @@ void QHexView::SetEditingState(bool state) {
 
 void QHexView::SaveSelectedContent() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -690,7 +690,7 @@ void QHexView::SaveSelectedContent() {
 
 void QHexView::getChecksum8() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -701,7 +701,7 @@ void QHexView::getChecksum8() {
 
 void QHexView::getChecksum16() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -712,7 +712,7 @@ void QHexView::getChecksum16() {
 
 void QHexView::getChecksum32() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -723,7 +723,7 @@ void QHexView::getChecksum32() {
 
 void QHexView::getMD5() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -750,7 +750,7 @@ void QHexView::getMD5() {
 
 void QHexView::getSHA1() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -777,7 +777,7 @@ void QHexView::getSHA1() {
 
 void QHexView::getSHA224() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -804,7 +804,7 @@ void QHexView::getSHA224() {
 
 void QHexView::getSHA256() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -831,7 +831,7 @@ void QHexView::getSHA256() {
 
 void QHexView::getSHA384() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }
@@ -858,7 +858,7 @@ void QHexView::getSHA384() {
 
 void QHexView::getSHA512() {
     QByteArray SelectedBuffer;
-    INT32 length {0};
+    INT64 length {0};
     if (!getSelectedBuffer(SelectedBuffer, &length)) {
         return;
     }

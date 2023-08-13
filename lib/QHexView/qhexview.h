@@ -49,22 +49,23 @@ private:
     QByteArray HexDataArray;
     QByteArray CopiedData;
 
-    INT32 AddressPosition{0};
-    INT32 CharWidth{0};
-    INT32 HexCharPosition;
-    INT32 AsciiCharPosition;
-    INT32 CharHeight{0};
-    INT32 SelectionBegin{0};
-    INT32 SelectionEnd{0};
-    INT32 SelectionInit{0};
-    INT32 CursorPosition{0};
-    INT32 BytesPerHexLine{MIN_BYTES_PER_LINE};
-    INT32 AddressLength{ADR_LENGTH};
+    INT64 AddressPosition{0};
+    INT64 CharWidth{0};
+    INT64 HexCharPosition;
+    INT64 AsciiCharPosition;
+    INT64 CharHeight{0};
+    INT64 SelectionBegin{0};
+    INT64 SelectionEnd{0};
+    INT64 SelectionInit{0};
+    INT64 CursorPosition{0};
+    INT64 BytesPerHexLine{MIN_BYTES_PER_LINE};
+    INT64 AddressLength{ADR_LENGTH};
+    INT64 RelativeAdressBase{0};
 
     char inputKey{};
     bool BinaryEdited{false};
     bool ReadOnly{false};
-    std::vector<INT32> EditedPos;
+    std::vector<INT64> EditedPos;
 
     bool isDarkMode{false};
     bool ShowCursor{true};
@@ -106,29 +107,30 @@ private:
     QSize fullSize() const;
     void updatePositions();
     void resetSelection();
-    void resetSelection(INT32 pos);
-    void setSelection(INT32 pos);
+    void resetSelection(INT64 pos);
+    void setSelection(INT64 pos);
     void ensureVisible();
-    void setCursorPos(INT32 pos);
-    INT32 cursorPos(const QPoint &position);
-    INT32 getCursorPos() const;
+    void setCursorPos(INT64 pos);
+    INT64 cursorPos(const QPoint &position);
+    INT64 getCursorPos() const;
     void confScrollBar();
-    bool isSelected(INT32 index);
-    bool isEdited(INT32 index);
+    bool isSelected(INT64 index);
+    bool isEdited(INT64 index);
     void restartTimer();
-    INT32 getLineNum();
+    INT64 getLineNum();
     void initRightMenu();
     void finiRightMenu();
-    bool getSelectedBuffer(QByteArray &buffer, INT32*length);
+    bool getSelectedBuffer(QByteArray &buffer, INT64*length);
     void binaryEdit(char inputChar);
 
 public slots:
     void loadFile(const QString& p_file);
     void loadFromBuffer(QByteArray &buffer);
     void clear();
-    void showFromOffset(INT32 offset, INT32 length = 1);
+    void showFromOffset(INT64 offset, INT64 length = 1);
     std::size_t sizeFile();
     void setAddressLength();
+    void setRelativeAddress(INT64 address = 0);
     void CopyFromSelectedContent();
     void PasteToContent();
     void PasteAndInsertToContent();

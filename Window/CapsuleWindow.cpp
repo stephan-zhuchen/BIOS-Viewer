@@ -626,6 +626,7 @@ void CapsuleWindow::showHexView() {
     hexDialog->loadBuffer(*hexViewData,
                           data,
                           offset,
+                          WindowData->InputImageSize,
                           QString::fromStdString(EntryHeader->getEntryName()),
                           WindowData->OpenedFileName,
                           false);

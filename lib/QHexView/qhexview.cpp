@@ -53,7 +53,7 @@ QHexView::QHexView(QWidget *parent)
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, [this](){ ShowCursor = !ShowCursor; });
+    connect(timer, &QTimer::timeout, this, [this](){ ShowCursor = !ShowCursor; });
     initRightMenu();
 }
 
@@ -152,8 +152,8 @@ void QHexView::loadFromBuffer(QByteArray &buffer) {
  * @param length The length of the data.
  */
 
-void QHexView::showFromOffset(INT32 offset, INT32 length) {
-    if (offset + length < HexDataArray.size())
+void QHexView::showFromOffset(INT64 offset, INT64 length) {
+    if (offset + length <= HexDataArray.size())
     {
         StartFromAscii = true;
         updatePositions();
@@ -162,7 +162,7 @@ void QHexView::showFromOffset(INT32 offset, INT32 length) {
         resetSelection(offset * 2);
         setSelection(offset * 2 + length * 2);
 
-        INT32 cursorY = CursorPosition / (2 * BytesPerHexLine);
+        INT64 cursorY = CursorPosition / (2 * BytesPerHexLine);
 
         verticalScrollBar()->setValue(cursorY);
         viewport()->update();
@@ -197,7 +197,7 @@ QSize QHexView::fullSize() const {
         return {0, 0};
 
     INT32 width = AsciiCharPosition + (BytesPerHexLine * CharWidth);
-    INT32 height = (INT32)HexDataArray.size() / BytesPerHexLine;
+    INT32 height = (INT64)HexDataArray.size() / BytesPerHexLine;
 
     if (HexDataArray.size() % BytesPerHexLine)
         height++;
@@ -257,12 +257,12 @@ void QHexView::paintEvent(QPaintEvent *event) {
     updatePositions();
     confScrollBar();
 
-    INT32 firstLineIdx = verticalScrollBar()->value();
-    INT32 lastLineIdx = firstLineIdx + viewport()->size().height() / CharHeight;
-    INT32 lastDataIdx = getLineNum() - 1;
-    INT32 linePos = AsciiCharPosition - (GAP_HEX_ASCII / 2);
-    INT32 horizenLinePosY = CharHeight + 2;
-    INT32 yPosStart = CharHeight + horizenLinePosY;
+    INT64 firstLineIdx = verticalScrollBar()->value();
+    INT64 lastLineIdx = firstLineIdx + viewport()->size().height() / CharHeight;
+    INT64 lastDataIdx = getLineNum() - 1;
+    INT64 linePos = AsciiCharPosition - (GAP_HEX_ASCII / 2);
+    INT64 horizenLinePosY = CharHeight + 2;
+    INT64 yPosStart = CharHeight + horizenLinePosY;
 
     painter.setPen(QPen(Qt::gray, 1));
     painter.drawLine(linePos, horizenLinePosY, linePos, height());
@@ -271,26 +271,27 @@ void QHexView::paintEvent(QPaintEvent *event) {
     painter.setPen(WordColor);
 
   // offset drawn
-    for (INT32 offsetX = HexCharPosition, i = 0; i < BytesPerHexLine; ++i, offsetX += CharWidth * 3) {
+    for (INT64 offsetX = HexCharPosition, i = 0; i < BytesPerHexLine; ++i, offsetX += CharWidth * 3) {
         if (offsetX == HexCharPosition + CharWidth * 3 * (BytesPerHexLine / 2))
             offsetX += CharWidth;
-        QString offsetVal = QString::number(i, 16);
+        INT64 BeginVal = (i + (RelativeAdressBase & 0xF)) % 16;
+        QString offsetVal = QString::number(BeginVal, 16);
         painter.drawText(offsetX + CharWidth / 2, CharHeight - 2, offsetVal);
     }
 
     QByteArray data = HexDataArray.mid(firstLineIdx * BytesPerHexLine, (lastLineIdx - firstLineIdx) * BytesPerHexLine);
     painter.setPen(WordColor); // paint white characters and binary
 
-    for (INT32 lineIdx = firstLineIdx, yPos = yPosStart; lineIdx < lastLineIdx; lineIdx += 1, yPos += CharHeight) {
+    for (INT64 lineIdx = firstLineIdx, yPos = yPosStart; lineIdx < lastLineIdx; lineIdx += 1, yPos += CharHeight) {
         // ascii position
-        for (INT32 xPosAscii = AsciiCharPosition, i = 0;
+        for (INT64 xPosAscii = AsciiCharPosition, i = 0;
              ((lineIdx - firstLineIdx) * BytesPerHexLine + i) < data.size() && (i < BytesPerHexLine);
              i++, xPosAscii += CharWidth)
         {
             char character = data[(lineIdx - firstLineIdx) * BytesPerHexLine + i];
             CHAR_VALID(character);
 
-            INT32 pos = ((lineIdx * BytesPerHexLine + i) * 2) + 1;
+            INT64 pos = ((lineIdx * BytesPerHexLine + i) * 2) + 1;
             if (isSelected(pos)) {
                 painter.fillRect(QRectF(xPosAscii, yPos - CharHeight + 4, CharWidth, CharHeight), SelectionColor);
             }
@@ -303,11 +304,11 @@ void QHexView::paintEvent(QPaintEvent *event) {
         }
 
         // binary position
-        for (INT32 xPos = HexCharPosition, i = 0; i < BytesPerHexLine * 2 &&
+        for (INT64 xPos = HexCharPosition, i = 0; i < BytesPerHexLine * 2 &&
             ((lineIdx - firstLineIdx) * BytesPerHexLine + i / 2) < data.size();
              i++, xPos += CharWidth)
         {
-            INT32 HexByteIndex = ((lineIdx * BytesPerHexLine) * 2) + i;
+            INT64 HexByteIndex = ((lineIdx * BytesPerHexLine) * 2) + i;
             if (isSelected(HexByteIndex)) {
                 painter.fillRect(QRectF(xPos, yPos - CharHeight + 4, CharWidth, CharHeight), SelectionColor);
                 if ((i == BytesPerHexLine - 1) && isSelected(HexByteIndex + 1)) {
@@ -356,7 +357,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
 
         // address drawn
         if (lineIdx <= lastDataIdx) {
-            QString address = QString("%1h:").arg(lineIdx * BytesPerHexLine, AddressLength, 16, QChar('0'));
+            QString address = QString("%1h:").arg(lineIdx * BytesPerHexLine + RelativeAdressBase, AddressLength, 16, QChar('0'));
             painter.setFont(HexFontSetting);
             painter.drawText(AddressPosition, yPos, address);
         }
@@ -367,12 +368,12 @@ void QHexView::paintEvent(QPaintEvent *event) {
     //cursor drawn
     if (hasFocus() && ShowCursor && (CursorPosition >= 0))
     {
-        INT32 x = (CursorPosition % (2 * BytesPerHexLine));
-        INT32 y = CursorPosition / (2 * BytesPerHexLine);
+        INT64 x = (CursorPosition % (2 * BytesPerHexLine));
+        INT64 y = CursorPosition / (2 * BytesPerHexLine);
         if (y < firstLineIdx || y >= lastLineIdx)
             return;
         y -= firstLineIdx;
-        INT32 cursorX;
+        INT64 cursorX;
         if (StartFromAscii)
             cursorX = (x / 2) * CharWidth + AsciiCharPosition;
         else {
@@ -381,7 +382,7 @@ void QHexView::paintEvent(QPaintEvent *event) {
                 cursorX += CharWidth;
         }
 
-        INT32 cursorY = y * CharHeight + 4;
+        INT64 cursorY = y * CharHeight + 4;
         painter.fillRect(cursorX, cursorY + horizenLinePosY, CharWidth, CharHeight, CursorColor);
 
         if (StartFromAscii) {
@@ -415,15 +416,15 @@ void QHexView::paintEvent(QPaintEvent *event) {
  * @return the cursor position
  */
 
-INT32 QHexView::cursorPos(const QPoint &position) {
-    INT32 pos;
-    INT32 x;
-    INT32 y;
+INT64 QHexView::cursorPos(const QPoint &position) {
+    INT64 pos;
+    INT64 x;
+    INT64 y;
 
     if (!StartFromAscii) {
-        if (position.x() < (INT32)HexCharPosition)
+        if (position.x() < (INT64)HexCharPosition)
             x = 0;
-        else if (position.x() >= (INT32)(HexCharPosition + (BytesPerHexLine * 3) * CharWidth))
+        else if (position.x() >= (INT64)(HexCharPosition + (BytesPerHexLine * 3) * CharWidth))
             x = BytesPerHexLine * 3 - 1;
         else
             x = (position.x() - HexCharPosition) / CharWidth;
@@ -437,21 +438,21 @@ INT32 QHexView::cursorPos(const QPoint &position) {
         else
             x = ((x / 3) * 2) + 2;
     } else {
-        if (position.x() < (INT32)AsciiCharPosition)
+        if (position.x() < (INT64)AsciiCharPosition)
             x = 0;
-        else if (position.x() >= (INT32)(AsciiCharPosition + BytesPerHexLine * CharWidth))
+        else if (position.x() >= (INT64)(AsciiCharPosition + BytesPerHexLine * CharWidth))
             x = BytesPerHexLine * 2 - 2;
         else {
-            INT32 asciiNum = (position.x() - AsciiCharPosition) / CharWidth;
-            x = 2 * (INT32)(asciiNum);
+            INT64 asciiNum = (position.x() - AsciiCharPosition) / CharWidth;
+            x = 2 * (INT64)(asciiNum);
         }
     }
 
-    INT32 firstLineIdx = verticalScrollBar()->value();
-    INT32 lastLineIdx = viewport()->size().height() / CharHeight + 1;
-    INT32 lastDataIdx = getLineNum() - firstLineIdx;
-    INT32 lastPageFirstLineIdx = getLineNum() + BLANK_LINE_NUM - viewport()->size().height() / CharHeight;
-    INT32 lastX_Offset = ((INT32)HexDataArray.size() % BytesPerHexLine) * 2 - 1;
+    INT64 firstLineIdx = verticalScrollBar()->value();
+    INT64 lastLineIdx = viewport()->size().height() / CharHeight + 1;
+    INT64 lastDataIdx = getLineNum() - firstLineIdx;
+    INT64 lastPageFirstLineIdx = getLineNum() + BLANK_LINE_NUM - viewport()->size().height() / CharHeight;
+    INT64 lastX_Offset = ((INT64)HexDataArray.size() % BytesPerHexLine) * 2 - 1;
 
     y = (position.y() / (int)CharHeight);
     if (y < 0) {
@@ -480,8 +481,8 @@ void QHexView::resetSelection() {
     SelectionEnd = SelectionInit;
 }
 
-void QHexView::resetSelection(INT32 pos) {
-    if (pos == std::numeric_limits<INT32>::max())
+void QHexView::resetSelection(INT64 pos) {
+    if (pos == std::numeric_limits<INT64>::max())
         pos = 0;
 
     SelectionInit = pos;
@@ -489,11 +490,11 @@ void QHexView::resetSelection(INT32 pos) {
     SelectionEnd = pos;
 }
 
-void QHexView::setSelection(INT32 pos) {
-    if (pos == std::numeric_limits<INT32>::max())
+void QHexView::setSelection(INT64 pos) {
+    if (pos == std::numeric_limits<INT64>::max())
         pos = 0;
 
-    if (pos >= (INT32)SelectionInit) {
+    if (pos >= (INT64)SelectionInit) {
         SelectionEnd = pos;
         SelectionBegin = SelectionInit;
     }
@@ -509,19 +510,19 @@ void QHexView::setSelection(INT32 pos) {
         }
     }
     if (SelectionEnd >= HexDataArray.size() * 2 - 1) {
-        SelectionEnd = (INT32)(HexDataArray.size() * 2 - 1);
+        SelectionEnd = (INT64)(HexDataArray.size() * 2 - 1);
     }
 }
 
-void QHexView::setCursorPos(INT32 position)
+void QHexView::setCursorPos(INT64 position)
 {
     // Ensure that position is within the bounds of the data.
     if (position < 0)
         position = 0;
 
-    INT32 maxPos = 0;
+    INT64 maxPos = 0;
     if (HexDataArray.size() != 0) {
-        maxPos = (INT32)((HexDataArray.size() - 1) * 2 + 1);
+        maxPos = (INT64)((HexDataArray.size() - 1) * 2 + 1);
     }
 
     if (position > maxPos)
@@ -531,17 +532,17 @@ void QHexView::setCursorPos(INT32 position)
     CursorPosition = position;
 }
 
-INT32 QHexView::getCursorPos() const {
+INT64 QHexView::getCursorPos() const {
     return CursorPosition;
 }
 
 void QHexView::ensureVisible() {
     QSize areaSize = viewport()->size();
 
-    INT32 firstVisibleLineIdx = verticalScrollBar()->value();
-    INT32 lastVisibleLineIdx = firstVisibleLineIdx + areaSize.height() / CharHeight;
+    INT64 firstVisibleLineIdx = verticalScrollBar()->value();
+    INT64 lastVisibleLineIdx = firstVisibleLineIdx + areaSize.height() / CharHeight;
 
-    INT32 cursorY = CursorPosition / (2 * BytesPerHexLine);
+    INT64 cursorY = CursorPosition / (2 * BytesPerHexLine);
 
     if (cursorY < firstVisibleLineIdx)
         verticalScrollBar()->setValue(cursorY);
@@ -561,15 +562,19 @@ std::size_t QHexView::sizeFile() {
 }
 
 void QHexView::setAddressLength() {
-    INT32 size = (INT32) HexDataArray.size();
-    for(INT32 i = 0; size >> i != 0; ++i) {
+    INT64 size = (INT64) HexDataArray.size() + RelativeAdressBase;
+    for(INT64 i = 0; size >> i != 0; ++i) {
         AddressLength = i + 1;
     }
-    INT32 remainder = AddressLength % 4;
-    AddressLength = AddressLength / 4 + remainder;
+    AddressLength = (AddressLength + 3) / 4;
 }
 
-bool QHexView::isSelected(INT32 index) {
+void QHexView::setRelativeAddress(INT64 address) {
+    RelativeAdressBase = address;
+    setAddressLength();
+}
+
+bool QHexView::isSelected(INT64 index) {
     bool ret = false;
     if (index < sizeFile() * 2) {
         if (SelectionBegin != SelectionEnd) {
@@ -583,7 +588,7 @@ bool QHexView::isSelected(INT32 index) {
     return ret;
 }
 
-bool QHexView::isEdited(INT32 index) {
+bool QHexView::isEdited(INT64 index) {
     bool ret = false;
     if (std::count(EditedPos.begin(), EditedPos.end(), index)) {
         ret = true;
@@ -598,8 +603,8 @@ void QHexView::restartTimer()
     timer->start(500);
 }
 
-INT32 QHexView::getLineNum() {
-    INT32 num = (INT32)HexDataArray.size() / BytesPerHexLine;
+INT64 QHexView::getLineNum() {
+    INT64 num = (INT64)HexDataArray.size() / BytesPerHexLine;
     if (HexDataArray.size() % BytesPerHexLine)
         num += 1;
     return num;
@@ -624,8 +629,8 @@ void QHexView::actionGoto() {
 
     // Process when OK button is clicked
     if (dialog.exec() == QDialog::Accepted) {
-        INT32 SearchOffset = OffsetSpinbox->value();
-        if (SearchOffset < 0 ||SearchOffset >= HexDataArray.size()) {
+        INT64 SearchOffset = (INT64)(UINT32)OffsetSpinbox->value() - RelativeAdressBase;
+        if (SearchOffset < 0 || SearchOffset >= HexDataArray.size()) {
             QMessageBox::critical(this, tr("Goto ..."), "Invalid offset!");
             return;
         }
@@ -649,9 +654,9 @@ void QHexView::setReadOnly(bool ReadOnlyFlag) {
     ReadOnly = ReadOnlyFlag;
 }
 
-bool QHexView::getSelectedBuffer(QByteArray &buffer, INT32*length) {
-    INT32 beginIdx = SelectionBegin / 2;
-    INT32 endIdx = SelectionEnd / 2;
+bool QHexView::getSelectedBuffer(QByteArray &buffer, INT64*length) {
+    INT64 beginIdx = SelectionBegin / 2;
+    INT64 endIdx = SelectionEnd / 2;
     if (beginIdx > endIdx) {
         return false;
     }

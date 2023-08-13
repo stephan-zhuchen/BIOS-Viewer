@@ -76,7 +76,7 @@ StartWindow::~StartWindow() {
 
 void StartWindow::initSettings() {
     DefaultSettings = {
-        {"Theme",               "System"},
+        {"Theme",               "Light"},
         {"BiosViewerFontSize",  "12"},
         {"BiosViewerFont",      "Microsoft YaHei UI"},
         {"ShowPaddingItem",     "false"},
@@ -89,7 +89,8 @@ void StartWindow::initSettings() {
         {"LineSpacing",         "2"},
         {"EnableHexEditing",    "true"},
         {"DisableBiosViewer",   "false"},
-        {"PasteMode",           "Ask Everytime"}
+        {"PasteMode",           "Ask Everytime"},
+        {"HexAlign",            "None"}
     };
 
     for (const auto& defaultSetting : DefaultSettings) {

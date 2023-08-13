@@ -40,6 +40,8 @@
         <file>close.svg</file>
         <file>close_light.svg</file>
         <file>UEFI.ico</file>
+        <file>check.svg</file>
+        <file>check_light.svg</file>
     </qresource>
     <qresource prefix="/sty">
         <file>dark_mode.qss</file>

@@ -214,6 +214,7 @@ void BiosViewerWindow::showHexView() const {
     hexDialog->loadBuffer(*hexViewData,
                           InputData->InputImageModel->modelData,
                           InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          WindowData->InputImageSize,
                           InputData->RightClickeditemModel->getName(),
                           WindowData->OpenedFileName,
                           InputData->RightClickeditemModel->modelData->isCompressed);
@@ -237,7 +238,8 @@ void BiosViewerWindow::showBodyHexView() {
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
     hexDialog->loadBuffer(BodyHexViewData,
                           InputData->InputImageModel->modelData,
-                          InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          InputData->RightClickeditemModel->modelData->offsetFromBegin + HeaderSize,
+                          WindowData->InputImageSize,
                           InputData->RightClickeditemModel->getName(),
                           WindowData->OpenedFileName,
                           InputData->RightClickeditemModel->modelData->isCompressed);
@@ -262,6 +264,7 @@ void BiosViewerWindow::showDecompressedHexView() {
     hexDialog->loadBuffer(*hexViewData,
                           InputData->InputImageModel->modelData,
                           InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          WindowData->InputImageSize,
                           InputData->RightClickeditemModel->getName() + " Decompressed",
                           WindowData->OpenedFileName,
                           true);
@@ -289,6 +292,7 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
     hexDialog->loadBuffer(*hexViewData,
                           InputData->InputImageModel->modelData,
                           InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          WindowData->InputImageSize,
                           InputData->RightClickeditemModel->getName() + " Decompressed",
                           WindowData->OpenedFileName,
                           true);
@@ -306,6 +310,7 @@ void BiosViewerWindow::showNvHexView() const {
     hexDialog->loadBuffer(*hexViewData,
                           InputData->InputImageModel->modelData,
                           InputData->RightClickeditemModel->modelData->offsetFromBegin,
+                          WindowData->InputImageSize,
                           InputData->RightClickeditemModel->getName(),
                           WindowData->OpenedFileName,
                           InputData->RightClickeditemModel->modelData->isCompressed);
