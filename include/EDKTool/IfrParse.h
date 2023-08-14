@@ -129,7 +129,7 @@ typedef struct {
 
 typedef struct {
   UINTN            Signature;
-  LIST_ENTRY       Link;
+  UEFI_LIST_ENTRY       Link;
   CHAR16           *Name;
   CHAR16           *Value;
   CHAR16           *EditValue;
@@ -141,7 +141,7 @@ typedef struct {
 
 typedef struct {
   UINTN            Signature;
-  LIST_ENTRY       Link;
+  UEFI_LIST_ENTRY       Link;
 
   UINT16           DefaultId[MAX_PLATFORM_DEFAULT_ID_NUM];
   UINT64           PlatformId[MAX_PLATFORM_DEFAULT_ID_NUM];
@@ -160,7 +160,7 @@ typedef struct {
   UINT16           Size;
   UINT8            *Buffer;
 
-  LIST_ENTRY       NameValueListHead; // List of NAME_VALUE_NODE
+  UEFI_LIST_ENTRY       NameValueListHead; // List of NAME_VALUE_NODE
 
   UINT32           Attributes;     // For EFI_IFR_VARSTORE_EFI: EFI Variable attribute
 } FORMSET_STORAGE;
@@ -176,7 +176,7 @@ typedef union {
 
 typedef struct {
   UINTN             Signature;
-  LIST_ENTRY        Link;
+  UEFI_LIST_ENTRY        Link;
 
   UINT8             Operand;
 
@@ -200,7 +200,7 @@ typedef struct {
   UINT8             ValueType;   // For EFI_IFR_SET, EFI_IFR_GET
   UINT8             ValueWidth;  // For EFI_IFR_SET, EFI_IFR_GET
   CHAR16            *ValueName;  // For EFI_IFR_SET, EFI_IFR_GET
-  LIST_ENTRY        MapExpressionList;   // nested expressions inside of Map opcode.
+  UEFI_LIST_ENTRY        MapExpressionList;   // nested expressions inside of Map opcode.
 } EXPRESSION_OPCODE;
 
 #define EXPRESSION_OPCODE_FROM_LINK(a)  CR (a, EXPRESSION_OPCODE, Link, EXPRESSION_OPCODE_SIGNATURE)
@@ -209,7 +209,7 @@ typedef struct {
 
 typedef struct {
   UINTN             Signature;
-  LIST_ENTRY        Link;
+  UEFI_LIST_ENTRY        Link;
 
   UINT8             Type;            // Type for this expression
 
@@ -219,7 +219,7 @@ typedef struct {
   EFI_HII_VALUE     Result;          // Expression evaluation result
   UINT8             TimeOut;         // For EFI_IFR_WARNING_IF
 
-  LIST_ENTRY        OpCodeListHead;  // OpCodes consist of this expression (EXPRESSION_OPCODE)
+  UEFI_LIST_ENTRY        OpCodeListHead;  // OpCodes consist of this expression (EXPRESSION_OPCODE)
 } FORM_EXPRESSION;
 
 #define FORM_EXPRESSION_FROM_LINK(a)  CR (a, FORM_EXPRESSION, Link, FORM_EXPRESSION_SIGNATURE)
@@ -228,7 +228,7 @@ typedef struct {
 
 typedef struct {
   UINTN               Signature;
-  LIST_ENTRY          Link;
+  UEFI_LIST_ENTRY          Link;
 
   UINT16              DefaultId;
   EFI_HII_VALUE       Value;              // Default value
@@ -242,7 +242,7 @@ typedef struct {
 
 typedef struct {
   UINTN               Signature;
-  LIST_ENTRY          Link;
+  UEFI_LIST_ENTRY          Link;
 
   EFI_STRING_ID       Text;
   UINT8               Flags;
@@ -257,7 +257,7 @@ typedef struct {
 
 struct _FORM_BROWSER_STATEMENT {
   UINTN                 Signature;
-  LIST_ENTRY            Link;
+  UEFI_LIST_ENTRY            Link;
   UINT8                 Operand;          // The operand (first byte) of this Statement or Question
 
   UQI_HEADER            Uqi;
@@ -311,16 +311,16 @@ struct _FORM_BROWSER_STATEMENT {
   // Get from IFR parsing
   //
   FORM_EXPRESSION       *ValueExpression;    // nested EFI_IFR_VALUE, provide Question value and indicate Question is ReadOnly
-  LIST_ENTRY            DefaultListHead;     // nested EFI_IFR_DEFAULT list (QUESTION_DEFAULT), provide default values
-  LIST_ENTRY            OptionListHead;      // nested EFI_IFR_ONE_OF_OPTION list (QUESTION_OPTION)
+  UEFI_LIST_ENTRY            DefaultListHead;     // nested EFI_IFR_DEFAULT list (QUESTION_DEFAULT), provide default values
+  UEFI_LIST_ENTRY            OptionListHead;      // nested EFI_IFR_ONE_OF_OPTION list (QUESTION_OPTION)
 
   EFI_IMAGE_ID          ImageId;             // nested EFI_IFR_IMAGE
   UINT8                 RefreshInterval;     // nested EFI_IFR_REFRESH, refresh interval(in seconds) for Question value, 0 means no refresh
   BOOLEAN               InSubtitle;          // nesting inside of EFI_IFR_SUBTITLE
 
-  LIST_ENTRY            InconsistentListHead;// nested inconsistent expression list (FORM_EXPRESSION)
-  LIST_ENTRY            NoSubmitListHead;    // nested nosubmit expression list (FORM_EXPRESSION)
-  LIST_ENTRY            WarningListHead;     // nested warning expression list (FORM_EXPRESSION)
+  UEFI_LIST_ENTRY            InconsistentListHead;// nested inconsistent expression list (FORM_EXPRESSION)
+  UEFI_LIST_ENTRY            NoSubmitListHead;    // nested nosubmit expression list (FORM_EXPRESSION)
+  UEFI_LIST_ENTRY            WarningListHead;     // nested warning expression list (FORM_EXPRESSION)
   FORM_EXPRESSION       *GrayOutExpression;  // nesting inside of GrayOutIf
   FORM_EXPRESSION       *SuppressExpression; // nesting inside of SuppressIf
   FORM_EXPRESSION       *DisableExpression;  // nesting inside of DisableIf
@@ -336,15 +336,15 @@ struct _FORM_BROWSER_STATEMENT {
 
 typedef struct {
   UINTN             Signature;
-  LIST_ENTRY        Link;
+  UEFI_LIST_ENTRY        Link;
 
   UINT16            FormId;               // FormId of normal form or formmap form.
   EFI_STRING_ID     FormTitle;            // FormTile of normal form, or FormMapMethod title of formmap form.
   UINT16            FormType;             // Specific form type for the different form.
 
  BOOLEAN            ModalForm;            // Whether this is a modal form.
-  LIST_ENTRY        ExpressionListHead;   // List of Expressions (FORM_EXPRESSION)
-  LIST_ENTRY        StatementListHead;    // List of Statements and Questions (FORM_BROWSER_STATEMENT)
+  UEFI_LIST_ENTRY        ExpressionListHead;   // List of Expressions (FORM_EXPRESSION)
+  UEFI_LIST_ENTRY        StatementListHead;    // List of Statements and Questions (FORM_BROWSER_STATEMENT)
   FORM_EXPRESSION   *SuppressExpression;  // nesting inside of SuppressIf
 } FORM_BROWSER_FORM;
 
@@ -354,7 +354,7 @@ typedef struct {
 
 typedef struct {
   UINTN            Signature;
-  LIST_ENTRY       Link;
+  UEFI_LIST_ENTRY       Link;
 
   UINT16           DefaultId;
   EFI_STRING_ID    DefaultName;
@@ -379,7 +379,7 @@ typedef struct {
 
 typedef struct {
   UINTN                           Signature;
-  LIST_ENTRY                      Link;
+  UEFI_LIST_ENTRY                      Link;
 
   UINT32                          FormSetOrder;
 
@@ -398,10 +398,10 @@ typedef struct {
   FORM_BROWSER_STATEMENT          *StatementBuffer;     // Buffer for all Statements and Questions
   EXPRESSION_OPCODE               *ExpressionBuffer;    // Buffer for all Expression OpCode
 
-  LIST_ENTRY                      *StorageListHead;      // Storage list (FORMSET_STORAGE)
-  LIST_ENTRY                      DefaultStoreListHead; // DefaultStore list (FORMSET_DEFAULTSTORE)
-  LIST_ENTRY                      FormListHead;         // Form list (FORM_BROWSER_FORM)
-  LIST_ENTRY                      ExpressionListHead;   // List of Expressions (FORM_EXPRESSION)
+  UEFI_LIST_ENTRY                      *StorageListHead;      // Storage list (FORMSET_STORAGE)
+  UEFI_LIST_ENTRY                      DefaultStoreListHead; // DefaultStore list (FORMSET_DEFAULTSTORE)
+  UEFI_LIST_ENTRY                      FormListHead;         // Form list (FORM_BROWSER_FORM)
+  UEFI_LIST_ENTRY                      ExpressionListHead;   // List of Expressions (FORM_EXPRESSION)
   FORMSET_STRING_LIST             EnUsStringList;      // Cache EN_US English list
   FORMSET_STRING_LIST             UqiStringList;       // Cache EN_US English list
 } FORM_BROWSER_FORMSET;
@@ -436,7 +436,7 @@ typedef struct {
   @param  HiiObjList       The pointer to the Question
   @param  VarName          The EFI variable name need to be updated to VarList
   @param  Offset           The offset of the variable
-  @param  StorageListHead  The pointer to the LIST_ENTRY of Storage
+  @param  StorageListHead  The pointer to the UEFI_LIST_ENTRY of Storage
   @param  Vaue             The value in that value offset of the variable
   @param  VarList          The dual pointer of Varlist
 
@@ -447,7 +447,7 @@ SearchVarStorage (
   IN     FORM_BROWSER_STATEMENT   *Question,
   IN     CHAR16*                  VarName,
   IN     UINT32                   Offset,
-  IN     LIST_ENTRY               *StorageListHead,
+  IN     UEFI_LIST_ENTRY               *StorageListHead,
   IN OUT CHAR8                    **Value,
   IN OUT FORMSET_STORAGE          **VarList
   );
@@ -469,14 +469,14 @@ GetToken (
   );
 
 /**
-  Free resources allocated for all Storage in an LIST_ENTRY.
+  Free resources allocated for all Storage in an UEFI_LIST_ENTRY.
 
   @param  FormSet                Pointer of the FormSet
 
 **/
 VOID
 DestroyAllStorage (
-  IN LIST_ENTRY    *StorageEntryListHead
+  IN UEFI_LIST_ENTRY    *StorageEntryListHead
   );
 
 
@@ -493,14 +493,14 @@ DestroyFormSet (
 
 
 /**
-  Free resources allocated for all FormSet in an LIST_ENTRY.
+  Free resources allocated for all FormSet in an UEFI_LIST_ENTRY.
 
   @param  FormSet                Pointer of the FormSet
 
 **/
 VOID
 DestroyAllFormSet (
-  IN LIST_ENTRY    *FormSetEntryListHead
+  IN UEFI_LIST_ENTRY    *FormSetEntryListHead
   );
 
 /**
@@ -759,8 +759,8 @@ CompareUqiHeader (
 **/
 EFI_STATUS
 PrintInfoInAllFormset (
-  IN LIST_ENTRY      *FormSetEntryListHead,
-  IN LIST_ENTRY      *StorageEntryListHead
+  IN UEFI_LIST_ENTRY      *FormSetEntryListHead,
+  IN UEFI_LIST_ENTRY      *StorageEntryListHead
   );
 
  /**

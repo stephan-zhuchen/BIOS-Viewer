@@ -217,7 +217,7 @@ void ME_RegionClass::setInfoStr() {
     INT32 width = 15;
     stringstream ss;
     ss.setf(ios::left);
-    ss << setw(width) << "Version Signature:" << hex << BaseLibrarySpace::charToString((INT8*)&MeVersion.Signature, sizeof(UINT32), false) << "\n"
+    ss << setw(width) << "Version Signature:" << hex << BaseLibrarySpace::charToString((CHAR8*)&MeVersion.Signature, sizeof(UINT32), false) << "\n"
        << setw(width) << "ME Version:" << dec << MeVersion.Major << "." << MeVersion.Minor << "." << MeVersion.Bugfix << "." << MeVersion.Build << "\n";
     InfoStr = QString::fromStdString(ss.str());
 }

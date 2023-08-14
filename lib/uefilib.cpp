@@ -78,11 +78,11 @@ namespace UefiSpace {
         return *(UINT64*)(data + offset);
     }
 
-    INT8 Volume::getINT8(INT64 offset) {
+    CHAR8 Volume::getINT8(INT64 offset) {
         if (offset > size) {
             throw BiosException(SizeErrorMsg);
         }
-        return (INT8) data[offset];
+        return (CHAR8) data[offset];
     }
 
     INT16 Volume::getINT16(INT64 offset) {
@@ -491,8 +491,8 @@ namespace UefiSpace {
             peOptionalSignature = peCoffHeader->pe32Header.OptionalHeader.Magic;
             SubSystem = peCoffHeader->pe32Header.OptionalHeader.Subsystem;
 
-            ss << setw(width) << "DOS signature:" << hex << uppercase << e_magic << "h (" << charToString((INT8*)&e_magic, sizeof(UINT16), false) << ")\n"
-               << setw(width) << "PE signature:" << hex << uppercase << peSignature << "h (" << charToString((INT8*)&peSignature, sizeof(UINT32), false) << ")\n"
+            ss << setw(width) << "DOS signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
+               << setw(width) << "PE signature:" << hex << uppercase << peSignature << "h (" << charToString((CHAR8*)&peSignature, sizeof(UINT32), false) << ")\n"
                << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
                << setw(width) << "Number of sections:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.NumberOfSections << "h\n"
                << setw(width) << "Characteristics:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.Characteristics << "h\n"
@@ -510,7 +510,7 @@ namespace UefiSpace {
             e_magic = peCoffHeader->teHeader.Signature;
             SubSystem = peCoffHeader->teHeader.Subsystem;
 
-            ss << setw(width) << "TE signature:" << hex << uppercase << e_magic << "h (" << charToString((INT8*)&e_magic, sizeof(UINT16), false) << ")\n"
+            ss << setw(width) << "TE signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
                << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
                << setw(width) << "Number of sections:" << hex << uppercase << (UINT32)peCoffHeader->teHeader.NumberOfSections << "h\n"
                << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
@@ -880,7 +880,7 @@ namespace UefiSpace {
             return;
 
         ss << "FileSystem GUID:\n" << GUID(FirmwareVolumeHeader.FileSystemGuid).str(true) << "\n"
-           << setw(width) << "Signature:"   << charToString((INT8*)(&FirmwareVolumeHeader.Signature), sizeof(UINT32)) << "\n"
+           << setw(width) << "Signature:"   << charToString((CHAR8*)(&FirmwareVolumeHeader.Signature), sizeof(UINT32)) << "\n"
            << setw(width) << "Full size:"   << hex << uppercase << FirmwareVolumeHeader.FvLength << "h\n"
            << setw(width) << "Header size:" << hex << uppercase << FirmwareVolumeSize << "h\n"
            << setw(width) << "Body size:"   << hex << uppercase << FirmwareVolumeHeader.FvLength - FirmwareVolumeSize << "h\n"

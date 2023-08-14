@@ -90,7 +90,7 @@ typedef enum {
 EFI_STATUS
 SynAuthEfiVariable (
   IN  BOOLEAN     VarToList,
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**
@@ -104,7 +104,7 @@ SynAuthEfiVariable (
 **/
 EFI_STATUS
 RemoveAuthEfiVariable (
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**
@@ -125,7 +125,7 @@ RemoveAuthEfiVariable (
 EFI_STATUS
 SynAuthEfiVariableBasedTime (
   IN  BOOLEAN     VarToList,
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**
@@ -139,7 +139,7 @@ SynAuthEfiVariableBasedTime (
 **/
 EFI_STATUS
 RemoveAuthEfiVariableBasedTime (
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**
@@ -159,7 +159,7 @@ RemoveAuthEfiVariableBasedTime (
 EFI_STATUS
 SynEfiVariable (
   IN  BOOLEAN     VarToList,
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**
@@ -173,7 +173,7 @@ SynEfiVariable (
 **/
 EFI_STATUS
 RemoveNormalEfiVariable (
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**
@@ -264,7 +264,7 @@ CopyVariableToNvStoreBinary (
 UINT32
 ReadNvStoreVariableToList (
   IN      UINT8             *Binary,
-  IN      LIST_ENTRY        *StorageListEntry
+  IN      UEFI_LIST_ENTRY        *StorageListEntry
   );
 
 /**
@@ -278,7 +278,7 @@ ReadNvStoreVariableToList (
 UINT32
 ReadVariableToList (
   IN      UINT8             *Binary,
-  IN      LIST_ENTRY        *StorageListEntry
+  IN      UEFI_LIST_ENTRY        *StorageListEntry
   );
 
 /**
@@ -289,7 +289,7 @@ ReadVariableToList (
 **/
 BOOLEAN
 ExistNormalEfiVarOrNot (
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**
@@ -345,7 +345,7 @@ CopyTimeBasedVariableToBinary (
 UINT32
 ReadTimeBasedVariableToList (
   IN      UINT8             *Binary,
-  IN      LIST_ENTRY        *StorageListEntry
+  IN      UEFI_LIST_ENTRY        *StorageListEntry
   );
 
 /**
@@ -356,7 +356,7 @@ ReadTimeBasedVariableToList (
 **/
 BOOLEAN
 ExistTimeBasedEfiVarOrNot (
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**
@@ -400,7 +400,7 @@ CopyMonotonicBasedVariableToBinary (
 UINT32
 ReadMonotonicBasedVariableToList (
   IN      UINT8             *Binary,
-  IN      LIST_ENTRY        *StorageListEntry
+  IN      UEFI_LIST_ENTRY        *StorageListEntry
   );
 
 /**
@@ -411,7 +411,7 @@ ReadMonotonicBasedVariableToList (
 **/
 BOOLEAN
 ExistMonotonicBasedEfiVarOrNot (
-  IN  LIST_ENTRY  *StorageListHead
+  IN  UEFI_LIST_ENTRY  *StorageListHead
   );
 
 /**

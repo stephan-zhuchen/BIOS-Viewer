@@ -48,7 +48,7 @@ namespace BaseLibrarySpace {
         return *(UINT64*)value;
     }
 
-    INT8 Buffer::getINT8() {
+    CHAR8 Buffer::getINT8() {
         buffer->seekg(offset, ios::beg);
         offset += 1;
         char value{};
@@ -317,16 +317,16 @@ namespace BaseLibrarySpace {
     * @note If `hasZeroEnding` is true, the length of the resulting string will be `length + 1`.
     * @note It is the caller's responsibility to ensure that the resulting string does not exceed the maximum size limit of a string.
     */
-    string charToString(const INT8* address, INT64 length, bool hasZeroEnding) {
-        INT8 *cStr;
+    string charToString(const CHAR8* address, INT64 length, bool hasZeroEnding) {
+        CHAR8 *cStr;
         if (hasZeroEnding)
-            cStr = new INT8[length];
+            cStr = new CHAR8[length];
         else {
-            cStr = new INT8[length + 1];
+            cStr = new CHAR8[length + 1];
             cStr[length] = 0x0;
         }
         for (int var = 0; var < length; ++var) {
-            cStr[var] = *(INT8*)(address + var);
+            cStr[var] = *(CHAR8*)(address + var);
         }
         string result = cStr;
         delete[] cStr;
@@ -357,7 +357,7 @@ namespace BaseLibrarySpace {
         for (int var = 0; var < charSize; ++var) {
             charAddress[var] = (UINT8)*(wcharAddress + var);
         }
-        string str = (INT8*)charAddress;
+        string str = (CHAR8*)charAddress;
         delete[] charAddress;
         return str;
     }
@@ -384,7 +384,7 @@ namespace BaseLibrarySpace {
         for (int var = 0; var < charSize; ++var) {
             charAddress[var] = (UINT8)*(wcharAddress + var);
         }
-        string str = (INT8*)charAddress;
+        string str = (CHAR8*)charAddress;
         delete[] charAddress;
         return str;
     }
@@ -517,7 +517,7 @@ namespace BaseLibrarySpace {
     */
     void saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size) {
         ofstream outFile(filename, ios::out | ios::binary);
-        outFile.write((INT8*)(address + offset), size);
+        outFile.write((CHAR8*)(address + offset), size);
         outFile.close();
     }
 }

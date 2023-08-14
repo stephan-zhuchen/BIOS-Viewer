@@ -387,7 +387,7 @@ namespace UefiSpace {
 
         ss << "BGUP_HEADER\n";
         ss << setw(width) << "Version:"          << hex << uppercase << BgupHeader.Version << "h\n"
-            << setw(width) << "PlatId:"           << hex << uppercase << charToString((INT8*)BgupHeader.PlatId, 16) << "\n"
+            << setw(width) << "PlatId:"           << hex << uppercase << charToString((CHAR8*)BgupHeader.PlatId, 16) << "\n"
             << setw(width) << "PkgAttributes:"    << hex << uppercase << BgupHeader.PkgAttributes << "h\n"
             << setw(width) << "PslMajorVer:"      << hex << uppercase << BgupHeader.PslMajorVer << "h\n"
             << setw(width) << "PslMinorVer:"      << hex << uppercase << BgupHeader.PslMinorVer << "h\n"

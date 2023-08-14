@@ -35,10 +35,10 @@ UINT32 mEfiVariableAddr        = 0;
 
 UQI_PARAM_LIST           *mUqiList = NULL;
 UQI_PARAM_LIST           *mLastUqiList = NULL;
-LIST_ENTRY               mVarListEntry;
-LIST_ENTRY               mBfvVarListEntry;
-LIST_ENTRY               mAllVarListEntry;
-LIST_ENTRY               mFormSetListEntry;
+UEFI_LIST_ENTRY               mVarListEntry;
+UEFI_LIST_ENTRY               mBfvVarListEntry;
+UEFI_LIST_ENTRY               mAllVarListEntry;
+UEFI_LIST_ENTRY               mFormSetListEntry;
 
 //
 // Store GUIDed Section guid->tool mapping

@@ -50,7 +50,7 @@ GetValueByName (
   IN OUT CHAR16              **Value
   )
 {
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   NAME_VALUE_NODE         *Node;
 
   *Value = NULL;
@@ -511,7 +511,7 @@ IdToQuestion2 (
   IN UINT16             QuestionId
   )
 {
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   FORM_BROWSER_STATEMENT  *Question;
 
   if (QuestionId == 0) {
@@ -554,7 +554,7 @@ IdToQuestion (
   IN UINT16                QuestionId
   )
 {
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   FORM_BROWSER_STATEMENT  *Question;
 
   //
@@ -600,7 +600,7 @@ RuleIdToExpression (
   IN UINT8              RuleId
   )
 {
-  LIST_ENTRY       *Link;
+  UEFI_LIST_ENTRY       *Link;
   FORM_EXPRESSION  *Expression;
 
   Link = GetFirstNode (&Form->ExpressionListHead);
@@ -1502,7 +1502,7 @@ EvaluateExpression (
   )
 {
   EFI_STATUS              Status;
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   EXPRESSION_OPCODE       *OpCode;
   FORM_BROWSER_STATEMENT  *Question;
   FORM_BROWSER_STATEMENT  *Question2;
@@ -1515,7 +1515,7 @@ EvaluateExpression (
   INTN                    Result;
   CHAR16                  *StrPtr;
   UINT32                  TempValue;
-  LIST_ENTRY              *SubExpressionLink;
+  UEFI_LIST_ENTRY              *SubExpressionLink;
   FORM_EXPRESSION         *SubExpression;
   UINTN                   StackOffset;
   UINTN                   TempLength;

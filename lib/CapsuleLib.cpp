@@ -772,7 +772,7 @@ namespace CapsuleToolSpace {
 
     string BgupHeaderClass::getPlatId() const
     {
-        return charToString((INT8*)BgupHeader.PlatId, 16);
+        return charToString((CHAR8*)BgupHeader.PlatId, 16);
     }
 
     BgupHeaderClass::~BgupHeaderClass() {

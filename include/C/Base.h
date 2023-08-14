@@ -237,16 +237,11 @@ typedef struct {
 typedef UINT64 PHYSICAL_ADDRESS;
 
 ///
-/// LIST_ENTRY structure definition.
-///
-typedef struct _LIST_ENTRY LIST_ENTRY;
-
-///
 /// _LIST_ENTRY structure definition.
 ///
-struct _LIST_ENTRY {
-  LIST_ENTRY    *ForwardLink;
-  LIST_ENTRY    *BackLink;
+struct UEFI_LIST_ENTRY {
+  UEFI_LIST_ENTRY    *ForwardLink;
+  UEFI_LIST_ENTRY    *BackLink;
 };
 
 //
@@ -314,7 +309,7 @@ struct _LIST_ENTRY {
 ///
 /// Maximum values for common UEFI Data Types
 ///
-#define MAX_INT8    ((INT8)0x7F)
+#define MAX_INT8    ((CHAR8)0x7F)
 #define MAX_UINT8   ((UINT8)0xFF)
 #define MAX_INT16   ((INT16)0x7FFF)
 #define MAX_UINT16  ((UINT16)0xFFFF)
@@ -328,7 +323,7 @@ struct _LIST_ENTRY {
 ///
 /// Minimum values for the signed UEFI Data Types
 ///
-#define MIN_INT8   (((INT8)  -127) - 1)
+#define MIN_INT8   (((CHAR8)  -127) - 1)
 #define MIN_INT16  (((INT16) -32767) - 1)
 #define MIN_INT32  (((INT32) -2147483647) - 1)
 #define MIN_INT64  (((INT64) -9223372036854775807LL) - 1)
@@ -796,7 +791,7 @@ typedef UINTN *BASE_LIST;
 //
 
 STATIC_ASSERT (sizeof (BOOLEAN) == 1, "sizeof (BOOLEAN) does not meet UEFI Specification Data Type requirements");
-STATIC_ASSERT (sizeof (INT8)    == 1, "sizeof (INT8) does not meet UEFI Specification Data Type requirements");
+STATIC_ASSERT (sizeof (CHAR8)    == 1, "sizeof (CHAR8) does not meet UEFI Specification Data Type requirements");
 STATIC_ASSERT (sizeof (UINT8)   == 1, "sizeof (UINT8) does not meet UEFI Specification Data Type requirements");
 STATIC_ASSERT (sizeof (INT16)   == 2, "sizeof (INT16) does not meet UEFI Specification Data Type requirements");
 STATIC_ASSERT (sizeof (UINT16)  == 2, "sizeof (UINT16) does not meet UEFI Specification Data Type requirements");

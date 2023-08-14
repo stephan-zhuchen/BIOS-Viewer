@@ -298,7 +298,7 @@ namespace CapsuleToolSpace {
     class FitTableClass {
     private:
         INT64  Address{};
-        INT8*  Size{};
+        CHAR8* Size{};
         UINT8  Rsvd{};
         UINT16 Version{};
         UINT8  Type{};

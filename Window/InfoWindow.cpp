@@ -83,7 +83,7 @@ void InfoWindow::showFitTab() {
     QTableWidgetItem    *item;
     FIRMWARE_INTERFACE_TABLE_ENTRY  FitHeader = BiosImage->FitTable->FitHeader;
     UINT64 address = FitHeader.Address;
-    QString FitSignature = QString::fromStdString(charToString((INT8*)&address, sizeof(UINT64), false));
+    QString FitSignature = QString::fromStdString(charToString((CHAR8*)&address, sizeof(UINT64), false));
     INT32 FitNum = BiosImage->FitTable->FitEntryNum;
 
     ui->tableWidget->setColumnCount(6);

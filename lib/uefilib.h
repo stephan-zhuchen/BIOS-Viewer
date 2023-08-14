@@ -65,7 +65,7 @@ namespace UefiSpace {
         [[nodiscard]] UINT16 getUINT16(INT64 offset);
         [[nodiscard]] UINT32 getUINT32(INT64 offset);
         [[nodiscard]] UINT64 getUINT64(INT64 offset);
-        [[nodiscard]] INT8   getINT8(INT64 offset);
+        [[nodiscard]] CHAR8  getINT8(INT64 offset);
         [[nodiscard]] INT16  getINT16(INT64 offset);
         [[nodiscard]] INT32  getINT24(INT64 offset);
         [[nodiscard]] INT32  getINT32(INT64 offset);
@@ -196,7 +196,7 @@ namespace UefiSpace {
         FirmwareVolume(UINT8* fv, INT64 length, INT64 offset, bool empty=false, bool Compressed=false);
         ~FirmwareVolume() override;
 
-        [[nodiscard]] GUID getFvGuid(bool returnExt=true) const;
+        [[nodiscard]] BaseLibrarySpace::GUID getFvGuid(bool returnExt=true) const;
         void decodeFfs(bool multiThread=false);
         [[nodiscard]] INT64 getHeaderSize() const override;
         void setInfoStr() override;

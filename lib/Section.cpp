@@ -181,9 +181,9 @@ namespace UefiSpace {
         }
         ValidFlag = true;
         AcpiHeader = *(EFI_ACPI_DESCRIPTION_HEADER*)fv;
-        AcpiTableSignature = charToString((INT8*)fv, sizeof(UINT32), false);
-        AcpiTableOemID = charToString((INT8*)&AcpiHeader.OemId, sizeof(UINT32), false);
-        AcpiTableOemTableID = charToString((INT8*)&AcpiHeader.OemTableId, sizeof(UINT32), false);
+        AcpiTableSignature = charToString((CHAR8*)fv, sizeof(UINT32), false);
+        AcpiTableOemID = charToString((CHAR8*)&AcpiHeader.OemId, sizeof(UINT32), false);
+        AcpiTableOemTableID = charToString((CHAR8*)&AcpiHeader.OemTableId, sizeof(UINT32), false);
     }
 
     ACPI_Class::~ACPI_Class() = default;
@@ -215,8 +215,8 @@ namespace UefiSpace {
         ss << setw(width) << "Signature:"   << AcpiTableSignature << "\n"
            << setw(width) << "Length:"      << hex << uppercase << AcpiHeader.Length << "h\n"
            << setw(width) << "Revision:"    << hex << uppercase << (UINT16)AcpiHeader.Revision << "h\n"
-           << setw(width) << "OemId:"       << charToString((INT8*)&AcpiHeader.OemId, 6, false) << "\n"
-           << setw(width) << "OemTableId:"  << charToString((INT8*)&AcpiHeader.OemTableId, 8, false) << "\n";
+           << setw(width) << "OemId:"       << charToString((CHAR8*)&AcpiHeader.OemId, 6, false) << "\n"
+           << setw(width) << "OemTableId:"  << charToString((CHAR8*)&AcpiHeader.OemTableId, 8, false) << "\n";
 
         InfoStr = QString::fromStdString(ss.str());
     }

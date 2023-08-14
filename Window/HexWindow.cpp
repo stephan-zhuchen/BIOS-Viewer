@@ -91,7 +91,7 @@ void HexViewWindow::ActionGotoTriggered() const {
 }
 
 void HexViewWindow::loadBuffer(UINT8 *image, INT64 imageLength) {
-    hexBuffer = QByteArray((INT8*)image, imageLength);
+    hexBuffer = QByteArray((CHAR8*)image, imageLength);
     if (setting.value("EnableHexEditing").toString() == "false") {
         m_hexview->setReadOnly(true);
     }

@@ -42,10 +42,10 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
     } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_V ) {
         PasteToContent();
     } else if ((event ->modifiers() & Qt::ControlModifier) == 0 && event->key() >= Qt::Key_0 && event->key() <= Qt::Key_9) {
-        inputKey = static_cast<INT8>((event->key() - Qt::Key_0) & 0xF);
+        inputKey = static_cast<CHAR8>((event->key() - Qt::Key_0) & 0xF);
         binaryEdit(inputKey);
     } else if ((event ->modifiers() & Qt::ControlModifier) == 0 && event->key() >= Qt::Key_A && event->key() <= Qt::Key_F) {
-        inputKey = static_cast<INT8>((event->key() - 0x37) & 0xF);
+        inputKey = static_cast<CHAR8>((event->key() - 0x37) & 0xF);
         binaryEdit(inputKey);
     }
 

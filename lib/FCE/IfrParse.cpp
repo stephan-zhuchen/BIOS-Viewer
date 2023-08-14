@@ -34,8 +34,8 @@ FORM_EXPRESSION  *mGrayOutExpression;
 FORM_EXPRESSION  *mDisableExpression;
 
 extern MULTI_PLATFORM_PARAMETERS   mMultiPlatformParam;
-extern LIST_ENTRY                  mVarListEntry;
-extern LIST_ENTRY                  mFormSetListEntry;
+extern UEFI_LIST_ENTRY                  mVarListEntry;
+extern UEFI_LIST_ENTRY                  mFormSetListEntry;
 extern UINT32                      mFormSetOrderParse;
 
 #define FORM_SET_GUID_PREFIX    "Form Set GUID: "
@@ -467,7 +467,7 @@ CompareUqiHeader (
 
 
 /**
-  Check whether existed a same variable in the LIST_ENTRY.
+  Check whether existed a same variable in the UEFI_LIST_ENTRY.
 
   @param  CurVarList        A pointer to a variable node.
 
@@ -478,13 +478,13 @@ CompareUqiHeader (
 static
 FORMSET_STORAGE *
 NotSameVariableInVarList (
-  IN  LIST_ENTRY         *VariableListEntry,
+  IN  UEFI_LIST_ENTRY         *VariableListEntry,
   IN  FORMSET_STORAGE    *StorageNode
   )
 {
   FORMSET_STORAGE    *CurNode;
-  LIST_ENTRY         *Link;
-  LIST_ENTRY         *StorageListHead;
+  UEFI_LIST_ENTRY         *Link;
+  UEFI_LIST_ENTRY         *StorageListHead;
 
   StorageListHead       =  VariableListEntry;
   CurNode               = nullptr;
@@ -931,7 +931,7 @@ Done:
 
   @param  FormSet        The pointer to the formset.
   @param  FormSet        The pointer to the form.
-  @param  ListEntry      The pointer to the LIST_ENTRY.
+  @param  ListEntry      The pointer to the UEFI_LIST_ENTRY.
 
   @return EFI_SUCCESS
   @return EFI_NOT_FOUND  If not find the the variable, or the variable doesn't belong to EfiVarStore or VarStore.
@@ -941,12 +941,12 @@ EFI_STATUS
 GetGuidNameByVariableId (
   IN       FORM_BROWSER_FORMSET    *FormSet,
   IN  OUT  FORM_BROWSER_STATEMENT  *Question,
-  IN       LIST_ENTRY              *ListEntry
+  IN       UEFI_LIST_ENTRY              *ListEntry
   )
 {
   FORMSET_STORAGE    *CurNode;
-  LIST_ENTRY         *Link;
-  LIST_ENTRY         *StorageListHead;
+  UEFI_LIST_ENTRY         *Link;
+  UEFI_LIST_ENTRY         *StorageListHead;
   EFI_STATUS         Status;
   CHAR16             *EfiVariableName;
 
@@ -1049,7 +1049,7 @@ GetGuidNameByVariableId (
   @param  HiiObjList       The pointer to the Question
   @param  VarName          The EFI variable name need to be updated to VarList
   @param  Offset           The offset of the variable
-  @param  StorageListHead  The pointer to the LIST_ENTRY of Storage
+  @param  StorageListHead  The pointer to the UEFI_LIST_ENTRY of Storage
   @param  Vaue             The value in that value offset of the variable
   @param  VarList          The dual pointer of Varlist
 
@@ -1061,13 +1061,13 @@ SearchVarStorage (
   IN     FORM_BROWSER_STATEMENT   *Question,
   IN     CHAR16*                  VarName,
   IN     UINT32                   Offset,
-  IN     LIST_ENTRY               *StorageListHead,
+  IN     UEFI_LIST_ENTRY               *StorageListHead,
   IN OUT CHAR8                    **Value,
   IN OUT FORMSET_STORAGE          **VarList
   )
 {
   FORMSET_STORAGE   *CurNode;
-  LIST_ENTRY        *Link;
+  UEFI_LIST_ENTRY        *Link;
   BOOLEAN           FindOrNot;
 
   CurNode         = nullptr;
@@ -1275,7 +1275,7 @@ CreateQuestion (
 {
   FORM_BROWSER_STATEMENT   *Statement;
   EFI_IFR_QUESTION_HEADER  *QuestionHdr;
-  LIST_ENTRY               *Link;
+  UEFI_LIST_ENTRY               *Link;
   FORMSET_STORAGE          *Storage;
   NAME_VALUE_NODE          *NameValueNode;
 
@@ -1399,9 +1399,9 @@ DestroyExpression (
   IN FORM_EXPRESSION   *Expression
   )
 {
-  LIST_ENTRY         *Link;
+  UEFI_LIST_ENTRY         *Link;
   EXPRESSION_OPCODE  *OpCode;
-  LIST_ENTRY         *SubExpressionLink;
+  UEFI_LIST_ENTRY         *SubExpressionLink;
   FORM_EXPRESSION    *SubExpression;
 
   while (!IsListEmpty (&Expression->OpCodeListHead)) {
@@ -1445,7 +1445,7 @@ DestroyStorage (
   IN FORMSET_STORAGE   *Storage
   )
 {
-  LIST_ENTRY         *Link;
+  UEFI_LIST_ENTRY         *Link;
   NAME_VALUE_NODE    *NameValueNode;
 
   if (Storage == nullptr) {
@@ -1481,17 +1481,17 @@ DestroyStorage (
 }
 
 /**
-  Free resources allocated for all Storage in an LIST_ENTRY.
+  Free resources allocated for all Storage in an UEFI_LIST_ENTRY.
 
   @param  FormSet                Pointer of the FormSet
 
 **/
 VOID
 DestroyAllStorage (
-  IN LIST_ENTRY    *StorageEntryListHead
+  IN UEFI_LIST_ENTRY    *StorageEntryListHead
   )
 {
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   FORMSET_STORAGE         *Storage;
   //
   // Parse Fromset one by one
@@ -1521,7 +1521,7 @@ DestroyStatement (
   IN OUT FORM_BROWSER_STATEMENT  *Statement
   )
 {
-  LIST_ENTRY        *Link;
+  UEFI_LIST_ENTRY        *Link;
   QUESTION_DEFAULT  *Default;
   QUESTION_OPTION   *Option;
   FORM_EXPRESSION   *Expression;
@@ -1604,7 +1604,7 @@ DestroyForm (
   IN OUT FORM_BROWSER_FORM     *Form
   )
 {
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   FORM_EXPRESSION         *Expression;
   FORM_BROWSER_STATEMENT  *Statement;
 
@@ -1648,7 +1648,7 @@ DestroyFormSet (
   IN FORM_BROWSER_FORMSET  *FormSet
   )
 {
-  LIST_ENTRY            *Link;
+  UEFI_LIST_ENTRY            *Link;
   FORMSET_DEFAULTSTORE  *DefaultStore;
   FORM_EXPRESSION       *Expression;
   FORM_BROWSER_FORM     *Form;
@@ -1714,17 +1714,17 @@ DestroyFormSet (
 }
 
 /**
-  Free resources allocated for all FormSet in an LIST_ENTRY.
+  Free resources allocated for all FormSet in an UEFI_LIST_ENTRY.
 
   @param  FormSet                Pointer of the FormSet
 
 **/
 VOID
 DestroyAllFormSet (
-  IN LIST_ENTRY    *FormSetEntryListHead
+  IN UEFI_LIST_ENTRY    *FormSetEntryListHead
   )
 {
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   FORM_BROWSER_FORMSET    *FormSet;
   //
   // Parse Fromset one by one
@@ -1859,13 +1859,13 @@ ParseOpCodes (
   BOOLEAN                 InScopeDefault;
   EFI_HII_VALUE           *Value;
   UINT8                   MapScopeDepth;
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   FORMSET_STORAGE         *VarStorage;
-  LIST_ENTRY              *MapExpressionList;
+  UEFI_LIST_ENTRY              *MapExpressionList;
   EFI_VARSTORE_ID         TempVarstoreId;
   BOOLEAN                 ConstantFlag;
   FORMSET_DEFAULTSTORE    *PreDefaultStore;
-  LIST_ENTRY              *DefaultLink;
+  UEFI_LIST_ENTRY              *DefaultLink;
   BOOLEAN                 HaveInserted;
   BOOLEAN                 BitFieldStorage;
   UINT16                  TotalBits;
@@ -3324,7 +3324,7 @@ ValueToOption (
   IN EFI_HII_VALUE            *OptionValue
   )
 {
-  LIST_ENTRY       *Link;
+  UEFI_LIST_ENTRY       *Link;
   QUESTION_OPTION  *Option;
 
   Link = GetFirstNode (&Question->OptionListHead);
@@ -3405,7 +3405,7 @@ GetQuestionDefault (
   )
 {
   EFI_STATUS              Status;
-  LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *Link;
   QUESTION_DEFAULT        *Default;
   QUESTION_OPTION         *Option;
   EFI_HII_VALUE           *HiiValue;
@@ -3415,7 +3415,7 @@ GetQuestionDefault (
   BOOLEAN                 ConstantFlag;
   UINT16                  OriginalDefaultId;
   FORMSET_DEFAULTSTORE    *DefaultStore;
-  LIST_ENTRY              *DefaultLink;
+  UEFI_LIST_ENTRY              *DefaultLink;
   CHAR16                  *VarDefaultName;
 
   VarDefaultName  = nullptr;
@@ -3774,9 +3774,9 @@ ExtractDefault (
   )
 {
   EFI_STATUS              Status;
-  LIST_ENTRY              *FormLink;
-  LIST_ENTRY              *Link;
-  LIST_ENTRY              *FormSetEntryListHead;
+  UEFI_LIST_ENTRY              *FormLink;
+  UEFI_LIST_ENTRY              *Link;
+  UEFI_LIST_ENTRY              *FormSetEntryListHead;
   FORM_BROWSER_STATEMENT  *Question;
   //
   // Check the supported setting level.
@@ -3965,7 +3965,7 @@ PrintOneOfOptions (
   IN  FORM_BROWSER_STATEMENT  *Question
   )
 {
-  LIST_ENTRY       *Link;
+  UEFI_LIST_ENTRY       *Link;
   QUESTION_OPTION  *Option;
   CHAR16           *VarDefaultName;
   EFI_STATUS       Status;
@@ -4576,9 +4576,9 @@ CheckFormSetOrFormNull (
   IN  BOOLEAN                  IsFormSet
   )
 {
-  LIST_ENTRY              *FormLink;
+  UEFI_LIST_ENTRY              *FormLink;
   FORM_BROWSER_STATEMENT  *Question;
-  LIST_ENTRY              *QuestionLink;
+  UEFI_LIST_ENTRY              *QuestionLink;
 
   FormLink     = nullptr;
   Question     = nullptr;
@@ -4697,20 +4697,20 @@ CheckFormSetOrFormNull (
 **/
 EFI_STATUS
 PrintInfoInAllFormset (
-  IN LIST_ENTRY      *FormSetEntryListHead,
-  IN LIST_ENTRY      *StorageEntryListHead
+  IN UEFI_LIST_ENTRY      *FormSetEntryListHead,
+  IN UEFI_LIST_ENTRY      *StorageEntryListHead
   )
 {
   EFI_STATUS              Status;
   FORM_BROWSER_FORMSET    *FormSet;
-  LIST_ENTRY              *FormSetLink;
-  LIST_ENTRY              *FormLink;
+  UEFI_LIST_ENTRY              *FormSetLink;
+  UEFI_LIST_ENTRY              *FormLink;
   FORM_BROWSER_FORM       *Form;
   FORM_BROWSER_STATEMENT  *Question;
-  LIST_ENTRY              *QuestionLink;
+  UEFI_LIST_ENTRY              *QuestionLink;
   FORMSET_STORAGE         *Storage;
   CHAR8                   *VarBuffer;
-  LIST_ENTRY              *TempStorageLink;
+  UEFI_LIST_ENTRY              *TempStorageLink;
   UINT32                  Index;
   BOOLEAN                 Skip;
   BOOLEAN                 ConstantFlag;

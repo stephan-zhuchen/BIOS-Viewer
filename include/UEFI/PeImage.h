@@ -667,11 +667,11 @@ typedef struct {
 //
 // .pdata entries for X64
 //
-typedef struct {
-  UINT32  FunctionStartAddress;
-  UINT32  FunctionEndAddress;
-  UINT32  UnwindInfoAddress;
-} RUNTIME_FUNCTION;
+//typedef struct {
+//  UINT32  FunctionStartAddress;
+//  UINT32  FunctionEndAddress;
+//  UINT32  UnwindInfoAddress;
+//} RUNTIME_FUNCTION;
 
 typedef struct {
   UINT8  Version:3;

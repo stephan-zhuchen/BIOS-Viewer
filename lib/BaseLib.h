@@ -42,7 +42,7 @@ namespace BaseLibrarySpace {
         UINT16 getUINT16();
         UINT32 getUINT32();
         UINT64 getUINT64();
-        INT8   getINT8();
+        CHAR8  getINT8();
         INT16  getINT16();
         INT32  getINT24();
         INT32  getINT32();
@@ -97,7 +97,7 @@ namespace BaseLibrarySpace {
 
     void   Align(INT64& address, INT64 RelativeAddress, INT64 alignment);
     INT64  adjustBufferAddress(INT64 FullLength, INT64 offset, INT64 length);
-    string charToString(const INT8* address, INT64 length, bool hasZeroEnding=false);
+    string charToString(const CHAR8* address, INT64 length, bool hasZeroEnding=false);
     string wcharToString(const CHAR16* address, INT64 length, bool hasZeroEnding=false);
     string wstringToString(CHAR16* wcharAddress);
     UINT8  CalculateSum8(const UINT8 *Buffer, INT64 Size);

@@ -694,9 +694,9 @@ FceAllocateCopyPool (
   @return ListHead
 
 **/
-LIST_ENTRY *
+UEFI_LIST_ENTRY *
 InitializeListHead (
-    IN OUT  LIST_ENTRY                *ListHead
+    IN OUT  UEFI_LIST_ENTRY                *ListHead
     );
 
 /**
@@ -721,10 +721,10 @@ InitializeListHead (
   @return ListHead
 
 **/
-LIST_ENTRY *
+UEFI_LIST_ENTRY *
 InsertHeadList (
-    IN OUT  LIST_ENTRY                *ListHead,
-    IN OUT  LIST_ENTRY                *Entry
+    IN OUT  UEFI_LIST_ENTRY                *ListHead,
+    IN OUT  UEFI_LIST_ENTRY                *Entry
     );
 
 /**
@@ -749,10 +749,10 @@ InsertHeadList (
   @return ListHead
 
 **/
-LIST_ENTRY *
+UEFI_LIST_ENTRY *
 InsertTailList (
-    IN OUT  LIST_ENTRY                *ListHead,
-    IN OUT  LIST_ENTRY                *Entry
+    IN OUT  UEFI_LIST_ENTRY                *ListHead,
+    IN OUT  UEFI_LIST_ENTRY                *Entry
     );
 
 /**
@@ -775,9 +775,9 @@ InsertTailList (
   @retval NULL  The list is empty.
 
 **/
-LIST_ENTRY *
+UEFI_LIST_ENTRY *
 GetFirstNode (
-    IN      CONST LIST_ENTRY          *List
+    IN      CONST UEFI_LIST_ENTRY          *List
     );
 
 /**
@@ -801,10 +801,10 @@ GetFirstNode (
   @return A pointer to the next node if one exists. Otherwise List is returned.
 
 **/
-LIST_ENTRY *
+UEFI_LIST_ENTRY *
 GetNextNode (
-    IN      CONST LIST_ENTRY          *List,
-    IN      CONST LIST_ENTRY          *Node
+    IN      CONST UEFI_LIST_ENTRY          *List,
+    IN      CONST UEFI_LIST_ENTRY          *Node
     );
 
 /**
@@ -828,10 +828,10 @@ GetNextNode (
   @return A pointer to the previous node if one exists. Otherwise List is returned.
 
 **/
-LIST_ENTRY *
+UEFI_LIST_ENTRY *
 GetPreviousNode (
-    IN      CONST LIST_ENTRY          *List,
-    IN      CONST LIST_ENTRY          *Node
+    IN      CONST UEFI_LIST_ENTRY          *List,
+    IN      CONST UEFI_LIST_ENTRY          *Node
     );
 
 /**
@@ -855,7 +855,7 @@ GetPreviousNode (
 **/
 BOOLEAN
 IsListEmpty (
-    IN      CONST LIST_ENTRY          *ListHead
+    IN      CONST UEFI_LIST_ENTRY          *ListHead
     );
 
 /**
@@ -886,8 +886,8 @@ IsListEmpty (
 **/
 BOOLEAN
 IsNull (
-    IN      CONST LIST_ENTRY          *List,
-    IN      CONST LIST_ENTRY          *Node
+    IN      CONST UEFI_LIST_ENTRY          *List,
+    IN      CONST UEFI_LIST_ENTRY          *Node
     );
 
 /**
@@ -915,8 +915,8 @@ IsNull (
 **/
 BOOLEAN
 IsNodeAtEnd (
-    IN      CONST LIST_ENTRY          *List,
-    IN      CONST LIST_ENTRY          *Node
+    IN      CONST UEFI_LIST_ENTRY          *List,
+    IN      CONST UEFI_LIST_ENTRY          *Node
     );
 
 /**
@@ -940,9 +940,9 @@ IsNodeAtEnd (
   @return Entry.
 
 **/
-LIST_ENTRY *
+UEFI_LIST_ENTRY *
 RemoveEntryList (
-    IN      CONST LIST_ENTRY          *Entry
+    IN      CONST UEFI_LIST_ENTRY          *Entry
     );
 
 /**

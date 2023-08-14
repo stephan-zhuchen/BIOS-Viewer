@@ -100,7 +100,7 @@ std::string Elf::getStringFromOffset(UINT32 off) const {
         }
         StrSize += 1;
     }
-    return BaseLibrarySpace::charToString((INT8*)StrOff, (INT64)StrSize);
+    return BaseLibrarySpace::charToString((CHAR8*)StrOff, (INT64)StrSize);
 }
 
 void Elf::setInfoStr() {
