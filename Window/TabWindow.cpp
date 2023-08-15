@@ -1,5 +1,6 @@
-#include <QTextBrowser>
 #include <QKeyEvent>
+#include <QLineEdit>
+#include <QPushButton>
 #include "TabWindow.h"
 #include "ui_TabWindow.h"
 
@@ -10,9 +11,7 @@ TabWindow::TabWindow(QWidget *parent) :
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
     verticalLayout = new QVBoxLayout(this);
-    verticalLayout->setObjectName("verticalLayout");
     tabWidget = new QTabWidget(this);
-    tabWidget->setObjectName("tabWidget");
     tabWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
 
     QSettings windowSettings("Intel", "BiosViewer");
@@ -38,6 +37,7 @@ void TabWindow::SetNewTabAndText(const QString& tabName, const QString& txt) {
     TabTextBrowser->setLineWrapMode(QTextEdit::NoWrap);
     TabTextBrowser->setText(txt);
     TabTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+
     LayoutInThisTab->addWidget(TabTextBrowser);
     tabWidget->addTab(NewTab, QString());
     tabWidget->setTabText(tabWidget->indexOf(NewTab), tabName);
@@ -56,4 +56,22 @@ void TabWindow::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) {
         this->close();
     }
+}
+
+TabSearchDialog::TabSearchDialog(QTextBrowser *textBrowser, QWidget *parent) : QDialog(parent), TabTextBrowser(textBrowser) {
+    QVBoxLayout *layout = new QVBoxLayout;
+
+    QLineEdit *searchLineEdit = new QLineEdit;
+    QPushButton *searchButton = new QPushButton("Search");
+
+    layout->addWidget(searchLineEdit);
+    layout->addWidget(searchButton);
+
+    setLayout(layout);
+
+    connect(searchButton, &QPushButton::clicked, this, [this, searchLineEdit]() {
+        QString searchText = searchLineEdit->text();
+        TabTextBrowser->find(searchText);
+        accept();
+    });
 }

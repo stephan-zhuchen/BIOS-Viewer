@@ -277,6 +277,14 @@ void StartWindow::OpenBuffer(UINT8* data, UINT64 length, const QString& path, bo
 }
 
 void StartWindow::showHintWindow() {
+    ui->actionReplace_BIOS->setEnabled(false);
+    ui->actionExtract_BIOS->setEnabled(false);
+    ui->actionExtract_Binary->setEnabled(false);
+    ui->actionSeperate_Binary->setEnabled(false);
+    ui->actionCollapse->setEnabled(false);
+    ui->actionSearch->setEnabled(false);
+    ui->actionGoto->setEnabled(false);
+
     auto *centralWidget = new QWidget(this);
     auto *HintLabel = new QLabel("Drag and drop or \"Start -> Open\" any File");
     HintLabel->setStyleSheet("color:grey;");
@@ -288,6 +296,11 @@ void StartWindow::showHintWindow() {
 }
 
 void StartWindow::showTabWindow() {
+    ui->actionExtract_Binary->setEnabled(true);
+    ui->actionSeperate_Binary->setEnabled(true);
+    ui->actionSearch->setEnabled(true);
+    ui->actionGoto->setEnabled(true);
+
     auto *centralWidget = new QWidget(this);
     auto *StartLayout = new QVBoxLayout(centralWidget);
     StartLayout->setObjectName("StartLayout");
@@ -409,15 +422,25 @@ void StartWindow::ActionAboutQtTriggered() {
 }
 
 void StartWindow::ActionAboutBiosViewerTriggered() {
+    auto xorLambda = [](const QString& str, char key) -> QString {
+        QByteArray ba = QByteArray::fromHex(str.toLatin1());
+        for (int i = 0; i < ba.size(); i++)
+            ba[i] = ba[i] ^ key;
+        return QString(ba);
+    };
+
     QString strText= QString("<html>"
                              "<head/>"
                              "<body>"
-                             "<p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1</span></p>"
-                             "<p>Intel Internal Use Only</p>"
-                             "<p>Built on %2 by <span style=' font-weight:700; color:#00aaff;'>Zhu, Chen</p>"
+                             "<p><span style=' font-size:14pt; font-weight:700;'>%1</span></p>"
+                             "<p>%2</p>"
+                             "<p>Built on %3 by <span style=' font-weight:700; color:#00aaff;'>%4</p>"
                              "</body>"
-                             "</html>")
-            .arg(__BiosViewerVersion__, __DATE__);
+                             "</html>").arg(
+                                            xorLambda("181315097a0c333f2d3f287a6b7463", 0x5A),
+                                            xorLambda("13342e3f367a13342e3f28343b367a0f293f7a15343623", 0x5A),
+                                            __DATE__,
+                                            xorLambda("00322f767a19323f34", 0x5A));
     QMessageBox::about(this, tr("About BIOS Viewer"), strText);
 }
 
@@ -484,8 +507,27 @@ void StartWindow::ActionTabWidgetClose() {
 void StartWindow::CurrentTabChanged(int index) {
     if (index >= 0 && TabData.at(index)->CurrentWindow == WindowMode::BIOS) {
         ui->actionCollapse->setEnabled(true);
+        ui->actionSearch->setEnabled(true);
+        ui->actionGoto->setEnabled(true);
+        if (TabData.at(index)->InputImageSize == 0x2000000) {
+            ui->actionReplace_BIOS->setEnabled(true);
+            ui->actionExtract_BIOS->setEnabled(true);
+        } else {
+            ui->actionReplace_BIOS->setEnabled(false);
+            ui->actionExtract_BIOS->setEnabled(false);
+        }
     } else if (index >= 0 && TabData.at(index)->CurrentWindow == WindowMode::Hex) {
         ui->actionCollapse->setEnabled(false);
+        ui->actionReplace_BIOS->setEnabled(false);
+        ui->actionExtract_BIOS->setEnabled(false);
+        ui->actionSearch->setEnabled(true);
+        ui->actionGoto->setEnabled(true);
+    } else if (index >= 0 && TabData.at(index)->CurrentWindow == WindowMode::CAPSULE) {
+        ui->actionCollapse->setEnabled(false);
+        ui->actionReplace_BIOS->setEnabled(false);
+        ui->actionExtract_BIOS->setEnabled(false);
+        ui->actionSearch->setEnabled(false);
+        ui->actionGoto->setEnabled(false);
     }
 
     for (GeneralData *WindowData:TabData) {

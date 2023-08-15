@@ -216,12 +216,14 @@ void SearchDialog::AsciiCheckboxStateChanged(int state) {
         SearchAscii = true;
         ui->EndianBox->setEnabled(false);
         ui->CaseCheckbox->setEnabled(true);
+        ui->WideCheckbox->setEnabled(true);
         setting.setValue("SearchAscii", "true");
     }
     else if (state == Qt::Unchecked) {
         SearchAscii = false;
         ui->EndianBox->setEnabled(true);
         ui->CaseCheckbox->setEnabled(false);
+        ui->WideCheckbox->setEnabled(false);
         setting.setValue("SearchAscii", "false");
     }
 }

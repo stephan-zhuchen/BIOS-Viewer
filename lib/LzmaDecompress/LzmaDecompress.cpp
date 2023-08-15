@@ -175,7 +175,6 @@ LzmaUefiDecompressGetInfo (
                           (not in a valid compressed format).
 **/
 RETURN_STATUS
-//EFIAPI
 LzmaUefiDecompress (
   IN CONST VOID  *Source,
   IN UINTN       SourceSize,

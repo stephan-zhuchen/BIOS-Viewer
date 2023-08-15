@@ -556,7 +556,7 @@ namespace UefiSpace {
         string compressed = "No";
         if (this->isCompressed)
             compressed = "Yes";
-        ss << setw(width) << "Compressed:" << compressed;
+        ss << "\nCompressed: " << compressed;
         InfoStr = QString::fromStdString(guidInfo.str() +  ss.str());
     }
 
@@ -723,7 +723,7 @@ namespace UefiSpace {
         string compressed = "No";
         if (this->isCompressed)
             compressed = "Yes";
-        ss << setw(width) << "Compressed:" << compressed;
+        ss << "\nCompressed: " << compressed;
 
         InfoStr = QString::fromStdString(ss.str());
     }
@@ -902,7 +902,7 @@ namespace UefiSpace {
         string compressed = "No";
         if (this->isCompressed)
             compressed = "Yes";
-        ss << setw(width) << "Compressed:" << compressed;
+        ss << "\nCompressed: " << compressed;
 
         InfoStr = QString::fromStdString(ss.str());
     }
