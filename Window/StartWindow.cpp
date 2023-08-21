@@ -248,7 +248,13 @@ void StartWindow::OpenBuffer(UINT8* data, UINT64 length, const QString& path, bo
     QFileInfo FileInfo(path);
     bool onlyHex = DisableBiosViewer || onlyHexView;
     auto *tabWidget = new QMainWindow;
-    if (!onlyHex && BiosViewerWindow::TryOpenBios(newTabData->InputImage, newTabData->InputImageSize)) {
+    if (!onlyHex && CapsuleWindow::tryOpenCapsule(newTabData->InputImage, newTabData->InputImageSize)) {
+        // Show Capsule File
+        newTabData->CurrentWindow = WindowMode::CAPSULE;
+        newTabData->CapsuleViewerUi->setupUi(tabWidget, newTabData);
+        newTabData->CapsuleViewerUi->OpenFile(path);
+        MainTabWidget->addTab(tabWidget, FileInfo.fileName());
+    } else if (!onlyHex && BiosViewerWindow::TryOpenBios(newTabData->InputImage, newTabData->InputImageSize)) {
         // Show BIOS File
         newTabData->CurrentWindow = WindowMode::BIOS;
         newTabData->BiosViewerUi->setupUi(tabWidget, newTabData);
@@ -256,12 +262,6 @@ void StartWindow::OpenBuffer(UINT8* data, UINT64 length, const QString& path, bo
         ui->actionCollapse->setEnabled(true);
         ui->actionHex_View->setEnabled(true);
         ui->actionBios_View->setDisabled(true);
-        MainTabWidget->addTab(tabWidget, FileInfo.fileName());
-    } else if (!onlyHex && CapsuleWindow::tryOpenCapsule(newTabData->InputImage, newTabData->InputImageSize)) {
-        // Show Capsule File
-        newTabData->CurrentWindow = WindowMode::CAPSULE;
-        newTabData->CapsuleViewerUi->setupUi(tabWidget, newTabData);
-        newTabData->CapsuleViewerUi->OpenFile(path);
         MainTabWidget->addTab(tabWidget, FileInfo.fileName());
     } else {
         // Show Hex View
@@ -437,7 +437,7 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
                              "<p>Built on %3 by <span style=' font-weight:700; color:#00aaff;'>%4</p>"
                              "</body>"
                              "</html>").arg(
-                                            xorLambda("181315097a0c333f2d3f287a6b7463", 0x5A),
+                                            xorLambda("181315097a0c333f2d3f287a6b7463746b", 0x5A),
                                             xorLambda("13342e3f367a13342e3f28343b367a0f293f7a15343623", 0x5A),
                                             __DATE__,
                                             xorLambda("00322f767a19323f34", 0x5A));

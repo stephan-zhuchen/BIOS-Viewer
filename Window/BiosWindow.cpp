@@ -65,10 +65,16 @@ bool BiosViewerData::isValidBIOS(const UINT8 *image, INT64 imageLength) {
         }
     }
 
-    EFI_FIRMWARE_VOLUME_HEADER fvHeader = *(EFI_FIRMWARE_VOLUME_HEADER*)image;
-    if (FirmwareVolume::isValidFirmwareVolume(&fvHeader)) {
-        return true;
+    INT64 SearchOffset = 0;
+    INT64 SearchInterval = 0x1000;
+    while (SearchOffset <= imageLength - SearchInterval) {
+        EFI_FIRMWARE_VOLUME_HEADER fvHeader = *(EFI_FIRMWARE_VOLUME_HEADER*)(image + SearchOffset);
+        if (FirmwareVolume::isValidFirmwareVolume(&fvHeader)) {
+            return true;
+        }
+        SearchOffset += SearchInterval;
     }
+
     return false;
 }
 
@@ -141,7 +147,15 @@ void BiosViewerWindow::loadBios() {
         getBiosFlashmap.detach();
     }
     InputData->InputImageModel->modelData->InfoStr = InputData->BiosImage->InfoStr;
-    ui->titleInfomation->setText(QString::fromStdString(InputData->BiosImage->BiosID));
+
+    QString title;
+    if (InputData->BiosImage->BiosID == "") {
+        QFileInfo fileInfo(WindowData->OpenedFileName);
+        title = fileInfo.fileName();
+    } else
+        title = QString::fromStdString(InputData->BiosImage->BiosID);
+
+    ui->titleInfomation->setText(title);
     if (InputData->BiosImage->FitTable == nullptr)
         ui->infoButton->setVisible(false);
     else
