@@ -291,15 +291,17 @@ void CapsuleWindow::parseACMCapsuleInfo(INT64 offset, QString &labelMode, string
 
     //decode FFS for BtGAcmBgup.bin
     PayloadOffset = FfsFileHeader->Decode(*buffer, PayloadOffset + FfsDataSize, true, offset);
+    string PlatID;
     for (BgupConfig &config : ConfigIni->BgupList) {
         auto BgupHeader = make_shared<BgupHeaderClass>();
         BgupHeader->Decode(*buffer, PayloadOffset + config.BgupOffset, config.BgupSize, config.BgupContent);
         BgupHeaderVector.emplace_back(BgupHeader);
         addList(BgupHeader);
+        PlatID = BgupHeader->getPlatId();
     }
 
     CapsuleInfo << AcmInstance->getAcmVersion()
-                << "\n\nPlat ID: " << BgupHeader->getPlatId() << endl;
+                << "\n\nPlat ID: " << PlatID << endl;
 }
 
 void CapsuleWindow::parseEcCapsuleInfo(INT64 offset, QString &labelMode, stringstream &CapsuleInfo)
@@ -347,17 +349,19 @@ void CapsuleWindow::parseBiosCapsuleInfo(INT64& offset, QString& labelMode, stri
     //decode FFS for BiosBgup.bin
     FfsFileHeaderClass FfsFileHeaderBiosBgup;
     INT64 BiosBgupPayloadOffset = FfsFileHeaderBiosBgup.Decode(*buffer, ClientBiosPayloadOffset + ClientBiosPayloadSize, true, offset);
+    string PlatID;
     for (BgupConfig &config : ConfigIni->BgupList) {
         auto BgupHeader = make_shared<BgupHeaderClass>();
         BgupHeader->Decode(*buffer, BiosBgupPayloadOffset + config.BgupOffset, config.BgupSize, config.BgupContent);
         BgupHeaderVector.emplace_back(BgupHeader);
         addList(BgupHeader);
+        PlatID = BgupHeader->getPlatId();
     }
 
     offset = FfsFileHeaderBiosBgup.getSize() + BiosBgupPayloadOffset - FfsFileHeaderBiosBgup.getFfsHeaderSize();
 
     CapsuleInfo << "BIOS ID : " << BiosInstance->getBiosIDString()
-                << "\n\nPlat ID: " << BgupHeader->getPlatId() << endl;
+                << "\n\nPlat ID: " << PlatID << endl;
 }
 
 void CapsuleWindow::parseMonoCapsuleInfo(INT64& offset, QString &labelMode, stringstream &CapsuleInfo)
@@ -430,15 +434,17 @@ void CapsuleWindow::parseIfwiCapsuleInfo(INT64& offset, QString& labelMode, stri
     //decode FFS for IfwiBgup.bin
     FfsFileHeaderClass FfsFileHeaderIfwiBgup;
     INT64 BiosBgupPayloadOffset = FfsFileHeaderIfwiBgup.Decode(*buffer, IfwiPayloadOffset + IfwiPayloadSize);
+    string PlatID;
     for (BgupConfig &config : ConfigIni->BgupList) {
         auto BgupHeader = make_shared<BgupHeaderClass>();
         BgupHeader->Decode(*buffer, BiosBgupPayloadOffset + config.BgupOffset, config.BgupSize, config.BgupContent);
         BgupHeaderVector.emplace_back(BgupHeader);
         addList(BgupHeader);
+        PlatID = BgupHeader->getPlatId();
     }
 
     CapsuleInfo << "BIOS ID : " << BiosInstance->getBiosIDString()
-                << "\n\nPlat ID: " << BgupHeader->getPlatId() << "\n"
+                << "\n\nPlat ID: " << PlatID << "\n"
                 << "\nEC Version : " << EcInstance->getEcVersion() << endl;
 }
 

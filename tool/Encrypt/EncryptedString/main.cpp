@@ -2,7 +2,7 @@
 #include <QByteArray>
 #include <iostream>
 
-#define __BiosViewerVersion__   "BIOS Viewer 1.9.1"
+#define __BiosViewerVersion__   "BIOS Viewer 1.10"
 #define __BiosViewerAuthor__    "Zhu, Chen"
 #define __BiosViewerCopyright__ "Intel Internal Use Only"
 

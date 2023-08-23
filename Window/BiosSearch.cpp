@@ -14,6 +14,7 @@ BiosSearch::BiosSearch(QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
     initSetting();
     ui->SearchContent->setAttribute(Qt::WA_InputMethodEnabled, false);
+    ui->SearchContent->setInputMethodHints(Qt::ImhPreferLatin);
     ui->guidTab->installEventFilter(this);
 
     QSettings windowSettings("Intel", "BiosViewer");

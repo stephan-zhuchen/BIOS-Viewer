@@ -3,9 +3,6 @@
 #include <QInputDialog>
 #include <QProcess>
 #include <QClipboard>
-#include <Windows.h>
-#include <QSharedMemory>
-//#include <algorithm>
 #include "BiosWindow.h"
 #include "HexViewDialog.h"
 #include "TabWindow.h"
@@ -322,51 +319,11 @@ void BiosViewerWindow::showNvHexView() const {
 }
 
 void BiosViewerWindow::showPeCoffView() {
-    QString filepath = WindowData->appDir + "/tool/temp.bin";
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString filepath = QDir(lastPath).filePath("temp.bin");
     QString toolpath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
-    QString SaveToolPath = WindowData->appDir + "/tool/SaveFile/QtSaveFile.exe";
     INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
-
-    enum ToolType { NONE=0, PECOFF=1, ACPI=2 };
-    struct SharedData {
-        ToolType Type;
-        CHAR8   stringData[256];
-        INT64   Offset;
-        INT64   Size;
-    };
-    SharedData PeCoffPara;
-    std::memcpy(PeCoffPara.stringData, filepath.toStdString().c_str(), min(filepath.toStdString().size(), sizeof(PeCoffPara.stringData) - 1));
-    PeCoffPara.stringData[min(filepath.toStdString().size(), sizeof(PeCoffPara.stringData) - 1)] = '\0';
-    PeCoffPara.Type = ToolType::PECOFF;
-    PeCoffPara.Offset = HeaderSize;
-    PeCoffPara.Size = InputData->RightClickeditemModel->modelData->size - HeaderSize;
-
-    QSharedMemory sharedParameter;
-    sharedParameter.setKey("BiosViewerSharedParameter");
-    sharedParameter.create(sizeof(PeCoffPara));
-    char *para = (char*)sharedParameter.data();
-    memcpy(para, &PeCoffPara, sizeof(PeCoffPara));
-
-    QSharedMemory sharedMemory;
-    sharedMemory.setKey("BiosViewerSharedData");
-    sharedMemory.create(InputData->RightClickeditemModel->modelData->size);
-    char *to = (char*)sharedMemory.data();
-    memcpy(to, InputData->RightClickeditemModel->modelData->data, InputData->RightClickeditemModel->modelData->size);
-
-    SHELLEXECUTEINFO shExecInfo = { sizeof(SHELLEXECUTEINFO) };
-    shExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-    shExecInfo.lpVerb = L"runas";
-    shExecInfo.lpFile = SaveToolPath.toStdWString().c_str();;
-    shExecInfo.lpParameters = L"elevate";
-    shExecInfo.nShow = SW_HIDE;
-
-    if (ShellExecuteEx(&shExecInfo)) {
-        WaitForSingleObject(shExecInfo.hProcess, INFINITE);
-        CloseHandle(shExecInfo.hProcess);
-    } else {
-        QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
-    }
-
+    saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
     std::ifstream tempFile(filepath.toStdString());
     if (!tempFile.good()) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
@@ -405,57 +362,26 @@ void BiosViewerWindow::showPeCoffView() {
 }
 
 void BiosViewerWindow::showAcpiTableView() {
-    QString AppPath = WindowData->appDir;
-    QString Dslpath = WindowData->appDir + "/tool/acpitemp.dsl";
-    QString SaveToolPath = WindowData->appDir + "/tool/SaveFile/QtSaveFile.exe";
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString filepath = QDir(lastPath).filePath("temp.bin");
+    QString Dslpath = QDir(lastPath).filePath("temp.dsl");
+    QString toolpath = WindowData->appDir + "/tool/ACPI/iasl.exe";
     INT64 HeaderSize = InputData->RightClickeditemModel->modelData->getHeaderSize();
-
-    enum ToolType { NONE=0, PECOFF=1, ACPI=2 };
-
-    struct SharedData {
-        ToolType Type;
-        CHAR8   stringData[256];
-        INT64   Offset;
-        INT64   Size;
-    };
-    SharedData PeCoffPara;
-    std::memcpy(PeCoffPara.stringData, AppPath.toStdString().c_str(), min(AppPath.toStdString().size(), sizeof(PeCoffPara.stringData) - 1));
-    PeCoffPara.stringData[min(AppPath.toStdString().size(), sizeof(PeCoffPara.stringData) - 1)] = '\0';
-    PeCoffPara.Type = ToolType::ACPI;
-    PeCoffPara.Offset = HeaderSize;
-    PeCoffPara.Size = InputData->RightClickeditemModel->modelData->size - HeaderSize;
-
-    QSharedMemory sharedParameter;
-    sharedParameter.setKey("BiosViewerSharedParameter");
-    sharedParameter.create(sizeof(PeCoffPara));
-    char *para = (char*)sharedParameter.data();
-    memcpy(para, &PeCoffPara, sizeof(PeCoffPara));
-
-    QSharedMemory sharedMemory;
-    sharedMemory.setKey("BiosViewerSharedData");
-    sharedMemory.create(InputData->RightClickeditemModel->modelData->size);
-    char *to = (char*)sharedMemory.data();
-    memcpy(to, InputData->RightClickeditemModel->modelData->data, InputData->RightClickeditemModel->modelData->size);
-
-    SHELLEXECUTEINFO shExecInfo = { sizeof(SHELLEXECUTEINFO) };
-    shExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-    shExecInfo.lpVerb = L"runas";
-    shExecInfo.lpFile = SaveToolPath.toStdWString().c_str();;
-    shExecInfo.lpParameters = L"elevate";
-    shExecInfo.nShow = SW_HIDE;
-
-    if (ShellExecuteEx(&shExecInfo)) {
-        WaitForSingleObject(shExecInfo.hProcess, INFINITE);
-        CloseHandle(shExecInfo.hProcess);
+    saveBinary(filepath.toStdString(), InputData->RightClickeditemModel->modelData->data, HeaderSize, InputData->RightClickeditemModel->modelData->size - HeaderSize);
+    std::ifstream tempFile(filepath.toStdString());
+    if (!tempFile.good()) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
+        return;
     }
-    sharedParameter.detach();
-    sharedMemory.detach();
-
+    tempFile.close();
     auto *TabView = new TabWindow();
     TabView->SetTabViewTitle("ACPI Table");
     if (isDarkMode()) {
         TabView->setWindowIcon(QIcon(":/windows_light.svg"));
     }
+    auto *process = new QProcess(this);
+    process->start(toolpath, QStringList() << "-d" << filepath);
+    process->waitForFinished();
 
     QString DisAssembly;
     QFile DslFile(Dslpath);
@@ -464,11 +390,17 @@ void BiosViewerWindow::showAcpiTableView() {
         DisAssembly = DslFile.readAll();
         DslFile.close();
         DslFile.remove();
-    } else {
-        QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
-        return;
     }
     TabView->SetNewTabAndText("ACPI", DisAssembly);
+    delete process;
+
+    QFile file(filepath);
+    if(file.exists())
+        file.remove();
+    QFile dslFile(Dslpath);
+    if(dslFile.exists())
+        dslFile.remove();
+
     TabView->CollectTabAndShow();
 }
 
@@ -554,7 +486,7 @@ void BiosViewerWindow::replaceFfsContent() {
     auto *FileBuffer = new BaseLibrarySpace::Buffer(new std::ifstream(FileName.toStdString(), std::ios::in | std::ios::binary));
     INT64 NewFileSize = FileBuffer->getBufferSize();
     INT64 FileSize = ((FfsFile*)InputData->RightClickeditemModel->modelData)->FfsSize - ((FfsFile*)InputData->RightClickeditemModel->modelData)->getHeaderSize();
-    if (NewFileSize > FileSize) {
+    if (NewFileSize != FileSize) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "File size does not match!");
         safeDelete(FileBuffer);
         return;
@@ -576,6 +508,10 @@ void BiosViewerWindow::replaceFfsContent() {
 
     QFileInfo fileInfo {WindowData->OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileInfo.baseName() + "_NewAcm.bin";
+    outputPath = QFileDialog::getSaveFileName(this,
+                                              tr("Replace File"),
+                                              outputPath,
+                                              tr("Files(*.rom *.bin *.fd);;All files (*.*)"));
     saveBinary(outputPath.toStdString(), NewImage, 0, WindowData->InputImageSize);
 
     safeArrayDelete(NewFile);

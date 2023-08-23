@@ -94,9 +94,18 @@
     <addaction name="actionGoto"/>
     <addaction name="actionCollapse"/>
    </widget>
+   <widget class="QMenu" name="menuGUID">
+    <property name="title">
+     <string>GUID</string>
+    </property>
+    <addaction name="actionCreateGUID_Database"/>
+    <addaction name="actionLoadGUID_Database"/>
+    <addaction name="actionUnloadGUID_Database"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menuShow"/>
    <addaction name="menuTool"/>
+   <addaction name="menuGUID"/>
    <addaction name="menuAbout"/>
   </widget>
   <action name="OpenFile">
@@ -351,6 +360,24 @@
     <font>
      <pointsize>10</pointsize>
     </font>
+   </property>
+  </action>
+  <action name="actionCreateGUID_Database">
+   <property name="text">
+    <string>Create GUID Database</string>
+   </property>
+  </action>
+  <action name="actionLoadGUID_Database">
+   <property name="text">
+    <string>Load GUID Database</string>
+   </property>
+  </action>
+  <action name="actionUnloadGUID_Database">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Unload GUID Database</string>
    </property>
   </action>
  </widget>

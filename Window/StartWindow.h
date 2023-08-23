@@ -80,6 +80,9 @@ public slots:
     void MainTabWidgetCloseRequested(int index);
     void ActionTabWidgetClose();
     void CurrentTabChanged(int index);
+    void actionCreateGUID_DatabaseTriggered();
+    void actionLoadGUID_DatabaseTriggered();
+    void actionUnloadGUID_DatabaseTriggered();
 };
 
 #endif // STARTWINDOW_H

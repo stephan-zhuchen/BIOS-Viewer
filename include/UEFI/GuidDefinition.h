@@ -4,6 +4,8 @@
 #include <map>
 #include <unordered_map>
 #include <QHash>
+#include <QString>
+#include <QStringList>
 #include "SymbolDefinition.h"
 
 #define VNAME(name) (#name)
@@ -11,11 +13,15 @@
 class GuidDatabase {
 public:
     std::unordered_map<UINT32, std::string> hashedGuid;
-//    QHash<UINT32, std::string> QHashedGuid;
-public:
+    static QHash<UINT32, QString> ExternalDataGuidMap;
+    static bool UseExternalDataGuid;
     GuidDatabase();
     ~GuidDatabase();
     std::string getNameFromGuid(EFI_GUID guid);
+
+    static void parseGuidInDec(const QStringList &DirPaths);
+    static void parseGuidInInf(const QStringList &DirPaths);
+    static void parseGuidInFdf(const QStringList &DirPaths);
 
     // GUID Definition
     // constexpr static EFI_GUID gFmpDeviceIshPdtDefaultGuid                   = {0x76CA0AD8, 0x4A14, 0x4389, {0xB7, 0xE5, 0xFD, 0x88, 0x79, 0x17, 0x62, 0xAD}};

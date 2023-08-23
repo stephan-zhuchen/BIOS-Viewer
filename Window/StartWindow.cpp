@@ -7,7 +7,13 @@
 #include <QElapsedTimer>
 #include <QProcess>
 #include <QFontDatabase>
+#include <QDirIterator>
+#include <QProgressBar>
+#include <QTimer>
+#include <atomic>
+#include <thread>
 #include <utility>
+#include <condition_variable>
 #include "SettingsDialog.h"
 #include "UEFI/GuidDefinition.h"
 #include "StartWindow.h"
@@ -47,6 +53,11 @@ StartWindow::StartWindow(QString appPath, QWidget *parent) :
     connect(ui->actionExtract_BIOS, SIGNAL(triggered()), this, SLOT(ActionExtractBIOSTriggered()));
     connect(ui->actionReplace_BIOS, SIGNAL(triggered()), this, SLOT(ActionReplaceBIOSTriggered()));
     connect(ui->actionCloseTab,     SIGNAL(triggered()), this, SLOT(ActionTabWidgetClose()));
+    connect(ui->actionCreateGUID_Database,   SIGNAL(triggered()), this, SLOT(actionCreateGUID_DatabaseTriggered()));
+    connect(ui->actionLoadGUID_Database,     SIGNAL(triggered()), this, SLOT(actionLoadGUID_DatabaseTriggered()));
+    connect(ui->actionUnloadGUID_Database,   SIGNAL(triggered()), this, SLOT(actionUnloadGUID_DatabaseTriggered()));
+
+    ui->actionLoadGUID_Database->setCheckable(true);
 
     if (guidData == nullptr) {
         guidData = new GuidDatabase;
@@ -90,7 +101,8 @@ void StartWindow::initSettings() {
         {"EnableHexEditing",    "true"},
         {"DisableBiosViewer",   "false"},
         {"PasteMode",           "Ask Everytime"},
-        {"HexAlign",            "None"}
+        {"HexAlign",            "None"},
+        {"UseExternalGuid",     "false"}
     };
 
     for (const auto& defaultSetting : DefaultSettings) {
@@ -225,6 +237,7 @@ void StartWindow::OpenFile(const QString& path, bool onlyHexView) {
     INT32 bufferSize = buffer->getBufferSize();
     UINT8* data = buffer->getBytes(bufferSize);
     safeDelete(buffer);
+    setting.setValue("LastFilePath", fileInfo.path());
 
     OpenBuffer(data, bufferSize, path, onlyHexView);
 }
@@ -385,8 +398,6 @@ void StartWindow::OpenFileTriggered() {
     if (fileName.isEmpty()){
         return;
     }
-    QFileInfo fileinfo {fileName};
-    setting.setValue("LastFilePath", fileinfo.path());
     OpenFile(fileName);
 }
 
@@ -399,8 +410,6 @@ void StartWindow::OpenInHexViewTriggered() {
     if (fileName.isEmpty()){
         return;
     }
-    QFileInfo fileinfo {fileName};
-    setting.setValue("LastFilePath", fileinfo.path());
     OpenFile(fileName, true);
 }
 
@@ -437,7 +446,7 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
                              "<p>Built on %3 by <span style=' font-weight:700; color:#00aaff;'>%4</p>"
                              "</body>"
                              "</html>").arg(
-                                            xorLambda("181315097a0c333f2d3f287a6b7463746b", 0x5A),
+                                            xorLambda("181315097a0c333f2d3f287a6b746b6a", 0x5A),
                                             xorLambda("13342e3f367a13342e3f28343b367a0f293f7a15343623", 0x5A),
                                             __DATE__,
                                             xorLambda("00322f767a19323f34", 0x5A));
@@ -446,14 +455,13 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
 
 void StartWindow::OpenInNewWindowTriggered() {
     QString lastPath = setting.value("LastFilePath").toString();
-    QString fileName = QFileDialog::getOpenFileName(
-        this, tr("Open Image File"),
-        lastPath, tr("Image files(*.rom *.bin *.fd);;All files (*.*)"));
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    tr("Open Image File"),
+                                                    lastPath,
+                                                    tr("Image files(*.rom *.bin *.fd);;All files (*.*)"));
     if (fileName.isEmpty()){
         return;
     }
-    QFileInfo fileInfo {fileName};
-    setting.setValue("LastFilePath", fileInfo.path());
 
     auto *newWindow = new StartWindow(appPath);
     newWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -546,3 +554,137 @@ void StartWindow::CurrentTabChanged(int index) {
         this->setWindowTitle("BIOS Viewer");
     }
 }
+
+void StartWindow::actionCreateGUID_DatabaseTriggered() {
+    QMessageBox::information(this, "GUID", "Select one of your code repository folder");
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString folderPath = QFileDialog::getExistingDirectory(this,
+                                                           "Code Repository",
+                                                           lastPath,
+                                                           QFileDialog::ShowDirsOnly);
+    if (folderPath.isEmpty()) return;
+    setting.setValue("LastFilePath", folderPath);
+
+    QString DataGuidPath = QDir(folderPath).filePath("DataGuid.dat");
+    DataGuidPath = QFileDialog::getSaveFileName(this,
+                                                tr("Open GUID Data File"),
+                                                DataGuidPath,
+                                                tr("GUID Data file(*.dat);;All files (*.*)"));
+    if (DataGuidPath.isEmpty()) return;
+
+    QFile DataGuidFile(DataGuidPath);
+    if (DataGuidFile.exists() && DataGuidFile.open(QIODevice::ReadOnly)) {
+        QDataStream in(&DataGuidFile);
+        in >> GuidDatabase::ExternalDataGuidMap;
+        DataGuidFile.close();
+    }
+
+    QDialog             dialog;
+    QVBoxLayout         layout(&dialog);
+    QProgressBar        progressBar;
+    QTimer              timer;
+    QStringList         DecPaths;
+    QStringList         InfPaths;
+    QStringList         FdfPaths;
+    condition_variable  cv;
+    mutex               mtx;
+    INT32               progress = 0;
+    atomic<INT32>       upperProgress = 60;
+    atomic<INT32>       ReadyGuidNum = 0;
+    dialog.setWindowTitle("Create GUID_Database");
+    dialog.resize(300, 50);
+    layout.addWidget(&progressBar);
+
+    QObject::connect(&timer, &QTimer::timeout, this, [&]() {
+        if (progress < upperProgress) {
+            progress += 1;
+            progressBar.setValue(progress);
+        }
+        if (progress >= 100) {
+            timer.stop();
+            dialog.close();
+        }
+    });
+
+    auto get_files = [&upperProgress, &mtx, &ReadyGuidNum, &cv](const QString& DirName, QStringList& FilePaths, const QString& suffix) {
+        if (!QDir(DirName).exists()) return;
+        QDirIterator it(DirName, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            QFileInfo fileInfo(it.next());
+            if (fileInfo.isFile() && fileInfo.suffix() == suffix) {
+                FilePaths.append(fileInfo.filePath());
+            }
+        }
+        upperProgress.fetch_add(10);
+        std::lock_guard<std::mutex> lock(mtx);
+        ReadyGuidNum += 1;
+        if (ReadyGuidNum == 3) {
+            cv.notify_one();
+        }
+    };
+
+    auto getGuidData = [&DecPaths, &InfPaths, &FdfPaths, &upperProgress, &mtx, &ReadyGuidNum, &cv]() {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock, [&ReadyGuidNum] { return ReadyGuidNum == 3; });
+        GuidDatabase::parseGuidInDec(DecPaths);
+        GuidDatabase::parseGuidInInf(InfPaths);
+        GuidDatabase::parseGuidInFdf(FdfPaths);
+        upperProgress.fetch_add(10);
+    };
+
+    std::thread t1(get_files, folderPath, std::ref(DecPaths), "dec");
+    std::thread t2(get_files, folderPath, std::ref(InfPaths), "inf");
+    std::thread t3(get_files, folderPath, std::ref(FdfPaths), "fdf");
+    std::thread t4(getGuidData);
+
+    timer.start(10);
+    dialog.exec();
+    t1.join();
+    t2.join();
+    t3.join();
+    t4.join();
+
+    QFile DataGuidOutFile(DataGuidPath);
+    if (DataGuidOutFile.open(QIODevice::WriteOnly)) {
+        QDataStream out(&DataGuidOutFile);
+        out << GuidDatabase::ExternalDataGuidMap;
+        DataGuidOutFile.close();
+    }
+}
+
+void StartWindow::actionLoadGUID_DatabaseTriggered() {
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString DataGuidPath = QDir(lastPath).filePath("DataGuid.dat");
+    DataGuidPath = QFileDialog::getOpenFileName(this,
+                                                tr("Open GUID Data File"),
+                                                DataGuidPath,
+                                                tr("GUID Data file(*.dat);;All files (*.*)"));
+    if (DataGuidPath.isEmpty()) return;
+    QFileInfo DataGuidInfo(DataGuidPath);
+    setting.setValue("LastFilePath", DataGuidInfo.path());
+
+    QFile DataGuidFile(DataGuidPath);
+    if (DataGuidFile.exists() && DataGuidFile.open(QIODevice::ReadOnly)) {
+        QDataStream in(&DataGuidFile);
+        GuidDatabase::ExternalDataGuidMap.clear();
+        in >> GuidDatabase::ExternalDataGuidMap;
+        GuidDatabase::UseExternalDataGuid = true;
+        DataGuidFile.close();
+    }
+
+    if (GuidDatabase::UseExternalDataGuid == true) {
+        ui->actionLoadGUID_Database->setChecked(true);
+        ui->actionUnloadGUID_Database->setEnabled(true);
+    } else {
+        ui->actionLoadGUID_Database->setChecked(false);
+        ui->actionUnloadGUID_Database->setEnabled(false);
+    }
+}
+
+void StartWindow::actionUnloadGUID_DatabaseTriggered() {
+    GuidDatabase::ExternalDataGuidMap.clear();
+    GuidDatabase::UseExternalDataGuid = false;
+    ui->actionLoadGUID_Database->setChecked(false);
+    ui->actionUnloadGUID_Database->setEnabled(false);
+}
+

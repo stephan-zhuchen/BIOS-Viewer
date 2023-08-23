@@ -1,6 +1,9 @@
 #include "UEFI/GuidDefinition.h"
 #include "BaseLib.h"
 #include <iomanip>
+#include <QFile>
+#include <QTextStream>
+#include <QDebug>
 
 bool EFI_GUID::operator==(const EFI_GUID guid) {
     if (this->Data1 != guid.Data1) {
@@ -106,14 +109,194 @@ std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
             name = "Tiano Logo";
             break;
         default:
-            if (hashedGuid.count(guid.Data1) == 0)
+            if (UseExternalDataGuid && ExternalDataGuidMap.contains(guid.Data1)) {
+                name = ExternalDataGuidMap.value(guid.Data1).toStdString();
+            }
+            else if (hashedGuid.count(guid.Data1) == 0) {
                 name = BaseLibrarySpace::GUID(guid).str(true);
+            }
             else
                 name = hashedGuid.at(guid.Data1);
             break;
     }
 
     return name;
+}
+
+QHash<UINT32, QString> GuidDatabase::ExternalDataGuidMap;
+bool GuidDatabase::UseExternalDataGuid {false};
+
+void GuidDatabase::parseGuidInDec(const QStringList& DirPaths) {
+    QStringList lines;
+    QStringList Guidlist;
+    for (const QString& DecPath : DirPaths) {
+            QFile file(DecPath);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                continue;
+            }
+
+            QTextStream in(&file);
+            lines.clear();
+            while (!in.atEnd()) {
+                lines.append(in.readLine().trimmed());
+            }
+
+            int ProtocolsBeginIdx = 0;
+            int PpisBeginIdx = 0;
+            int GuidsBeginIdx = 0;
+            for (int idx = 0; idx < lines.size(); ++idx) {
+                QString line = lines.at(idx);
+                if (line == "[Protocols]") {
+                    ProtocolsBeginIdx = idx;
+                } else if (line == "[Ppis]") {
+                    PpisBeginIdx = idx;
+                } else if (line == "[Guids]") {
+                    GuidsBeginIdx = idx;
+                }
+            }
+
+            auto processSection = [&Guidlist, &lines](int beginIdx) {
+                for (const QString& line : lines.mid(beginIdx + 1)) {
+                    if (!line.isEmpty()) {
+                        if (line[0] == '#')
+                            continue;
+                        else if (line[0] == '[')
+                            break;
+                        Guidlist.append(line.split("#").first().trimmed());
+                    }
+                }
+            };
+
+            processSection(ProtocolsBeginIdx);
+            processSection(PpisBeginIdx);
+            processSection(GuidsBeginIdx);
+    }
+
+    for (const QString& GuidDefinition : Guidlist) {
+            QStringList parts = GuidDefinition.split("=");
+            QString Name = parts[0].trimmed().replace("-", "_");
+            QString Guid = parts[1].trimmed();
+
+            QStringList GuidList = Guid.split(",");
+            QString Data1 = GuidList[0].split("{").last().trimmed();
+            UINT32 num = Data1.toUInt(nullptr, 16);
+
+            if (ExternalDataGuidMap.contains(num))
+                continue;
+
+            ExternalDataGuidMap.insert(num, Name);
+    }
+}
+
+void GuidDatabase::parseGuidInInf(const QStringList &DirPaths) {
+    for (const QString &InfPath : DirPaths) {
+            QStringList lines;
+            QStringList DefinesLines;
+
+            QFile file(InfPath);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+                continue;
+
+            QTextStream in(&file);
+            while (!in.atEnd()) {
+                QString line = in.readLine().trimmed();
+                lines.append(line);
+            }
+
+            int DefinesBeginIdx = 0;
+            for (int idx = 0; idx < lines.size(); ++idx) {
+                if (lines[idx] == "[Defines]") {
+                    DefinesBeginIdx = idx;
+                    break;
+                }
+            }
+
+            for (const QString &line : lines.mid(DefinesBeginIdx + 1)) {
+                if (line != "" && line[0] != '#' && line[0] != '[') {
+                    DefinesLines.append(line.split("#")[0].trimmed());
+                }
+            }
+
+            QString Name;
+            QString Guid;
+            bool Flag1 {false};
+            bool Flag2 {false};
+            for (const QString &GuidDefinition : DefinesLines) {
+                QString Key = GuidDefinition.split("=")[0].trimmed();
+                if (Key == "BASE_NAME") {
+                    Flag1 = true;
+                    Name = GuidDefinition.split("=")[1].trimmed().replace("-", "_");
+                }
+                if (Key == "FILE_GUID") {
+                    Flag2 = true;
+                    Guid = GuidDefinition.split("=")[1].trimmed();
+                }
+            }
+            if (Flag1 && Flag2) {
+                QString Data1 = Guid.split("-").first().trimmed();
+                UINT32 num = Data1.toUInt(nullptr, 16);
+                if (ExternalDataGuidMap.contains(num))
+                    continue;
+                ExternalDataGuidMap.insert(num, Name);
+            }
+    }
+}
+
+void GuidDatabase::parseGuidInFdf(const QStringList &DirPaths) {
+    for (const QString &FdfPath : DirPaths) {
+            QStringList lines;
+            QFile file(FdfPath);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+                continue;
+            QTextStream in(&file);
+            while (!in.atEnd()) {
+                QString line = in.readLine().trimmed();
+                lines.append(line);
+            }
+
+            // Get FvNameGuid in [FV.] block
+            QList<int> FvBeginIdxes;
+            for (int idx = 0; idx < lines.size(); ++idx) {
+                if (lines[idx].startsWith("[FV."))
+                    FvBeginIdxes.append(idx);
+            }
+            for (int idx = 0; idx < FvBeginIdxes.size(); ++idx) {
+                int EndLineIdx = (idx == FvBeginIdxes.size() - 1) ? lines.size() - 1 : FvBeginIdxes[idx + 1];
+                for (int i = FvBeginIdxes[idx]; i < EndLineIdx; ++i) {
+                    if (lines[i].startsWith("FvNameGuid")) {
+                        QString FvName = lines[FvBeginIdxes[idx]].mid(4).split("]").first().replace("-", "_").trimmed();
+                        QString Guid = lines[i].split("=")[1].trimmed();
+                        QString Data1 = Guid.split("-").first().trimmed();
+                        UINT32 num = Data1.toUInt(nullptr, 16);
+                        if (ExternalDataGuidMap.contains(num))
+                            continue;
+                        ExternalDataGuidMap.insert(num, FvName);
+                        break;
+                    }
+                }
+            }
+
+            // Get FV_IMAGE GUID in SECTION FV_IMAGE block
+            FvBeginIdxes.clear();
+            for (int idx = 0; idx < lines.size(); ++idx) {
+                if (lines[idx].startsWith("FILE FV_IMAGE"))
+                    FvBeginIdxes.append(idx);
+            }
+            for (int idx = 0; idx < FvBeginIdxes.size(); ++idx) {
+                for (int i = FvBeginIdxes[idx]; i < FvBeginIdxes[idx] + 3; ++i) {
+                    if (lines[i].startsWith("SECTION FV_IMAGE")) {
+                        QString FvName = lines[i].split("=")[1].replace("-", "_").trimmed();
+                        QString Guid = lines[FvBeginIdxes[idx]].split("=")[1].split("{")[0].trimmed();
+                        QString Data1 = Guid.split("-").first().trimmed();
+                        UINT32 num = Data1.toUInt(nullptr, 16);
+                        if (ExternalDataGuidMap.contains(num))
+                            continue;
+                        ExternalDataGuidMap.insert(num, FvName);
+                        break;
+                    }
+                }
+            }
+    }
 }
 
 GuidDatabase::GuidDatabase() {
