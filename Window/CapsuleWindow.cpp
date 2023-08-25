@@ -30,8 +30,7 @@ void CapsuleWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
     connect(ui->listWidget, SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showListRightMenu(QPoint)));
 }
 
-void CapsuleWindow::initSetting()
-{
+void CapsuleWindow::initSetting() {
     ui->label_mode->clear();
     ui->itemBox->setVisible(false);
     ui->listWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
@@ -40,8 +39,7 @@ void CapsuleWindow::initSetting()
     ui->AddressPanel->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 }
 
-void CapsuleWindow::fini()
-{
+void CapsuleWindow::fini() {
     EntryList.clear();
     CapsuleInfo.str("");
     MicrocodeHeaderVector.clear();

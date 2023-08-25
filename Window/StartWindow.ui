@@ -82,9 +82,11 @@
     <addaction name="separator"/>
     <addaction name="actionExtract_BIOS"/>
     <addaction name="actionReplace_BIOS"/>
+    <addaction name="separator"/>
     <addaction name="actionSeperate_Binary"/>
     <addaction name="actionExtract_Binary"/>
     <addaction name="separator"/>
+    <addaction name="actionMergeFiles"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -378,6 +380,11 @@
    </property>
    <property name="text">
     <string>Unload GUID Database</string>
+   </property>
+  </action>
+  <action name="actionMergeFiles">
+   <property name="text">
+    <string>Merge Files</string>
    </property>
   </action>
  </widget>

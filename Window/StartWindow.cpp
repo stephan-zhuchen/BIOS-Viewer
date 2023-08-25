@@ -18,6 +18,7 @@
 #include "UEFI/GuidDefinition.h"
 #include "StartWindow.h"
 #include "CapsuleWindow.h"
+#include "MergeFilesWindow.h"
 #include "ui_StartWindow.h"
 
 GuidDatabase *guidData = nullptr;
@@ -38,24 +39,25 @@ StartWindow::StartWindow(QString appPath, QWidget *parent) :
     InstallFonts("IntelOne Mono");
     initSettings();
 
-    connect(ui->OpenFile,           SIGNAL(triggered()), this, SLOT(OpenFileTriggered()));
-    connect(ui->OpenInHexView,      SIGNAL(triggered()), this, SLOT(OpenInHexViewTriggered()));
-    connect(ui->actionExit,         SIGNAL(triggered()), this, SLOT(ActionExitTriggered()));
-    connect(ui->actionSettings,     SIGNAL(triggered()), this, SLOT(ActionSettingsTriggered()));
-    connect(ui->actionAboutQt,      SIGNAL(triggered()), this, SLOT(ActionAboutQtTriggered()));
-    connect(ui->actionAboutBiosViewer, SIGNAL(triggered()), this, SLOT(ActionAboutBiosViewerTriggered()));
-    connect(ui->OpenInNewWindow,    SIGNAL(triggered()), this, SLOT(OpenInNewWindowTriggered()));
-    connect(ui->actionSeperate_Binary, SIGNAL(triggered()), this, SLOT(ActionSeperateBinaryTriggered()));
-    connect(ui->actionSearch,       SIGNAL(triggered()), this, SLOT(ActionSearchTriggered()));
-    connect(ui->actionGoto,         SIGNAL(triggered()), this, SLOT(ActionGotoTriggered()));
-    connect(ui->actionCollapse,     SIGNAL(triggered()), this, SLOT(ActionCollapseTriggered()));
-    connect(ui->actionExtract_Binary, SIGNAL(triggered()), this, SLOT(ActionExtractBinaryTriggered()));
-    connect(ui->actionExtract_BIOS, SIGNAL(triggered()), this, SLOT(ActionExtractBIOSTriggered()));
-    connect(ui->actionReplace_BIOS, SIGNAL(triggered()), this, SLOT(ActionReplaceBIOSTriggered()));
-    connect(ui->actionCloseTab,     SIGNAL(triggered()), this, SLOT(ActionTabWidgetClose()));
+    connect(ui->OpenFile,                    SIGNAL(triggered()), this, SLOT(OpenFileTriggered()));
+    connect(ui->OpenInHexView,               SIGNAL(triggered()), this, SLOT(OpenInHexViewTriggered()));
+    connect(ui->actionExit,                  SIGNAL(triggered()), this, SLOT(ActionExitTriggered()));
+    connect(ui->actionSettings,              SIGNAL(triggered()), this, SLOT(ActionSettingsTriggered()));
+    connect(ui->OpenInNewWindow,             SIGNAL(triggered()), this, SLOT(OpenInNewWindowTriggered()));
+    connect(ui->actionSearch,                SIGNAL(triggered()), this, SLOT(ActionSearchTriggered()));
+    connect(ui->actionGoto,                  SIGNAL(triggered()), this, SLOT(ActionGotoTriggered()));
+    connect(ui->actionCollapse,              SIGNAL(triggered()), this, SLOT(ActionCollapseTriggered()));
+    connect(ui->actionExtract_BIOS,          SIGNAL(triggered()), this, SLOT(ActionExtractBIOSTriggered()));
+    connect(ui->actionReplace_BIOS,          SIGNAL(triggered()), this, SLOT(ActionReplaceBIOSTriggered()));
+    connect(ui->actionSeperate_Binary,       SIGNAL(triggered()), this, SLOT(ActionSeperateBinaryTriggered()));
+    connect(ui->actionExtract_Binary,        SIGNAL(triggered()), this, SLOT(ActionExtractBinaryTriggered()));
+    connect(ui->actionMergeFiles,            SIGNAL(triggered()), this, SLOT(actionMergeFilesTriggered()));
+    connect(ui->actionCloseTab,              SIGNAL(triggered()), this, SLOT(ActionTabWidgetClose()));
     connect(ui->actionCreateGUID_Database,   SIGNAL(triggered()), this, SLOT(actionCreateGUID_DatabaseTriggered()));
     connect(ui->actionLoadGUID_Database,     SIGNAL(triggered()), this, SLOT(actionLoadGUID_DatabaseTriggered()));
     connect(ui->actionUnloadGUID_Database,   SIGNAL(triggered()), this, SLOT(actionUnloadGUID_DatabaseTriggered()));
+    connect(ui->actionAboutQt,               SIGNAL(triggered()), this, SLOT(ActionAboutQtTriggered()));
+    connect(ui->actionAboutBiosViewer,       SIGNAL(triggered()), this, SLOT(ActionAboutBiosViewerTriggered()));
 
     if (guidData == nullptr) {
         guidData = new GuidDatabase;
@@ -373,10 +375,12 @@ void StartWindow::closeEvent(QCloseEvent *event) {
 }
 
 void StartWindow::dropEvent(QDropEvent* event) {
-    QUrl url = event->mimeData()->urls().first();
-    QFileInfo file(url.toLocalFile());
-    if(file.isFile()) {
-        OpenFile(file.filePath());
+    const QList<QUrl> urlList = event->mimeData()->urls();
+    foreach (const QUrl &url, urlList) {
+        QFileInfo file(url.toLocalFile());
+        if(file.isFile()) {
+            OpenFile(file.filePath());
+        }
     }
 }
 
@@ -566,13 +570,13 @@ void StartWindow::actionCreateGUID_DatabaseTriggered() {
     setting.setValue("LastFilePath", folderPath);
 
     QString DataGuidPath = QDir(folderPath).filePath("DataGuid.dat");
-    DataGuidPath = QFileDialog::getSaveFileName(this,
-                                                tr("Open GUID Data File"),
-                                                DataGuidPath,
-                                                tr("GUID Data file(*.dat);;All files (*.*)"));
-    if (DataGuidPath.isEmpty()) return;
+    QString DataGuidPathName = QFileDialog::getSaveFileName(this,
+                                                            tr("Open GUID Data File"),
+                                                            DataGuidPath,
+                                                            tr("GUID Data file(*.dat);;All files (*.*)"));
+    if (DataGuidPathName.isEmpty()) return;
 
-    QFile DataGuidFile(DataGuidPath);
+    QFile DataGuidFile(DataGuidPathName);
     if (DataGuidFile.exists() && DataGuidFile.open(QIODevice::ReadOnly)) {
         QDataStream in(&DataGuidFile);
         in >> GuidDatabase::ExternalDataGuidMap;
@@ -694,5 +698,10 @@ void StartWindow::actionUnloadGUID_DatabaseTriggered() {
     ui->actionLoadGUID_Database->setCheckable(false);
     ui->actionLoadGUID_Database->setChecked(false);
     ui->actionUnloadGUID_Database->setEnabled(false);
+}
+
+void StartWindow::actionMergeFilesTriggered() {
+    MergeFilesWindow *window = new MergeFilesWindow(DarkmodeFlag);
+    window->show();
 }
 

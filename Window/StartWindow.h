@@ -83,6 +83,7 @@ public slots:
     void actionCreateGUID_DatabaseTriggered();
     void actionLoadGUID_DatabaseTriggered();
     void actionUnloadGUID_DatabaseTriggered();
+    void actionMergeFilesTriggered();
 };
 
 #endif // STARTWINDOW_H

@@ -42,6 +42,12 @@
         <file>UEFI.ico</file>
         <file>check.svg</file>
         <file>check_light.svg</file>
+        <file>arrowup.svg</file>
+        <file>arrowup_light.svg</file>
+        <file>arrowdown.svg</file>
+        <file>arrowdown_light.svg</file>
+        <file>delete.svg</file>
+        <file>delete_light.svg</file>
     </qresource>
     <qresource prefix="/sty">
         <file>dark_mode.qss</file>
