@@ -57,8 +57,6 @@ StartWindow::StartWindow(QString appPath, QWidget *parent) :
     connect(ui->actionLoadGUID_Database,     SIGNAL(triggered()), this, SLOT(actionLoadGUID_DatabaseTriggered()));
     connect(ui->actionUnloadGUID_Database,   SIGNAL(triggered()), this, SLOT(actionUnloadGUID_DatabaseTriggered()));
 
-    ui->actionLoadGUID_Database->setCheckable(true);
-
     if (guidData == nullptr) {
         guidData = new GuidDatabase;
     }
@@ -563,6 +561,8 @@ void StartWindow::actionCreateGUID_DatabaseTriggered() {
                                                            lastPath,
                                                            QFileDialog::ShowDirsOnly);
     if (folderPath.isEmpty()) return;
+    QDir dir(folderPath);
+    if (!dir.exists()) return;
     setting.setValue("LastFilePath", folderPath);
 
     QString DataGuidPath = QDir(folderPath).filePath("DataGuid.dat");
@@ -610,7 +610,12 @@ void StartWindow::actionCreateGUID_DatabaseTriggered() {
         if (!QDir(DirName).exists()) return;
         QDirIterator it(DirName, QDirIterator::Subdirectories);
         while (it.hasNext()) {
-            QFileInfo fileInfo(it.next());
+            QString filePath = it.next();
+            if (filePath.contains("Build")) {
+                it.next();
+                continue;
+            }
+            QFileInfo fileInfo(filePath);
             if (fileInfo.isFile() && fileInfo.suffix() == suffix) {
                 FilePaths.append(fileInfo.filePath());
             }
@@ -654,11 +659,11 @@ void StartWindow::actionCreateGUID_DatabaseTriggered() {
 
 void StartWindow::actionLoadGUID_DatabaseTriggered() {
     QString lastPath = setting.value("LastFilePath").toString();
-    QString DataGuidPath = QDir(lastPath).filePath("DataGuid.dat");
-    DataGuidPath = QFileDialog::getOpenFileName(this,
-                                                tr("Open GUID Data File"),
-                                                DataGuidPath,
-                                                tr("GUID Data file(*.dat);;All files (*.*)"));
+    QString filePath = QDir(lastPath).filePath("DataGuid.dat");
+    QString DataGuidPath = QFileDialog::getOpenFileName(this,
+                                                        tr("Open GUID Data File"),
+                                                        filePath,
+                                                        tr("GUID Data file(*.dat);;All files (*.*)"));
     if (DataGuidPath.isEmpty()) return;
     QFileInfo DataGuidInfo(DataGuidPath);
     setting.setValue("LastFilePath", DataGuidInfo.path());
@@ -673,9 +678,11 @@ void StartWindow::actionLoadGUID_DatabaseTriggered() {
     }
 
     if (GuidDatabase::UseExternalDataGuid == true) {
+        ui->actionLoadGUID_Database->setCheckable(true);
         ui->actionLoadGUID_Database->setChecked(true);
         ui->actionUnloadGUID_Database->setEnabled(true);
     } else {
+        ui->actionLoadGUID_Database->setCheckable(false);
         ui->actionLoadGUID_Database->setChecked(false);
         ui->actionUnloadGUID_Database->setEnabled(false);
     }
@@ -684,6 +691,7 @@ void StartWindow::actionLoadGUID_DatabaseTriggered() {
 void StartWindow::actionUnloadGUID_DatabaseTriggered() {
     GuidDatabase::ExternalDataGuidMap.clear();
     GuidDatabase::UseExternalDataGuid = false;
+    ui->actionLoadGUID_Database->setCheckable(false);
     ui->actionLoadGUID_Database->setChecked(false);
     ui->actionUnloadGUID_Database->setEnabled(false);
 }
