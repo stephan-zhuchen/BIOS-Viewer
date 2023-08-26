@@ -2,6 +2,7 @@
 #include <QKeyEvent>
 #include <QFile>
 #include <QProcess>
+#include <QDir>
 #include <thread>
 #include <utility>
 #include "BiosWindow.h"
@@ -77,6 +78,8 @@ void InfoWindow::showTab() {
 
     std::thread showAcpi(&InfoWindow::showAcpiTab, this);
     showAcpi.detach();
+
+//    showFceTab();
 }
 
 void InfoWindow::showFitTab() {
@@ -211,7 +214,8 @@ void InfoWindow::showFceTab() {
     }
 
     auto *process = new QProcess(this);
-    QString TempFilepath = appDir + "/tool/ClientBios.config";
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString TempFilepath = QDir(lastPath).filePath("ClientBios.config");
     QStringList arguments;
     arguments << "read" << "-i" << OpenedFileName << "0006" <<  "005C" << "0078" << "0030" << "0034" << "0039" << "0046" << ">" << TempFilepath;
     QString command = toolpath + " " + arguments.join(" ");
@@ -227,7 +231,7 @@ void InfoWindow::showFceTab() {
 //        TempFile.open(QIODevice::ReadOnly | QIODevice::Text);
 //        text = TempFile.readAll();
 //        TempFile.close();
-//        TempFile.remove();
+////        TempFile.remove();
 //    } else {
 //        text = "Please run as Administrator!";
 //    }
@@ -307,7 +311,8 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
         text = BpmToolVersion + BpmGen2Text.mid(BpmIndex, KmIndex - BpmIndex);
     } else if (item->text() == "BPM DEF") {
         process = new QProcess(this);
-        QString TempFilepath = appDir + "/tool/temp.txt";
+        QString lastPath = setting.value("LastFilePath").toString();
+        QString TempFilepath = QDir(lastPath).filePath("temp.txt");
         process->start(toolpath, QStringList() << "PARSE" << OpenedFileName << "-o" << TempFilepath);
         process->waitForFinished();
         delete process;
@@ -330,8 +335,9 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
     INT32 currentRow = ui->AcpiListWidget->currentRow();
     ACPI_Class* ACPI_Entry = BiosImage->AcpiTables.at(currentRow);
 
-    QString filepath = appDir + "/tool/temp.bin";
-    QString Dslpath = appDir + "/tool/temp.dsl";
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString filePath = QDir(lastPath).filePath("temp.bin");
+    QString Dslpath = QDir(lastPath).filePath("temp.dsl");
     QString toolpath = appDir + "/tool/ACPI/iasl.exe";
     QString AcpiText;
 
@@ -342,17 +348,15 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
         return;
     }
 
-    saveBinary(filepath.toStdString(), ACPI_Entry->data, 0, ACPI_Entry->size);
-    std::ifstream tempFile(filepath.toStdString());
-    if (!tempFile.good()) {
+    saveBinary(filePath.toStdString(), ACPI_Entry->data, 0, ACPI_Entry->size);
+    if (!QFile::exists(filePath)) {
         AcpiText = "Please run as Administrator!";
         ui->AcpiTextBrowser->setText(AcpiText);
         return;
     }
-    tempFile.close();
 
     auto *process = new QProcess(this);
-    process->start(toolpath, QStringList() << "-d" << filepath);
+    process->start(toolpath, QStringList() << "-d" << filePath);
     process->waitForFinished();
 
     QFile DslFile(Dslpath);
@@ -362,7 +366,7 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
         DslFile.close();
         DslFile.remove();
     }
-    QFile TempFile(filepath);
+    QFile TempFile(filePath);
     if(TempFile.exists()) {
         TempFile.close();
         TempFile.remove();
