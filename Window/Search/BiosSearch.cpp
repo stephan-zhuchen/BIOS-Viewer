@@ -265,13 +265,21 @@ void BiosSearch::NextButtonClicked() {
             SearchGuidFromTreeWidget(SearchedGuid);
     }
 
+    // Still Empty
+    if (matchedItems.empty()) {
+        QMessageBox::about(this, tr("Search"), "Not Found!");
+        return;
+    }
     currentHighlightedIndex = (currentHighlightedIndex + 1) % matchedItems.size();
     treeWidget->scrollToItem(matchedItems[currentHighlightedIndex]);
     treeWidget->setCurrentItem(matchedItems[currentHighlightedIndex]);
 }
 
 void BiosSearch::PreviousButtonClicked() {
-    if (matchedItems.empty()) return;
+    if (matchedItems.empty()) {
+        QMessageBox::about(this, tr("Search"), "No Previous Results!");
+        return;
+    }
     currentHighlightedIndex = (currentHighlightedIndex - 1 + matchedItems.size()) % matchedItems.size();
     treeWidget->scrollToItem(matchedItems[currentHighlightedIndex]);
     treeWidget->setCurrentItem(matchedItems[currentHighlightedIndex]);

@@ -92,14 +92,14 @@ void BiosViewerWindow::ActionExtractBIOSTriggered() {
 }
 
 void StartWindow::ActionSearchTriggered() {
-//    if (TabData.empty())
-//        return;
-//    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-//    if (WindowData->CurrentWindow == WindowMode::BIOS) {
-//        WindowData->BiosViewerUi->ActionSearchBiosTriggered();
-//    } else if (WindowData->CurrentWindow == WindowMode::Hex) {
-//        WindowData->HexViewerUi->ActionSearchHexTriggered();
-//    }
+    if (TabData.empty())
+        return;
+    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
+    if (WindowData->CurrentWindow == WindowMode::BIOS) {
+        WindowData->BiosViewerUi->ActionSearchBiosTriggered();
+    } else if (WindowData->CurrentWindow == WindowMode::Hex) {
+        WindowData->HexViewerUi->ActionSearchHexTriggered();
+    }
 }
 
 void StartWindow::ActionGotoTriggered() {

@@ -9,8 +9,7 @@
 
 SearchDialog::SearchDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SearchDialog),
-    PreviousOffset(-1)
+    ui(new Ui::SearchDialog)
 {
     ui->setupUi(this);
     initSetting();
@@ -104,48 +103,34 @@ void SearchDialog::SetBinaryData(QByteArray *BinaryData) {
  * @brief A class that represents a search dialog for binary search.
  */
 
-bool SearchDialog::SearchBinary(int *begin, int *length) {
+void SearchDialog::SearchBinary() {
     if (SearchedString.size() == 0)
-        return false;
+        return;
     static QRegularExpression re("\\s");
     QString number = SearchedString.remove(re);
     if (number.size() % 2 == 1) {
         number = "0" + number;
     }
     QStringList littleEndianNum;
-    QVector<char> searchNum;
+    QByteArray searchNum;
     for (int idx = 0; idx < number.size(); idx += 2) {
         littleEndianNum.append(number.mid(idx, 2));
     }
     for (const auto & var : littleEndianNum) {
-        searchNum.push_back(var.toInt(nullptr, 16));
+        searchNum.append(var.toInt(nullptr, 16));
     }
     if (isLittleEndian)
         std::reverse(searchNum.begin(), searchNum.end());
 
-    // Search little endian binary
-    INT64 matchIdx = PreviousOffset;
-    while (true) {
-        bool Found = true;
-        matchIdx = BinaryBuffer->indexOf(searchNum.at(0), matchIdx + 1);
-        if (matchIdx == -1) {
-            break;
-        }
-        for (int strIdx = 1; strIdx < searchNum.size(); ++strIdx) {
-            if (BinaryBuffer->at(matchIdx + strIdx) != searchNum.at(strIdx)) {
-                Found = false;
-                break;
-            }
-        }
-        if (Found) {
-            *begin = matchIdx;
-            *length = searchNum.size();
-            PreviousOffset = matchIdx;
-            return true;
-        }
+    CurrentSearchLength = searchNum.size();
+
+    INT64 currentIndex = 0;
+    while ((currentIndex = BinaryBuffer->indexOf(searchNum, currentIndex)) != -1) {
+        matchedSearchIndexes.append(currentIndex);
+        currentIndex += searchNum.size();
     }
-    QMessageBox::about(this, tr("Search"), "Not Found!");
-    return false;
+
+    return;
 }
 
 /**
@@ -157,10 +142,8 @@ bool SearchDialog::SearchBinary(int *begin, int *length) {
  * methods to search for specific ASCII values within the array using the binary search algorithm.
  */
 
-bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
-    if (SearchedString.size() == 0)
-        return false;
-    for (INT64 idx = PreviousOffset + 1; idx < BinaryBuffer->size(); ++idx) {
+void SearchDialog::SearchBinaryAscii() {
+    for (INT64 idx = 0; idx < BinaryBuffer->size(); ++idx) {
         bool Found = true;
         bool wFound = WideCharacter;
         if (UpperToLower(BinaryBuffer->at(idx)) == SearchedString.at(0).toLatin1()) {
@@ -180,15 +163,14 @@ bool SearchDialog::SearchBinaryAscii(int *begin, int *length) {
             }
 
             if (Found || wFound) {
-                *begin = idx;
-                *length = SearchedString.size();
-                PreviousOffset = idx;
-                return true;
+                qDebug() << "Found";
+                matchedSearchIndexes.append(idx);
+                continue;
             }
         }
     }
-    QMessageBox::about(this, tr("Search"), "Not Found!");
-    return false;
+
+    return;
 }
 
 char SearchDialog::UpperToLower(char s) const {
@@ -210,8 +192,8 @@ void SearchDialog::closeEvent(QCloseEvent *event) {
 }
 
 void SearchDialog::AsciiCheckboxStateChanged(int state) {
-    PreviousOffset = -1;
-    HistoryResult.clear();
+    CurrentIndex = -1;
+    matchedSearchIndexes.clear();
     if (state == Qt::Checked) {
         SearchAscii = true;
         ui->EndianBox->setEnabled(false);
@@ -229,38 +211,43 @@ void SearchDialog::AsciiCheckboxStateChanged(int state) {
 }
 
 void SearchDialog::SearchContentTextChanged(const QString &text) {
-    PreviousOffset = -1;
-    HistoryResult.clear();
+    CurrentIndex = -1;
+    matchedSearchIndexes.clear();
     SearchedString = text;
+    CurrentSearchLength = SearchedString.size();
     if (!CaseSensitive)
         SearchedString = text.toLower();
 }
 
 void SearchDialog::NextButtonClicked() {
-    int beginOffset = 0;
-    int searchLength = 0;
-    if (SearchAscii) {
-        if (SearchBinaryAscii(&beginOffset, &searchLength)) {
-            HistoryResult.push_back(QPair<int, int>(beginOffset, searchLength));
-            ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
-        }
-    } else {
-        if (SearchBinary(&beginOffset, &searchLength)) {
-            HistoryResult.push_back(QPair<int, int>(beginOffset, searchLength));
-            ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
+    if (SearchedString.isEmpty())
+        return;
+
+    if (matchedSearchIndexes.empty()) {
+        if (SearchAscii) {
+            SearchBinaryAscii();
+        } else {
+            SearchBinary();
         }
     }
+
+    // Still Empty
+    if (matchedSearchIndexes.empty()) {
+        QMessageBox::about(this, tr("Search"), "Not Found!");
+        return;
+    }
+    CurrentIndex = (CurrentIndex + 1) % matchedSearchIndexes.size();
+    ((QHexView*)parentWidget)->showFromOffset(matchedSearchIndexes.at(CurrentIndex), CurrentSearchLength);
 }
 
 void SearchDialog::PreviousButtonClicked() {
-    if (HistoryResult.size() <= 1)
+    if (matchedSearchIndexes.empty()) {
+        QMessageBox::about(this, tr("Search"), "No Previous Results!");
         return;
-    HistoryResult.pop_back();
-    QPair<int, int> lastResult = HistoryResult.back();
-    INT32 beginOffset = lastResult.first;
-    INT32 searchLength = lastResult.second;
-    PreviousOffset = (INT64)beginOffset;
-    ((QHexView*)parentWidget)->showFromOffset(beginOffset, searchLength);
+    }
+
+    CurrentIndex = (CurrentIndex - 1 + matchedSearchIndexes.size()) % matchedSearchIndexes.size();
+    ((QHexView*)parentWidget)->showFromOffset(matchedSearchIndexes.at(CurrentIndex), CurrentSearchLength);
 }
 
 void SearchDialog::SearchContentReturnPressed() {
@@ -268,8 +255,8 @@ void SearchDialog::SearchContentReturnPressed() {
 }
 
 void SearchDialog::EndianBoxActivated(int index) {
-    PreviousOffset = -1;
-    HistoryResult.clear();
+    CurrentIndex = -1;
+    matchedSearchIndexes.clear();
     if (ui->EndianBox->currentIndex() == EndianMode::LittleEndian) {
         isLittleEndian = true;
         setting.setValue("Endian", "little");
@@ -280,8 +267,8 @@ void SearchDialog::EndianBoxActivated(int index) {
 }
 
 void SearchDialog::CaseCheckboxStateChanged(int state) {
-    PreviousOffset = -1;
-    HistoryResult.clear();
+    CurrentIndex = -1;
+    matchedSearchIndexes.clear();
     if (state == Qt::Checked) {
         CaseSensitive = true;
         setting.setValue("CaseSensitive", "true");
@@ -293,8 +280,8 @@ void SearchDialog::CaseCheckboxStateChanged(int state) {
 }
 
 void SearchDialog::WideCheckboxStateChanged(int state) {
-    PreviousOffset = -1;
-    HistoryResult.clear();
+    CurrentIndex = -1;
+    matchedSearchIndexes.clear();
     if (state == Qt::Checked) {
         WideCharacter = true;
         setting.setValue("WideChar", "true");

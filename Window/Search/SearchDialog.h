@@ -21,8 +21,8 @@ public:
     void initSetting();
     void setParentWidget(QWidget *pWidget);
     void SetBinaryData(QByteArray *BinaryData);
-    bool SearchBinary(int *begin, int *length);
-    bool SearchBinaryAscii(int *begin, int *length);
+    void SearchBinary();
+    void SearchBinaryAscii();
     char UpperToLower(char s) const;
 
 protected:
@@ -46,7 +46,9 @@ private:
     Ui::SearchDialog *ui;
     QSettings        setting{"Intel", "BiosViewer"};
     QWidget          *parentWidget{};
-    INT64            PreviousOffset;
+    INT64            CurrentIndex{-1};
+    INT64            CurrentSearchLength{-1};
+    QVector<INT64>   matchedSearchIndexes;
     QByteArray       *BinaryBuffer{};
     static QString   SearchedString;
     static QString   pSearchedString;
@@ -55,7 +57,6 @@ private:
     bool             SearchAscii{false};
     bool             CaseSensitive{false};
     bool             WideCharacter{true};
-    QVector<QPair<INT32, INT32>>  HistoryResult;
 };
 
 #endif // SEARCHDIALOG_H

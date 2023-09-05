@@ -32,7 +32,7 @@
    <string>Search</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../logo/Images.qrc">
+   <iconset resource="../../logo/Images.qrc">
     <normaloff>:/search.svg</normaloff>:/search.svg</iconset>
   </property>
   <property name="locale">
@@ -149,17 +149,17 @@
     <rect>
      <x>130</x>
      <y>155</y>
-     <width>91</width>
+     <width>131</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>Wide Char</string>
+    <string>Include Wide Char</string>
    </property>
   </widget>
  </widget>
  <resources>
-  <include location="../logo/Images.qrc"/>
+  <include location="../../logo/Images.qrc"/>
  </resources>
  <connections/>
 </ui>
