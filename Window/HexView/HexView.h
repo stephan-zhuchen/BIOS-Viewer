@@ -24,6 +24,8 @@
 #define ADR_LENGTH 8
 #define BLANK_LINE_NUM 10
 
+class SearchDialog;
+
 class QHexView : public QAbstractScrollArea
 {
     Q_OBJECT
@@ -82,6 +84,8 @@ private:
     QColor WordColor{Qt::black};
     QColor WordColorOpposite{Qt::white};
     QColor CursorColor{COLOR_CURSOR};
+    SearchDialog *HexSearchDialog{nullptr};
+    bool         HexSearchDialogOpened{false};
     QSettings setting{QSettings("Intel", "BiosViewer")};
     QSettings SysSettings{R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", QSettings::NativeFormat};
 
@@ -138,6 +142,7 @@ public slots:
     void DiscardChangedContent();
     void SetEditingState(bool state);
     void SaveSelectedContent();
+    void setSearchDialogState(bool opened);
     void getChecksum8();
     void getChecksum16();
     void getChecksum32();

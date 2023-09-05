@@ -19,7 +19,6 @@ Volume::Volume(UINT8* buffer, INT64 length, INT64 offset, bool Compressed, Volum
 Volume::~Volume() {
     if (Type == VolumeType::Empty)
         return;
-    cout << "~Volume at offset: 0x" << hex << offsetFromBegin << ", Type:" << static_cast<int>(Type) << endl;
     for (Volume* vol : ChildVolume) {
         safeDelete(vol);
     }

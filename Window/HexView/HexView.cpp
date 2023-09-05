@@ -54,6 +54,10 @@ QHexView::QHexView(QWidget *parent, bool darkMode)
 
 QHexView::~QHexView() {
     finiRightMenu();
+    if (HexSearchDialogOpened) {
+        HexSearchDialog->close();
+        HexSearchDialog = nullptr;
+    }
 }
 
 /**
@@ -634,10 +638,18 @@ void QHexView::actionGoto() {
 }
 
 void QHexView::actionSearch() {
-    auto *searchDialog = new SearchDialog();
-    searchDialog->SetBinaryData(&HexDataArray);
-    searchDialog->setParentWidget(this);
-    searchDialog->exec();
+    if (!HexSearchDialogOpened) {
+        HexSearchDialogOpened = true;
+        HexSearchDialog = new SearchDialog();
+        HexSearchDialog->SetBinaryData(&HexDataArray);
+        HexSearchDialog->setParentWidget(this);
+        if (isDarkMode)
+            HexSearchDialog->setWindowIcon(QIcon(":/search_light.svg"));
+        HexSearchDialog->show();
+        connect(HexSearchDialog, SIGNAL(closeSignal(bool)), this, SLOT(setSearchDialogState(bool)));
+    } else {
+        HexSearchDialog->activateWindow();
+    }
 }
 
 void QHexView::setParentWidget(QWidget *pWidget, bool fromMainWindow) {
@@ -659,4 +671,8 @@ bool QHexView::getSelectedBuffer(QByteArray &buffer, INT64*length) {
     *length = endIdx - beginIdx + 1;
     buffer = HexDataArray.mid(beginIdx, *length);
     return true;
+}
+
+void QHexView::setSearchDialogState(bool opened) {
+    HexSearchDialogOpened = opened;
 }

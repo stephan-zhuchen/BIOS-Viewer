@@ -39,8 +39,8 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
             ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
             ((HexViewWindow*)parentWidget)->saveImage();
         }
-    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_C ) {
-        CopyFromSelectedContent();
+//    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_C ) {
+//        CopyFromSelectedContent();
     } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_V ) {
         PasteToContent();
     } else if ((event ->modifiers() & Qt::ControlModifier) == 0 && event->key() >= Qt::Key_0 && event->key() <= Qt::Key_9) {
@@ -162,41 +162,7 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
         setSelection(pos);
         setVisible = true;
     } else if (event->matches(QKeySequence::Copy)) {
-        if (HexDataArray.size()) {
-            QString res;
-            INT64 idx = 0;
-            INT64 copyOffset = 0;
-
-            QByteArray data = HexDataArray.mid(SelectionBegin / 2, (SelectionEnd - SelectionBegin) / 2 + 2);
-
-            if (SelectionBegin % 2) {
-                res += QString::number((data.at((idx + 2) / 2) & 0xF), 16);
-                res += " ";
-                idx++;
-                copyOffset = 1;
-            }
-
-            INT64 selectedSize = SelectionEnd - SelectionBegin;
-            for (; idx < selectedSize; idx += 2) {
-                if (data.size() > (copyOffset + idx) / 2) {
-                    QString val = QString::number(
-                        (data.at((copyOffset + idx) / 2) & 0xF0) >> 4, 16);
-
-                    if (idx + 2 < selectedSize) {
-                        val += QString::number(
-                            (data.at((copyOffset + idx) / 2) & 0xF), 16);
-                        val += " ";
-                    }
-
-                    res += val;
-                    if ((idx / 2) % BytesPerHexLine == (BytesPerHexLine - 1))
-                        res += "\n";
-                }
-            }
-
-            QClipboard *clipboard = QApplication::clipboard();
-            clipboard->setText(res);
-        }
+        CopyFromSelectedContent();
     }
 
     if (setVisible)
@@ -458,8 +424,14 @@ void QHexView::binaryEdit(char inputChar) {
 }
 
 void QHexView::CopyFromSelectedContent() {
+    if (SelectionBegin % 2 != 0) {
+        SelectionBegin -= 1;
+    }
+    if (SelectionEnd % 2 == 0) {
+        SelectionEnd += 1;
+    }
+
     if (SelectionBegin < SelectionEnd) {
-        qDebug() << "CopyFromSelectedContent";
         if (SelectionBegin % 2 != 0) {
             SelectionBegin -= 1;
         }
@@ -470,11 +442,20 @@ void QHexView::CopyFromSelectedContent() {
         getSelectedBuffer(CopiedData, &length);
     }
 
-    QClipboard *clipboard = QGuiApplication::clipboard();
+    QClipboard *dataClipboard = QGuiApplication::clipboard();
     auto *mimeData = new QMimeData;
     mimeData->setData("Hexedit/CopiedData", CopiedData);
-    clipboard->setMimeData(mimeData);
+    dataClipboard->setMimeData(mimeData);
 
+    QString CopiedString;
+    QByteArray data = HexDataArray.mid(SelectionBegin / 2, (SelectionEnd - SelectionBegin) / 2 + 1);
+    for (int var = 0; var < data.size(); ++var) {
+        UINT8 num = (UINT8)data.at(var);
+        CopiedString += QString("%1").arg(num, 2, 16, QChar('0')).toUpper();
+    }
+    cout << CopiedString.toStdString() << endl;
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->setText(CopiedString);
 }
 
 void QHexView::PasteToContent() {
