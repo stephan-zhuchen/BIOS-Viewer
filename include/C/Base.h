@@ -18,6 +18,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 //
 // Include processor specific binding
 //
+#include "UEFI/GUID.h"
 #include "SymbolDefinition.h"
 #include <assert.h>
 

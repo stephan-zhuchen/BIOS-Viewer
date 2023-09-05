@@ -10,6 +10,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef __VARIABLE_FORMAT_H__
 #define __VARIABLE_FORMAT_H__
 
+#include "UEFI/GUID.h"
 #include "SymbolDefinition.h"
 
 #define EFI_VARIABLE_GUID \
@@ -20,6 +21,11 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 extern EFI_GUID  gEfiVariableGuid;
 extern EFI_GUID  gEfiAuthenticatedVariableGuid;
+
+///
+/// Logical block address.
+///
+typedef UINT64 EFI_LBA;
 
 ///
 /// Alignment of variable name and data, according to the architecture:
@@ -62,6 +68,20 @@ typedef enum {
 ///
 #define VARIABLE_STORE_FORMATTED  0x5a
 #define VARIABLE_STORE_HEALTHY    0xfe
+
+typedef struct {
+    UINT16    Year;
+    UINT8     Month;
+    UINT8     Day;
+    UINT8     Hour;
+    UINT8     Minute;
+    UINT8     Second;
+    UINT8     Pad1;
+    UINT32    Nanosecond;
+    INT16     TimeZone;
+    UINT8     Daylight;
+    UINT8     Pad2;
+} EFI_TIME;
 
 ///
 /// Variable Store region header.
@@ -219,5 +239,93 @@ struct _VARIABLE_INFO_ENTRY {
   UINT32                 CacheCount;  ///< Number of times that cache hits this variable.
   BOOLEAN                Volatile;    ///< TRUE if volatile, FALSE if non-volatile.
 };
+
+
+#define WORKING_BLOCK_VALID    0x1
+#define WORKING_BLOCK_INVALID  0x2
+
+///
+/// The EDKII Fault tolerant working block header.
+/// The header is immediately followed by the write queue data.
+///
+typedef struct {
+    ///
+    /// FTW working block signature.
+    /// Its value has be updated from gEfiSystemNvDataFvGuid to gEdkiiWorkingBlockSignatureGuid,
+    /// because its write queue data format has been updated to support the crossing archs.
+    ///
+    EFI_GUID    Signature;
+    ///
+    /// 32bit CRC calculated for this header.
+    ///
+    UINT32      Crc;
+    ///
+    /// Working block valid bit.
+    ///
+    UINT8       WorkingBlockValid   : 1;
+    UINT8       WorkingBlockInvalid : 1;
+    UINT8       Reserved            : 6;
+    UINT8       Reserved3[3];
+    ///
+    /// Total size of the following write queue range.
+    ///
+    UINT64      WriteQueueSize;
+    ///
+    /// Write Queue data.
+    ///
+    /// EFI_FAULT_TOLERANT_WRITE_HEADER FtwHeader;
+    /// EFI_FAULT_TOLERANT_WRITE_RECORD FtwRecord[FtwHeader.NumberOfWrites]
+    /// EFI_FAULT_TOLERANT_WRITE_HEADER FtwHeader2;
+    /// EFI_FAULT_TOLERANT_WRITE_RECORD FtwRecord2[FtwHeader2.NumberOfWrites]
+    /// ...
+    ///
+} EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER;
+
+#define FTW_VALID_STATE    0
+#define FTW_INVALID_STATE  1
+
+//
+// EFI Fault tolerant block update write queue entry.
+//
+typedef struct {
+    UINT8       HeaderAllocated : 1;
+    UINT8       WritesAllocated : 1;
+    UINT8       Complete        : 1;
+    UINT8       Reserved        : 5;
+    EFI_GUID    CallerId;
+    UINT64      NumberOfWrites;
+    UINT64      PrivateDataSize;
+} EFI_FAULT_TOLERANT_WRITE_HEADER;
+
+//
+// EFI Fault tolerant block update write queue record.
+//
+typedef struct {
+    UINT8      BootBlockUpdate     : 1;
+    UINT8      SpareComplete       : 1;
+    UINT8      DestinationComplete : 1;
+    UINT8      Reserved            : 5;
+    EFI_LBA    Lba;
+    UINT64     Offset;
+    UINT64     Length;
+    //
+    // Relative offset to spare block.
+    //
+    INT64      RelativeOffset;
+    //
+    // UINT8    PrivateData[PrivateDataSize]
+    //
+} EFI_FAULT_TOLERANT_WRITE_RECORD;
+
+#define FTW_RECORD_SIZE(PrivateDataSize)  (sizeof (EFI_FAULT_TOLERANT_WRITE_RECORD) + (UINTN) PrivateDataSize)
+
+#define FTW_RECORD_TOTAL_SIZE(NumberOfWrites, PrivateDataSize) \
+    ((UINTN) (NumberOfWrites) * (sizeof (EFI_FAULT_TOLERANT_WRITE_RECORD) + (UINTN) PrivateDataSize))
+
+#define FTW_WRITE_TOTAL_SIZE(NumberOfWrites, PrivateDataSize) \
+    ( \
+      sizeof (EFI_FAULT_TOLERANT_WRITE_HEADER) + (UINTN) (NumberOfWrites) * \
+      (sizeof (EFI_FAULT_TOLERANT_WRITE_RECORD) + (UINTN) PrivateDataSize) \
+    )
 
 #endif // _EFI_VARIABLE_H_

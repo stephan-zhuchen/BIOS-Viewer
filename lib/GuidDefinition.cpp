@@ -1,11 +1,10 @@
-#include "UEFI/GuidDefinition.h"
+#include "UEFI/GuidDatabase.h"
 #include "BaseLib.h"
 #include <iomanip>
 #include <QFile>
 #include <QTextStream>
-#include <QDebug>
 
-bool EFI_GUID::operator==(const EFI_GUID guid) {
+bool EFI_GUID::operator==(EFI_GUID guid) {
     if (this->Data1 != guid.Data1) {
         return false;
     } else if (this->Data2 != guid.Data2) {
@@ -21,28 +20,25 @@ bool EFI_GUID::operator==(const EFI_GUID guid) {
     return true;
 }
 
-bool EFI_GUID::operator!=(const EFI_GUID guid) {
+bool EFI_GUID::operator!=(EFI_GUID guid) {
     return !operator==(guid);
 }
 
-std::ostream& operator<<(std::ostream& out, const EFI_GUID& guid) {
-    using namespace std;
-    out << hex
-        << setfill('0')
-        << setw(8)
-        << guid.Data1 << "-"
-        << setw(4)
-        << guid.Data2 << "-"
-        << setw(4)
-        << guid.Data3 << "-";
-    for (int i = 0; i < 8; ++i) {
-        if (i == 2) {
-            out << "-";
-        }
-        out << setw(2)
-            << (UINT16)guid.Data4[i];
+std::string EFI_GUID::str(bool upperCase) {
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    if (upperCase) {
+        ss << std::uppercase;
     }
-    return out;
+    ss << std::setw(8) << Data1 << "-";
+    ss << std::setw(4) << Data2 << "-";
+    ss << std::setw(4) << Data3 << "-";
+    ss << std::setw(2) << static_cast<int>(Data4[0]);
+    ss << std::setw(2) << static_cast<int>(Data4[1]) << "-";
+    for (int i = 2; i < 8; ++i) {
+        ss << std::setw(2) << static_cast<int>(Data4[i]);
+    }
+    return ss.str();
 }
 
 GuidDatabase::~GuidDatabase() = default;
@@ -113,7 +109,7 @@ std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
                 name = ExternalDataGuidMap.value(guid.Data1).toStdString();
             }
             else if (hashedGuid.count(guid.Data1) == 0) {
-                name = BaseLibrarySpace::GUID(guid).str(true);
+                name = guid.str(true);
             }
             else
                 name = hashedGuid.at(guid.Data1);

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(BiosViewer VERSION 0.1 LANGUAGES CXX)
+project(BiosViewer2 VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -45,75 +45,68 @@ aux_source_directory(lib/BrotliDecompress/brotli/enc BROTLI_ENC_C)
 file(GLOB_RECURSE INCLUDE_FILES "include/*")
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
 file(GLOB UI_SOURCES "Window/*.ui")
-file(GLOB WINDOW_H_SOURCES "Window/*.h")
-aux_source_directory(Window WINDOW_SOURCES)
-
-set(LIBRARY_SOURCES
-        lib/GuidDefinition.cpp
-        lib/BaseLib.h
-        lib/BaseLib.cpp
-        lib/UefiLib.h
-        lib/UefiLib.cpp
-        lib/iwfi.h
-        lib/iwfi.cpp
-        lib/BootGuard.cpp
-        lib/BiosGuard.cpp
-        lib/Model.h
-        lib/Model.cpp
-        lib/Section.cpp
-        lib/ElfLib.cpp
-        lib/ElfLib.h
-        lib/CapsuleLib.cpp
-        lib/CapsuleLib.h
-        lib/QHexView/qhexview.cpp
-        lib/QHexView/HexEdit.cpp
-        lib/QHexView/qhexview.h
-        lib/Compatibility/BaseMemoryLib.cpp
-#        lib/Compatibility/Common.cpp
-#        lib/FCE/Expression.cpp
-#        lib/FCE/IfrParse.cpp
-#        lib/FCE/Fce.cpp
-)
+file(GLOB_RECURSE WINDOW_SOURCES "Window/*")
+file(GLOB LIBRARY_H_SOURCES "lib/*.h")
+file(GLOB FILE_SYSTEM_H_SOURCES "lib/UefiFileSystem/*.h")
+file(GLOB IFWI_REGION_H_SOURCES "lib/IfwiRegion/*.h")
+file(GLOB CAPSULE_H_SOURCES "lib/Capsule/*.h")
+file(GLOB FEATURE_H_SOURCES "lib/Feature/*.h")
+aux_source_directory(lib LIBRARY_SOURCES)
+aux_source_directory(lib/UefiFileSystem FILE_SYSTEM_SOURCES)
+aux_source_directory(lib/IfwiRegion IFWI_REGION_SOURCES)
+aux_source_directory(lib/Capsule CAPSULE_SOURCES)
+aux_source_directory(lib/Feature FEATURE_SOURCES)
+file(GLOB_RECURSE COMPATIBILITY_SOURCES "lib/Compatibility/*")
 
 set(PROJECT_SOURCES
         main.cpp
         logo/Images.qrc
         font/Fonts.qrc
         ${LIBRARY_SOURCES}
+        ${LIBRARY_H_SOURCES}
+        ${COMPATIBILITY_SOURCES}
+        ${FILE_SYSTEM_H_SOURCES}
+        ${FILE_SYSTEM_SOURCES}
+        ${IFWI_REGION_H_SOURCES}
+        ${IFWI_REGION_SOURCES}
+        ${CAPSULE_H_SOURCES}
+        ${CAPSULE_SOURCES}
+        ${FEATURE_H_SOURCES}
+        ${FEATURE_SOURCES}
         ${WINDOW_SOURCES}
-        ${WINDOW_H_SOURCES}
+#        ${WINDOW_H_SOURCES}
         ${INCLUDE_FILES}
         ${app_icon_resource_windows}
         ${UI_SOURCES}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(BiosViewer
+    qt_add_executable(BiosViewer2
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
 # Define target properties for Android with Qt 6 as:
-#    set_property(TARGET BiosViewer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#    set_property(TARGET BiosViewer2 APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(BiosViewer SHARED
+        add_library(BiosViewer2 SHARED
             ${PROJECT_SOURCES}
         )
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(BiosViewer
+        add_executable(BiosViewer2
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(BiosViewer PRIVATE -Wno-deprecated-declarations)
+    target_compile_options(BiosViewer2 PRIVATE -Wno-deprecated-declarations)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(BiosViewer PRIVATE -Wno-deprecated)
+    target_compile_options(BiosViewer2 PRIVATE -Wno-deprecated)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Using MSVC compiler")
 endif()
@@ -124,23 +117,32 @@ add_library(Decompress STATIC ${DECOMPRESS_LIB})
 target_link_libraries(Decompress PRIVATE Lzma Brotli)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Decompress)
+    target_link_libraries(BiosViewer2 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Decompress)
 else()
-    target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets crypto Decompress)
+    target_link_libraries(BiosViewer2 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets crypto Decompress)
 endif()
 
-set_target_properties(BiosViewer PROPERTIES
-    MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
+# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
+# If you are developing for iOS or macOS you should consider setting an
+# explicit, fixed bundle identifier manually though.
+if(${QT_VERSION} VERSION_LESS 6.1.0)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.BiosViewer2)
+endif()
+set_target_properties(BiosViewer2 PROPERTIES
+    ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
-install(TARGETS BiosViewer
+include(GNUInstallDirs)
+install(TARGETS BiosViewer2
     BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(BiosViewer)
+    qt_finalize_executable(BiosViewer2)
 endif()

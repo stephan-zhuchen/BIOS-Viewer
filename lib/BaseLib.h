@@ -11,54 +11,12 @@
 #include <utility>
 #include <exception>
 #include <fstream>
+#include "UEFI/GUID.h"
 #include "SymbolDefinition.h"
 
 namespace BaseLibrarySpace {
 
     using namespace std;
-
-    class GUID {
-    public:
-        EFI_GUID GuidData{};
-        GUID() = delete;
-        GUID(const GUID& guid);
-        explicit GUID(const char* buffer);
-        explicit GUID(const EFI_GUID& cGuid);
-        string str(bool upper=false) const;
-        friend ostream& operator<<(ostream& out, const GUID* guid);
-        bool operator==(const GUID& guid);
-        bool operator!=(const GUID& guid);
-        GUID& operator=(const GUID& guid);
-        GUID& operator=(const EFI_GUID& guid);
-    };
-
-    class Buffer {
-    public:
-        ifstream* buffer;
-        INT64 offset;
-
-        EFI_GUID getGUID();
-        UINT8  getUINT8();
-        UINT16 getUINT16();
-        UINT32 getUINT32();
-        UINT64 getUINT64();
-        CHAR8  getINT8();
-        INT16  getINT16();
-        INT32  getINT24();
-        INT32  getINT32();
-        INT64  getINT64();
-        UINT8* getBytes(int n);
-        string getString(int n);
-
-        Buffer();
-        explicit Buffer(ifstream* inFile);
-        ~Buffer();
-
-        void setOffset(INT64 off);
-        [[nodiscard]] INT64 getOffset() const;
-        [[nodiscard]] INT64 getBufferSize() const;
-        [[nodiscard]] INT64 getRemainingSize() const;
-    };
 
     class BiosException : public exception {
     private:

@@ -18,6 +18,30 @@ WITHWARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 #define V_FLASH_FDBAR_FLVALSIG  0x0FF0A55A
 
+/**
+  Flash Region Type
+**/
+enum FLASH_REGION_TYPE{
+    FlashRegionDescriptor,
+    FlashRegionBios,
+    FlashRegionMe,
+    FlashRegionGbE,
+    FlashRegionPlatformData,
+    FlashRegionDer,
+    FlashRegionSecondaryBios,
+    FlashRegionuCodePatch,
+    FlashRegionEC,
+    FlashRegionDeviceExpansion2,
+    FlashRegionIE,
+    FlashRegion10Gbe_A,
+    FlashRegion10Gbe_B,
+    FlashRegion13,
+    FlashRegion14,
+    FlashRegion15,
+    FlashRegionAll,
+    FlashRegionMax
+};
+
 // Flash descriptor header
 typedef struct FLASH_DESCRIPTOR_HEADER_ {
     UINT8  ReservedVector[16];     // Reserved for ARM ResetVector, 0xFFs on x86/x86-64 machines
