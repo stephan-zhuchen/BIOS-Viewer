@@ -6,6 +6,7 @@
 #include "BaseLib.h"
 #include <QStringList>
 #include <QDebug>
+#include <utility>
 
 using namespace BaseLibrarySpace;
 
@@ -421,4 +422,12 @@ void BiosGuardClass::setInfoStr() {
        << DumpHex(UpdatePackageDigest, RSAKeySize);
 
     InfoStr = QString::fromStdString(ss.str());
+}
+
+QString BiosGuardClass::getUserDefinedName() const {
+    return "BGUP - " + Content;;
+}
+
+void BiosGuardClass::setContent(QString content) {
+    Content = std::move(content);
 }

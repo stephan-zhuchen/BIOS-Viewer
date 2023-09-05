@@ -17,6 +17,7 @@ struct BgslOperation {
 class BiosGuardClass: public Volume {
 private:
     BGUP_HEADER   BgupHeader;
+    QString       Content;
     QString       BiosGuardScript;
     BGUPC_HEADER  BgupCHeader;
     QString       Algorithm;
@@ -31,6 +32,8 @@ public:
     INT64 SelfDecode() override;
     ~BiosGuardClass() override;
     void setInfoStr() override;
+    [[nodiscard]] QString getUserDefinedName() const override;
 
+    void setContent(QString content);
     void decodeBgsl(UINT8* buffer, INT64 length);
 };

@@ -33,7 +33,7 @@ public:
     QList<Volume*>               VolumeDataList{};
     Volume                       *OverviewVolume{nullptr};
     DataModel                    RightClickedItemModel;
-    bool                         BiosValidFlag{true};
+    QString                      CapsuleType;
 
     CapsuleViewerData()=default;
     ~CapsuleViewerData();
@@ -68,12 +68,15 @@ public:
 
     void closeEvent(QCloseEvent *event) override;
     static bool tryOpenCapsule(const UINT8 *image, INT64 imageLength);
-    void LoadCapsule();
-    void ParseStandardCapsule(INT64 CapsuleOffset, const QString& CapsuleType);
+    void  LoadCapsule();
+    void  ParseStandardCapsule(INT64 CapsuleOffset, const QString& CapsuleType);
+    void  ParseMonolithicCapsule(INT64 CapsuleOffset);
     INT64 ParsePayloadInFfs(INT64 FfsOffset, const QString& CapsuleType);
-    void ParseBgupInFfs(INT64 BgupOffset, IniConfigFile *ConfigIni);
-    void initSetting();
-    void fini();
+    INT64 ParseBgupInFfs(INT64 BgupOffset, IniConfigFile *ConfigIni);
+    void  ParseMicrocodeCapsule(INT64 CapsuleOffset);
+    INT64 ParsePayloadCapsule(INT64 CapsuleOffset, INT64 PayloadSize, const QString& CapsuleType);
+    void  initSetting();
+
     void initRightMenu();
     void finiRightMenu();
     void setPanelInfo(INT64 offset, INT64 size);

@@ -290,5 +290,17 @@ void DataModel::InitFromVolume(Volume *vol) {
         case VolumeType::BiosGuardPackage:
             name = "BGUP";
             break;
+        case VolumeType::BtgAcm:
+            name = "ACM";
+            break;
+        case VolumeType::Microcodeversion:
+            name = "Microcode Version";
+            break;
+        case VolumeType::Microcode:
+            name = "Microcode";
+            break;
+        case VolumeType::IshPdt:
+            name = "ISH PDT";
+            break;
     }
 }

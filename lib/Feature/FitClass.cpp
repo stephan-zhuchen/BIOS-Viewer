@@ -34,14 +34,16 @@ FitTableClass::FitTableClass(UINT8 *fv, INT64 length) {
                 UINT64 RelativeMicrocodeAddress = adjustBufferAddress(0x1000000, MicrocodeAddress, length);
                 if (RelativeMicrocodeAddress > (UINT64)length)
                     continue;
-                auto *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, MicrocodeAddress);
+                auto *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, 0, MicrocodeAddress);
+                MicrocodeEntry->SelfDecode();
                 MicrocodeEntries.push_back(MicrocodeEntry);
             } else if (FitEntry.Type == FIT_TABLE_TYPE_STARTUP_ACM) {
                 UINT64 AcmAddress = FitEntry.Address & 0xFFFFFF;
                 UINT64 RelativeAcmAddress = adjustBufferAddress(0x1000000, AcmAddress, length);
                 if (RelativeAcmAddress > (UINT64)length)
                     continue;
-                auto *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, AcmAddress);
+                auto *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, 0, AcmAddress);
+                AcmEntry->SelfDecode();
                 AcmEntries.push_back(AcmEntry);
             } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST || FitEntry.Type == FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST) {
                 // Use external BpmGen2 tool to parse KM and BPM info

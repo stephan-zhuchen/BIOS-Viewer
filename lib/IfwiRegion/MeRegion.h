@@ -20,4 +20,3 @@ public:
     void  DecodeChildVolume() override;
     void  setInfoStr() override;
 };
-

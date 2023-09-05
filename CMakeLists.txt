@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(BiosViewer2 VERSION 0.1 LANGUAGES CXX)
+project(BiosViewer VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -81,32 +81,32 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(BiosViewer2
+    qt_add_executable(BiosViewer
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
 # Define target properties for Android with Qt 6 as:
-#    set_property(TARGET BiosViewer2 APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#    set_property(TARGET BiosViewer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(BiosViewer2 SHARED
+        add_library(BiosViewer SHARED
             ${PROJECT_SOURCES}
         )
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(BiosViewer2
+        add_executable(BiosViewer
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(BiosViewer2 PRIVATE -Wno-deprecated-declarations)
+    target_compile_options(BiosViewer PRIVATE -Wno-deprecated-declarations)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(BiosViewer2 PRIVATE -Wno-deprecated)
+    target_compile_options(BiosViewer PRIVATE -Wno-deprecated)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Using MSVC compiler")
 endif()
@@ -117,18 +117,18 @@ add_library(Decompress STATIC ${DECOMPRESS_LIB})
 target_link_libraries(Decompress PRIVATE Lzma Brotli)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_link_libraries(BiosViewer2 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Decompress)
+    target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Decompress)
 else()
-    target_link_libraries(BiosViewer2 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets crypto Decompress)
+    target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets crypto Decompress)
 endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.BiosViewer2)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.BiosViewer)
 endif()
-set_target_properties(BiosViewer2 PROPERTIES
+set_target_properties(BiosViewer PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -137,12 +137,12 @@ set_target_properties(BiosViewer2 PROPERTIES
 )
 
 include(GNUInstallDirs)
-install(TARGETS BiosViewer2
+install(TARGETS BiosViewer
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(BiosViewer2)
+    qt_finalize_executable(BiosViewer)
 endif()

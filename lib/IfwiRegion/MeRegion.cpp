@@ -14,7 +14,7 @@ bool MeRegion::CheckValidation() {
 
 INT64 MeRegion::SelfDecode() {
     Type = VolumeType::ME;
-    return Volume::SelfDecode();
+    return size;
 }
 
 void MeRegion::DecodeChildVolume() {
@@ -25,6 +25,4 @@ void MeRegion::setInfoStr() {
     Volume::setInfoStr();
 }
 
-MeRegion::~MeRegion() {
-    qDebug() << "~MeRegion";
-}
+MeRegion::~MeRegion() = default;

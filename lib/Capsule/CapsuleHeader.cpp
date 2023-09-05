@@ -128,9 +128,9 @@ void FirmwareManagementHeader::setInfoStr() {
        << setw(width) << "dwLength:"           << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.dwLength << "h\n"
        << setw(width) << "wRevision:"          << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.wRevision << "h\n"
        << setw(width) << "wCertificateType:"   << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.wCertificateType << "h\n"
-       << setw(width) << "CertType:"           << hex << uppercase << FmpAuthHeader.AuthInfo.CertType.str(true) << "h\n";
+       << setw(width) << "CertType:"           << hex << uppercase << FmpAuthHeader.AuthInfo.CertType.str(true) << "h\n\n";
 
-    ss << setw(width) << "Signature:"              << FmpPayloadHeader.Signature << "\n"
+    ss << setw(width) << "Signature:"              << charToString((CHAR8*)&FmpPayloadHeader.Signature, sizeof(FmpPayloadHeader.Signature), false) << "\n"
        << setw(width) << "HeaderSize:"             << hex << uppercase << FmpPayloadHeader.HeaderSize << "h\n"
        << setw(width) << "FwVersion:"              << hex << uppercase << FmpPayloadHeader.FwVersion << "h\n"
        << setw(width) << "LowestSupportedVersion:" << hex << uppercase << FmpPayloadHeader.LowestSupportedVersion << "h\n";

@@ -257,7 +257,7 @@ void InfoWindow::microcodeListWidgetItemSelectionChanged() {
     INT32 currentRow = ui->microcodeListWidget->currentRow();
     MicrocodeHeaderClass* EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(currentRow);
     EntryHeader->setInfoStr();
-    ui->MicrocodeTextBrowser->setText(EntryHeader->InfoStr);
+    ui->MicrocodeTextBrowser->setText(EntryHeader->getInfoText());
 }
 
 void InfoWindow::acmListWidgetItemSelectionChanged() {

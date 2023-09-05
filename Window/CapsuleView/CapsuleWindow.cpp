@@ -8,6 +8,11 @@
 #include "UefiFileSystem/FirmwareVolume.h"
 #include "UefiFileSystem/FfsFile.h"
 #include "Feature/BiosGuardClass.h"
+#include "Feature/AcmClass.h"
+#include "IfwiRegion/EcRegion.h"
+#include "IfwiRegion/MeRegion.h"
+#include "IfwiRegion/PdtRegion.h"
+#include "IfwiRegion/GbeRegion.h"
 #include "UEFI/GuidDefinition.h"
 #include "HexView/HexViewDialog.h"
 #include "openssl/sha.h"
@@ -25,7 +30,6 @@ CapsuleWindow::CapsuleWindow(StartWindow *parent):
 CapsuleWindow::~CapsuleWindow() {
     delete ui;
     safeDelete(CapsuleData);
-    fini();
     finiRightMenu();
 }
 
@@ -39,14 +43,11 @@ void CapsuleWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
 }
 
 void CapsuleWindow::initSetting() {
-    ui->label_mode->clear();
+    ui->CapsuleTitle->clear();
     ui->listWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->listWidget->setStyleSheet(QString("QListView::item{margin:%1px;}").arg(setting.value("LineSpacing").toInt()));
     ui->textBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt() + 1));
     ui->AddressPanel->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
-}
-
-void CapsuleWindow::fini() {
 }
 
 void CapsuleWindow::initRightMenu() {
@@ -95,8 +96,7 @@ void CapsuleWindow::finiRightMenu() {
     safeDelete(sha512_Menu);
 }
 
-void CapsuleWindow::setPanelInfo(INT64 offset, INT64 size)
-{
+void CapsuleWindow::setPanelInfo(INT64 offset, INT64 size) {
     stringstream Info;
     Info.setf(ios::left);
     Info << "Offset = 0x";
@@ -163,11 +163,19 @@ void CapsuleWindow::LoadCapsule() {
             continue;
         }
         CapsuleData->VolumeDataList.append(FmpHeader);
-        QString capsuleType = FmpHeader->getCapsuleType();
-        ParseStandardCapsule(itemOffset + offset, capsuleType);
+        CapsuleData->CapsuleType = FmpHeader->getCapsuleType();
+        if (CapsuleData->CapsuleType == "BIOS" || CapsuleData->CapsuleType == "Extended BIOS" || CapsuleData->CapsuleType == "BtgAcm")
+            ParseStandardCapsule(itemOffset + offset, CapsuleData->CapsuleType);
+        else if (CapsuleData->CapsuleType == "Monolithic")
+            ParseMonolithicCapsule(itemOffset + offset);
+        else if (CapsuleData->CapsuleType == "uCode")
+            ParseMicrocodeCapsule(itemOffset + offset);
+        else
+            ParsePayloadCapsule(itemOffset + offset, WindowData->InputImageSize - itemOffset - offset, CapsuleData->CapsuleType);
     }
 
     addListItem(CapsuleData->VolumeDataList);
+    ui->CapsuleTitle->setText("Capsule: " + CapsuleData->CapsuleType);
 }
 
 void CapsuleWindow::ParseStandardCapsule(INT64 CapsuleOffset, const QString& CapsuleType) {
@@ -211,6 +219,107 @@ void CapsuleWindow::ParseStandardCapsule(INT64 CapsuleOffset, const QString& Cap
     ParseBgupInFfs(offset, iniVolume);
 }
 
+void CapsuleWindow::ParseMonolithicCapsule(INT64 CapsuleOffset) {
+    /**
+     * Monolithic Capsule Format has 7 parts:
+     * 1. BIOS ini Config file;
+     * 2. Client Bios Payload;
+     * 3. BiosBgup payload.
+     * 4. ME Payload.
+     * 5. EC payload.
+     * 6. Pdt Payload.
+     * 7. GbE Payload.
+     */
+
+    // Firmware Header
+    INT64 offset = CapsuleOffset;
+    auto fv = FirmwareVolume(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 fvSize = fv.SelfDecode();
+    if (fvSize == 0) {
+        return;
+    }
+    offset += fv.getHeaderSize();
+
+    // FFS File Header + Ini Config File
+    Align(offset, CapsuleOffset, 0x8);
+    auto iniFile = FfsFile(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 iniSize = iniFile.SelfDecode();
+    if (iniSize == 0) {
+        return;
+    }
+    offset += iniFile.getHeaderSize();
+    auto iniVolume = new IniConfigFile(WindowData->InputImage + offset, iniFile.getSize() - iniFile.getHeaderSize(), offset);
+    iniVolume->SelfDecode();
+    CapsuleData->VolumeDataList.append(iniVolume);
+    offset += iniVolume->getSize();
+    Align(offset, CapsuleOffset, 0x8);
+
+    // FFS File Header + Payload
+    offset = ParsePayloadInFfs(offset, "BIOS");
+    if (offset == 0) {
+        return;
+    }
+
+    // FFS File Header + Bgup Payload
+    offset = ParseBgupInFfs(offset, iniVolume);
+    if (offset == 0) {
+        return;
+    }
+    Align(offset, CapsuleOffset, 0x8);
+
+    // FFS File Header + ME Payload
+    auto MeFile = FfsFile(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 MeSize = MeFile.SelfDecode();
+    if (MeSize == 0) {
+        return;
+    }
+    offset += MeFile.getHeaderSize();
+    offset = ParsePayloadCapsule(offset, MeSize - MeFile.getHeaderSize(), "ME");
+    if (offset == 0) {
+        return;
+    }
+    Align(offset, CapsuleOffset, 0x8);
+
+    // FFS File Header + EC Payload
+    auto EcFile = FfsFile(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 EcSize = EcFile.SelfDecode();
+    if (EcSize == 0) {
+        return;
+    }
+    offset += EcFile.getHeaderSize();
+    offset = ParsePayloadCapsule(offset, EcSize - EcFile.getHeaderSize(), "EC");
+    if (offset == 0) {
+        return;
+    }
+    Align(offset, CapsuleOffset, 0x8);
+
+    // FFS File Header + Pdt Payload
+    auto PdtFile = FfsFile(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 PdtSize = PdtFile.SelfDecode();
+    if (PdtSize == 0) {
+        return;
+    }
+    offset += PdtFile.getHeaderSize();
+    offset = ParsePayloadCapsule(offset, PdtSize - PdtFile.getHeaderSize(), "IshPdt");
+    if (offset == 0) {
+        return;
+    }
+    Align(offset, CapsuleOffset, 0x8);
+
+    // FFS File Header + GbE Payload
+    auto GbeFile = FfsFile(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 GbeSize = GbeFile.SelfDecode();
+    if (GbeSize == 0) {
+        return;
+    }
+    offset += GbeFile.getHeaderSize();
+    offset = ParsePayloadCapsule(offset, GbeSize - GbeFile.getHeaderSize(), "GbE");
+    if (offset == 0) {
+        return;
+    }
+    Align(offset, CapsuleOffset, 0x8);
+}
+
 INT64 CapsuleWindow::ParsePayloadInFfs(INT64 FfsOffset, const QString& CapsuleType) {
     // FFS File Header + Payload
     auto payloadFile = FfsFile(WindowData->InputImage + FfsOffset, WindowData->InputImageSize - FfsOffset, FfsOffset);
@@ -219,29 +328,134 @@ INT64 CapsuleWindow::ParsePayloadInFfs(INT64 FfsOffset, const QString& CapsuleTy
         return 0;
     }
     INT64 offset = FfsOffset + payloadFile.getHeaderSize();
-    if (CapsuleType == "BIOS") {
+    if (CapsuleType == "BIOS" || CapsuleType == "Extended BIOS") {
         auto biosVolume = new BiosRegion(WindowData->InputImage + offset, payloadFile.getSize() - payloadFile.getHeaderSize(), offset);
         biosVolume->SelfDecode();
         biosVolume->setBiosID();
         CapsuleData->VolumeDataList.append(biosVolume);
         offset += biosVolume->getSize();
+    } else if (CapsuleType == "BtgAcm") {
+        auto acmVolume = new AcmHeaderClass(WindowData->InputImage + offset, payloadFile.getSize() - payloadFile.getHeaderSize(), offset);
+        acmVolume->SelfDecode();
+        CapsuleData->VolumeDataList.append(acmVolume);
+        offset += acmVolume->getSize();
     }
     return offset;
 }
 
-void CapsuleWindow::ParseBgupInFfs(INT64 BgupOffset, IniConfigFile *ConfigIni) {
+INT64 CapsuleWindow::ParseBgupInFfs(INT64 BgupOffset, IniConfigFile *ConfigIni) {
     // FFS File Header + Bgup Payload
     auto bgupFile = FfsFile(WindowData->InputImage + BgupOffset, WindowData->InputImageSize - BgupOffset, BgupOffset);
     INT64 bgupSize = bgupFile.SelfDecode();
     if (bgupSize == 0) {
-        return;
+        return 0;
     }
     INT64 offset = BgupOffset + bgupFile.getHeaderSize();
     for (BgupConfig &config : ConfigIni->BgupList) {
-        auto bgup = new BiosGuardClass(WindowData->InputImage + offset + config.BgupOffset, config.BgupSize, offset + config.BgupOffset);
+        auto bgup = new BiosGuardClass(WindowData->InputImage + offset, config.BgupSize, offset);
         bgup->SelfDecode();
+        bgup->setVolumeType(VolumeType::UserDefined);
+        bgup->setContent(QString::fromStdString(config.BgupContent));
+        CapsuleData->VolumeDataList.append(bgup);
+        offset += config.BgupOffset;
+    }
+    return offset;
+}
+
+void CapsuleWindow::ParseMicrocodeCapsule(INT64 CapsuleOffset) {
+    /**
+     * Microcode Capsule Format has 3 parts:
+     * 1. Microcode Version file;
+     * 2. Microcode Payload;
+     * 3. Bgup payload (Optional).
+     */
+     // Do not Support Slot Mode Microcode Capsule (This mode doesn't follow standard capsule format)
+    CapsuleOffset += 0x4; // XDR Header
+
+    // Firmware Header
+    INT64 offset = CapsuleOffset;
+    auto fv = FirmwareVolume(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 fvSize = fv.SelfDecode();
+    if (fvSize == 0) {
+        return;
+    }
+    offset += fv.getHeaderSize();
+    Align(offset, CapsuleOffset, 0x8);
+
+    // FFS File Header + Microcode Version file
+    auto versionFfs = FfsFile(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 versionFfsSize = versionFfs.SelfDecode();
+    if (versionFfsSize == 0) {
+        return;
+    }
+    offset += versionFfs.getHeaderSize();
+    auto version = new MicrocodeVersion(WindowData->InputImage + offset, versionFfs.getSize() - versionFfs.getHeaderSize(), offset);
+    version->SelfDecode();
+    CapsuleData->VolumeDataList.append(version);
+    offset += version->getSize();
+
+    // FFS File Header + Microcode Payload
+    // Microcode address is located at an offset of 0x1000 after the Firmware header.
+    INT64 microcodeFfsOffset = CapsuleOffset + 0x1000 - sizeof(EFI_FFS_FILE_HEADER);
+    auto microcodeFfs = FfsFile(WindowData->InputImage + microcodeFfsOffset, WindowData->InputImageSize - microcodeFfsOffset, microcodeFfsOffset);
+    INT64 microcodeFfsSize = microcodeFfs.SelfDecode();
+    if (microcodeFfsSize == 0) {
+        return;
+    }
+    offset = microcodeFfsOffset + microcodeFfs.getHeaderSize();
+    QVector<INT64> MicrocodeOffsetVector = MicrocodeHeaderClass::SearchMicrocodeEntryNum(WindowData->InputImage + offset, microcodeFfs.getSize() - microcodeFfs.getHeaderSize());
+    for (INT64 microcodeOffset : MicrocodeOffsetVector) {
+        auto microcode = new MicrocodeHeaderClass(WindowData->InputImage + offset + microcodeOffset, microcodeFfs.getSize() - microcodeFfs.getHeaderSize() - microcodeOffset, offset + microcodeOffset);
+        INT64 microcodeSize = microcode->SelfDecode();
+        microcode->setVolumeType(VolumeType::UserDefined);
+        if (microcodeSize == 0) {
+            continue;
+        }
+        CapsuleData->VolumeDataList.append(microcode);
+    }
+
+    // XDR Header + Bgup Payload (Optional)
+    INT64 bgupFfsOffset = CapsuleOffset + fvSize;
+    if (bgupFfsOffset < WindowData->InputImageSize) {
+        UINT32 XDR = *(UINT32 *)(WindowData->InputImage + bgupFfsOffset);
+        UINT32 BgupSize = swapEndian<UINT32>(XDR);
+        bgupFfsOffset += 4;
+        auto bgup = new BiosGuardClass(WindowData->InputImage + bgupFfsOffset, BgupSize, bgupFfsOffset);
+        bgup->SelfDecode();
+        bgup->setVolumeType(VolumeType::UserDefined);
+        bgup->setContent("uCode");
         CapsuleData->VolumeDataList.append(bgup);
     }
+}
+
+INT64 CapsuleWindow::ParsePayloadCapsule(INT64 CapsuleOffset, INT64 PayloadSize, const QString& CapsuleType) {
+    /**
+     * Payload Capsule Format has only 1 parts:
+     * 1. Payload file;
+     */
+    if (CapsuleType == "EC") {
+        auto EcVolume = new EcRegion(WindowData->InputImage + CapsuleOffset, PayloadSize, CapsuleOffset);
+        EcVolume->SelfDecode();
+        CapsuleData->VolumeDataList.append(EcVolume);
+        return EcVolume->getSize() + CapsuleOffset;
+    } else if (CapsuleType == "ME") {
+        auto MeVolume = new MeRegion(WindowData->InputImage + CapsuleOffset, PayloadSize, CapsuleOffset);
+        MeVolume->SelfDecode();
+        CapsuleData->VolumeDataList.append(MeVolume);
+        return MeVolume->getSize() + CapsuleOffset;
+    } else if (CapsuleType == "IshPdt") {
+        auto PdtVolume = new PdtRegion(WindowData->InputImage + CapsuleOffset, PayloadSize, CapsuleOffset);
+        PdtVolume->SelfDecode();
+        CapsuleData->VolumeDataList.append(PdtVolume);
+        return PdtVolume->getSize() + CapsuleOffset;
+    } else if (CapsuleType == "GbE") {
+        auto GbeVolume = new GbeRegion(WindowData->InputImage + CapsuleOffset, PayloadSize, CapsuleOffset);
+        GbeVolume->SelfDecode();
+        CapsuleData->VolumeDataList.append(GbeVolume);
+        return GbeVolume->getSize() + CapsuleOffset;
+    }
+
+    return 0;
 }
 
 void CapsuleWindow::closeEvent(QCloseEvent *event)
@@ -507,7 +721,9 @@ void CapsuleWindow::getSHA512() {
 }
 
 CapsuleViewerData::~CapsuleViewerData() {
-    safeDelete(OverviewVolume);
+    for (Volume *volume : VolumeDataList) {
+        safeDelete(volume);
+    }
 }
 
 bool CapsuleViewerData::isValidCapsule(UINT8 *image, INT64 imageLength) {
