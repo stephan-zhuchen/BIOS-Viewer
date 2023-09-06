@@ -19,6 +19,7 @@ public:
     GuidDatabase();
     ~GuidDatabase();
     std::string getNameFromGuid(EFI_GUID guid);
+    static QString getFmpDeviceName(EFI_GUID guid) ;
 
     static void parseGuidInDec(const QStringList &DirPaths);
     static void parseGuidInInf(const QStringList &DirPaths);

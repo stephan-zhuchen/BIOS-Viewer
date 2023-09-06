@@ -188,8 +188,8 @@ void InfoWindow::showBtgTab() {
 void InfoWindow::showAcpiTab() {
     BiosImage->collectAcpiTable();
     for (AcpiClass* AcpiTable:BiosImage->AcpiTables) {
-        string AcpiItemName = AcpiTable->AcpiTableSignature + " - " + AcpiTable->AcpiTableOemID + " - " + AcpiTable->AcpiTableOemTableID;
-        auto *AcpiItem = new QListWidgetItem(QString::fromStdString(AcpiItemName));
+        QString AcpiItemName = AcpiTable->AcpiTableSignature + " - " + AcpiTable->AcpiTableOemID + " - " + AcpiTable->AcpiTableOemTableID;
+        auto *AcpiItem = new QListWidgetItem(AcpiItemName);
         ui->AcpiListWidget->addItem(AcpiItem);
     }
     if (ui->AcpiListWidget->model()->rowCount() != 0)
@@ -307,13 +307,11 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
         process->waitForFinished();
         delete process;
         QFile TempFile(TempFilepath);
-        if(TempFile.exists()) {
+        if (TempFile.exists()) {
             TempFile.open(QIODevice::ReadOnly | QIODevice::Text);
             text = TempFile.readAll();
             TempFile.close();
             TempFile.remove();
-        } else {
-            text = "Please run as Administrator!";
         }
     }
 
@@ -321,44 +319,44 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
 }
 
 void InfoWindow::AcpiListWidgetItemSelectionChanged() {
-//    INT32 currentRow = ui->AcpiListWidget->currentRow();
-//    ACPI_Class* ACPI_Entry = BiosImage->AcpiTables.at(currentRow);
-//
-//    QString lastPath = setting.value("LastFilePath").toString();
-//    QString filePath = QDir(lastPath).filePath("temp.bin");
-//    QString Dslpath = QDir(lastPath).filePath("temp.dsl");
-//    QString toolpath = appDir + "/tool/ACPI/iasl.exe";
-//    QString AcpiText;
-//
-//    QFile ToolFile(toolpath);
-//    if(!ToolFile.exists()) {
-//        AcpiText = "ACPI tool not found!";
-//        ui->AcpiTextBrowser->setText(AcpiText);
-//        return;
-//    }
-//
-//    saveBinary(filePath.toStdString(), ACPI_Entry->data, 0, ACPI_Entry->size);
-//    if (!QFile::exists(filePath)) {
-//        AcpiText = "Please run as Administrator!";
-//        ui->AcpiTextBrowser->setText(AcpiText);
-//        return;
-//    }
-//
-//    auto *process = new QProcess(this);
-//    process->start(toolpath, QStringList() << "-d" << filePath);
-//    process->waitForFinished();
-//
-//    QFile DslFile(Dslpath);
-//    if(DslFile.exists()) {
-//        DslFile.open(QIODevice::ReadOnly | QIODevice::Text);
-//        AcpiText = DslFile.readAll();
-//        DslFile.close();
-//        DslFile.remove();
-//    }
-//    QFile TempFile(filePath);
-//    if(TempFile.exists()) {
-//        TempFile.close();
-//        TempFile.remove();
-//    }
-//    ui->AcpiTextBrowser->setText(AcpiText);
+    INT32 currentRow = ui->AcpiListWidget->currentRow();
+    AcpiClass* ACPI_Entry = BiosImage->AcpiTables.at(currentRow);
+
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString filePath = QDir(lastPath).filePath("temp.bin");
+    QString Dslpath = QDir(lastPath).filePath("temp.dsl");
+    QString toolpath = appDir + "/tool/ACPI/iasl.exe";
+    QString AcpiText;
+
+    QFile ToolFile(toolpath);
+    if(!ToolFile.exists()) {
+        AcpiText = "ACPI tool not found!";
+        ui->AcpiTextBrowser->setText(AcpiText);
+        return;
+    }
+
+    saveBinary(filePath.toStdString(), ACPI_Entry->getData(), 0, ACPI_Entry->getSize());
+    if (!QFile::exists(filePath)) {
+        AcpiText = "Please run as Administrator!";
+        ui->AcpiTextBrowser->setText(AcpiText);
+        return;
+    }
+
+    auto *process = new QProcess(this);
+    process->start(toolpath, QStringList() << "-d" << filePath);
+    process->waitForFinished();
+
+    QFile DslFile(Dslpath);
+    if(DslFile.exists()) {
+        DslFile.open(QIODevice::ReadOnly | QIODevice::Text);
+        AcpiText = DslFile.readAll();
+        DslFile.close();
+        DslFile.remove();
+    }
+    QFile TempFile(filePath);
+    if(TempFile.exists()) {
+        TempFile.close();
+        TempFile.remove();
+    }
+    ui->AcpiTextBrowser->setText(AcpiText);
 }

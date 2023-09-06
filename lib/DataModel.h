@@ -13,18 +13,18 @@ private:
     QString type;
     QString subtype;
     Volume* modelData{};
+
+    void setSectionModel(Volume *sec);
+    void setFfsModel(Volume *file);
+    void setFirmwareVolumeModel(Volume *vol);
+    void setNvVariableHeaderModel(Volume *var);
+    void setNvVariableEntryModel(Volume *entry);
 public:
     DataModel()=default;
     DataModel(Volume* vol, QString nm, QString typ = "", QString sbtyp = "");
     ~DataModel() = default;
 
     void InitFromVolume(Volume* vol);
-    void setSectionModel(Volume *sec);
-    void setFfsModel(Volume *file);
-    void setFirmwareVolumeModel(Volume *vol);
-    void setNvVariableHeaderModel(Volume *var);
-    void setNvVariableEntryModel(Volume *entry);
-
     inline void setName(QString txt) { name = std::move(txt); };
     inline void setType(QString txt) { type = std::move(txt); };
     inline void setSubtype(QString txt) { subtype = std::move(txt); };

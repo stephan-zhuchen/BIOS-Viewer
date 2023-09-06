@@ -7,6 +7,7 @@
 #include <QString>
 #include <QVector>
 #include <QMetaType>
+#include <utility>
 
 struct Decompressed {
     std::vector<UINT8> decompressedBuffer;
@@ -57,7 +58,9 @@ protected:
     UINT32              decompressedSize{0};
     UINT8               *DecompressedBufferOnHeap{nullptr};
     VolumeType          Type{VolumeType::Empty};
+    VolumeType          SubType{VolumeType::Empty};
     QString             InfoStr;
+    QString             UniqueVolumeName;
 public:
     Volume              *ParentVolume{nullptr};
     QList<Volume*>      ChildVolume;
@@ -87,8 +90,12 @@ public:
     [[nodiscard]] inline bool isCompressed() const { return Compressed; }
     [[nodiscard]] inline bool isCorrupted() const { return Corrupted; }
     [[nodiscard]] inline VolumeType getVolumeType() const { return Type; }
+    [[nodiscard]] inline VolumeType getVolumeSubType() const { return SubType; }
     [[nodiscard]] inline QString    getInfoText() const { return InfoStr; }
+    [[nodiscard]] inline QString    getUniqueVolumeName() const { return UniqueVolumeName; }
     inline void setVolumeType(VolumeType tp) { Type = tp; }
+    inline void setVolumeSubType(VolumeType tp) { SubType = tp; }
+    inline void setUniqueVolumeName(QString name) { UniqueVolumeName = std::move(name); }
 
     // Virtual function
     virtual bool  CheckValidation();

@@ -87,6 +87,7 @@ public:
     [[nodiscard]] EFI_GUID getVolumeGuid() const override;
 
     [[nodiscard]] UINT8 getSectionType() const;
+    [[nodiscard]] inline QString getUiName() const { return QString::fromStdString(FileNameString); }
     [[nodiscard]] inline AcpiClass *getAcpiTable() const { return AcpiTable;};
     [[nodiscard]] inline EFI_GUID getSubTypeGuid() const { return SubTypeGuid; };
     [[nodiscard]] inline EFI_GUID getSectionDefinitionGuid() const { return SectionDefinitionGuid; };

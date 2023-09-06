@@ -2,27 +2,29 @@
 // Created by stephan on 9/5/2023.
 //
 #pragma once
+#include "Volume.h"
 #include "UEFI/Acpi.h"
 #include <QString>
 
-class AcpiClass {
+class AcpiClass: public Volume {
 private:
-    UINT8*                        data;
-    INT64                         size{};
-    INT64                         offset{};
     EFI_ACPI_DESCRIPTION_HEADER   AcpiHeader{};
     bool                          ValidFlag{false};
-    QString                       InfoStr;
+    bool                          needValidation;
 public:
-    std::string                   AcpiTableSignature;
-    std::string                   AcpiTableOemID;
-    std::string                   AcpiTableOemTableID;
+    QString                       AcpiTableSignature;
+    QString                       AcpiTableOemID;
+    QString                       AcpiTableOemTableID;
 
     AcpiClass()=delete;
     AcpiClass(UINT8* buffer, INT64 length, INT64 offset, bool needValidation=true);
-    ~AcpiClass();
+    ~AcpiClass() override = default;
+
+    bool  CheckValidation() override;
+    INT64 SelfDecode() override;
+
+
     [[nodiscard]] bool isValid() const;
     static bool isAcpiHeader(const UINT8  *ImageBase, INT64 length);
-    void setInfoStr();
-    [[nodiscard]] QString getInfoText() const { return InfoStr; }
+    void setInfoStr() override;
 };

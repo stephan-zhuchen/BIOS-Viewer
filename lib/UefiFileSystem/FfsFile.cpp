@@ -49,7 +49,7 @@ INT64 FfsFile::SelfDecode() {
 
     // Check if the file is an Apriori file
     if (FfsHeader.Name.Data1 == GuidDatabase::gPeiAprioriFileNameGuid.Data1 || FfsHeader.Name.Data1 == GuidDatabase::gAprioriGuid.Data1) {
-        Type = VolumeType::Apriori;
+        SubType = VolumeType::Apriori;
     }
     return size;
 }

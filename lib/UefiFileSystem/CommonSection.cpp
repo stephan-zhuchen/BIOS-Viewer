@@ -335,6 +335,11 @@ void CommonSection::DecodeChildVolume() {
             UINT16* char16FileName;
             char16FileName = (UINT16*)this->getBytes(offset, size - HeaderSize);
             FileNameString = wstringToString(char16FileName);
+            if (FileNameString == "FmpDxe") {
+                ParentVolume->setUniqueVolumeName(QString::fromStdString(FileNameString) + " " + GuidDatabase::getFmpDeviceName(ParentVolume->getVolumeGuid()));
+            } else {
+                ParentVolume->setUniqueVolumeName(QString::fromStdString(FileNameString));
+            }
             safeArrayDelete(char16FileName);
             break;
         case EFI_SECTION_VERSION:
@@ -357,8 +362,9 @@ void CommonSection::DecodeChildVolume() {
             dependency = new Depex(data + HeaderSize, size - HeaderSize);
             break;
         case EFI_SECTION_RAW:
-            if (ParentVolume->getVolumeType() == VolumeType::Apriori) {
+            if (ParentVolume->getVolumeSubType() == VolumeType::Apriori) {
                 INT64 index = 0;
+                UniqueVolumeName = "Apriori List";
                 INT64 RemainingSize = size - HeaderSize;
                 while (RemainingSize >= sizeof(EFI_GUID)) {
                     EFI_GUID AprioriFileGuid = *(EFI_GUID*)(data + HeaderSize + index * sizeof(EFI_GUID));
@@ -369,9 +375,10 @@ void CommonSection::DecodeChildVolume() {
             }
             else if (ELF::IsElfFormat(data + HeaderSize)) {
                 isElfFormat = true;
-                Type = VolumeType::ELF;
+                SubType = VolumeType::ELF;
                 elf = new ELF(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, Compressed);
                 if (elf->SelfDecode() != 0) {
+                    UniqueVolumeName = "ELF";
                     elf->DecodeChildVolume();
                     elf->setInfoStr();
                     for (Volume *elfSection : elf->ChildVolume) {
@@ -388,10 +395,12 @@ void CommonSection::DecodeChildVolume() {
                 }
             } else if (AcpiClass::isAcpiHeader(data + HeaderSize, size - HeaderSize)) {
                 isAcpiHeader = true;
-                Type = VolumeType::AcpiTable;
+                SubType = VolumeType::AcpiTable;
                 AcpiTable = new AcpiClass(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, false);
+                AcpiTable->SelfDecode();
                 if (AcpiTable->isValid()) {
                     AcpiTable->setInfoStr();
+                    UniqueVolumeName = "ACPI Table - " + AcpiTable->AcpiTableSignature;
                 }
             }
             break;
@@ -491,7 +500,7 @@ void CommonSection::setInfoStr() {
                 ss << depexStr << "\n";
             break;
         case EFI_SECTION_RAW:
-            if (ParentVolume->getVolumeType() == VolumeType::Apriori) {
+            if (ParentVolume->getVolumeSubType() == VolumeType::Apriori) {
                 ss << "Apriori List:\n";
                 for (auto ApriFile: AprioriList) {
                     ss << guidData->getNameFromGuid(ApriFile) << "\n";

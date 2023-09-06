@@ -67,11 +67,6 @@ void DataModel::setSectionModel(Volume *sec) {
         case EFI_SECTION_USER_INTERFACE:
             name = "UI Section";
             subtype = "UI";
-//            if (text == "FmpDxe") {
-//                parentModel->setName(text + " " + parentModel->getFmpDeviceName());
-//            } else {
-//                parentModel->setName(text);
-//            }
             break;
         case EFI_SECTION_COMPATIBILITY16:
             name = "Compatibility16 Section";
@@ -87,12 +82,6 @@ void DataModel::setSectionModel(Volume *sec) {
             break;
         case EFI_SECTION_RAW:
             name = "Raw Section";
-//            if (section->isElfFormat) {
-//                name = "ELF";
-//            } else if (section->isAcpiHeader) {
-//                QString Signature = QString::fromStdString(section->AcpiTable->AcpiTableSignature);
-//                name = "ACPI Table - " + Signature;
-//            }
             subtype = "Raw";
             break;
         case EFI_SECTION_PEI_DEPEX:
@@ -309,5 +298,8 @@ void DataModel::InitFromVolume(Volume *vol) {
         case VolumeType::IshPdt:
             name = "ISH PDT";
             break;
+    }
+    if (vol->getUniqueVolumeName().size() > 0) {
+        name = vol->getUniqueVolumeName();
     }
 }

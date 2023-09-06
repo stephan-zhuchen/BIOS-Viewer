@@ -15,7 +15,7 @@
 #include <utility>
 #include <condition_variable>
 #include "Setting/SettingsDialog.h"
-#include "UEFI/GuidDefinition.h"
+#include "UEFI/GuidDatabase.h"
 #include "StartWindow.h"
 #include "CapsuleView/CapsuleWindow.h"
 #include "Tool/MergeFilesWindow.h"

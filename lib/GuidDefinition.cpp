@@ -119,6 +119,63 @@ std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
     return name;
 }
 
+QString GuidDatabase::getFmpDeviceName(EFI_GUID guid) {
+    QString FmpName;
+    switch (guid.Data1) {
+        case GuidDatabase::gFmpDeviceMonolithicDefaultGuid.Data1:
+            FmpName = "Monolithic";
+            break;
+        case GuidDatabase::gFmpDeviceIfwiDefaultGuid.Data1:
+            FmpName = "IFWI";
+            break;
+        case GuidDatabase::gFmpDeviceBiosDefaultGuid.Data1:
+            FmpName = "Bios";
+            break;
+        case GuidDatabase::gFmpDeviceMeDefaultGuid.Data1:
+            FmpName = "Me";
+            break;
+        case GuidDatabase::gFmpDeviceEcDefaultGuid.Data1:
+            FmpName = "EC";
+            break;
+        case GuidDatabase::gFmpDeviceBtGAcmDefaultGuid.Data1:
+            FmpName = "BtgAcm";
+            break;
+        case GuidDatabase::gFmpDeviceMicrocodeDefaultGuid.Data1:
+            FmpName = "uCode";
+            break;
+        case GuidDatabase::gFmpDevicePlatformCypressPDGuid.Data1:
+            FmpName = "CypressPD";
+            break;
+        case GuidDatabase::gFmpDevicePlatformTiPDGuid.Data1:
+            FmpName = "TiPD";
+            break;
+        case GuidDatabase::gFmpDevicePlatformRetimerGuid.Data1:
+            FmpName = "Retimer";
+            break;
+        case GuidDatabase::gFmpDevicePlatformDiscreteTBTGuid.Data1:
+            FmpName = "DiscreteTBT";
+            break;
+        case GuidDatabase::gFmpDeviceMeFwAdlLpConsGuid.Data1:
+            FmpName = "MeFwAdlLpCons";
+            break;
+        case GuidDatabase::gFmpDeviceMeFwAdlHConsGuid.Data1:
+            FmpName = "MeFwAdlHCons";
+            break;
+        case GuidDatabase::gFmpDeviceMeFwAdlLpCorpGuid.Data1:
+            FmpName = "MeFwAdlLpCorp";
+            break;
+        case GuidDatabase::gFmpDeviceMeFwAdlHCorpGuid.Data1:
+            FmpName = "MeFwAdlHCorp";
+            break;
+        case GuidDatabase::gFmpDeviceIshPdtDefaultGuid.Data1:
+            FmpName = "ISH PDT";
+            break;
+        default:
+            break;
+    }
+    return FmpName;
+}
+
 QHash<UINT32, QString> GuidDatabase::ExternalDataGuidMap;
 bool GuidDatabase::UseExternalDataGuid {false};
 

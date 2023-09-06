@@ -13,7 +13,7 @@
 #include "IfwiRegion/MeRegion.h"
 #include "IfwiRegion/PdtRegion.h"
 #include "IfwiRegion/GbeRegion.h"
-#include "UEFI/GuidDefinition.h"
+#include "UEFI/GuidDatabase.h"
 #include "HexView/HexViewDialog.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
