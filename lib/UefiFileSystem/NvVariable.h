@@ -27,7 +27,7 @@ public:
     void  setInfoStr() override;
 
     [[nodiscard]] INT64   getHeaderSize() const override;
-    [[nodiscard]] QString getUserDefinedName() const override;
+    [[nodiscard]] QStringList getUserDefinedName() const override;
 };
 
 class NvStorageVariable : public Volume {

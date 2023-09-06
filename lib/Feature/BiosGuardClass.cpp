@@ -424,8 +424,10 @@ void BiosGuardClass::setInfoStr() {
     InfoStr = QString::fromStdString(ss.str());
 }
 
-QString BiosGuardClass::getUserDefinedName() const {
-    return "BGUP - " + Content;;
+QStringList BiosGuardClass::getUserDefinedName() const {
+    QStringList UserDefinedName;
+    UserDefinedName << "BGUP - " + Content;
+    return UserDefinedName;
 }
 
 void BiosGuardClass::setContent(QString content) {

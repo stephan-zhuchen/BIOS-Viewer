@@ -97,7 +97,7 @@ public:
     virtual void  setInfoStr();
     [[nodiscard]] virtual INT64    getHeaderSize() const;
     [[nodiscard]] virtual EFI_GUID getVolumeGuid() const;
-    [[nodiscard]] virtual QString  getUserDefinedName() const;
+    [[nodiscard]] virtual QStringList getUserDefinedName() const;
 
     void setInfoText(const QString &text);
     bool  GetDecompressedVolume(std::vector<UINT8>& DecompressedVolume);

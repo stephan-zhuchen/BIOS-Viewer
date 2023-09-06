@@ -62,8 +62,10 @@ INT64 NvVariableEntry::getHeaderSize() const {
         return sizeof(VARIABLE_HEADER);
 }
 
-QString NvVariableEntry::getUserDefinedName() const {
-    return QString::fromStdString(VariableName);
+QStringList NvVariableEntry::getUserDefinedName() const {
+    QStringList UserDefinedName;
+    UserDefinedName << QString::fromStdString(VariableName) << "Variable";
+    return UserDefinedName;
 }
 
 NvVariableEntry::~NvVariableEntry() = default;

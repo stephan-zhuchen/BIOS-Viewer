@@ -20,7 +20,7 @@ public:
     bool CheckValidation() override;
     INT64 SelfDecode() override;
     void setInfoStr() override;
-    [[nodiscard]] QString getUserDefinedName() const override;
+    [[nodiscard]] QStringList getUserDefinedName() const override;
 
     static QVector<INT64> SearchMicrocodeEntryNum(const UINT8* buffer, INT64 MicrocodeRegionSize);
 };

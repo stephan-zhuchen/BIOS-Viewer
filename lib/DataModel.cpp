@@ -272,8 +272,15 @@ void DataModel::InitFromVolume(Volume *vol) {
             name = "NV Storage";
             break;
         case VolumeType::UserDefined:
-            name = vol->getUserDefinedName();
-            type = "Variable";
+            if (vol->getUserDefinedName().size() >= 1) {
+                name = vol->getUserDefinedName()[0];
+            }
+            if (vol->getUserDefinedName().size() >= 2) {
+                type = vol->getUserDefinedName()[1];
+            }
+            if (vol->getUserDefinedName().size() >= 3) {
+                subtype = vol->getUserDefinedName()[2];
+            }
             break;
         case VolumeType::FaultTolerantBlock:
             name = "Fault Tolerant Working Block";

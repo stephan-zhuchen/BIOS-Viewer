@@ -32,7 +32,7 @@ public:
     INT64 SelfDecode() override;
     ~BiosGuardClass() override;
     void setInfoStr() override;
-    [[nodiscard]] QString getUserDefinedName() const override;
+    [[nodiscard]] QStringList getUserDefinedName() const override;
 
     void setContent(QString content);
     void decodeBgsl(UINT8* buffer, INT64 length);

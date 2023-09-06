@@ -139,7 +139,7 @@ void Volume::setInfoText(const QString &text) {
     InfoStr = text;
 }
 
-QString Volume::getUserDefinedName() const {
+QStringList Volume::getUserDefinedName() const {
     return {};
 }
 

@@ -6,6 +6,7 @@
 #include "IfwiRegion/FlashDescriptorRegion.h"
 #include "IfwiRegion/EcRegion.h"
 #include "IfwiRegion/GbeRegion.h"
+#include "IfwiRegion/MeRegion.h"
 #include "IfwiRegion/OsseRegion.h"
 #include "IfwiRegion/BiosRegion.h"
 #include "UefiFileSystem/FirmwareVolume.h"
@@ -73,6 +74,21 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
             return false;
         }
         BiosData->VolumeDataList.push_back(GbEVolume);
+    }
+
+    if (MeRegionArea.getLimit() > bufferSize) {
+        CleanVolumeDataList();
+        return false;
+    }
+    if (MeRegionArea.limit != 0) {
+        UINT8* MeBuffer = WindowData->InputImage + MeRegionArea.getBase();
+        auto *MeVolume = new MeRegion(MeBuffer, MeRegionArea.getSize(), MeRegionArea.getBase());
+        if (MeVolume->SelfDecode() == 0) {
+            safeDelete(MeVolume);
+            CleanVolumeDataList();
+            return false;
+        }
+        BiosData->VolumeDataList.push_back(MeVolume);
     }
 
     if (OsseRegionArea.getLimit() > bufferSize) {

@@ -94,9 +94,10 @@ QVector<INT64> MicrocodeHeaderClass::SearchMicrocodeEntryNum(const UINT8* buffer
     return MicrocodeEntryList;
 }
 
-QString MicrocodeHeaderClass::getUserDefinedName() const {
-    QString ItemName = "Microcode  " + QString::number(microcodeHeader.ProcessorSignature.Uint32, 16).toUpper();
-    return ItemName;
+QStringList MicrocodeHeaderClass::getUserDefinedName() const {
+    QStringList UserDefinedName;
+    UserDefinedName << "Microcode  " + QString::number(microcodeHeader.ProcessorSignature.Uint32, 16).toUpper();
+    return UserDefinedName;
 }
 
 MicrocodeVersion::MicrocodeVersion(UINT8 *buffer, INT64 length, INT64 offset):
