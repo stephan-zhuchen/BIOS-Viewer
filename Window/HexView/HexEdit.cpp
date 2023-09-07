@@ -453,7 +453,6 @@ void QHexView::CopyFromSelectedContent() {
         UINT8 num = (UINT8)data.at(var);
         CopiedString += QString("%1").arg(num, 2, 16, QChar('0')).toUpper();
     }
-    cout << CopiedString.toStdString() << endl;
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->setText(CopiedString);
 }

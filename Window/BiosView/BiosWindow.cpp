@@ -59,7 +59,7 @@ bool BiosViewerData::isValidBIOS(UINT8 *image, INT64 imageLength) {
     INT64 SearchOffset = 0;
     INT64 SearchInterval = 0x1000;
     while (SearchOffset <= imageLength - SearchInterval) {
-        FirmwareVolume fvHeader = FirmwareVolume(image, imageLength - SearchOffset, SearchOffset);
+        FirmwareVolume fvHeader = FirmwareVolume(image + SearchOffset, imageLength - SearchOffset, SearchOffset);
         if (fvHeader.CheckValidation()) {
             return true;
         }
@@ -172,55 +172,55 @@ void BiosViewerWindow::ActionSearchBiosTriggered() {
             BiosData->BiosSearchDialog->setWindowIcon(QIcon(":/search_light.svg"));
         BiosData->BiosSearchDialog->show();
         connect(BiosData->BiosSearchDialog, SIGNAL(closeSignal(bool)), this, SLOT(setSearchDialogState(bool)));
-        connect(BiosData->BiosSearchDialog, SIGNAL(Highlight(vector<INT32>)), this, SLOT(HighlightTreeItem(vector<INT32>)));
     } else {
         BiosData->BiosSearchDialog->activateWindow();
     }
 }
 
 void BiosViewerWindow::ActionGotoTriggered() {
-//    if ( BiosData->BiosImage == nullptr )
-//        return;
-//
-//    QDialog dialog(this);
-//    dialog.setWindowTitle("Goto ...");
-//    QFormLayout form(&dialog);
-//    // Offset
-//    QString Offset = QString("Offset: ");
-//    auto *OffsetSpinbox = new HexSpinBox(&dialog);
-//    OffsetSpinbox->setFocus();
-//    OffsetSpinbox->selectAll();
-//    form.addRow(Offset, OffsetSpinbox);
-//    // Add Cancel and OK button
-//    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
-//                               Qt::Horizontal, &dialog);
-//    form.addRow(&buttonBox);
-//    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
-//    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
-//
-//    // Process when OK button is clicked
-//    if (dialog.exec() == QDialog::Accepted) {
-//        INT64 SearchOffset = OffsetSpinbox->value();
-//        if (SearchOffset < 0 || SearchOffset >= WindowData->InputImageSize) {
-//            QMessageBox::critical(this, tr("Goto ..."), "Invalid offset!");
-//            return;
-//        }
-//
-//        vector<INT32> SearchRows;
-//        for (UINT64 row = 0; row < BiosData->IFWI_ModelData.size(); ++row) {
-//            DataModel *model = BiosData->IFWI_ModelData.at(row);
-//            if (SearchOffset >= model->modelData->offsetFromBegin && SearchOffset < model->modelData->offsetFromBegin + model->modelData->size) {
-//                SearchRows.push_back(row + 1);
-//                RecursiveSearchOffset(model, SearchOffset, SearchRows);
-//            }
-//        }
-//        HighlightTreeItem(SearchRows);
-//    }
+    if ( BiosData->BiosImage == nullptr )
+        return;
+
+    QDialog dialog(this);
+    dialog.setWindowTitle("Goto ...");
+    QFormLayout form(&dialog);
+    // Offset
+    QString Offset = QString("Offset: ");
+    auto *OffsetSpinbox = new HexSpinBox(&dialog);
+    OffsetSpinbox->setFocus();
+    OffsetSpinbox->selectAll();
+    form.addRow(Offset, OffsetSpinbox);
+    // Add Cancel and OK button
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+                               Qt::Horizontal, &dialog);
+    form.addRow(&buttonBox);
+    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+
+    // Process when OK button is clicked
+    if (dialog.exec() == QDialog::Accepted) {
+        INT64 SearchOffset = OffsetSpinbox->value();
+        if (SearchOffset < 0 || SearchOffset >= WindowData->InputImageSize) {
+            QMessageBox::critical(this, tr("Goto ..."), "Invalid offset!");
+            return;
+        }
+
+        QList<QTreeWidgetItem *> allItems = ui->treeWidget->findItems(QString("*"), Qt::MatchWildcard|Qt::MatchRecursive);
+        for (QTreeWidgetItem *item : allItems) {
+            auto *itemVolume = item->data(treeColNum::Name, Qt::UserRole).value<Volume*>();
+            INT64 VolumeBase = itemVolume->getOffset();
+            INT64 VolumeLimit = itemVolume->getOffset() + itemVolume->getSize();
+            if (!itemVolume->isCompressed() && (SearchOffset >= VolumeBase) && (SearchOffset < VolumeLimit)) {
+                ui->treeWidget->expandItem(item);
+                ui->treeWidget->scrollToItem(item);
+                ui->treeWidget->setCurrentItem(item);
+            }
+        }
+    }
 }
 
 bool BiosViewerWindow::eventFilter(QObject *obj, QEvent *event) {
     if (obj == ui->treeWidget->viewport()) {
-        //点击树的空白,取消选中
         if (event->type() == QEvent::MouseButtonPress) {
             auto *e = (QMouseEvent *)event;
             if (e->buttons() & Qt::LeftButton) {

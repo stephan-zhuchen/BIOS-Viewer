@@ -123,7 +123,7 @@ public:
     // Tree Widget
     void initSetting() const;
     void setTreeData();
-    void addTreeItem(QTreeWidgetItem *parentItem, Volume *volume);
+    void addTreeItem(QTreeWidgetItem *parentItem, Volume *volume, bool ShowPadding);
     void setPanelInfo(INT64 offset, INT64 size) const;
 //    void RecursiveSearchOffset(DataModel* model, INT64 offset, vector<INT32> &SearchRows);
 
@@ -146,9 +146,6 @@ public:
     // Event from Main Window
     bool eventFilter(QObject *obj, QEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
-
-public slots:
-    void HighlightTreeItem(const QVector<INT32>& rows) const;
 
 private slots:
     void TreeWidgetItemSelectionChanged();

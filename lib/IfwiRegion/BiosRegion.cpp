@@ -100,7 +100,7 @@ void BiosRegion::setBiosID() {
 
 void BiosRegion::setDebugFlag() {
     INT64 pos = BiosID.find('.');
-    if (pos != string::npos && pos + 1 < BiosID.size()) {
+    if (pos != string::npos && pos + 1 < (INT64)BiosID.size()) {
         if (BiosID[pos + 1] == 'R') {
             DebugFlag = false;
         }

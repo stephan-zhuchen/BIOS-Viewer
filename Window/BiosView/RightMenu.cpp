@@ -151,7 +151,6 @@ void BiosViewerWindow::showTreeRightMenu(QPoint pos) const {
     RightMenu->addAction(showHex);
 
     if (BiosData->RightClickedItemModel.getType() == "Volume") {
-        qDebug() << "showDecompressedHex";
         showDecompressedHex->setIcon(hexBinary);
         RightMenu->addAction(showDecompressedHex);
     }
@@ -214,7 +213,6 @@ void BiosViewerWindow::showHexView() const {
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
-    cout << BiosData->RightClickedItemModel.getName().toStdString() << endl;
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
     UINT8 *itemData = selectedVolume->getData();
     auto *hexViewData = new QByteArray((char*)itemData, selectedVolume->getSize());

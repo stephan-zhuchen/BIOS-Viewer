@@ -180,7 +180,7 @@ bool Volume::GetDecompressedVolume(vector<UINT8> &DecompressedVolume) {
     for (Decompressed *decompressed:DecompressedVolumeList) {
         UINT32 ReplaceOffset = decompressed->decompressedOffset - this->offsetFromBegin + OffsetCorrection;
         DecompressedVolume.erase(DecompressedVolume.begin() + ReplaceOffset, DecompressedVolume.begin() + ReplaceOffset + decompressed->CompressedSize);
-        OffsetCorrection += decompressed->decompressedBuffer.size() - decompressed->CompressedSize;
+        OffsetCorrection += (UINT32)decompressed->decompressedBuffer.size() - decompressed->CompressedSize;
         DecompressedVolume.insert(DecompressedVolume.begin() + ReplaceOffset, decompressed->decompressedBuffer.begin(), decompressed->decompressedBuffer.end());
     }
 

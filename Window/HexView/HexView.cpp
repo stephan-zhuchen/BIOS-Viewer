@@ -556,8 +556,8 @@ void QHexView::confScrollBar() {
     verticalScrollBar()->setRange(0, (widgetSize.height() - areaSize.height()) / CharHeight + BLANK_LINE_NUM);
 }
 
-std::size_t QHexView::sizeFile() {
-    return HexDataArray.size();
+INT64 QHexView::sizeFile() {
+    return (INT64)HexDataArray.size();
 }
 
 void QHexView::setAddressLength() {

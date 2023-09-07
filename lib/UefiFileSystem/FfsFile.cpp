@@ -77,7 +77,7 @@ void FfsFile::DecodeChildVolume() {
 //    }
     while (offset < size) {
         auto *SecHeader = (EFI_COMMON_SECTION_HEADER*)(data + offset);
-        UINT64 SecSize = SECTION_SIZE(SecHeader);
+        INT64 SecSize = (INT64)SECTION_SIZE(SecHeader);
         if (SecSize == 0xFFFFFF) {
             SecSize = this->getUINT32(offset + sizeof(EFI_COMMON_SECTION_HEADER));
         }

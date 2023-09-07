@@ -343,6 +343,7 @@ void BiosSearch::CollectGuidData() {
 }
 
 void BiosSearch::tabWidgetCurrentChanged(int index) {
+    ClearHighlightedItems();
     if (ui->tabWidget->currentIndex() == SearchMode::Text) {
         ui->SearchContent->setText(SearchedString);
         ui->SearchContent->selectAll();

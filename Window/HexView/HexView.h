@@ -132,7 +132,7 @@ public slots:
     void loadFromBuffer(QByteArray &buffer);
     void clear();
     void showFromOffset(INT64 offset, INT64 length = 1);
-    std::size_t sizeFile();
+    INT64 sizeFile();
     void setAddressLength();
     void setRelativeAddress(INT64 address = 0);
     void CopyFromSelectedContent();

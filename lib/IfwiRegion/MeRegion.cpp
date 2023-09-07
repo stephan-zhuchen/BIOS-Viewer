@@ -18,7 +18,7 @@ bool MeRegion::CheckValidation() {
 INT64 MeRegion::SelfDecode() {
     Type = VolumeType::ME;
     INT64 SearchOffset = 0;
-    while (SearchOffset < size - sizeof(INT64)) {
+    while (SearchOffset < size - (INT64)sizeof(INT64)) {
         if (*(UINT32*)(data + SearchOffset) == ME_VERSION_SIGNATURE || *(UINT32*)(data + SearchOffset) == ME_VERSION_SIGNATURE2) {
             VersionFound = true;
             break;

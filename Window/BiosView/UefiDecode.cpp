@@ -217,16 +217,6 @@ void BiosViewerWindow::AddVolumeList(INT64 offset, INT64 length, Volume *parent,
     }
 }
 
-void BiosViewerWindow::HighlightTreeItem(const QVector<INT32>& rows) const {
-    if (rows.empty())
-        return;
-    QModelIndex itemIndex =  ui->treeWidget->model()->index(rows.at(0), 0, QModelIndex());
-    for (int var = 1; var < rows.size(); ++var) {
-        itemIndex = ui->treeWidget->model()->index(rows.at(var), 0, itemIndex);
-    }
-    ui->treeWidget->setCurrentIndex(itemIndex);
-}
-
 void BiosViewerWindow::setTreeData() {
     auto *ImageOverviewItem = new QTreeWidgetItem(BiosData->OverviewImageModel->getData());
     ImageOverviewItem->setData(treeColNum::Name, Qt::UserRole, QVariant::fromValue(BiosData->OverviewVolume));
@@ -241,12 +231,14 @@ void BiosViewerWindow::setTreeData() {
     }
 
     for (auto volume : BiosData->VolumeDataList) {
-        addTreeItem(nullptr, volume);
+        addTreeItem(nullptr, volume, ShowPadding);
     }
     ui->treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-void BiosViewerWindow::addTreeItem(QTreeWidgetItem *parentItem, Volume *volume) {
+void BiosViewerWindow::addTreeItem(QTreeWidgetItem *parentItem, Volume *volume, bool ShowPadding) {
+    if (!ShowPadding && volume->getVolumeType() == VolumeType::Empty)
+        return;
     DataModel item;
     item.InitFromVolume(volume);
 
@@ -259,7 +251,7 @@ void BiosViewerWindow::addTreeItem(QTreeWidgetItem *parentItem, Volume *volume) 
     }
 
     for (auto childVolume:volume->ChildVolume) {
-        addTreeItem(treeItem, childVolume);
+        addTreeItem(treeItem, childVolume, ShowPadding);
     }
 }
 
