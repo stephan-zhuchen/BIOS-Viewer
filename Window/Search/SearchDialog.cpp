@@ -2,6 +2,7 @@
 #include <QRegularExpression>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QLineEdit>
 #include <algorithm>
 #include "SearchDialog.h"
 #include "HexView/HexView.h"
@@ -17,20 +18,20 @@ SearchDialog::SearchDialog(QWidget *parent) :
     connect(ui->AsciiCheckbox,  SIGNAL(stateChanged(int)),    this, SLOT(AsciiCheckboxStateChanged(int)));
     connect(ui->CaseCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(CaseCheckboxStateChanged(int)));
     connect(ui->WideCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(WideCheckboxStateChanged(int)));
-    connect(ui->SearchContent,  SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
     connect(ui->NextButton,     SIGNAL(clicked()),            this, SLOT(NextButtonClicked()));
     connect(ui->PreviousButton, SIGNAL(clicked()),            this, SLOT(PreviousButtonClicked()));
-    connect(ui->SearchContent,  SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
     connect(ui->EndianBox,      SIGNAL(activated(int)),       this, SLOT(EndianBoxActivated(int)));
+    connect(ui->SearchContentBox->lineEdit(),  SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
+    connect(ui->SearchContentBox->lineEdit(),  SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
 
-    ui->SearchContent->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->SearchContent->setText(SearchedString);
-    ui->SearchContent->selectAll();
+    ui->SearchContentBox->lineEdit()->setAttribute(Qt::WA_InputMethodEnabled, false);
+    ui->SearchContentBox->lineEdit()->setText(SearchedString);
+    ui->SearchContentBox->lineEdit()->selectAll();
+    ui->SearchContentBox->setFocus();
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlags(this->windowFlags() | Qt::WindowStaysOnTopHint);
 
-    QSettings windowSettings("Intel", "BiosViewer");
-    restoreGeometry(windowSettings.value("SearchDialog/geometry").toByteArray());
+    restoreGeometry(setting.value("SearchDialog/geometry").toByteArray());
 }
 
 SearchDialog::~SearchDialog() {
@@ -76,6 +77,11 @@ void SearchDialog::initSetting() {
         ui->WideCheckbox->setCheckState(Qt::Unchecked);
     }
 
+    if (setting.contains("SearchBinaryHistory")) {
+        setting.value("SearchBinaryHistory").toStringList().swap(searchHistory);
+        ui->SearchContentBox->addItems(searchHistory);
+    }
+
     if (SearchAscii) {
         ui->EndianBox->setEnabled(false);
         ui->CaseCheckbox->setEnabled(true);
@@ -88,7 +94,6 @@ void SearchDialog::initSetting() {
 }
 
 QString SearchDialog::SearchedString = "";
-QString SearchDialog::pSearchedString = "";
 
 void SearchDialog::setParentWidget(QWidget *pWidget) {
     parentWidget = pWidget;
@@ -104,8 +109,6 @@ void SearchDialog::SetBinaryData(QByteArray *BinaryData) {
  */
 
 void SearchDialog::SearchBinary() {
-    if (SearchedString.size() == 0)
-        return;
     static QRegularExpression re("\\s");
     QString number = SearchedString.remove(re);
     if (number.size() % 2 == 1) {
@@ -124,10 +127,10 @@ void SearchDialog::SearchBinary() {
 
     CurrentSearchLength = searchNum.size();
 
-    INT64 currentIndex = 0;
-    while ((currentIndex = BinaryBuffer->indexOf(searchNum, currentIndex)) != -1) {
-        matchedSearchIndexes.append(currentIndex);
-        currentIndex += searchNum.size();
+    INT64 searchIndex = 0;
+    while ((searchIndex = BinaryBuffer->indexOf(searchNum, searchIndex)) != -1) {
+        matchedSearchIndexes.append(searchIndex);
+        searchIndex += searchNum.size();
     }
 
     return;
@@ -163,7 +166,6 @@ void SearchDialog::SearchBinaryAscii() {
             }
 
             if (Found || wFound) {
-                qDebug() << "Found";
                 matchedSearchIndexes.append(idx);
                 continue;
             }
@@ -179,6 +181,12 @@ char SearchDialog::UpperToLower(char s) const {
     return s;
 }
 
+bool SearchDialog::containsNonHexCharacters(const QString& str) {
+    static QRegularExpression regex("[^0-9a-fA-F]");
+    QRegularExpressionMatch match = regex.match(str);
+    return match.hasMatch();
+}
+
 void SearchDialog::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) {
         this->close();
@@ -186,8 +194,8 @@ void SearchDialog::keyPressEvent(QKeyEvent *event) {
 }
 
 void SearchDialog::closeEvent(QCloseEvent *event) {
-    QSettings windowSettings("Intel", "BiosViewer");
-    windowSettings.setValue("SearchDialog/geometry", saveGeometry());
+    setting.setValue("SearchDialog/geometry", saveGeometry());
+    setting.setValue("SearchBinaryHistory", searchHistory);
     emit closeSignal(false);
 }
 
@@ -223,10 +231,23 @@ void SearchDialog::NextButtonClicked() {
     if (SearchedString.isEmpty())
         return;
 
+    INT64 Index = CurrentIndex;
+    searchHistory.removeAll(SearchedString);
+    searchHistory.prepend(SearchedString);
+    if (searchHistory.size() > 10)
+        searchHistory.removeLast();
+    ui->SearchContentBox->clear();
+    ui->SearchContentBox->addItems(searchHistory);
+    CurrentIndex = Index;
+
     if (matchedSearchIndexes.empty()) {
         if (SearchAscii) {
             SearchBinaryAscii();
         } else {
+            if (containsNonHexCharacters(SearchedString)) {
+                QMessageBox::about(this, tr("Search"), "Please type Hex number!");
+                return;
+            }
             SearchBinary();
         }
     }

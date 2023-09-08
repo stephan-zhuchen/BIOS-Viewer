@@ -11,7 +11,6 @@
 #include <utility>
 #include <exception>
 #include <fstream>
-#include "UEFI/GUID.h"
 #include "SymbolDefinition.h"
 
 namespace BaseLibrarySpace {
@@ -63,5 +62,6 @@ namespace BaseLibrarySpace {
     UINT32 CalculateSum32(const UINT32 *Buffer, INT64 Size);
     INT32  getSizeFromUINT24(const UINT8* address);
     string DumpHex(UINT8* HexData, INT64 length, bool SingleLine = false);
+
     void   saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size);
 }

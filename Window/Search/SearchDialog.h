@@ -24,6 +24,7 @@ public:
     void SearchBinary();
     void SearchBinaryAscii();
     char UpperToLower(char s) const;
+    bool containsNonHexCharacters(const QString& str);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -51,7 +52,7 @@ private:
     QVector<INT64>   matchedSearchIndexes;
     QByteArray       *BinaryBuffer{};
     static QString   SearchedString;
-    static QString   pSearchedString;
+    QStringList      searchHistory;
     enum             EndianMode{LittleEndian=0, BigEndian};
     bool             isLittleEndian{true};
     bool             SearchAscii{false};

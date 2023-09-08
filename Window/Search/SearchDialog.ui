@@ -38,27 +38,6 @@
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
   </property>
-  <widget class="QLineEdit" name="SearchContent">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>50</y>
-     <width>361</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>11</pointsize>
-    </font>
-   </property>
-   <property name="locale">
-    <locale language="English" country="UnitedStates"/>
-   </property>
-   <property name="clearButtonEnabled">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
@@ -109,8 +88,8 @@
     <rect>
      <x>20</x>
      <y>100</y>
-     <width>99</width>
-     <height>74</height>
+     <width>105</width>
+     <height>75</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -155,6 +134,19 @@
    </property>
    <property name="text">
     <string>Include Wide Char</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="SearchContentBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>50</y>
+     <width>360</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="editable">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>

@@ -95,6 +95,16 @@ void QHexView::refresh() {
             SelectionColor = QColor(COLOR_SELECTION);
             CursorColor = QColor(COLOR_CURSOR);
         }
+    } else if (setting.value("Theme").toString() == "Light") {
+        WordColor = Qt::black;
+        WordColorOpposite = Qt::white;
+        SelectionColor = QColor(COLOR_SELECTION);
+        CursorColor = QColor(COLOR_CURSOR);
+    } else if (setting.value("Theme").toString() == "Dark") {
+        WordColor = Qt::white;
+        WordColorOpposite = Qt::black;
+        SelectionColor = QColor(38, 79, 120);
+        CursorColor = QColor(235, 235, 235);
     }
 
     if (setting.value("EnableHexEditing").toString() == "false") {
@@ -124,8 +134,6 @@ void QHexView::loadFile(const QString& p_file) {
 
     restartTimer();
     setFileOpened(true);
-
-//  resetSelection(0);
 }
 
 void QHexView::loadFromBuffer(QByteArray &buffer) {
@@ -137,7 +145,6 @@ void QHexView::loadFromBuffer(QByteArray &buffer) {
     setFileOpened(true);
     restartTimer();
 }
-
 
 /**
  * @brief Sets the starting offset to display in the Hex View.
@@ -167,7 +174,6 @@ void QHexView::showFromOffset(INT64 offset, INT64 length) {
         viewport()->update();
     }
 }
-
 
 /**
  * @brief Clears the content of the QHexView.

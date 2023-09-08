@@ -39,8 +39,6 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
             ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
             ((HexViewWindow*)parentWidget)->saveImage();
         }
-//    } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_C ) {
-//        CopyFromSelectedContent();
     } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_V ) {
         PasteToContent();
     } else if ((event ->modifiers() & Qt::ControlModifier) == 0 && event->key() >= Qt::Key_0 && event->key() <= Qt::Key_9) {

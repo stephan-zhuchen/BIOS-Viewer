@@ -9,11 +9,7 @@
 #include "SymbolDefinition.h"
 
 // config font and colors
-#define FONT "Courier"
-#define SIZE_FONT 11
-#define COLOR_CHARACTERS Qt::black
 #define COLOR_SELECTION 199, 199, 199, 0xff
-#define COLOR_ADDRESS 199, 199, 199, 0xff
 #define COLOR_CURSOR 38, 95, 153, 0xff
 
 // config lines

@@ -16,27 +16,26 @@ BiosSearch::BiosSearch(QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlags(this->windowFlags() | Qt::WindowStaysOnTopHint);
     initSetting();
-    ui->SearchContent->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->SearchContent->setInputMethodHints(Qt::ImhPreferLatin);
+    ui->SearchContentBox->lineEdit()->setAttribute(Qt::WA_InputMethodEnabled, false);
+    ui->SearchContentBox->lineEdit()->setInputMethodHints(Qt::ImhPreferLatin);
     ui->guidTab->installEventFilter(this);
 
-    QSettings windowSettings("Intel", "BiosViewer");
-    restoreGeometry(windowSettings.value("BiosSearchDialog/geometry").toByteArray());
+    restoreGeometry(setting.value("BiosSearchDialog/geometry").toByteArray());
 
-    connect(ui->SearchContent,      SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
     connect(ui->FvCheckbox,         SIGNAL(stateChanged(int)),    this, SLOT(FvCheckboxStateChanged(int)));
     connect(ui->FfsCheckbox,        SIGNAL(stateChanged(int)),    this, SLOT(FfsCheckboxStateChanged(int)));
     connect(ui->SectionCheckbox,    SIGNAL(stateChanged(int)),    this, SLOT(SectionCheckboxStateChanged(int)));
     connect(ui->CaseCheckbox,       SIGNAL(stateChanged(int)),    this, SLOT(CaseCheckboxStateChanged(int)));
     connect(ui->PreviousButton,     SIGNAL(clicked()),            this, SLOT(PreviousButtonClicked()));
     connect(ui->NextButton,         SIGNAL(clicked()),            this, SLOT(NextButtonClicked()));
-    connect(ui->SearchContent,      SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
     connect(ui->tabWidget,          SIGNAL(currentChanged(int)),  this, SLOT(tabWidgetCurrentChanged(int)));
     connect(ui->clearButton,        SIGNAL(clicked()),            this, SLOT(ClearButtonClicked()));
     connect(ui->Data1Edit,          SIGNAL(GuidCopied(const QString&)), this, SLOT(SetGuidDataFromClipboard(const QString&)));
     connect(ui->GuidFvCheckbox,     SIGNAL(stateChanged(int)),    this, SLOT(GuidFvCheckboxStateChanged(int)));
     connect(ui->GuidFfsCheckbox,    SIGNAL(stateChanged(int)),    this, SLOT(GuidFfsCheckboxStateChanged(int)));
     connect(ui->GuidSectionCheckbox, SIGNAL(stateChanged(int)),   this, SLOT(GuidSectionCheckboxStateChanged(int)));
+    connect(ui->SearchContentBox->lineEdit(),   SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
+    connect(ui->SearchContentBox->lineEdit(),   SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
 
     tabWidgetCurrentChanged(0);
 }
@@ -115,6 +114,11 @@ void BiosSearch::initSetting() {
     } else if (setting.value("GuidSearchSection") == "false") {
         GuidSearchSection = false;
         ui->GuidSectionCheckbox->setCheckState(Qt::Unchecked);
+    }
+
+    if (setting.contains("SearchTextHistory")) {
+        setting.value("SearchTextHistory").toStringList().swap(searchHistory);
+        ui->SearchContentBox->addItems(searchHistory);
     }
 
     QRegularExpressionValidator GuidData1Validator = QRegularExpressionValidator(QRegularExpression("([0-9a-fA-F]){8}"));
@@ -303,8 +307,8 @@ void BiosSearch::keyPressEvent(QKeyEvent *event) {
 
 void BiosSearch::closeEvent(QCloseEvent *event) {
     ClearHighlightedItems();
-    QSettings windowSettings("Intel", "BiosViewer");
-    windowSettings.setValue("BiosSearchDialog/geometry", saveGeometry());
+    setting.setValue("BiosSearchDialog/geometry", saveGeometry());
+    setting.setValue("SearchTextHistory", searchHistory);
     emit closeSignal(false);
 }
 
@@ -345,9 +349,9 @@ void BiosSearch::CollectGuidData() {
 void BiosSearch::tabWidgetCurrentChanged(int index) {
     ClearHighlightedItems();
     if (ui->tabWidget->currentIndex() == SearchMode::Text) {
-        ui->SearchContent->setText(SearchedString);
-        ui->SearchContent->selectAll();
-        ui->SearchContent->setFocus();
+        ui->SearchContentBox->lineEdit()->setText(SearchedString);
+        ui->SearchContentBox->lineEdit()->selectAll();
+        ui->SearchContentBox->setFocus();
     } else if (ui->tabWidget->currentIndex() == SearchMode::Guid) {
         ui->Data1Edit->setFocus();
     }
@@ -415,6 +419,15 @@ void BiosSearch::SetTreeData(QTreeWidget *tree) {
 }
 
 void BiosSearch::SearchTextFromTreeWidget(const QString &searchString) {
+    INT32 Index = currentHighlightedIndex;
+    searchHistory.removeAll(searchString);
+    searchHistory.prepend(searchString);
+    if (searchHistory.size() > 10)
+        searchHistory.removeLast();
+    ui->SearchContentBox->clear();
+    ui->SearchContentBox->addItems(searchHistory);
+    currentHighlightedIndex = Index;
+
     QFlags<Qt::MatchFlag> flags = Qt::MatchContains | Qt::MatchRecursive;
     if (CaseSensitive)
         flags = flags | Qt::MatchCaseSensitive;
@@ -427,7 +440,6 @@ void BiosSearch::SearchTextFromTreeWidget(const QString &searchString) {
 
 void BiosSearch::SearchGuidFromTreeWidget(const EFI_GUID &searchGuid) {
     ClearHighlightedItems();
-    currentHighlightedIndex = -1;
     QList<QTreeWidgetItem *> allItems = treeWidget->findItems(QString("*"), Qt::MatchWildcard|Qt::MatchRecursive);
     for (QTreeWidgetItem *item : allItems) {
         auto *itemVolume = item->data(treeColNum::Name, Qt::UserRole).value<Volume*>();
@@ -443,4 +455,5 @@ void BiosSearch::ClearHighlightedItems() {
         item->setBackground(Name, QBrush(ItemColor));
     }
     matchedItems.clear();
+    currentHighlightedIndex = -1;
 }

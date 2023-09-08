@@ -16,7 +16,7 @@ class BiosSearch : public QWidget
 
 public:
     explicit BiosSearch(QWidget *parent = nullptr);
-    ~BiosSearch();
+    ~BiosSearch() override;
 
     void initSetting();
     void SetTreeData(QTreeWidget* tree);
@@ -29,7 +29,6 @@ public:
     void ClearHighlightedItems();
 
 signals:
-    void Highlight(QVector<INT32>);
     void closeSignal(bool State);
 
 protected:
@@ -74,6 +73,8 @@ private:
 
     static QString   SearchedString;
     static EFI_GUID  SearchedGuid;
+    QStringList      searchHistory;
+
 
     INT32 currentHighlightedIndex = -1;
 };
