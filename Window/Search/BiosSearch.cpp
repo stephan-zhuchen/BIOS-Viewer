@@ -16,6 +16,7 @@ BiosSearch::BiosSearch(QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlags(this->windowFlags() | Qt::WindowStaysOnTopHint);
     initSetting();
+    ui->SearchContentBox->setCompleter(nullptr);
     ui->SearchContentBox->lineEdit()->setAttribute(Qt::WA_InputMethodEnabled, false);
     ui->SearchContentBox->lineEdit()->setInputMethodHints(Qt::ImhPreferLatin);
     ui->guidTab->installEventFilter(this);
@@ -391,6 +392,13 @@ void BiosSearch::SetGuidDataFromClipboard(const QString &ClipContent) {
         ui->Data3Edit->setText(guidStr.mid(21, 4));
         ui->Data4Edit->setText(guidStr.mid(29, 2) + guidStr.mid(34, 2));
         ui->Data5Edit->setText(guidStr.mid(39, 2) + guidStr.mid(44, 2) + guidStr.mid(49, 2) + guidStr.mid(54, 2) + guidStr.mid(59, 2) + guidStr.mid(64, 2));
+    } else {
+        QString TipMsg = "\nSupported GUID Pattern:\n"
+                         "8C8CE578\n"
+                         "0x8C8CE578\n"
+                         "8C8CE578-8A3D-4F1C-9935-896185C32DD3\n"
+                         "{0x8c8ce578, 0x3dcb, 0x4dca, {0xbd, 0x6f, 0x1e, 0x96, 0x89, 0xe7, 0x34, 0x9a}}";
+        QMessageBox::about(this, tr("Search"), "\"" + ClipContent + "\" Does Match GUID Pattern!" + TipMsg);
     }
 }
 

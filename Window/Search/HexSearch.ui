@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SearchDialog</class>
- <widget class="QDialog" name="SearchDialog">
+ <class>HexSearch</class>
+ <widget class="QDialog" name="HexSearch">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -88,8 +88,8 @@
     <rect>
      <x>20</x>
      <y>100</y>
-     <width>105</width>
-     <height>75</height>
+     <width>109</width>
+     <height>82</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">

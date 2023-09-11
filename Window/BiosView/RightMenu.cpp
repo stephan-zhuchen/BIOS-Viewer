@@ -328,17 +328,17 @@ void BiosViewerWindow::showPeCoffView() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString filepath = QDir(lastPath).filePath("temp.bin");
     QString toolpath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
+    if(QFile::exists(toolpath)) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "Microsoft dumpbin tool not found!");
+        return;
+    }
+
     INT64 HeaderSize = BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
     saveBinary(filepath.toStdString(),
                BiosData->RightClickedItemModel.getVolume()->getData(),
                HeaderSize,
                BiosData->RightClickedItemModel.getVolume()->getSize() - HeaderSize);
-    std::ifstream tempFile(filepath.toStdString());
-    if (!tempFile.good()) {
-        QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
-        return;
-    }
-    tempFile.close();
+
     auto *TabView = new TabWindow();
     TabView->SetTabViewTitle("PE/COFF");
     if (isDarkMode()) {
@@ -375,17 +375,17 @@ void BiosViewerWindow::showAcpiTableView() {
     QString filepath = QDir(lastPath).filePath("temp.bin");
     QString Dslpath = QDir(lastPath).filePath("temp.dsl");
     QString toolpath = WindowData->appDir + "/tool/ACPI/iasl.exe";
+    if(QFile::exists(toolpath)) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "ACPI iasl tool not found!");
+        return;
+    }
+
     INT64 HeaderSize = BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
     saveBinary(filepath.toStdString(),
                BiosData->RightClickedItemModel.getVolume()->getData(),
                HeaderSize,
                BiosData->RightClickedItemModel.getVolume()->getSize() - HeaderSize);
-    std::ifstream tempFile(filepath.toStdString());
-    if (!tempFile.good()) {
-        QMessageBox::critical(this, tr("BIOS Viewer"), "Please run as Administrator!");
-        return;
-    }
-    tempFile.close();
+
     auto *TabView = new TabWindow();
     TabView->SetTabViewTitle("ACPI Table");
     if (isDarkMode()) {

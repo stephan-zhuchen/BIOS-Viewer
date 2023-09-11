@@ -19,8 +19,7 @@ MergeFilesWindow::MergeFilesWindow(bool darkMode, QWidget *parent) :
     initRightMenu();
     setAttribute(Qt::WA_DeleteOnClose);
     ui->FileListWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    QSettings windowSettings("Intel", "BiosViewer");
-    restoreGeometry(windowSettings.value("MergeFilesWindow/geometry").toByteArray());
+    restoreGeometry(setting.value("MergeFilesWindow/geometry").toByteArray());
 
     if (darkModeFlag) {
         ui->actionAddFile->setIcon(QIcon(":/open_light.svg"));
@@ -42,8 +41,7 @@ MergeFilesWindow::MergeFilesWindow(bool darkMode, QWidget *parent) :
 MergeFilesWindow::~MergeFilesWindow() {
     delete ui;
     finiRightMenu();
-    QSettings windowSettings("Intel", "BiosViewer");
-    windowSettings.setValue("MergeFilesWindow/geometry", saveGeometry());
+    setting.setValue("MergeFilesWindow/geometry", saveGeometry());
 }
 
 void MergeFilesWindow::OpenFile(const QString& path) {

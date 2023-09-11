@@ -14,17 +14,14 @@ TabWindow::TabWindow(QWidget *parent) :
     tabWidget = new QTabWidget(this);
     tabWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
 
-    QSettings windowSettings("Intel", "BiosViewer");
-    restoreGeometry(windowSettings.value("TabWindow/geometry").toByteArray());
+    restoreGeometry(setting.value("TabWindow/geometry").toByteArray());
 }
 
-TabWindow::~TabWindow()
-{
+TabWindow::~TabWindow() {
     delete ui;
     delete verticalLayout;
     delete tabWidget;
-    QSettings windowSettings("Intel", "BiosViewer");
-    windowSettings.setValue("TabWindow/geometry", saveGeometry());
+    setting.setValue("TabWindow/geometry", saveGeometry());
 }
 
 void TabWindow::SetNewTabAndText(const QString& tabName, const QString& txt) {

@@ -47,7 +47,7 @@ private:
     QWidget          *parentWidget{ nullptr };
     QString          appDir;
     QString          OpenedFileName;
-    QSettings setting{"Intel", "BiosViewer"};
+    QSettings        setting{"Intel", "BiosViewer"};
 
     enum tableColNum {Address=0, Size, Version, C_V, Checksum, Type};
 };

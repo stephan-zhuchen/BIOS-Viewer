@@ -48,9 +48,7 @@
         <file>arrowdown_light.svg</file>
         <file>delete.svg</file>
         <file>delete_light.svg</file>
-    </qresource>
-    <qresource prefix="/sty">
-        <file>dark_mode.qss</file>
-        <file>light_mode.qss</file>
+        <file>merge.svg</file>
+        <file>merge_light.svg</file>
     </qresource>
 </RCC>

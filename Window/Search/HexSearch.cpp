@@ -4,13 +4,14 @@
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <algorithm>
-#include "SearchDialog.h"
+#include "HexSearch.h"
 #include "HexView/HexView.h"
-#include "ui_SearchDialog.h"
+#include "ui_HexSearch.h"
 
-SearchDialog::SearchDialog(QWidget *parent) :
+HexSearch::HexSearch(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SearchDialog)
+    ui(new Ui::HexSearch),
+    SearchLine(new QLineEdit)
 {
     ui->setupUi(this);
     initSetting();
@@ -21,24 +22,26 @@ SearchDialog::SearchDialog(QWidget *parent) :
     connect(ui->NextButton,     SIGNAL(clicked()),            this, SLOT(NextButtonClicked()));
     connect(ui->PreviousButton, SIGNAL(clicked()),            this, SLOT(PreviousButtonClicked()));
     connect(ui->EndianBox,      SIGNAL(activated(int)),       this, SLOT(EndianBoxActivated(int)));
-    connect(ui->SearchContentBox->lineEdit(),  SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
-    connect(ui->SearchContentBox->lineEdit(),  SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
+    connect(SearchLine,         SIGNAL(textChanged(QString)), this, SLOT(SearchContentTextChanged(QString)));
+    connect(SearchLine,         SIGNAL(returnPressed()),      this, SLOT(SearchContentReturnPressed()));
 
-    ui->SearchContentBox->lineEdit()->setAttribute(Qt::WA_InputMethodEnabled, false);
-    ui->SearchContentBox->lineEdit()->setText(SearchedString);
+    ui->SearchContentBox->setCompleter(nullptr);
+    ui->SearchContentBox->setLineEdit(SearchLine);
+    SearchLine->setAttribute(Qt::WA_InputMethodEnabled, false);
+//    ui->SearchContentBox->lineEdit()->setText(SearchedString);
     ui->SearchContentBox->lineEdit()->selectAll();
     ui->SearchContentBox->setFocus();
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlags(this->windowFlags() | Qt::WindowStaysOnTopHint);
 
-    restoreGeometry(setting.value("SearchDialog/geometry").toByteArray());
+    restoreGeometry(setting.value("HexSearch/geometry").toByteArray());
 }
 
-SearchDialog::~SearchDialog() {
+HexSearch::~HexSearch() {
     delete ui;
 }
 
-void SearchDialog::initSetting() {
+void HexSearch::initSetting() {
     if (!setting.contains("Endian"))
         setting.setValue("Endian", "little");
     if (!setting.contains("SearchAscii"))
@@ -93,24 +96,30 @@ void SearchDialog::initSetting() {
     }
 }
 
-QString SearchDialog::SearchedString = "";
+QString HexSearch::SearchedString = "";
 
-void SearchDialog::setParentWidget(QWidget *pWidget) {
+void HexSearch::setParentWidget(QWidget *pWidget) {
     parentWidget = pWidget;
 }
 
-void SearchDialog::SetBinaryData(QByteArray *BinaryData) {
+void HexSearch::SetBinaryData(QByteArray *BinaryData) {
     BinaryBuffer = BinaryData;
 }
 
 /**
- * @class SearchDialog
+ * @class HexSearch
  * @brief A class that represents a search dialog for binary search.
  */
 
-void SearchDialog::SearchBinary() {
+void HexSearch::SearchBinary() {
     static QRegularExpression re("\\s");
-    QString number = SearchedString.remove(re);
+    QString SearchContent;
+    if (!CaseSensitive)
+        SearchContent = SearchedString.toLower();
+    else
+        SearchContent = SearchedString;
+
+    QString number = SearchContent.remove(re);
     if (number.size() % 2 == 1) {
         number = "0" + number;
     }
@@ -137,28 +146,33 @@ void SearchDialog::SearchBinary() {
 }
 
 /**
- * @class SearchDialog
- * @brief SearchDialog class for performing binary search on ASCII values
+ * @class HexSearch
+ * @brief HexSearch class for performing binary search on ASCII values
  *
  * This class provides functionality to perform binary search on the ASCII values of an integer array.
  * It takes a pointer to the beginning of the array and the length of the array as input, and provides
  * methods to search for specific ASCII values within the array using the binary search algorithm.
  */
 
-void SearchDialog::SearchBinaryAscii() {
+void HexSearch::SearchBinaryAscii() {
+    QString SearchContent;
+    if (!CaseSensitive)
+        SearchContent = SearchedString.toLower();
+    else
+        SearchContent = SearchedString;
     for (INT64 idx = 0; idx < BinaryBuffer->size(); ++idx) {
         bool Found = true;
         bool wFound = WideCharacter;
-        if (UpperToLower(BinaryBuffer->at(idx)) == SearchedString.at(0).toLatin1()) {
-            for (INT64 strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
-                if (UpperToLower(BinaryBuffer->at(idx + strIdx)) != SearchedString.at(strIdx).toLatin1()) {
+        if (UpperToLower(BinaryBuffer->at(idx)) == SearchContent.at(0).toLatin1()) {
+            for (INT64 strIdx = 1; strIdx < SearchContent.size(); ++strIdx) {
+                if (UpperToLower(BinaryBuffer->at(idx + strIdx)) != SearchContent.at(strIdx).toLatin1()) {
                     Found = false;
                     break;
                 }
             }
             if (WideCharacter) {
-                for (INT64 strIdx = 1; strIdx < SearchedString.size(); ++strIdx) {
-                    if (BinaryBuffer->at(idx + strIdx * 2 - 1) != 0 || UpperToLower(BinaryBuffer->at(idx + strIdx * 2)) != SearchedString.at(strIdx).toLatin1()) {
+                for (INT64 strIdx = 1; strIdx < SearchContent.size(); ++strIdx) {
+                    if (BinaryBuffer->at(idx + strIdx * 2 - 1) != 0 || UpperToLower(BinaryBuffer->at(idx + strIdx * 2)) != SearchContent.at(strIdx).toLatin1()) {
                         wFound = false;
                         break;
                     }
@@ -175,31 +189,31 @@ void SearchDialog::SearchBinaryAscii() {
     return;
 }
 
-char SearchDialog::UpperToLower(char s) const {
+char HexSearch::UpperToLower(char s) const {
     if(!CaseSensitive && s >= 65 && s <= 90)
         s = s + 32;
     return s;
 }
 
-bool SearchDialog::containsNonHexCharacters(const QString& str) {
-    static QRegularExpression regex("[^0-9a-fA-F]");
+bool HexSearch::containsNonHexCharacters(const QString& str) {
+    static QRegularExpression regex("[^0-9a-fA-F\\s]");
     QRegularExpressionMatch match = regex.match(str);
     return match.hasMatch();
 }
 
-void SearchDialog::keyPressEvent(QKeyEvent *event) {
+void HexSearch::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) {
         this->close();
     }
 }
 
-void SearchDialog::closeEvent(QCloseEvent *event) {
-    setting.setValue("SearchDialog/geometry", saveGeometry());
+void HexSearch::closeEvent(QCloseEvent *event) {
+    setting.setValue("HexSearch/geometry", saveGeometry());
     setting.setValue("SearchBinaryHistory", searchHistory);
     emit closeSignal(false);
 }
 
-void SearchDialog::AsciiCheckboxStateChanged(int state) {
+void HexSearch::AsciiCheckboxStateChanged(int state) {
     CurrentIndex = -1;
     matchedSearchIndexes.clear();
     if (state == Qt::Checked) {
@@ -218,16 +232,14 @@ void SearchDialog::AsciiCheckboxStateChanged(int state) {
     }
 }
 
-void SearchDialog::SearchContentTextChanged(const QString &text) {
+void HexSearch::SearchContentTextChanged(const QString &text) {
     CurrentIndex = -1;
     matchedSearchIndexes.clear();
     SearchedString = text;
     CurrentSearchLength = SearchedString.size();
-    if (!CaseSensitive)
-        SearchedString = text.toLower();
 }
 
-void SearchDialog::NextButtonClicked() {
+void HexSearch::NextButtonClicked() {
     if (SearchedString.isEmpty())
         return;
 
@@ -261,7 +273,7 @@ void SearchDialog::NextButtonClicked() {
     ((QHexView*)parentWidget)->showFromOffset(matchedSearchIndexes.at(CurrentIndex), CurrentSearchLength);
 }
 
-void SearchDialog::PreviousButtonClicked() {
+void HexSearch::PreviousButtonClicked() {
     if (matchedSearchIndexes.empty()) {
         QMessageBox::about(this, tr("Search"), "No Previous Results!");
         return;
@@ -271,11 +283,11 @@ void SearchDialog::PreviousButtonClicked() {
     ((QHexView*)parentWidget)->showFromOffset(matchedSearchIndexes.at(CurrentIndex), CurrentSearchLength);
 }
 
-void SearchDialog::SearchContentReturnPressed() {
+void HexSearch::SearchContentReturnPressed() {
     NextButtonClicked();
 }
 
-void SearchDialog::EndianBoxActivated(int index) {
+void HexSearch::EndianBoxActivated(int index) {
     CurrentIndex = -1;
     matchedSearchIndexes.clear();
     if (ui->EndianBox->currentIndex() == EndianMode::LittleEndian) {
@@ -287,7 +299,7 @@ void SearchDialog::EndianBoxActivated(int index) {
     }
 }
 
-void SearchDialog::CaseCheckboxStateChanged(int state) {
+void HexSearch::CaseCheckboxStateChanged(int state) {
     CurrentIndex = -1;
     matchedSearchIndexes.clear();
     if (state == Qt::Checked) {
@@ -300,7 +312,7 @@ void SearchDialog::CaseCheckboxStateChanged(int state) {
     }
 }
 
-void SearchDialog::WideCheckboxStateChanged(int state) {
+void HexSearch::WideCheckboxStateChanged(int state) {
     CurrentIndex = -1;
     matchedSearchIndexes.clear();
     if (state == Qt::Checked) {

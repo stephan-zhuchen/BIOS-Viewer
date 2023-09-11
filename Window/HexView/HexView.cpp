@@ -11,10 +11,7 @@
 #include <QDialogButtonBox>
 #include <QMessageBox>
 #include "Input/inputdialog.h"
-#include "Search/SearchDialog.h"
-
-// valid character table ascii
-#define CHAR_VALID(_character) ((_character < 0x20) || (_character > 0x7e)) ? _character = '.' : _character;
+#include "Search/HexSearch.h"
 
 QHexView::QHexView(QWidget *parent, bool darkMode)
     : QAbstractScrollArea(parent),
@@ -293,8 +290,8 @@ void QHexView::paintEvent(QPaintEvent *event) {
              ((lineIdx - firstLineIdx) * BytesPerHexLine + i) < data.size() && (i < BytesPerHexLine);
              i++, xPosAscii += CharWidth)
         {
-            char character = data[(lineIdx - firstLineIdx) * BytesPerHexLine + i];
-            CHAR_VALID(character);
+            CHAR8 character = data[(lineIdx - firstLineIdx) * BytesPerHexLine + i];
+            character = FilterAscii(character);
 
             INT64 pos = ((lineIdx * BytesPerHexLine + i) * 2) + 1;
             if (isSelected(pos)) {
@@ -391,8 +388,8 @@ void QHexView::paintEvent(QPaintEvent *event) {
         painter.fillRect(cursorX, cursorY + horizenLinePosY, CharWidth, CharHeight, CursorColor);
 
         if (StartFromAscii) {
-            char character = data[y * BytesPerHexLine + x / 2];
-            CHAR_VALID(character);
+            CHAR8 character = data[y * BytesPerHexLine + x / 2];
+            character = FilterAscii(character);
             painter.setPen(WordColorOpposite);
             painter.drawText(cursorX, (y + 1) * CharHeight + horizenLinePosY, QString(character));
             painter.setPen(WordColor);
@@ -555,6 +552,13 @@ void QHexView::ensureVisible() {
         verticalScrollBar()->setValue(cursorY - areaSize.height() / CharHeight + 1);
 }
 
+CHAR8 QHexView::FilterAscii(CHAR8 character) {
+    if ((character < 0x20) || (character > 0x7e)) {
+        return '.';
+    }
+    return character;
+}
+
 void QHexView::confScrollBar() {
     QSize areaSize = viewport()->size();
     QSize widgetSize = fullSize();
@@ -646,7 +650,7 @@ void QHexView::actionGoto() {
 void QHexView::actionSearch() {
     if (!HexSearchDialogOpened) {
         HexSearchDialogOpened = true;
-        HexSearchDialog = new SearchDialog();
+        HexSearchDialog = new HexSearch();
         HexSearchDialog->SetBinaryData(&HexDataArray);
         HexSearchDialog->setParentWidget(this);
         if (isDarkMode)

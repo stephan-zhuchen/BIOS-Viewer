@@ -20,7 +20,7 @@
 #define ADR_LENGTH 8
 #define BLANK_LINE_NUM 10
 
-class SearchDialog;
+class HexSearch;
 
 class QHexView : public QAbstractScrollArea
 {
@@ -80,8 +80,8 @@ private:
     QColor WordColor{Qt::black};
     QColor WordColorOpposite{Qt::white};
     QColor CursorColor{COLOR_CURSOR};
-    SearchDialog *HexSearchDialog{nullptr};
-    bool         HexSearchDialogOpened{false};
+    HexSearch *HexSearchDialog{nullptr};
+    bool      HexSearchDialogOpened{false};
     QSettings setting{QSettings("Intel", "BiosViewer")};
     QSettings SysSettings{R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", QSettings::NativeFormat};
 
@@ -105,23 +105,24 @@ private:
     QAction *sha512_Menu{nullptr};
 
     QSize fullSize() const;
-    void updatePositions();
-    void resetSelection();
-    void resetSelection(INT64 pos);
-    void setSelection(INT64 pos);
-    void ensureVisible();
-    void setCursorPos(INT64 pos);
+    void  updatePositions();
+    void  resetSelection();
+    void  resetSelection(INT64 pos);
+    void  setSelection(INT64 pos);
+    void  ensureVisible();
+    CHAR8 FilterAscii(CHAR8 character);
+    void  setCursorPos(INT64 pos);
     INT64 cursorPos(const QPoint &position);
     INT64 getCursorPos() const;
-    void confScrollBar();
-    bool isSelected(INT64 index);
-    bool isEdited(INT64 index);
-    void restartTimer();
+    void  confScrollBar();
+    bool  isSelected(INT64 index);
+    bool  isEdited(INT64 index);
+    void  restartTimer();
     INT64 getLineNum();
-    void initRightMenu();
-    void finiRightMenu();
-    bool getSelectedBuffer(QByteArray &buffer, INT64*length);
-    void binaryEdit(char inputChar);
+    void  initRightMenu();
+    void  finiRightMenu();
+    bool  getSelectedBuffer(QByteArray &buffer, INT64*length);
+    void  binaryEdit(char inputChar);
 
 public slots:
     void loadFile(const QString& p_file);

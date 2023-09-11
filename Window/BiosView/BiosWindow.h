@@ -24,7 +24,7 @@
 #include "DataModel.h"
 #include "IfwiRegion/BiosRegion.h"
 #include "InfoWindow/InfoWindow.h"
-#include "Search/SearchDialog.h"
+#include "Search/HexSearch.h"
 #include "Search/BiosSearch.h"
 
 class QHexView;

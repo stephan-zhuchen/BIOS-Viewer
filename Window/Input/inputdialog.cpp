@@ -41,7 +41,6 @@ QValidator::State GuidData1HexLineEdit::validate(QString &text, int &pos) const
 
 void GuidData1HexLineEdit::keyPressEvent(QKeyEvent *event) {
     if (event->matches(QKeySequence::Paste)) {
-        qDebug() << "GuidData1HexLineEdit Paste";
         QClipboard *clipboard = QApplication::clipboard();
         QString text = clipboard->text();
         emit GuidCopied(text);

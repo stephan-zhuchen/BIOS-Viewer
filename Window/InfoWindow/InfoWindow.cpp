@@ -41,8 +41,7 @@ InfoWindow::InfoWindow(QString Dir, QWidget *parent) :
     connect(ui->BtgListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(BtgListWidgetItemSelectionChanged()));
     connect(ui->AcpiListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(AcpiListWidgetItemSelectionChanged()));
 
-    QSettings windowSettings("Intel", "BiosViewer");
-    restoreGeometry(windowSettings.value("InfoDialog/geometry").toByteArray());
+    restoreGeometry(setting.value("InfoDialog/geometry").toByteArray());
 }
 
 InfoWindow::~InfoWindow()
@@ -224,9 +223,7 @@ void InfoWindow::showFceTab() {
 //        TempFile.open(QIODevice::ReadOnly | QIODevice::Text);
 //        text = TempFile.readAll();
 //        TempFile.close();
-////        TempFile.remove();
-//    } else {
-//        text = "Please run as Administrator!";
+//        TempFile.remove();
 //    }
 
 //    ui->fceText->setText(text);
@@ -249,8 +246,7 @@ void InfoWindow::keyPressEvent(QKeyEvent *event) {
 
 void InfoWindow::closeEvent(QCloseEvent *event) {
     ((BiosViewerWindow*)parentWidget)->setInfoWindowState(false);
-    QSettings windowSettings("Intel", "BiosViewer");
-    windowSettings.setValue("InfoDialog/geometry", saveGeometry());
+    setting.setValue("InfoDialog/geometry", saveGeometry());
 }
 
 void InfoWindow::microcodeListWidgetItemSelectionChanged() {
@@ -336,12 +332,6 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
     }
 
     saveBinary(filePath.toStdString(), ACPI_Entry->getData(), 0, ACPI_Entry->getSize());
-    if (!QFile::exists(filePath)) {
-        AcpiText = "Please run as Administrator!";
-        ui->AcpiTextBrowser->setText(AcpiText);
-        return;
-    }
-
     auto *process = new QProcess(this);
     process->start(toolpath, QStringList() << "-d" << filePath);
     process->waitForFinished();

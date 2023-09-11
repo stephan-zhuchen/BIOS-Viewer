@@ -28,10 +28,10 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
-    Ui::TabWindow *ui;
-    QVBoxLayout *verticalLayout;
-    QTabWidget *tabWidget;
-    QSettings setting{"Intel", "BiosViewer"};
+    Ui::TabWindow   *ui;
+    QVBoxLayout     *verticalLayout;
+    QTabWidget      *tabWidget;
+    QSettings       setting{"Intel", "BiosViewer"};
 };
 
 class TabSearchDialog : public QDialog {

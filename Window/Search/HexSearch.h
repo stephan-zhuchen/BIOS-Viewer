@@ -3,20 +3,21 @@
 
 #include <QDialog>
 #include <QSettings>
+#include <QLineEdit>
 #include <vector>
 #include "BaseLib.h"
 
 namespace Ui {
-class SearchDialog;
+class HexSearch;
 }
 
-class SearchDialog : public QDialog
+class HexSearch : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit SearchDialog(QWidget *parent = nullptr);
-    ~SearchDialog() override;
+    explicit HexSearch(QWidget *parent = nullptr);
+    ~HexSearch() override;
 
     void initSetting();
     void setParentWidget(QWidget *pWidget);
@@ -44,13 +45,14 @@ private slots:
     void WideCheckboxStateChanged(int state);
 
 private:
-    Ui::SearchDialog *ui;
+    Ui::HexSearch    *ui;
     QSettings        setting{"Intel", "BiosViewer"};
     QWidget          *parentWidget{};
     INT64            CurrentIndex{-1};
     INT64            CurrentSearchLength{-1};
     QVector<INT64>   matchedSearchIndexes;
     QByteArray       *BinaryBuffer{};
+    QLineEdit        *SearchLine;
     static QString   SearchedString;
     QStringList      searchHistory;
     enum             EndianMode{LittleEndian=0, BigEndian};

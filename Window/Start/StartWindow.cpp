@@ -34,8 +34,7 @@ StartWindow::StartWindow(QString appPath, QWidget *parent) :
     ui->setupUi(this);
     showHintWindow();
 
-    QSettings windowSettings("Intel", "BiosViewer");
-    restoreGeometry(windowSettings.value("mainwindow/geometry").toByteArray());
+    restoreGeometry(setting.value("mainwindow/geometry").toByteArray());
     InstallFonts("Fira Code");
     InstallFonts("Fira Code Light");
     InstallFonts("IntelOne Mono");
@@ -185,8 +184,26 @@ void StartWindow::initSettings() {
         ui->actionExtract_Binary->setIcon(QIcon(":/box-arrow-up_light.svg"));
         ui->actionSeperate_Binary->setIcon(QIcon(":/scissors_light.svg"));
         ui->actionReplace_BIOS->setIcon(QIcon(":/replace_light.svg"));
+        ui->actionMergeFiles->setIcon(QIcon(":/merge_light.svg"));
         ui->actionAboutBiosViewer->setIcon(QIcon(":/about_light.svg"));
         ui->actionAboutQt->setIcon(QIcon(":/about_light.svg"));
+    } else {
+        ui->OpenFile->setIcon(QIcon(":/open.svg"));
+        ui->OpenInHexView->setIcon(QIcon(":/file-binary.svg"));
+        ui->OpenInNewWindow->setIcon(QIcon(":/open.svg"));
+        ui->actionSettings->setIcon(QIcon(":/gear.svg"));
+        ui->actionCloseTab->setIcon(QIcon(":/close.svg"));
+        ui->actionExit->setIcon(QIcon(":/Exit.svg"));
+        ui->actionSearch->setIcon(QIcon(":/search.svg"));
+        ui->actionGoto->setIcon(QIcon(":/bookmark.svg"));
+        ui->actionCollapse->setIcon(QIcon(":/arrows-collapse.svg"));
+        ui->actionExtract_BIOS->setIcon(QIcon(":/box-arrow-up.svg"));
+        ui->actionExtract_Binary->setIcon(QIcon(":/box-arrow-up.svg"));
+        ui->actionSeperate_Binary->setIcon(QIcon(":/scissors.svg"));
+        ui->actionReplace_BIOS->setIcon(QIcon(":/replace.svg"));
+        ui->actionMergeFiles->setIcon(QIcon(":/merge.svg"));
+        ui->actionAboutBiosViewer->setIcon(QIcon(":/about.svg"));
+        ui->actionAboutQt->setIcon(QIcon(":/about.svg"));
     }
 }
 
@@ -201,9 +218,6 @@ void StartWindow::InstallFonts(QString FontName) {
 
         FontID = QFontDatabase::addApplicationFontFromData(fontData);
         QStringList fontFamilies = QFontDatabase::applicationFontFamilies(FontID);
-        if (!fontFamilies.isEmpty()) {
-            qDebug() << fontFamilies << " installed";
-        }
     }
 }
 
@@ -354,8 +368,7 @@ void StartWindow::closeEvent(QCloseEvent *event) {
             }
         }
 
-        QSettings windowSettings("Intel", "BiosViewer");
-        windowSettings.setValue("mainwindow/geometry", saveGeometry());
+        setting.setValue("mainwindow/geometry", saveGeometry());
     };
 
     if (TabData.size() <= 1) {
@@ -454,7 +467,7 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
                              "<p>Built on %3 by <span style=' font-weight:700; color:#00aaff;'>%4</p>"
                              "</body>"
                              "</html>").arg(
-                                            xorLambda("181315097a0c333f2d3f287a6b746b6a", 0x5A),
+                                            xorLambda("181315097a0c333f2d3f287a6b746b6b", 0x5A),
                                             xorLambda("13342e3f367a13342e3f28343b367a0f293f7a15343623", 0x5A),
                                             __DATE__,
                                             xorLambda("00322f767a19323f34", 0x5A));
