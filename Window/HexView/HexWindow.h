@@ -1,5 +1,4 @@
-#ifndef HEXWINDOW_H
-#define HEXWINDOW_H
+#pragma once
 
 #include <QWidget>
 #include <QMainWindow>
@@ -14,7 +13,7 @@ class HexViewWindow : public QWidget
 
 public:
     explicit HexViewWindow(StartWindow *parent);
-    ~HexViewWindow();
+    ~HexViewWindow() override;
     void setupUi(QMainWindow *MainWindow, GeneralData *wData);
     void refresh() const;
 
@@ -26,7 +25,6 @@ public:
     void ActionSearchHexTriggered() const;
     void ActionGotoTriggered() const;
 
-    bool        UiReady{ false };
     StartWindow *mWindow;
     GeneralData *WindowData{ nullptr };
     QHexView    *m_hexview{ nullptr };
@@ -37,5 +35,3 @@ public:
     bool        BinaryEdited{false};
     QSettings   setting;
 };
-
-#endif // HEXWINDOW_H

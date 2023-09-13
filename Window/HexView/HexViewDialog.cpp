@@ -11,7 +11,7 @@
 
 HexViewDialog::HexViewDialog(bool darkMode, QWidget *parent) :
     QDialog(parent),
-    m_hexview ( new QHexView(this, darkMode) ),
+    m_hexview ( new QHexView(this) ),
     ui(new Ui::HexViewDialog),
     m_layout ( new QVBoxLayout ),
     setting(QSettings("Intel", "BiosViewer"))

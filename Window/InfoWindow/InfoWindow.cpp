@@ -44,8 +44,7 @@ InfoWindow::InfoWindow(QString Dir, QWidget *parent) :
     restoreGeometry(setting.value("InfoDialog/geometry").toByteArray());
 }
 
-InfoWindow::~InfoWindow()
-{
+InfoWindow::~InfoWindow() {
     delete ui;
 }
 
@@ -85,7 +84,7 @@ void InfoWindow::showFitTab() {
     FIRMWARE_INTERFACE_TABLE_ENTRY FitHeader = BiosImage->FitTable->FitHeader;
     UINT64 address = FitHeader.Address;
     QString FitSignature = QString::fromStdString(charToString((CHAR8*)&address, sizeof(UINT64), false));
-    INT32 FitNum = BiosImage->FitTable->FitEntryNum;
+    INT32 FitNum = (INT32)BiosImage->FitTable->FitEntryNum;
 
     ui->tableWidget->setColumnCount(6);
     ui->tableWidget->setRowCount(FitNum);

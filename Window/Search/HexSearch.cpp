@@ -16,7 +16,8 @@ HexSearch::HexSearch(QWidget *parent) :
     ui->setupUi(this);
     initSetting();
 
-    connect(ui->AsciiCheckbox,  SIGNAL(stateChanged(int)),    this, SLOT(AsciiCheckboxStateChanged(int)));
+    connect(ui->HexCheckbox,    SIGNAL(clicked()),            this, SLOT(HexCheckboxClicked()));
+    connect(ui->AsciiCheckbox,  SIGNAL(clicked()),            this, SLOT(AsciiCheckboxClicked()));
     connect(ui->CaseCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(CaseCheckboxStateChanged(int)));
     connect(ui->WideCheckbox,   SIGNAL(stateChanged(int)),    this, SLOT(WideCheckboxStateChanged(int)));
     connect(ui->NextButton,     SIGNAL(clicked()),            this, SLOT(NextButtonClicked()));
@@ -59,10 +60,14 @@ void HexSearch::initSetting() {
         ui->EndianBox->setCurrentIndex(EndianMode::BigEndian);
     }
     if (setting.value("SearchAscii") == "true") {
+        SearchHex = false;
         SearchAscii = true;
+        ui->HexCheckbox->setCheckState(Qt::Unchecked);
         ui->AsciiCheckbox->setCheckState(Qt::Checked);
     } else if (setting.value("SearchAscii") == "false") {
+        SearchHex = true;
         SearchAscii = false;
+        ui->HexCheckbox->setCheckState(Qt::Checked);
         ui->AsciiCheckbox->setCheckState(Qt::Unchecked);
     }
     if (setting.value("CaseSensitive") == "true") {
@@ -213,22 +218,33 @@ void HexSearch::closeEvent(QCloseEvent *event) {
     emit closeSignal(false);
 }
 
-void HexSearch::AsciiCheckboxStateChanged(int state) {
-    CurrentIndex = -1;
-    matchedSearchIndexes.clear();
-    if (state == Qt::Checked) {
-        SearchAscii = true;
-        ui->EndianBox->setEnabled(false);
-        ui->CaseCheckbox->setEnabled(true);
-        ui->WideCheckbox->setEnabled(true);
-        setting.setValue("SearchAscii", "true");
-    }
-    else if (state == Qt::Unchecked) {
+void HexSearch::HexCheckboxClicked() {
+    if (ui->HexCheckbox->isChecked()) {
+        CurrentIndex = -1;
+        matchedSearchIndexes.clear();
+        SearchHex = true;
         SearchAscii = false;
+        ui->HexCheckbox->setCheckState(Qt::Checked);
+        ui->AsciiCheckbox->setCheckState(Qt::Unchecked);
         ui->EndianBox->setEnabled(true);
         ui->CaseCheckbox->setEnabled(false);
         ui->WideCheckbox->setEnabled(false);
         setting.setValue("SearchAscii", "false");
+    }
+}
+
+void HexSearch::AsciiCheckboxClicked() {
+    if (ui->AsciiCheckbox->isChecked()) {
+        CurrentIndex = -1;
+        matchedSearchIndexes.clear();
+        SearchHex = false;
+        SearchAscii = true;
+        ui->HexCheckbox->setCheckState(Qt::Unchecked);
+        ui->AsciiCheckbox->setCheckState(Qt::Checked);
+        ui->EndianBox->setEnabled(false);
+        ui->CaseCheckbox->setEnabled(true);
+        ui->WideCheckbox->setEnabled(true);
+        setting.setValue("SearchAscii", "true");
     }
 }
 

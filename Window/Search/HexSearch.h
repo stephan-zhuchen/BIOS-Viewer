@@ -35,7 +35,8 @@ signals:
     void closeSignal(bool State);
 
 private slots:
-    void AsciiCheckboxStateChanged(int state);
+    void HexCheckboxClicked();
+    void AsciiCheckboxClicked();
     void SearchContentTextChanged(const QString &text);
     void NextButtonClicked();
     void PreviousButtonClicked();
@@ -56,6 +57,7 @@ private:
     static QString   SearchedString;
     QStringList      searchHistory;
     enum             EndianMode{LittleEndian=0, BigEndian};
+    bool             SearchHex{true};
     bool             isLittleEndian{true};
     bool             SearchAscii{false};
     bool             CaseSensitive{false};

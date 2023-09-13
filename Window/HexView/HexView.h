@@ -8,28 +8,16 @@
 #include <QSettings>
 #include "SymbolDefinition.h"
 
-// config font and colors
-#define COLOR_SELECTION 199, 199, 199, 0xff
-#define COLOR_CURSOR 38, 95, 153, 0xff
-
-// config lines
-#define MIN_HEXCHARS_IN_LINE 47
-#define GAP_ADR_HEX 16
-#define GAP_HEX_ASCII 16
-#define MIN_BYTES_PER_LINE 16
-#define ADR_LENGTH 8
-#define BLANK_LINE_NUM 10
-
 class HexSearch;
 
 class QHexView : public QAbstractScrollArea
 {
     Q_OBJECT
 public:
-    explicit QHexView(QWidget *parent = nullptr, bool darkMode = false);
+    explicit QHexView(QWidget *parent = nullptr);
     ~QHexView() override;
 
-    void refresh();
+    void InitSetting();
     void setFileOpened(bool state);
     void setParentWidget(QWidget *pWidget, bool fromMainWindow);
     void setReadOnly(bool ReadOnlyFlag);
@@ -42,46 +30,58 @@ public:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     QByteArray HexDataArray;
     QByteArray CopiedData;
 
-    INT64 AddressPosition{0};
-    INT64 CharWidth{0};
-    INT64 HexCharPosition;
-    INT64 AsciiCharPosition;
-    INT64 CharHeight{0};
+// Layout
+    INT32 AddressPosition{16};
+    INT32 HexCharPosition{0};
+    INT32 AsciiCharPosition{0};
+    INT32 HexAsciiGap{20};
+    INT32 CharWidth{0};
+    INT32 CharHeight{0};
+    INT32 BlankEndingLineNum{10};
     INT64 SelectionBegin{0};
     INT64 SelectionEnd{0};
     INT64 SelectionInit{0};
     INT64 CursorPosition{0};
-    INT64 BytesPerHexLine{MIN_BYTES_PER_LINE};
-    INT64 AddressLength{ADR_LENGTH};
+    INT32 BytesPerHexLine{16};
+    INT32 AddressLength{8};
     INT64 RelativeAdressBase{0};
 
     char inputKey{};
     bool BinaryEdited{false};
     bool ReadOnly{false};
-    std::vector<INT64> EditedPos;
+    QVector<INT64> EditedPos;
+    QHash<INT32, INT32> HexToPos;
+    QHash<INT32, INT32> PosToHex;
 
     bool isDarkMode{false};
+    bool DoubleHexLine{false};
     bool ShowCursor{true};
     bool StartFromAscii{false};
     bool FileOpened{false};
     bool startFromMainWindow{false};
-    QTimer *timer{nullptr};
+    bool HexSearchDialogOpened{false};
+    QTimer *timer;
+
+    // Color and Font
     QFont HexFontSetting{"Courier New", 12, QFont::Normal, false};
     QFont AsciiFontSetting{"Courier New", 12, QFont::Normal, false};
-    QWidget *parentWidget{nullptr};
-    QColor SelectionColor{COLOR_SELECTION};
+
+    QColor SelectionColor{199, 199, 199, 0xff};
     QColor EditedColor{255, 128, 128, 0xff};
     QColor SelectedEditedColor{143, 122, 46, 0xff};
     QColor WordColor{Qt::black};
     QColor WordColorOpposite{Qt::white};
-    QColor CursorColor{COLOR_CURSOR};
+    QColor CursorColor{38, 95, 153, 0xff};
+
     HexSearch *HexSearchDialog{nullptr};
-    bool      HexSearchDialogOpened{false};
+    QWidget *parentWidget{nullptr};
+
     QSettings setting{QSettings("Intel", "BiosViewer")};
     QSettings SysSettings{R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", QSettings::NativeFormat};
 
@@ -105,20 +105,21 @@ private:
     QAction *sha512_Menu{nullptr};
 
     QSize fullSize() const;
-    void  updatePositions();
-    void  resetSelection();
-    void  resetSelection(INT64 pos);
+    void  UpdateLayout();
+    void  UpdateHexPosition();
+    INT32 HexIndexToCursorPos(INT32 HexIndex) const;
+    INT32 CursorPosToHexIndex(INT32 CursorPos) const;
+    void  ResetSelection(INT64 pos);
     void  setSelection(INT64 pos);
-    void  ensureVisible();
+    void  ScrollToSelectedHexContent();
     CHAR8 FilterAscii(CHAR8 character);
     void  setCursorPos(INT64 pos);
     INT64 cursorPos(const QPoint &position);
-    INT64 getCursorPos() const;
     void  confScrollBar();
     bool  isSelected(INT64 index);
     bool  isEdited(INT64 index);
     void  restartTimer();
-    INT64 getLineNum();
+    INT32 getLineNum();
     void  initRightMenu();
     void  finiRightMenu();
     bool  getSelectedBuffer(QByteArray &buffer, INT64*length);
@@ -129,9 +130,10 @@ public slots:
     void loadFromBuffer(QByteArray &buffer);
     void clear();
     void showFromOffset(INT64 offset, INT64 length = 1);
-    INT64 sizeFile();
     void setAddressLength();
     void setRelativeAddress(INT64 address = 0);
+    void setSearchDialogState(bool opened);
+
     void CopyFromSelectedContent();
     void PasteToContent();
     void PasteAndInsertToContent();
@@ -139,7 +141,6 @@ public slots:
     void DiscardChangedContent();
     void SetEditingState(bool state);
     void SaveSelectedContent();
-    void setSearchDialogState(bool opened);
     void getChecksum8();
     void getChecksum16();
     void getChecksum32();

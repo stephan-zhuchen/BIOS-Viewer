@@ -12,7 +12,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(LINK_DIR  lib/Openssl/lib/windows)
     link_directories(${LINK_DIR})
-
     include_directories(lib/VisualLeakDetector/include)
     set(VLD_LINK_DIR  lib/VisualLeakDetector/lib/Win64)
     link_directories(${VLD_LINK_DIR})
@@ -74,7 +73,6 @@ set(PROJECT_SOURCES
         ${FEATURE_H_SOURCES}
         ${FEATURE_SOURCES}
         ${WINDOW_SOURCES}
-#        ${WINDOW_H_SOURCES}
         ${INCLUDE_FILES}
         ${app_icon_resource_windows}
         ${UI_SOURCES}

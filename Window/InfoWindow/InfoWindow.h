@@ -17,7 +17,7 @@ class InfoWindow : public QWidget
 
 public:
     explicit InfoWindow(QString Dir, QWidget *parent = nullptr);
-    ~InfoWindow();
+    ~InfoWindow() override;
 
     void setBiosImage(BiosRegion *Image);
     void setOpenedFileName(QString name);

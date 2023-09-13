@@ -61,9 +61,9 @@
    <property name="geometry">
     <rect>
      <x>300</x>
-     <y>110</y>
+     <y>140</y>
      <width>80</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -74,66 +74,13 @@
    <property name="geometry">
     <rect>
      <x>300</x>
-     <y>150</y>
+     <y>170</y>
      <width>80</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Next</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>100</y>
-     <width>109</width>
-     <height>82</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QComboBox" name="EndianBox">
-      <item>
-       <property name="text">
-        <string>Little Endian</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Big Endian</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCheckBox" name="AsciiCheckbox">
-      <property name="text">
-       <string>Search ASCII</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCheckBox" name="CaseCheckbox">
-      <property name="text">
-       <string>Case Sensitive</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QCheckBox" name="WideCheckbox">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>155</y>
-     <width>131</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>Include Wide Char</string>
+    <string>Next</string>
    </property>
   </widget>
   <widget class="QComboBox" name="SearchContentBox">
@@ -147,6 +94,78 @@
    </property>
    <property name="editable">
     <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="EndianBox">
+   <property name="geometry">
+    <rect>
+     <x>135</x>
+     <y>110</y>
+     <width>120</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>Little Endian</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Big Endian</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QCheckBox" name="CaseCheckbox">
+   <property name="geometry">
+    <rect>
+     <x>135</x>
+     <y>140</y>
+     <width>120</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Case Sensitive</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="WideCheckbox">
+   <property name="geometry">
+    <rect>
+     <x>135</x>
+     <y>170</y>
+     <width>140</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Include Wide Char</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="AsciiCheckbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>140</y>
+     <width>100</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Search ASCII</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="HexCheckbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>110</y>
+     <width>100</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Search Hex</string>
    </property>
   </widget>
  </widget>
