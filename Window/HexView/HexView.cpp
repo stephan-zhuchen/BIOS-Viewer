@@ -21,11 +21,11 @@ QHexView::QHexView(QWidget *parent)
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     connect(timer, &QTimer::timeout, this, [this](){ ShowCursor = !ShowCursor; });
     InitSetting();
-    initRightMenu();
+    InitCustomMenu();
 }
 
 QHexView::~QHexView() {
-    finiRightMenu();
+    CleanupCustomMenu();
     if (HexSearchDialogOpened) {
         HexSearchDialog->close();
         HexSearchDialog = nullptr;

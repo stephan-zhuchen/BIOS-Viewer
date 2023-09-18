@@ -218,13 +218,13 @@ void QHexView::mouseReleaseEvent(QMouseEvent *event) {
     restartTimer();
 }
 
-void QHexView::initRightMenu() {
-    RightMenu = new QMenu;
+void QHexView::InitCustomMenu() {
+    CustomMenu = new QMenu;
     DigestMenu = new QMenu("Digest");
     ChecksumMenu = new QMenu("CheckSum");
 
     if (!isDarkMode) {
-        RightMenu->setStyleSheet("QMenu::item:disabled {background: rgb(240, 240, 240, 255); color:rgba(100,100,100,1);}");
+        CustomMenu->setStyleSheet("QMenu::item:disabled {background: rgb(240, 240, 240, 255); color:rgba(100,100,100,1);}");
     }
 
     CopyContent = new QAction("Copy");
@@ -288,8 +288,8 @@ void QHexView::initRightMenu() {
     }
 }
 
-void QHexView::finiRightMenu() {
-    safeDelete(RightMenu);
+void QHexView::CleanupCustomMenu() {
+    safeDelete(CustomMenu);
     safeDelete(DigestMenu);
     safeDelete(ChecksumMenu);
     safeDelete(CopyContent);
@@ -323,12 +323,12 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
         return;
     INT64 actPos = cursorPos(event->pos());
 
-    RightMenu->clear();
+    CustomMenu->clear();
     ChecksumMenu->clear();
     DigestMenu->clear();
 
     CopyContent->setDisabled(true);
-    RightMenu->addAction(CopyContent);
+    CustomMenu->addAction(CopyContent);
 
     if (ReadOnly || CopiedData.size() == 0) {
         PasteInsertContent->setDisabled(true);
@@ -340,21 +340,21 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
     if (!startFromMainWindow)
         PasteInsertContent->setDisabled(true);
 
-    RightMenu->addAction(PasteInsertContent);
-    RightMenu->addAction(PasteOverlapContent);
+    CustomMenu->addAction(PasteInsertContent);
+    CustomMenu->addAction(PasteOverlapContent);
 
     EnableEditing->setCheckable(true);
     if (ReadOnly)
         EnableEditing->setChecked(false);
     else
         EnableEditing->setChecked(true);
-    RightMenu->addAction(EnableEditing);
+    CustomMenu->addAction(EnableEditing);
 
     if (BinaryEdited)
         DiscardChange->setEnabled(true);
     else
         DiscardChange->setEnabled(false);
-    RightMenu->addAction(DiscardChange);
+    CustomMenu->addAction(DiscardChange);
 
     if (event->pos().x() < (INT64)AsciiCharPosition - (HexAsciiGap / 2) && event->pos().x() > (INT64)HexCharPosition && isSelected(actPos)) {
         if (SelectionBegin % 2 != 0) {
@@ -365,7 +365,7 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
         }
 
         CopyContent->setEnabled(true);
-        RightMenu->addAction(SaveContent);
+        CustomMenu->addAction(SaveContent);
         ChecksumMenu->addAction(CheckSum8);
         ChecksumMenu->addAction(CheckSum16);
         ChecksumMenu->addAction(CheckSum32);
@@ -387,10 +387,10 @@ void QHexView::contextMenuEvent(QContextMenuEvent *event) {
         DigestMenu->addAction(sha384_Menu);
         DigestMenu->addAction(sha512_Menu);
 
-        RightMenu->addMenu(ChecksumMenu);
-        RightMenu->addMenu(DigestMenu);
+        CustomMenu->addMenu(ChecksumMenu);
+        CustomMenu->addMenu(DigestMenu);
     }
-    RightMenu->exec(QCursor::pos());
+    CustomMenu->exec(QCursor::pos());
 }
 
 void QHexView::resizeEvent(QResizeEvent *event) {

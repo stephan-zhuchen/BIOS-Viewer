@@ -24,25 +24,25 @@ CapsuleWindow::CapsuleWindow(StartWindow *parent):
     QWidget(parent),
     ui(new Ui::CapsuleViewWindow)
 {
-    initRightMenu();
+    InitCustomMenu();
 }
 
 CapsuleWindow::~CapsuleWindow() {
     delete ui;
     safeDelete(CapsuleData);
-    finiRightMenu();
+    CleanupCustomMenu();
 }
 
 void CapsuleWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
     WindowData = wData;
     ui->setupUi(MainWindow);
-    initSetting();
+    InitSetting();
     ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listWidget, SIGNAL(itemSelectionChanged()), this, SLOT(listWidget_itemSelectionChanged()));
-    connect(ui->listWidget, SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showListRightMenu(QPoint)));
+    connect(ui->listWidget, SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showListCustomMenu(QPoint)));
 }
 
-void CapsuleWindow::initSetting() {
+void CapsuleWindow::InitSetting() {
     ui->CapsuleTitle->clear();
     ui->listWidget->setFont(QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt()));
     ui->listWidget->setStyleSheet(QString("QListView::item{margin:%1px;}").arg(setting.value("LineSpacing").toInt()));
@@ -50,8 +50,8 @@ void CapsuleWindow::initSetting() {
     ui->AddressPanel->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 }
 
-void CapsuleWindow::initRightMenu() {
-    RightMenu = new QMenu;
+void CapsuleWindow::InitCustomMenu() {
+    CustomMenu = new QMenu;
     DigestMenu = new QMenu("Digest");
 
     showHex = new QAction("Hex View");
@@ -82,8 +82,8 @@ void CapsuleWindow::initRightMenu() {
     connect(sha512_Menu,SIGNAL(triggered(bool)),this,SLOT(getSHA512()));
 }
 
-void CapsuleWindow::finiRightMenu() {
-    safeDelete(RightMenu);
+void CapsuleWindow::CleanupCustomMenu() {
+    safeDelete(CustomMenu);
     safeDelete(DigestMenu);
     safeDelete(showHex);
     safeDelete(openTab);
@@ -458,11 +458,7 @@ INT64 CapsuleWindow::ParsePayloadCapsule(INT64 CapsuleOffset, INT64 PayloadSize,
     return 0;
 }
 
-void CapsuleWindow::closeEvent(QCloseEvent *event)
-{
-}
-
-void CapsuleWindow::showListRightMenu(const QPoint &pos) {
+void CapsuleWindow::showListCustomMenu(const QPoint &pos) {
     QIcon hexBinary, box_arrow_up, open, key;
     if (WindowData->DarkmodeFlag) {
         hexBinary = QIcon(":/file-binary_light.svg");
@@ -482,15 +478,15 @@ void CapsuleWindow::showListRightMenu(const QPoint &pos) {
     Volume *Entry = CapsuleData->VolumeDataList.at(ui->listWidget->currentRow());
     CapsuleData->RightClickedItemModel.InitFromVolume(Entry);
 
-    RightMenu->clear();
+    CustomMenu->clear();
     showHex->setIcon(hexBinary);
-    RightMenu->addAction(showHex);
+    CustomMenu->addAction(showHex);
 
     ExtractRegion->setIcon(box_arrow_up);
-    RightMenu->addAction(ExtractRegion);
+    CustomMenu->addAction(ExtractRegion);
 
     openTab->setIcon(open);
-    RightMenu->addAction(openTab);
+    CustomMenu->addAction(openTab);
 
     DigestMenu->setIcon(key);
     DigestMenu->addAction(md5_Menu);
@@ -499,10 +495,10 @@ void CapsuleWindow::showListRightMenu(const QPoint &pos) {
     DigestMenu->addAction(sha256_Menu);
     DigestMenu->addAction(sha384_Menu);
     DigestMenu->addAction(sha512_Menu);
-    RightMenu->addMenu(DigestMenu);
+    CustomMenu->addMenu(DigestMenu);
 
-    RightMenu->move(ui->listWidget->cursor().pos());
-    RightMenu->show();
+    CustomMenu->move(ui->listWidget->cursor().pos());
+    CustomMenu->show();
 }
 
 void CapsuleWindow::showHexView() {

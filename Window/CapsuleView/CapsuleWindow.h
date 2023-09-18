@@ -54,7 +54,7 @@ public:
     QSettings           setting{"Intel", "BiosViewer"};
 
     // Menu
-    QMenu*         RightMenu{nullptr};
+    QMenu*         CustomMenu{nullptr};
     QMenu*         DigestMenu{nullptr};
     QAction*       showHex{nullptr};
     QAction*       openTab{nullptr};
@@ -66,7 +66,6 @@ public:
     QAction*       sha384_Menu{nullptr};
     QAction*       sha512_Menu{nullptr};
 
-    void closeEvent(QCloseEvent *event) override;
     static bool tryOpenCapsule(const UINT8 *image, INT64 imageLength);
     void  LoadCapsule();
     void  ParseStandardCapsule(INT64 CapsuleOffset, const QString& CapsuleType);
@@ -75,16 +74,16 @@ public:
     INT64 ParseBgupInFfs(INT64 BgupOffset, IniConfigFile *ConfigIni);
     void  ParseMicrocodeCapsule(INT64 CapsuleOffset);
     INT64 ParsePayloadCapsule(INT64 CapsuleOffset, INT64 PayloadSize, const QString& CapsuleType);
-    void  initSetting();
+    void  InitSetting();
 
-    void initRightMenu();
-    void finiRightMenu();
+    void InitCustomMenu();
+    void CleanupCustomMenu();
     void setPanelInfo(INT64 offset, INT64 size);
     void addListItem(const QList<Volume*> &volumeList);
 
 private slots:
     void listWidget_itemSelectionChanged();
-    void showListRightMenu(const QPoint &pos);
+    void showListCustomMenu(const QPoint &pos);
     void showHexView();
     void openInNewTab();
     void extractCapsuleRegion();

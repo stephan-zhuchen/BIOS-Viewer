@@ -50,7 +50,7 @@ StartWindow::StartWindow(QString appPath, QWidget *parent) :
     connect(ui->actionCollapse,              SIGNAL(triggered()), this, SLOT(ActionCollapseTriggered()));
     connect(ui->actionExtract_BIOS,          SIGNAL(triggered()), this, SLOT(ActionExtractBIOSTriggered()));
     connect(ui->actionReplace_BIOS,          SIGNAL(triggered()), this, SLOT(ActionReplaceBIOSTriggered()));
-    connect(ui->actionSeperate_Binary,       SIGNAL(triggered()), this, SLOT(ActionSeperateBinaryTriggered()));
+    connect(ui->actionSeperate_Binary,       SIGNAL(triggered()), this, SLOT(ActionSeparateBinaryTriggered()));
     connect(ui->actionExtract_Binary,        SIGNAL(triggered()), this, SLOT(ActionExtractBinaryTriggered()));
     connect(ui->actionMergeFiles,            SIGNAL(triggered()), this, SLOT(actionMergeFilesTriggered()));
     connect(ui->actionCloseTab,              SIGNAL(triggered()), this, SLOT(ActionTabWidgetClose()));

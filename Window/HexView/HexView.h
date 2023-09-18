@@ -85,9 +85,9 @@ private:
     QSettings setting{QSettings("Intel", "BiosViewer")};
     QSettings SysSettings{R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", QSettings::NativeFormat};
 
-    QMenu *RightMenu{nullptr};
-    QMenu *DigestMenu{nullptr};
-    QMenu *ChecksumMenu{nullptr};
+    QMenu  *CustomMenu{nullptr};
+    QMenu  *DigestMenu{nullptr};
+    QMenu  *ChecksumMenu{nullptr};
     QAction *CopyContent{nullptr};
     QAction *PasteInsertContent{nullptr};
     QAction *PasteOverlapContent{nullptr};
@@ -120,8 +120,8 @@ private:
     bool  isEdited(INT64 index);
     void  restartTimer();
     INT32 getLineNum();
-    void  initRightMenu();
-    void  finiRightMenu();
+    void  InitCustomMenu();
+    void  CleanupCustomMenu();
     bool  getSelectedBuffer(QByteArray &buffer, INT64*length);
     void  binaryEdit(char inputChar);
 

@@ -1,8 +1,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QInputDialog>
 #include <QFormLayout>
-#include <QSpinBox>
 #include <QDialogButtonBox>
 #include "BaseLib.h"
 #include "Start/StartWindow.h"
@@ -13,7 +11,7 @@
 
 using namespace BaseLibrarySpace;
 
-void StartWindow::ActionSeperateBinaryTriggered()
+void StartWindow::ActionSeparateBinaryTriggered()
 {
     if (TabData.empty())
         return;
@@ -91,7 +89,7 @@ void BiosViewerWindow::ActionExtractBIOSTriggered() {
     saveBinary(BiosName.toStdString(), WindowData->InputImage, BIOS_Offset, BIOS_Size);
 }
 
-void StartWindow::ActionSearchTriggered() {
+void StartWindow::ActionSearchTriggered() const {
     if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
@@ -102,7 +100,7 @@ void StartWindow::ActionSearchTriggered() {
     }
 }
 
-void StartWindow::ActionGotoTriggered() {
+void StartWindow::ActionGotoTriggered() const {
     if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
@@ -113,7 +111,7 @@ void StartWindow::ActionGotoTriggered() {
     }
 }
 
-void StartWindow::ActionCollapseTriggered() {
+void StartWindow::ActionCollapseTriggered() const {
     if (TabData.empty())
         return;
     GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
@@ -174,7 +172,7 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered() {
     FlashRegionBaseArea PaddingRegion = ValidRegionList.at(ValidRegionList.size() - 2);
     FlashRegionBaseArea BiosRegion = ValidRegionList.at(ValidRegionList.size() - 1);
 
-    if (NewBiosSize > (INT64) (PaddingRegion.getSize() + BiosRegion.getSize())) {
+    if (NewBiosSize > PaddingRegion.getSize() + BiosRegion.getSize()) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "Binary size is too large!");
         safeArrayDelete(NewBios);
         return;

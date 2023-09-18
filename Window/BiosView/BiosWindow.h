@@ -54,7 +54,7 @@ public:
     HexViewWindow     *HexViewerUi{nullptr};
     CapsuleWindow     *CapsuleViewerUi{nullptr};
 
-    GeneralData(QString dir);
+    explicit GeneralData(QString dir);
     ~GeneralData();
 };
 
@@ -89,7 +89,7 @@ public:
     Ui::BiosWindow *ui;
 
     // Menu
-    QMenu*         RightMenu{nullptr};
+    QMenu*         CustomMenu{nullptr};
     QMenu*         DigestMenu{nullptr};
     QAction*       showPeCoff{nullptr};
     QAction*       showAcpiTable{nullptr};
@@ -148,15 +148,15 @@ public:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
-    void TreeWidgetItemSelectionChanged();
+    void TreeWidgetItemSelectionChanged() const;
     void InfoButtonClicked();
     void SearchButtonClicked();
     void setSearchDialogState(bool opened) const;
 
     // Menu
-    void initRightMenu();
-    void finiRightMenu();
-    void showTreeRightMenu(QPoint) const;
+    void InitCustomMenu();
+    void CleanupCustomMenu();
+    void showTreeCustomMenu(QPoint pos) const;
     void showHexView() const;
     void showBodyHexView();
     void showDecompressedHexView();

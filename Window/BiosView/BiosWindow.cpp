@@ -75,13 +75,13 @@ BiosViewerWindow::BiosViewerWindow(StartWindow *parent):
     mWindow(parent),
     setting(QSettings("Intel", "BiosViewer"))
 {
-    initRightMenu();
+    InitCustomMenu();
 }
 
 BiosViewerWindow::~BiosViewerWindow() {
     delete ui;
     safeDelete(BiosData);
-    finiRightMenu();
+    CleanupCustomMenu();
 }
 
 void BiosViewerWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
@@ -92,7 +92,7 @@ void BiosViewerWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
     connect(ui->treeWidget,       SIGNAL(itemSelectionChanged()), this, SLOT(TreeWidgetItemSelectionChanged()));
     connect(ui->infoButton,       SIGNAL(clicked()),   this, SLOT(InfoButtonClicked()));
     connect(ui->searchButton,     SIGNAL(clicked()),   this, SLOT(SearchButtonClicked()));
-    connect(ui->treeWidget,       SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showTreeRightMenu(QPoint)));
+    connect(ui->treeWidget,       SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showTreeCustomMenu(QPoint)));
 }
 
 void BiosViewerWindow::initSetting() const {
@@ -240,16 +240,13 @@ void BiosViewerWindow::closeEvent(QCloseEvent *event) {
 //    cleanup();
 }
 
-void BiosViewerWindow::TreeWidgetItemSelectionChanged() {
+void BiosViewerWindow::TreeWidgetItemSelectionChanged() const {
     QModelIndex index = ui->treeWidget->currentIndex();
     if (!index.isValid())
         return;
     QTreeWidgetItem *item = ui->treeWidget->currentItem();
     auto *itemVolume = item->data(treeColNum::Name, Qt::UserRole).value<Volume*>();
     QPalette pal(ui->AddressPanel->palette());
-    //    if (volume->isCompressed) {
-    //        pal.setColor(QPalette::Base, Qt::cyan);
-    //    }
     ui->AddressPanel->setPalette(pal);
     setPanelInfo(itemVolume->getOffset(), itemVolume->getSize());
 

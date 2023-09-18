@@ -69,10 +69,10 @@ public slots:
     void ActionAboutQtTriggered();
     void ActionAboutBiosViewerTriggered();
     void OpenInNewWindowTriggered();
-    void ActionSeperateBinaryTriggered();
-    void ActionSearchTriggered();
-    void ActionGotoTriggered();
-    void ActionCollapseTriggered();
+    void ActionSeparateBinaryTriggered();
+    void ActionSearchTriggered() const;
+    void ActionGotoTriggered() const;
+    void ActionCollapseTriggered() const;
     void ActionExtractBinaryTriggered();
     void ActionExtractBIOSTriggered();
     void ActionReplaceBIOSTriggered();

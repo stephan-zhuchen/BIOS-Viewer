@@ -16,7 +16,7 @@ MergeFilesWindow::MergeFilesWindow(bool darkMode, QWidget *parent) :
     darkModeFlag(darkMode)
 {
     ui->setupUi(this);
-    initRightMenu();
+    InitCustomMenu();
     setAttribute(Qt::WA_DeleteOnClose);
     ui->FileListWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     restoreGeometry(setting.value("MergeFilesWindow/geometry").toByteArray());
@@ -34,13 +34,13 @@ MergeFilesWindow::MergeFilesWindow(bool darkMode, QWidget *parent) :
 
     connect(ui->actionAddFile,  SIGNAL(triggered()), this, SLOT(actionAddFileTriggered()));
     connect(ui->actionSave,     SIGNAL(triggered()), this, SLOT(actionSaveTriggered()));
-    connect(ui->FileListWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showListRightMenu(QPoint)));
+    connect(ui->FileListWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showListCustomMenu(QPoint)));
 
 }
 
 MergeFilesWindow::~MergeFilesWindow() {
     delete ui;
-    finiRightMenu();
+    CleanupCustomMenu();
     setting.setValue("MergeFilesWindow/geometry", saveGeometry());
 }
 
@@ -78,8 +78,8 @@ void MergeFilesWindow::dropEvent(QDropEvent *event) {
     }
 }
 
-void MergeFilesWindow::initRightMenu() {
-    RightMenu = new QMenu;
+void MergeFilesWindow::InitCustomMenu() {
+    CustomMenu = new QMenu;
 
     MoveUp = new QAction("Move Up");
     connect(MoveUp, SIGNAL(triggered(bool)), this, SLOT(MoveFileUp()));
@@ -91,15 +91,15 @@ void MergeFilesWindow::initRightMenu() {
     connect(DeleteItem, SIGNAL(triggered(bool)), this, SLOT(DeleteFile()));
 }
 
-void MergeFilesWindow::finiRightMenu() {
+void MergeFilesWindow::CleanupCustomMenu() {
     using BaseLibrarySpace::safeDelete;
-    safeDelete(RightMenu);
+    safeDelete(CustomMenu);
     safeDelete(MoveUp);
     safeDelete(MoveDown);
     safeDelete(DeleteItem);
 }
 
-void MergeFilesWindow::showListRightMenu(const QPoint &pos) {
+void MergeFilesWindow::showListCustomMenu(const QPoint &pos) {
     QIcon up, down, deleteFile;
     if (darkModeFlag) {
         up = QIcon(":/arrowup_light.svg");
@@ -115,23 +115,23 @@ void MergeFilesWindow::showListRightMenu(const QPoint &pos) {
     if (!index.isValid())
         return;
 
-    RightMenu->clear();
+    CustomMenu->clear();
     MoveUp->setIcon(up);
     MoveDown->setIcon(down);
     DeleteItem->setIcon(deleteFile);
 
     INT32 currentRow = ui->FileListWidget->currentRow();
     if (currentRow > 0) {
-        RightMenu->addAction(MoveUp);
+        CustomMenu->addAction(MoveUp);
     }
     if (currentRow >= 0 && currentRow != ui->FileListWidget->count() - 1) {
-        RightMenu->addAction(MoveDown);
+        CustomMenu->addAction(MoveDown);
     }
 
-    RightMenu->addAction(DeleteItem);
+    CustomMenu->addAction(DeleteItem);
 
-    RightMenu->move(ui->FileListWidget->cursor().pos());
-    RightMenu->show();
+    CustomMenu->move(ui->FileListWidget->cursor().pos());
+    CustomMenu->show();
 }
 
 void MergeFilesWindow::MoveFileUp() {

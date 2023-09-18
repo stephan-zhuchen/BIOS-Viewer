@@ -19,6 +19,7 @@ BiosSearch::BiosSearch(QWidget *parent) :
     ui->SearchContentBox->setCompleter(nullptr);
     ui->SearchContentBox->lineEdit()->setAttribute(Qt::WA_InputMethodEnabled, false);
     ui->SearchContentBox->lineEdit()->setInputMethodHints(Qt::ImhPreferLatin);
+    ui->SearchContentBox->lineEdit()->setClearButtonEnabled(true);
     ui->guidTab->installEventFilter(this);
 
     restoreGeometry(setting.value("BiosSearchDialog/geometry").toByteArray());
@@ -323,7 +324,7 @@ bool BiosSearch::eventFilter(QObject *watched, QEvent *event) {
 
 void BiosSearch::paintWidget() {
     QPainter painter(ui->guidTab);
-    INT32 LineHeight = 50;
+    INT32 LineHeight = 53;
     INT32 LineX = 86;
     INT32 LengthX = 8;
     INT32 Interval = 60;

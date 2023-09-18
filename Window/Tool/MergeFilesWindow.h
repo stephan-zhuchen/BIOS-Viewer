@@ -30,16 +30,16 @@ private:
     QList<QByteArray>    OpenedFilesList;
 
     // Menu
-    QMenu*         RightMenu{nullptr};
+    QMenu*         CustomMenu{nullptr};
     QAction*       MoveUp{nullptr};
     QAction*       MoveDown{nullptr};
     QAction*       DeleteItem{nullptr};
 
-    void initRightMenu();
-    void finiRightMenu();
+    void InitCustomMenu();
+    void CleanupCustomMenu();
 
 private slots:
-    void showListRightMenu(const QPoint &pos);
+    void showListCustomMenu(const QPoint &pos);
     void MoveFileUp();
     void MoveFileDown();
     void DeleteFile();
