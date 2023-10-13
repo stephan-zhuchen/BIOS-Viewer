@@ -32,7 +32,7 @@
    <string>Settings</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../logo/Images.qrc">
+   <iconset resource="../../logo/Images.qrc">
     <normaloff>:/gear.svg</normaloff>:/gear.svg</iconset>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
@@ -816,7 +816,7 @@
   <zorder>buttonBox</zorder>
  </widget>
  <resources>
-  <include location="../logo/Images.qrc"/>
+  <include location="../../logo/Images.qrc"/>
  </resources>
  <connections>
   <connection>

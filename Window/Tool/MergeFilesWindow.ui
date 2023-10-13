@@ -80,7 +80,7 @@
   </widget>
   <action name="actionAddFile">
    <property name="icon">
-    <iconset resource="../logo/Images.qrc">
+    <iconset resource="../../logo/Images.qrc">
      <normaloff>:/open.svg</normaloff>:/open.svg</iconset>
    </property>
    <property name="text">
@@ -92,7 +92,7 @@
   </action>
   <action name="actionSave">
    <property name="icon">
-    <iconset resource="../logo/Images.qrc">
+    <iconset resource="../../logo/Images.qrc">
      <normaloff>:/save.svg</normaloff>:/save.svg</iconset>
    </property>
    <property name="text">
@@ -104,7 +104,7 @@
   </action>
  </widget>
  <resources>
-  <include location="../logo/Images.qrc"/>
+  <include location="../../logo/Images.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -17,7 +17,7 @@
    <string>Hex Viewer</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="logo/Images.qrc">
+   <iconset resource="../../logo/Images.qrc">
     <normaloff>:/file-binary.svg</normaloff>:/file-binary.svg</iconset>
   </property>
   <property name="locale">
@@ -25,7 +25,7 @@
   </property>
  </widget>
  <resources>
-  <include location="logo/Images.qrc"/>
+  <include location="../../logo/Images.qrc"/>
  </resources>
  <connections/>
 </ui>
