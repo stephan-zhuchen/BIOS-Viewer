@@ -328,10 +328,11 @@ void BiosViewerWindow::showPeCoffView() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString filepath = QDir(lastPath).filePath("temp.bin");
     QString toolpath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
-    if(QFile::exists(toolpath)) {
-        QMessageBox::critical(this, tr("BIOS Viewer"), "Microsoft dumpbin tool not found!");
-        return;
-    }
+//    QFileInfo fileInfo(toolpath);
+//    if(fileInfo.isFile() && fileInfo.exists()) {
+//        QMessageBox::critical(this, tr("BIOS Viewer"), "Microsoft dumpbin tool not found!");
+//        return;
+//    }
 
     INT64 HeaderSize = BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
     saveBinary(filepath.toStdString(),
@@ -375,10 +376,12 @@ void BiosViewerWindow::showAcpiTableView() {
     QString filepath = QDir(lastPath).filePath("temp.bin");
     QString Dslpath = QDir(lastPath).filePath("temp.dsl");
     QString toolpath = WindowData->appDir + "/tool/ACPI/iasl.exe";
-    if(QFile::exists(toolpath)) {
-        QMessageBox::critical(this, tr("BIOS Viewer"), "ACPI iasl tool not found!");
-        return;
-    }
+//    QFileInfo fileInfo(toolpath.trimmed());
+//    qDebug() << toolpath;
+//    if (fileInfo.isFile()/* && fileInfo.exists()*/) {
+//        QMessageBox::critical(this, tr("BIOS Viewer"), "ACPI iasl tool not found! " + toolpath);
+//        return;
+//    }
 
     INT64 HeaderSize = BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
     saveBinary(filepath.toStdString(),
