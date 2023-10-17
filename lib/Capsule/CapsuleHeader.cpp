@@ -166,12 +166,6 @@ QString FirmwareManagementHeader::getCapsuleTypeFromGuid(EFI_GUID& guid) {
     else if (guid == GuidDatabase::gFmpDevicePlatformRetimerGuid) {
         return "Retimer";
     }
-    else if (guid == GuidDatabase::gFmpDeviceIshPdtDefaultGuid) {
-        return "IshPdt";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceMeFwAdlLpConsGuid) {
-        return "ME Lp_Cons";
-    }
     else if (guid == GuidDatabase::gFmpDeviceMeFwAdlHConsGuid) {
         return "ME H_Cons";
     }

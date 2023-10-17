@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import pickle
 import argparse
@@ -117,7 +118,8 @@ def parseGuidInDec(DirPaths, Guidlist):
 
         OrganizedGuid = "{" + Data1 + ", " + Data2 + ", " + Data3 + ", {" + Data41 + ", " + Data42 + ", " + Data43 + ", " + Data44 + ", " + Data45 + ", " + Data46 + ", " + Data47 + ", " + Data48 + "}}"
         
-        CPP_Command_Line = "{" + Name + ".Data1, VNAME(" + Name + ")},"
+        KeyName = re.sub(r'^_+', '', Name)
+        CPP_Command_Line = "{" + Name + ".Data1, \"" + KeyName + "\"},"
         GuidNameData.write(CPP_Command_Line + "\n")
 
         NameLen = 45
@@ -154,8 +156,9 @@ def parseGuidInInf(DirPaths, GuidDict):
             Key = GuidDefinition.split("=")[0].strip()
             if Key == "BASE_NAME":
                 Name = GuidDefinition.split("=")[1].strip().replace("-", "_")
-            Key = GuidDefinition.split("=")[0].strip()
-            if Key == "FILE_GUID":
+                if Name[0].isnumeric():
+                    Name = "_" + Name
+            elif Key == "FILE_GUID":
                 Guid = GuidDefinition.split("=")[1].strip()
         GuidDict[Name] = Guid
 
@@ -169,6 +172,7 @@ def parseGuidInInf(DirPaths, GuidDict):
         try:
             GuidList = value.split("-")
             Data1 = GuidList[0]
+            assert len(Data1) == 8
             # Data1 = Data1.split("{")[1].strip()
             num = int(Data1, 16)
             if num in Data1Set:
@@ -178,18 +182,22 @@ def parseGuidInInf(DirPaths, GuidDict):
             Data1 = "{:#010x}".format(int(Data1, 16))
 
             Data2 = GuidList[1].strip()
+            assert len(Data2) == 4
             Data2 = "{:#06x}".format(int(Data2, 16))
 
             Data3 = GuidList[2].strip()
+            assert len(Data3) == 4
             Data3 = "{:#06x}".format(int(Data3, 16))
 
             Data4 = GuidList[3].strip()
+            assert len(Data4) == 4
             Data41 = Data4[:2]
             Data42 = Data4[2:]
             Data41 = "{:#04x}".format(int(Data41, 16))
             Data42 = "{:#04x}".format(int(Data42, 16))
 
             Data5 = GuidList[4].strip()
+            assert len(Data5) == 12
             Data5_len = len(Data5);
             if Data5_len < 12:
                 Data5 = "0" * (12 - Data5_len) + Data5
@@ -207,7 +215,8 @@ def parseGuidInInf(DirPaths, GuidDict):
             Data48 = "{:#04x}".format(int(Data48, 16))
             OrganizedGuid = "{" + Data1 + ", " + Data2 + ", " + Data3 + ", {" + Data41 + ", " + Data42 + ", " + Data43 + ", " + Data44 + ", " + Data45 + ", " + Data46 + ", " + Data47 + ", " + Data48 + "}}"
             
-            CPP_Command_Line = "{" + key + ".Data1, VNAME(" + key + ")},"
+            KeyName = re.sub(r'^_+', '', key)
+            CPP_Command_Line = "{" + key + ".Data1, \"" + KeyName + "\"},"
             GuidNameData.write(CPP_Command_Line + "\n")
             
             NameLen = 45
@@ -217,6 +226,7 @@ def parseGuidInInf(DirPaths, GuidDict):
             CPP_Command_Line = "constexpr static EFI_GUID " + key + " = " + OrganizedGuid + ";"
             GuidDifinitionData.writelines(CPP_Command_Line + "\n")
         except Exception as e:
+            print(InfPath)
             print(e)
             continue
 
@@ -254,9 +264,10 @@ def parseGuidInFdf(DirPaths, GuidDict):
             for line in lines[FvLine : FvLine + 3]:
                 if line[:16] == "SECTION FV_IMAGE":
                     FvName = line.split("=")[1].strip().replace("-", "_")
+                    FvName = FvName.split("/")[-1].split(".")[0]
                     Guid = lines[FvLine].split("=")[1].split("{")[0].strip()
-                    if FvName in GuidDict:
-                        FvName += "_"
+                    while FvName in GuidDict:
+                        FvName = "_" + FvName
                     GuidDict[FvName] = Guid
                     break
 
@@ -306,8 +317,8 @@ def parseGuidInFdf(DirPaths, GuidDict):
         Data47 = "{:#04x}".format(int(Data47, 16))
         Data48 = "{:#04x}".format(int(Data48, 16))
         OrganizedGuid = "{" + Data1 + ", " + Data2 + ", " + Data3 + ", {" + Data41 + ", " + Data42 + ", " + Data43 + ", " + Data44 + ", " + Data45 + ", " + Data46 + ", " + Data47 + ", " + Data48 + "}}"
-       
-        CPP_Command_Line = "{" + key + ".Data1, VNAME(" + key + ")},"
+        KeyName = re.sub(r'^_+', '', key)
+        CPP_Command_Line = "{" + key + ".Data1, \"" + KeyName + "\"},"
         GuidNameData.write(CPP_Command_Line + "\n")
        
         NameLen = 45
@@ -357,3 +368,6 @@ if __name__ == "__main__":
         pickle.dump(Data1Set, f)
     with open('GuidNameSet.pickle', 'wb') as f:
         pickle.dump(GuidNameSet, f)
+
+
+# python GuidParser.py -c E:\Code\LNL_EXT -c E:\Code\MTL_EXT -c E:\Code\PTL_ISE -c E:\Code\RPL -c E:\Code\Server\GNR -c E:\Code\Server\SPR
