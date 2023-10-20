@@ -215,7 +215,9 @@ void BiosViewerWindow::showHexView() const {
     }
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
     UINT8 *itemData = selectedVolume->getData();
-    auto *hexViewData = new QByteArray((char*)itemData, selectedVolume->getSize());
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    auto *hexViewData = new QByteArray((char*)itemData, itemSize);
     hexDialog->loadBuffer(*hexViewData,
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset(),
@@ -240,7 +242,9 @@ void BiosViewerWindow::showBodyHexView() {
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
-    auto *hexViewData = new QByteArray((char*)itemData, selectedVolume->getSize());
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    auto *hexViewData = new QByteArray((char*)itemData, itemSize);
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
     hexDialog->loadBuffer(BodyHexViewData,
                           BiosData->OverviewVolume,
@@ -255,6 +259,11 @@ void BiosViewerWindow::showBodyHexView() {
 
 void BiosViewerWindow::showDecompressedHexView() {
     Volume *volume = BiosData->RightClickedItemModel.getVolume();
+    INT64 RemainingSize = WindowData->InputImageSize - volume->getOffset();
+    if (RemainingSize < volume->getSize()) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "Incomplete Section");
+        return;
+    }
     vector<UINT8> DecompressedVector;
     if (!volume->GetDecompressedVolume(DecompressedVector)) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "No Compressed Section");

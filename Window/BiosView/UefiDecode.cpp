@@ -141,7 +141,7 @@ void BiosViewerWindow::setBiosFvData() {
         auto fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(WindowData->InputImage + offset);
         INT64 FvLength = (INT64)fvHeader->FvLength;
 
-        INT64 searchInterval = 0x100;
+        INT64 searchInterval = 0x40;
         INT64 EmptyVolumeLength = 0;
         while (!FirmwareVolume::isValidFirmwareVolume(fvHeader)) {
             EmptyVolumeLength += searchInterval;

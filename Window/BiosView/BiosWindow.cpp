@@ -57,7 +57,7 @@ bool BiosViewerData::isValidBIOS(UINT8 *image, INT64 imageLength) {
     }
 
     INT64 SearchOffset = 0;
-    INT64 SearchInterval = 0x1000;
+    INT64 SearchInterval = 0x40;
     while (SearchOffset <= imageLength - SearchInterval) {
         FirmwareVolume fvHeader = FirmwareVolume(image + SearchOffset, imageLength - SearchOffset, SearchOffset);
         if (fvHeader.CheckValidation()) {

@@ -35,6 +35,10 @@ FitTableClass::FitTableClass(UINT8 *fv, INT64 length) {
                 if (RelativeMicrocodeAddress > (UINT64)length)
                     continue;
                 auto *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, 0, MicrocodeAddress);
+                if (!MicrocodeEntry->CheckValidation()) {
+                    delete MicrocodeEntry;
+                    continue;
+                }
                 MicrocodeEntry->SelfDecode();
                 MicrocodeEntries.push_back(MicrocodeEntry);
             } else if (FitEntry.Type == FIT_TABLE_TYPE_STARTUP_ACM) {
