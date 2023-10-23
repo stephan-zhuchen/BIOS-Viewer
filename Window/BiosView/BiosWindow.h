@@ -115,7 +115,8 @@ public:
     void refresh() const;
     bool detectIfwi(INT64 &BiosOffset) const;
     void setBiosFvData();
-    void setFfsData();
+    void DecodeBiosFileSystem();
+    void ReorganizeVolume(Volume *volume);
     void setInfoWindowState(bool opened) const;
     void AddVolumeList(INT64 offset, INT64 length, Volume *parent, bool Empty = false) const;
     bool isDarkMode() const;

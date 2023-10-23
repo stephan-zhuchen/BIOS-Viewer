@@ -6,6 +6,8 @@
 #include "FfsFile.h"
 #include "CommonSection.h"
 #include "UEFI/GuidDatabase.h"
+#include "Feature/FspHeader.h"
+#include "Feature/MicrocodeClass.h"
 using namespace BaseLibrarySpace;
 
 FfsFile::FfsFile(UINT8 *file, INT64 offset, bool Compressed, Volume* parent):
@@ -61,20 +63,7 @@ void FfsFile::DecodeChildVolume() {
     if (isExtended) {
         offset = sizeof(EFI_FFS_FILE_HEADER2);
     }
-//    if (isApriori) {
-//        // Apriori files are encoded as raw CommonSections
-//        auto *Sec = new CommonSection(data + offset, offsetFromBegin + offset, this, this->isCompressed);
-//        Sec->isAprioriRaw = true;
-//        if (!Sec->SelfDecode()) {
-//            safeDelete(Sec);
-//            return;
-//        }
-//        Sections.push_back(Sec);
-//        for (Volume* volume:Sections) {
-//            ChildVolume.push_back(volume);
-//        }
-//        return;
-//    }
+
     while (offset < size) {
         auto *SecHeader = (EFI_COMMON_SECTION_HEADER*)(data + offset);
         INT64 SecSize = (INT64)SECTION_SIZE(SecHeader);
@@ -137,6 +126,51 @@ void FfsFile::setInfoStr() {
     ss << "\nCompressed: " << compressed;
 
     InfoStr = QString::fromStdString(ss.str());
+}
+
+Volume* FfsFile::Reorganize() {
+    Volume *newVolume = nullptr;
+    bool   RemainChild = true;
+    EFI_GUID guid = this->getFfsGuid();
+
+    if (guid == GuidDatabase::gIntelMicrocodeArrayFfsBinGuid) {
+        newVolume = new MicrocodeHeaderClass(data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
+        newVolume->SelfDecode();
+    }
+    else if (FspHeader::isFspHeader(data + getHeaderSize() + sizeof(EFI_COMMON_SECTION_HEADER))) {
+        INT64 FspOffset = getHeaderSize() + sizeof(EFI_COMMON_SECTION_HEADER);
+        FspHeader *fspVolume = new FspHeader(data + FspOffset, size - FspOffset, offsetFromBegin + FspOffset);
+        if (fspVolume->SelfDecode() != 0) {
+            newVolume = fspVolume;
+            RemainChild = false;
+        }
+    }
+
+    if (newVolume != nullptr) {
+        newVolume->setCompressedFlag(this->Compressed);
+        newVolume->ParentVolume = this->ParentVolume;
+        for(int i = 0; i < this->ParentVolume->ChildVolume.size(); ++i) {
+            if (this->ParentVolume->ChildVolume[i] == this) {
+                this->ParentVolume->ChildVolume[i] = newVolume;
+            }
+        }
+        if (RemainChild) {
+            for (auto child:this->ChildVolume) {
+                newVolume->ChildVolume.append(child);
+                child->ParentVolume = newVolume;
+            }
+        } else {
+            for (auto child:this->ChildVolume) {
+                safeDelete(child);
+            }
+        }
+
+        this->ParentVolume = nullptr;
+        this->ChildVolume.clear();
+        return newVolume;
+    }
+
+    return nullptr;
 }
 
 INT64 FfsFile::getHeaderSize() const {

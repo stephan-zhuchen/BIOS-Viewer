@@ -129,7 +129,10 @@ void BiosViewerWindow::loadBios() {
     BiosData->OverviewVolume = new Volume(WindowData->InputImage, WindowData->InputImageSize);
     BiosData->OverviewImageModel = new DataModel(BiosData->OverviewVolume, "IFWI Overview", "Image");
     setBiosFvData();
-    setFfsData();
+    DecodeBiosFileSystem();
+    for (auto fv : BiosData->VolumeDataList) {
+        ReorganizeVolume(fv);
+    }
     setTreeData();
     if (BiosData->BiosValidFlag && BiosData->BiosImage->isFitValid()) {
         if (!BiosData->IFWI_exist) {

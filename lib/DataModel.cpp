@@ -13,10 +13,10 @@
 using namespace BaseLibrarySpace;
 
 DataModel::DataModel(Volume *vol, QString nm, QString typ, QString sbtyp):
-        modelData(vol),
         name(std::move(nm)),
         type(std::move(typ)),
-        subtype(std::move(sbtyp)) { }
+        subtype(std::move(sbtyp)),
+        modelData(vol) { }
 
 void DataModel::setSectionModel(Volume *sec) {
     if (sec->getVolumeType() != VolumeType::CommonSection) {
@@ -214,15 +214,21 @@ void DataModel::InitFromVolume(Volume *vol) {
             break;
         case VolumeType::ELF:
             name = "ELF";
+            type = "Section";
+            subtype = "Raw";
             break;
         case VolumeType::Apriori:
             name = "Apriori";
             break;
         case VolumeType::FspHeader:
             name = "FSP Header";
+            type = "File";
+            subtype = "Raw";
             break;
         case VolumeType::AcpiTable:
             name = "ACPI Table";
+            type = "Section";
+            subtype = "Raw";
             break;
         case VolumeType::Empty:
             name = "Empty Volume";
@@ -294,6 +300,8 @@ void DataModel::InitFromVolume(Volume *vol) {
             break;
         case VolumeType::Microcode:
             name = "Microcode";
+            type = "File";
+            subtype = "Raw";
             break;
         case VolumeType::IshPdt:
             name = "ISH PDT";

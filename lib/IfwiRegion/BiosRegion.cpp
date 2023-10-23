@@ -115,9 +115,8 @@ void BiosRegion::collectAcpiTable(Volume *parent) {
         parent = this;
     }
     for (Volume *vol:parent->ChildVolume) {
-        if (vol->getVolumeSubType() == VolumeType::AcpiTable) {
-            CommonSection *sec = (CommonSection*)vol;
-            AcpiTables.push_back(sec->getAcpiTable());
+        if (vol->getVolumeType() == VolumeType::AcpiTable) {
+            AcpiTables.push_back((AcpiClass*)vol);
         }
     }
     for (Volume *vol:parent->ChildVolume) {

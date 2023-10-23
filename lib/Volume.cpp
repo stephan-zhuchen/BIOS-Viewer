@@ -131,6 +131,10 @@ void Volume::setInfoStr() {
     }
 }
 
+Volume* Volume::Reorganize() {
+    return nullptr;
+}
+
 EFI_GUID Volume::getVolumeGuid() const {
     return {};
 }

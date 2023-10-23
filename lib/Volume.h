@@ -84,30 +84,32 @@ public:
     [[nodiscard]] UINT8* getBytes(INT64 offset, INT64 length);
 
     // Attribute Getter
-    [[nodiscard]] inline UINT8* getData() const { return data; }
-    [[nodiscard]] inline INT64 getSize() const { return size; }
-    [[nodiscard]] inline INT64 getOffset() const { return offsetFromBegin; }
-    [[nodiscard]] inline bool isCompressed() const { return Compressed; }
-    [[nodiscard]] inline bool isCorrupted() const { return Corrupted; }
+    [[nodiscard]] inline UINT8* getData()      const { return data; }
+    [[nodiscard]] inline INT64  getSize()      const { return size; }
+    [[nodiscard]] inline INT64  getOffset()    const { return offsetFromBegin; }
+    [[nodiscard]] inline bool   isCompressed() const { return Compressed; }
+    [[nodiscard]] inline bool   isCorrupted()  const { return Corrupted; }
     [[nodiscard]] inline VolumeType getVolumeType() const { return Type; }
     [[nodiscard]] inline VolumeType getVolumeSubType() const { return SubType; }
     [[nodiscard]] inline QString    getInfoText() const { return InfoStr; }
     [[nodiscard]] inline QString    getUniqueVolumeName() const { return UniqueVolumeName; }
+    inline void setCompressedFlag(bool flag) { Compressed = flag; }
     inline void setVolumeType(VolumeType tp) { Type = tp; }
     inline void setVolumeSubType(VolumeType tp) { SubType = tp; }
     inline void setUniqueVolumeName(QString name) { UniqueVolumeName = std::move(name); }
 
     // Virtual function
-    virtual bool  CheckValidation();
-    virtual INT64 SelfDecode();
-    virtual void  DecodeChildVolume();
-    virtual void  setInfoStr();
-    [[nodiscard]] virtual INT64    getHeaderSize() const;
-    [[nodiscard]] virtual EFI_GUID getVolumeGuid() const;
+    virtual bool   CheckValidation();
+    virtual INT64  SelfDecode();
+    virtual void   DecodeChildVolume();
+    virtual void   setInfoStr();
+    virtual Volume *Reorganize();
+    [[nodiscard]] virtual INT64       getHeaderSize() const;
+    [[nodiscard]] virtual EFI_GUID    getVolumeGuid() const;
     [[nodiscard]] virtual QStringList getUserDefinedName() const;
 
     void setInfoText(const QString &text);
-    bool  GetDecompressedVolume(std::vector<UINT8>& DecompressedVolume);
-    void  SearchDecompressedVolume(Volume *volume, std::vector<Decompressed*>& DecompressedVolumeList);
+    bool GetDecompressedVolume(std::vector<UINT8>& DecompressedVolume);
+    void SearchDecompressedVolume(Volume *volume, std::vector<Decompressed*>& DecompressedVolumeList);
 };
 Q_DECLARE_METATYPE(Volume);

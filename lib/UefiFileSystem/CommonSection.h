@@ -64,13 +64,7 @@ private:
     UINT32                    HeaderSize;
     bool                      isExtend{false};
     bool                      isValid;
-    bool                      isElfFormat{false};
-    bool                      isFspHeader{false};
-    bool                      isAcpiHeader{false};
     QVector<EFI_GUID>         AprioriList;
-    FspHeader                 *fspHeader{nullptr};
-    AcpiClass                 *AcpiTable{nullptr};
-    ELF                       *elf{nullptr};
 public:
     PeCoff                    *peCoffHeader{nullptr};
     Depex                     *dependency{nullptr};
@@ -83,12 +77,12 @@ public:
     INT64 SelfDecode() override;
     void  DecodeChildVolume() override;
     void  setInfoStr() override;
+    Volume *Reorganize() override;
     [[nodiscard]] INT64 getHeaderSize() const override;
     [[nodiscard]] EFI_GUID getVolumeGuid() const override;
 
     [[nodiscard]] UINT8 getSectionType() const;
     [[nodiscard]] inline QString getUiName() const { return QString::fromStdString(FileNameString); }
-    [[nodiscard]] inline AcpiClass *getAcpiTable() const { return AcpiTable;};
     [[nodiscard]] inline EFI_GUID getSubTypeGuid() const { return SubTypeGuid; };
     [[nodiscard]] inline EFI_GUID getSectionDefinitionGuid() const { return SectionDefinitionGuid; };
 

@@ -166,7 +166,7 @@ void BiosViewerWindow::setBiosFvData() {
     }
 }
 
-void BiosViewerWindow::setFfsData() {
+void BiosViewerWindow::DecodeBiosFileSystem() {
     using namespace std;
     if (BiosData->VolumeDataList.size() == 1 && BiosData->VolumeDataList.at(0)->getVolumeType() == VolumeType::Empty) {
         delete BiosData->VolumeDataList.at(0);
@@ -190,6 +190,17 @@ void BiosViewerWindow::setFfsData() {
     }
     double time = (double)timer.nsecsElapsed()/(double)1000000;
     qDebug() << "setFfsData time = " << time << "ms";
+}
+
+void BiosViewerWindow::ReorganizeVolume(Volume *volume) {
+    Volume *newVolume = volume->Reorganize();
+    if (newVolume != nullptr) {
+        safeDelete(volume);
+        volume = newVolume;
+    }
+    for (auto childVolume:volume->ChildVolume) {
+        ReorganizeVolume(childVolume);
+    }
 }
 
 void BiosViewerWindow::AddVolumeList(INT64 offset, INT64 length, Volume *parent, bool Empty) const {

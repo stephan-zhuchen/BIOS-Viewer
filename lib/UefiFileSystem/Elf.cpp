@@ -200,39 +200,39 @@ void ELF::setInfoStr() {
         return;
     }
     using namespace std;
-    INT32 width = 25;
+    INT32 width = 30;
     stringstream ss;
     stringstream guidInfo;
     ss.setf(ios::left);
 
     if (isElf32) {
-        ss << setw(width) << "File type: " << hex << Ehdr.Elf32Hdr->e_type << "\n"
-           << setw(width) << "Machine type: " << hex << Ehdr.Elf32Hdr->e_machine << "\n"
-           << setw(width) << "ELF Version: " << hex << Ehdr.Elf32Hdr->e_version << "\n"
-           << setw(width) << "Entry point: " << hex << Ehdr.Elf32Hdr->e_entry << "\n"
-           << setw(width) << "Program header offset: " << hex << Ehdr.Elf32Hdr->e_phoff << "\n"
-           << setw(width) << "Section header offset: " << hex << Ehdr.Elf32Hdr->e_shoff << "\n"
-           << setw(width) << "Architecture-specific flags: " << hex << Ehdr.Elf32Hdr->e_flags << "\n"
-           << setw(width) << "ELF header Size: " << hex << Ehdr.Elf32Hdr->e_ehsize << "\n"
-           << setw(width) << "program header Size: " << hex << Ehdr.Elf32Hdr->e_phentsize << "\n"
-           << setw(width) << "Number of program header: " << hex << Ehdr.Elf32Hdr->e_phnum << "\n"
-           << setw(width) << "section header Size: " << hex << Ehdr.Elf32Hdr->e_shentsize << "\n"
-           << setw(width) << "Number of section header: " << hex << Ehdr.Elf32Hdr->e_shnum << "\n"
-           << setw(width) << "Section name strings section: " << hex << Ehdr.Elf32Hdr->e_shstrndx << "\n";
+        ss << setw(width) << "File type: " << hex << Ehdr.Elf32Hdr->e_type << "h\n"
+           << setw(width) << "Machine type: " << hex << Ehdr.Elf32Hdr->e_machine << "h\n"
+           << setw(width) << "ELF Version: " << hex << Ehdr.Elf32Hdr->e_version << "h\n"
+           << setw(width) << "Entry point: " << hex << Ehdr.Elf32Hdr->e_entry << "h\n"
+           << setw(width) << "Program header offset: " << hex << Ehdr.Elf32Hdr->e_phoff << "h\n"
+           << setw(width) << "Section header offset: " << hex << Ehdr.Elf32Hdr->e_shoff << "h\n"
+           << setw(width) << "Architecture-specific flags: " << hex << Ehdr.Elf32Hdr->e_flags << "h\n"
+           << setw(width) << "ELF header Size: " << hex << Ehdr.Elf32Hdr->e_ehsize << "h\n"
+           << setw(width) << "program header Size: " << hex << Ehdr.Elf32Hdr->e_phentsize << "h\n"
+           << setw(width) << "Number of program header: " << hex << Ehdr.Elf32Hdr->e_phnum << "h\n"
+           << setw(width) << "section header Size: " << hex << Ehdr.Elf32Hdr->e_shentsize << "h\n"
+           << setw(width) << "Number of section header: " << hex << Ehdr.Elf32Hdr->e_shnum << "h\n"
+           << setw(width) << "Section name strings section: " << hex << Ehdr.Elf32Hdr->e_shstrndx << "h\n";
     } else {
-        ss << setw(width) << "File type: " << hex << Ehdr.Elf64Hdr->e_machine << "\n"
-           << setw(width) << "Machine type: " << hex << Ehdr.Elf64Hdr->e_machine << "\n"
-           << setw(width) << "ELF Version: " << hex << Ehdr.Elf64Hdr->e_version << "\n"
-           << setw(width) << "Entry point: " << hex << Ehdr.Elf64Hdr->e_entry << "\n"
-           << setw(width) << "Program header offset: " << hex << Ehdr.Elf64Hdr->e_phoff << "\n"
-           << setw(width) << "Section header offset: " << hex << Ehdr.Elf64Hdr->e_shoff << "\n"
-           << setw(width) << "Architecture-specific flags: " << hex << Ehdr.Elf64Hdr->e_flags << "\n"
-           << setw(width) << "ELF header Size: " << hex << Ehdr.Elf64Hdr->e_ehsize << "\n"
-           << setw(width) << "program header Size: " << hex << Ehdr.Elf64Hdr->e_phentsize << "\n"
-           << setw(width) << "Number of program header: " << hex << Ehdr.Elf64Hdr->e_phnum << "\n"
-           << setw(width) << "section header Size: " << hex << Ehdr.Elf64Hdr->e_shentsize << "\n"
-           << setw(width) << "Number of section header: " << hex << Ehdr.Elf64Hdr->e_shnum << "\n"
-           << setw(width) << "Section name strings section: " << hex << Ehdr.Elf64Hdr->e_shstrndx << "\n";
+        ss << setw(width) << "File type: " << hex << Ehdr.Elf64Hdr->e_machine << "h\n"
+           << setw(width) << "Machine type: " << hex << Ehdr.Elf64Hdr->e_machine << "h\n"
+           << setw(width) << "ELF Version: " << hex << Ehdr.Elf64Hdr->e_version << "h\n"
+           << setw(width) << "Entry point: " << hex << Ehdr.Elf64Hdr->e_entry << "h\n"
+           << setw(width) << "Program header offset: " << hex << Ehdr.Elf64Hdr->e_phoff << "h\n"
+           << setw(width) << "Section header offset: " << hex << Ehdr.Elf64Hdr->e_shoff << "h\n"
+           << setw(width) << "Architecture-specific flags: " << hex << Ehdr.Elf64Hdr->e_flags << "h\n"
+           << setw(width) << "ELF header Size: " << hex << Ehdr.Elf64Hdr->e_ehsize << "h\n"
+           << setw(width) << "program header Size: " << hex << Ehdr.Elf64Hdr->e_phentsize << "h\n"
+           << setw(width) << "Number of program header: " << hex << Ehdr.Elf64Hdr->e_phnum << "h\n"
+           << setw(width) << "section header Size: " << hex << Ehdr.Elf64Hdr->e_shentsize << "h\n"
+           << setw(width) << "Number of section header: " << hex << Ehdr.Elf64Hdr->e_shnum << "h\n"
+           << setw(width) << "Section name strings section: " << hex << Ehdr.Elf64Hdr->e_shstrndx << "h\n";
     }
 
     InfoStr = QString::fromStdString(ss.str());

@@ -186,9 +186,6 @@ CommonSection::CommonSection(UINT8 *file, INT64 length, INT64 offset, bool Compr
 CommonSection::~CommonSection() {
     safeDelete(peCoffHeader);
     safeDelete(dependency);
-    safeDelete(fspHeader);
-    safeDelete(AcpiTable);
-    safeDelete(elf);
 }
 
 bool CommonSection::CheckValidation() {
@@ -373,36 +370,6 @@ void CommonSection::DecodeChildVolume() {
                     index += 1;
                 }
             }
-            else if (ELF::IsElfFormat(data + HeaderSize)) {
-                isElfFormat = true;
-                SubType = VolumeType::ELF;
-                elf = new ELF(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, Compressed);
-                if (elf->SelfDecode() != 0) {
-                    UniqueVolumeName = "ELF";
-                    elf->DecodeChildVolume();
-                    elf->setInfoStr();
-                    for (Volume *elfSection : elf->ChildVolume) {
-                        elfSection->ParentVolume = this;
-                        ChildVolume.push_back(elfSection);
-                    }
-                    elf->ChildVolume.clear();
-                }
-            } else if (FspHeader::isFspHeader(data + HeaderSize)) {
-                isFspHeader = true;
-                fspHeader = new FspHeader(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize);
-                if (fspHeader->isValid()) {
-                    fspHeader->setInfoStr();
-                }
-            } else if (AcpiClass::isAcpiHeader(data + HeaderSize, size - HeaderSize)) {
-                isAcpiHeader = true;
-                SubType = VolumeType::AcpiTable;
-                AcpiTable = new AcpiClass(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, false);
-                AcpiTable->SelfDecode();
-                if (AcpiTable->isValid()) {
-                    AcpiTable->setInfoStr();
-                    UniqueVolumeName = "ACPI Table - " + AcpiTable->AcpiTableSignature;
-                }
-            }
             break;
         default:
             break;
@@ -506,15 +473,6 @@ void CommonSection::setInfoStr() {
                     ss << guidData->getNameFromGuid(ApriFile) << "\n";
                 }
             }
-            else if (isAcpiHeader) {
-                ss << AcpiTable->getInfoText().toStdString();
-            }
-            else if (isFspHeader) {
-                ss << fspHeader->getInfoText().toStdString();
-            }
-            else if (isElfFormat) {
-                ss << elf->getInfoText().toStdString();
-            }
             break;
         default:
             break;
@@ -525,6 +483,42 @@ void CommonSection::setInfoStr() {
         compressed = "Yes";
     ss << "\nCompressed: " << compressed;
     InfoStr = QString::fromStdString(guidInfo.str() +  ss.str());
+}
+
+Volume* CommonSection::Reorganize() {
+    Volume *newVolume = nullptr;
+    if (AcpiClass::isAcpiHeader(data + HeaderSize, size - HeaderSize)) {
+        AcpiClass *acpiVolume = new AcpiClass(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, false);
+        acpiVolume->SelfDecode();
+        acpiVolume->setUniqueVolumeName("ACPI Table - " + acpiVolume->AcpiTableSignature);
+        newVolume = acpiVolume;
+    }
+    else if (ELF::IsElfFormat(data + HeaderSize)) {
+        ELF *elfVolume = new ELF(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, Compressed);
+        if (elfVolume->SelfDecode() != 0) {
+            elfVolume->DecodeChildVolume();
+            newVolume = elfVolume;
+        }
+    }
+
+    if (newVolume != nullptr) {
+        newVolume->setCompressedFlag(this->Compressed);
+        newVolume->ParentVolume = this->ParentVolume;
+        for(int i = 0; i < this->ParentVolume->ChildVolume.size(); ++i) {
+                if (this->ParentVolume->ChildVolume[i] == this) {
+                    this->ParentVolume->ChildVolume[i] = newVolume;
+                }
+        }
+        for (auto child:this->ChildVolume) {
+                newVolume->ChildVolume.append(child);
+                child->ParentVolume = newVolume;
+        }
+        this->ParentVolume = nullptr;
+        this->ChildVolume.clear();
+        return newVolume;
+    }
+
+    return nullptr;
 }
 
 INT64 CommonSection::getHeaderSize() const {

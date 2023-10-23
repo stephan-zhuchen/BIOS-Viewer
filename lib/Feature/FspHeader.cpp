@@ -8,24 +8,29 @@
 using namespace BaseLibrarySpace;
 
 FspHeader::FspHeader(UINT8 *buffer, INT64 length, INT64 offset):
-        data(buffer), size(length), offset(offset)
-{
-    UINT32 s = sizeof(TABLES);
-    if (s != length) {
-        validFlag = false;
-    }
-    mTable = *(TABLES*)buffer;
-    if ((mTable.FspInfoHeader.Signature == FSP_INFO_HEADER_SIGNATURE) &&
-        (mTable.FspInfoExtendedHeader.Signature == FSP_INFO_EXTENDED_HEADER_SIGNATURE) &&
-        (mTable.FspPatchTable.Signature == FSP_PATCH_TABLE_SIGNATURE)) {
-        validFlag = true;
-    } else {
-        validFlag = false;
-    }
-}
+        Volume(buffer, length, offset, false, nullptr) { }
 
 bool FspHeader::isValid() const {
     return validFlag;
+}
+
+INT64 FspHeader::SelfDecode() {
+    UINT32 s = sizeof(TABLES);
+    if (s != size) {
+        validFlag = false;
+        return 0;
+    }
+    mTable = *(TABLES*)data;
+    if ((mTable.FspInfoHeader.Signature == FSP_INFO_HEADER_SIGNATURE) &&
+        (mTable.FspInfoExtendedHeader.Signature == FSP_INFO_EXTENDED_HEADER_SIGNATURE) &&
+        (mTable.FspPatchTable.Signature == FSP_PATCH_TABLE_SIGNATURE)) {
+        Type = VolumeType::FspHeader;
+        validFlag = true;
+        return size;
+    } else {
+        validFlag = false;
+        return 0;
+    }
 }
 
 void FspHeader::setInfoStr() {

@@ -19,10 +19,11 @@ public:
     FfsFile(UINT8* file, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
     ~FfsFile() override;
 
-    bool  CheckValidation() override;
-    INT64 SelfDecode() override;
-    void  DecodeChildVolume() override;
-    void  setInfoStr() override;
+    bool   CheckValidation() override;
+    INT64  SelfDecode() override;
+    void   DecodeChildVolume() override;
+    void   setInfoStr() override;
+    Volume *Reorganize() override;
     [[nodiscard]] INT64 getHeaderSize() const override;
     [[nodiscard]] EFI_GUID getVolumeGuid() const override;
 
