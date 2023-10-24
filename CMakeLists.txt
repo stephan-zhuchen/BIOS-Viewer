@@ -28,7 +28,6 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 include_directories(include lib lib/Openssl/include lib/BrotliDecompress/brotli/include Window)
 
 set(DECOMPRESS_LIB
-        lib/BaseUefiDecompress/UefiDecompressLib.h
         lib/BaseUefiDecompress/BaseUefiDecompressLib.h
         lib/BaseUefiDecompress/BaseUefiDecompressLib.cpp
         lib/BrotliDecompress/BrotliDecompress.cpp

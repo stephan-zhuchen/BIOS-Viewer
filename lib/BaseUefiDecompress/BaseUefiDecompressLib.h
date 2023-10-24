@@ -11,7 +11,7 @@
 
 #include "C/Base.h"
 #include "C/BaseMemoryLib.h"
-#include "UefiDecompressLib.h"
+
 //
 // Decompression algorithm begins here
 //
@@ -204,6 +204,53 @@ DecodeC (
 VOID
 Decode (
   SCRATCH_DATA  *Sd
+  );
+
+/**
+  Given a compressed source buffer, this function retrieves the size of
+  the uncompressed buffer and the size of the scratch buffer required
+  to decompress the compressed source buffer.
+
+  Retrieves the size of the uncompressed buffer and the temporary scratch buffer
+  required to decompress the buffer specified by Source and SourceSize.
+  If the size of the uncompressed buffer or the size of the scratch buffer cannot
+  be determined from the compressed data specified by Source and SourceData,
+  then RETURN_INVALID_PARAMETER is returned.  Otherwise, the size of the uncompressed
+  buffer is returned in DestinationSize, the size of the scratch buffer is returned
+  in ScratchSize, and RETURN_SUCCESS is returned.
+  This function does not have scratch buffer available to perform a thorough
+  checking of the validity of the source data.  It just retrieves the "Original Size"
+  field from the beginning bytes of the source data and output it as DestinationSize.
+  And ScratchSize is specific to the decompression implementation.
+
+  If Source is NULL, then ASSERT().
+  If DestinationSize is NULL, then ASSERT().
+  If ScratchSize is NULL, then ASSERT().
+
+  @param  Source          The source buffer containing the compressed data.
+  @param  SourceSize      The size, in bytes, of the source buffer.
+  @param  DestinationSize A pointer to the size, in bytes, of the uncompressed buffer
+                          that will be generated when the compressed buffer specified
+                          by Source and SourceSize is decompressed.
+  @param  ScratchSize     A pointer to the size, in bytes, of the scratch buffer that
+                          is required to decompress the compressed buffer specified
+                          by Source and SourceSize.
+
+  @retval  RETURN_SUCCESS The size of the uncompressed data was returned
+                          in DestinationSize and the size of the scratch
+                          buffer was returned in ScratchSize.
+  @retval  RETURN_INVALID_PARAMETER
+                          The size of the uncompressed data or the size of
+                          the scratch buffer cannot be determined from
+                          the compressed data specified by Source
+                          and SourceSize.
+**/
+RETURN_STATUS
+UefiDecompressGetInfo (
+  IN  CONST VOID  *Source,
+  IN  UINT32      SourceSize,
+  OUT UINT32      *DestinationSize,
+  OUT UINT32      *ScratchSize
   );
 
 /**

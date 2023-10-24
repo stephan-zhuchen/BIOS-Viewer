@@ -8,7 +8,7 @@
 #include "UEFI/GuidDatabase.h"
 #include "UEFI/PiDependency.h"
 #include "LzmaDecompress/LzmaDecompressLib.h"
-#include "BaseUefiDecompress/UefiDecompressLib.h"
+#include "BaseUefiDecompress/BaseUefiDecompressLib.h"
 #include "BrotliDecompress/BrotliDecompressLib.h"
 #include "IfwiRegion/BiosRegion.h"
 #include "Feature/FspHeader.h"
@@ -245,7 +245,7 @@ void CommonSection::DecodeChildVolume() {
 
                 DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
-                status = UefiDecompress(data + HeaderSize, DecompressedBufferOnHeap, scratch);
+                status = UefiTianoDecompress(data + HeaderSize, DecompressedBufferOnHeap, scratch, 1);
                 if (status != RETURN_SUCCESS) {
                     free(scratch);
                     throw exception();
@@ -266,6 +266,8 @@ void CommonSection::DecodeChildVolume() {
             if (isExtSection) {
                 HeaderSize = sizeof(EFI_GUID_DEFINED_SECTION2);
             }
+
+            // RSA2048/SHA256
             if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
                 RSA2048SHA256 = *(EFI_CERT_BLOCK_RSA_2048_SHA256*)(data + HeaderSize);
                 HeaderSize += sizeof(EFI_CERT_BLOCK_RSA_2048_SHA256);
@@ -316,6 +318,25 @@ void CommonSection::DecodeChildVolume() {
                 DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
                 status = BrotliUefiDecompress(data + HeaderSize, size - HeaderSize, DecompressedBufferOnHeap, scratch);
+                if (status != RETURN_SUCCESS) {
+                    free(scratch);
+                    throw exception();
+                }
+                DecodeDecompressedBuffer(DecompressedBufferOnHeap, decompressedSize);
+                free(scratch);
+            }
+
+            // Tiano Decompress
+            else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gTianoCustomDecompressGuid) {
+                ScratchSize = 0;
+                status = UefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
+                if (status != RETURN_SUCCESS) {
+                    throw exception();
+                }
+
+                DecompressedBufferOnHeap = new UINT8[decompressedSize];
+                scratch = malloc(ScratchSize);
+                status = UefiTianoDecompress(data + HeaderSize, DecompressedBufferOnHeap, scratch, 2);
                 if (status != RETURN_SUCCESS) {
                     free(scratch);
                     throw exception();
