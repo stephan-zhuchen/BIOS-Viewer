@@ -198,7 +198,7 @@ INT64 CommonSection::SelfDecode() {
     HeaderSize = sizeof(EFI_COMMON_SECTION_HEADER);
     size = SECTION_SIZE(&CommonHeader);
     if (IS_SECTION2(&CommonHeader)) {
-        isExtend = true;
+        isExtSection = true;
         auto *ExtHeader = (EFI_COMMON_SECTION_HEADER2*)data;
         HeaderSize = sizeof(EFI_COMMON_SECTION_HEADER2);
         size = SECTION2_SIZE(ExtHeader);
@@ -259,17 +259,17 @@ void CommonSection::DecodeChildVolume() {
             break;
         case EFI_SECTION_GUID_DEFINED:
             INT64 ChildSectionSize;
-
-            SectionDefinitionGuid = this->getGUID(offset);
-            DataOffset = this->getUINT16(offset + 0x10);
-            Attributes = this->getUINT16(offset + 0x12);
+            GuidDefinedSection.SectionDefinitionGuid = this->getGUID(offset);
+            GuidDefinedSection.DataOffset = this->getUINT16(offset + 0x10);
+            GuidDefinedSection.Attributes = this->getUINT16(offset + 0x12);
             HeaderSize = sizeof(EFI_GUID_DEFINED_SECTION);
-            if (isExtend) {
+            if (isExtSection) {
                 HeaderSize = sizeof(EFI_GUID_DEFINED_SECTION2);
             }
-            if (SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
-                HeaderSize = 0x228;
-                DataOffset = HeaderSize;
+            if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
+                RSA2048SHA256 = *(EFI_CERT_BLOCK_RSA_2048_SHA256*)(data + HeaderSize);
+                HeaderSize += sizeof(EFI_CERT_BLOCK_RSA_2048_SHA256);
+                GuidDefinedSection.DataOffset = HeaderSize;
                 offset = HeaderSize;
                 while (offset < size) {
                     auto ChildSection = new CommonSection(data + offset, HeaderSize, offsetFromBegin + offset, Compressed, this);
@@ -287,7 +287,7 @@ void CommonSection::DecodeChildVolume() {
             }
 
             // Lzma Decompress
-            if (SectionDefinitionGuid == GuidDatabase::gLzmaCustomDecompressGuid) {
+            else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gLzmaCustomDecompressGuid) {
                 ScratchSize = 0;
                 status = LzmaUefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
@@ -306,7 +306,7 @@ void CommonSection::DecodeChildVolume() {
             }
 
             // Brotli Decompress
-            if (SectionDefinitionGuid == GuidDatabase::gBrotliCustomDecompressGuid) {
+            else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gBrotliCustomDecompressGuid) {
                 ScratchSize = 0;
                 status = BrotliUefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
@@ -386,7 +386,7 @@ void CommonSection::setInfoStr() {
     ss.setf(ios::left);
 
     if (CommonHeader.Type == EFI_SECTION_GUID_DEFINED)
-        guidInfo << "Section GUID:\n" << SectionDefinitionGuid.str(true) << "\n";
+        guidInfo << "Section GUID:\n" << GuidDefinedSection.SectionDefinitionGuid.str(true) << "\n";
 
     ss << setw(width) << "Type:"        << hex << uppercase << (UINT32)CommonHeader.Type << "h\n"
        << setw(width) << "Full size:"   << hex << uppercase << getSize() << "h\n"
@@ -400,14 +400,16 @@ void CommonSection::setInfoStr() {
                << "Compression algorithm: EFI 1.1\n";
             break;
         case EFI_SECTION_GUID_DEFINED:
-            ss << setw(width) << "Data offset:"   << hex << uppercase << DataOffset << "h\n"
-               << setw(width) << "Attributes:"    << hex << uppercase << Attributes << "h\n";
+            ss << setw(width) << "Data offset:"   << hex << uppercase << GuidDefinedSection.DataOffset << "h\n"
+               << setw(width) << "Attributes:"    << hex << uppercase << GuidDefinedSection.Attributes << "h\n";
 
-            if (SectionDefinitionGuid == GuidDatabase::gLzmaCustomDecompressGuid) {
+            if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gLzmaCustomDecompressGuid) {
                 ss << "Compression algorithm: LZMA\n"
                    << setw(width) << "Decompressed size:" << hex << uppercase << decompressedSize << "h\n";
-            } else if (SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
-                ss << "Certificate type: RSA2048/SHA256";
+            } else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
+                ss << setw(width) << "Certificate type:" << "RSA2048/SHA256\n"
+                   << "PubKey:\n" << DumpHex(RSA2048SHA256.PublicKey, 256, 8)
+                   << "\nSignature:\n" << DumpHex(RSA2048SHA256.Signature, 256, 8);
             }
             break;
         case EFI_SECTION_PE32:
@@ -543,7 +545,7 @@ INT64 CommonSection::getHeaderSize() const {
             headerSize = sizeof(EFI_COMMON_SECTION_HEADER);
             break;
     }
-    if (isExtend)
+    if (isExtSection)
         headerSize += sizeof(UINT32);
     return headerSize;
 }
@@ -567,7 +569,7 @@ UINT8 CommonSection::getSectionType() const {
 EFI_GUID CommonSection::getVolumeGuid() const {
     switch (CommonHeader.Type) {
         case EFI_SECTION_GUID_DEFINED:
-            return SectionDefinitionGuid;
+            return GuidDefinedSection.SectionDefinitionGuid;
         case EFI_SECTION_FREEFORM_SUBTYPE_GUID:
             return SubTypeGuid;
         default:

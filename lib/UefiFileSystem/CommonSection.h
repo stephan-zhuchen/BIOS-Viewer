@@ -7,6 +7,7 @@
 #include "string"
 #include "UEFI/PiFirmwareFile.h"
 #include "UEFI/PeImage.h"
+#include "UEFI/CapsuleSpec.h"
 
 using std::string;
 class FspHeader;
@@ -52,9 +53,8 @@ private:
     //EFI_FREEFORM_SUBTYPE_GUID_SECTION
     EFI_GUID                  SubTypeGuid;
     //EFI_GUID_DEFINED_SECTION
-    EFI_GUID                  SectionDefinitionGuid;
-    UINT16                    DataOffset;
-    UINT16                    Attributes;
+    EFI_GUID_DEFINED_SECTION  GuidDefinedSection;
+    EFI_CERT_BLOCK_RSA_2048_SHA256 RSA2048SHA256;
     //EFI_USER_INTERFACE_SECTION
     string                    FileNameString;
     //EFI_VERSION_SECTION
@@ -62,7 +62,7 @@ private:
     string                    VersionString;
 
     UINT32                    HeaderSize;
-    bool                      isExtend{false};
+    bool                      isExtSection{false};
     bool                      isValid;
     QVector<EFI_GUID>         AprioriList;
 public:
@@ -84,7 +84,7 @@ public:
     [[nodiscard]] UINT8 getSectionType() const;
     [[nodiscard]] inline QString getUiName() const { return QString::fromStdString(FileNameString); }
     [[nodiscard]] inline EFI_GUID getSubTypeGuid() const { return SubTypeGuid; };
-    [[nodiscard]] inline EFI_GUID getSectionDefinitionGuid() const { return SectionDefinitionGuid; };
+    [[nodiscard]] inline EFI_GUID getSectionDefinitionGuid() const { return GuidDefinedSection.SectionDefinitionGuid; };
 
     void DecodeDecompressedBuffer(UINT8* DecompressedBuffer, INT64 bufferSize);
 };

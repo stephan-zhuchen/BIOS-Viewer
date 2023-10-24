@@ -222,8 +222,7 @@ namespace BaseLibrarySpace {
         return (INT32)*(UINT32*)address & 0xFFFFFF;
     }
 
-    string DumpHex(UINT8* HexData, INT64 length, bool SingleLine) {
-        const INT64 COLUME_SIZE = 16;
+    string DumpHex(UINT8* HexData, INT64 length, INT64 ColumeSize, bool SingleLine) {
         auto InternalDumpData = [](stringstream &ss, UINT8* Data, INT64 Size) {
             for (INT64 Index = 0; Index < Size; Index++) {
                 ss << setw(2) << setfill('0') << hex << (UINT16)Data[Index] << " ";
@@ -238,16 +237,16 @@ namespace BaseLibrarySpace {
         }
 
         INT64 Index;
-        INT64 Count = length / COLUME_SIZE;
-        INT64 Left  = length % COLUME_SIZE;
+        INT64 Count = length / ColumeSize;
+        INT64 Left  = length % ColumeSize;
         for (Index = 0; Index < Count; Index++) {
-            ss << setw(3) << setfill('0') << hex << Index * COLUME_SIZE << ": ";
-            InternalDumpData(ss, HexData + Index * COLUME_SIZE, COLUME_SIZE);
+            ss << setw(3) << setfill('0') << hex << Index * ColumeSize << ": ";
+            InternalDumpData(ss, HexData + Index * ColumeSize, ColumeSize);
             ss << "\n";
         }
         if (Left != 0) {
-            ss << setw(3) << setfill('0') << hex << Index * COLUME_SIZE << ": ";
-            InternalDumpData (ss, HexData + Index * COLUME_SIZE, Left);
+            ss << setw(3) << setfill('0') << hex << Index * ColumeSize << ": ";
+            InternalDumpData (ss, HexData + Index * ColumeSize, Left);
             ss << "\n";
         }
         return ss.str();
