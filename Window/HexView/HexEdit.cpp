@@ -4,6 +4,8 @@
 #include <QPainter>
 #include <QMessageBox>
 #include <QBuffer>
+#include <QMenu>
+#include <QApplication>
 #include "BaseLib.h"
 #include "HexViewDialog.h"
 #include "HexWindow.h"

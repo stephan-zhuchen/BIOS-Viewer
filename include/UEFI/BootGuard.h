@@ -33,6 +33,7 @@
 **/
 #pragma once
 #include "C/Base.h"
+#include "UEFI/GUID.h"
 
 //
 // Data structure definitions

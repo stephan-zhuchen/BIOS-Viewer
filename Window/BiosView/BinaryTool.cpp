@@ -5,6 +5,7 @@
 #include "BaseLib.h"
 #include "Start/StartWindow.h"
 #include "BiosWindow.h"
+#include "HexView/HexWindow.h"
 #include "Input/inputdialog.h"
 #include "IfwiRegion/FlashDescriptorRegion.h"
 #include "ui_BiosWindow.h"

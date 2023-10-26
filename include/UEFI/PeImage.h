@@ -15,6 +15,7 @@
 
 #ifndef __PE_IMAGE_H__
 #define __PE_IMAGE_H__
+#include "UEFI/GUID.h"
 #include "SymbolDefinition.h"
 //
 // PE32+ Subsystem type for EFI images

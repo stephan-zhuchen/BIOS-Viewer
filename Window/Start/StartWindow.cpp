@@ -14,10 +14,12 @@
 #include <thread>
 #include <utility>
 #include <condition_variable>
+#include "BaseLib.h"
 #include "Setting/SettingsDialog.h"
 #include "UEFI/GuidDatabase.h"
 #include "StartWindow.h"
 #include "CapsuleView/CapsuleWindow.h"
+#include "HexView/HexWindow.h"
 #include "Tool/MergeFilesWindow.h"
 #include "ui_StartWindow.h"
 

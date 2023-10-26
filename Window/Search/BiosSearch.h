@@ -4,7 +4,8 @@
 #include <QWidget>
 #include <QSettings>
 #include <QTreeWidget>
-#include "Volume.h"
+#include "UEFI/GUID.h"
+#include "SymbolDefinition.h"
 
 namespace Ui {
 class BiosSearch;

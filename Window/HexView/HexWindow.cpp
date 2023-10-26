@@ -1,4 +1,5 @@
 #include "HexWindow.h"
+#include "BaseLib.h"
 #include "Start/StartWindow.h"
 #include <HexView/HexView.h>
 #include <QCloseEvent>

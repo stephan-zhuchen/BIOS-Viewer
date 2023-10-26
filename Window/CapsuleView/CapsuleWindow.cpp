@@ -9,6 +9,7 @@
 #include "UefiFileSystem/FfsFile.h"
 #include "Feature/BiosGuardClass.h"
 #include "Feature/AcmClass.h"
+#include "Feature/MicrocodeClass.h"
 #include "IfwiRegion/EcRegion.h"
 #include "IfwiRegion/MeRegion.h"
 #include "IfwiRegion/PdtRegion.h"

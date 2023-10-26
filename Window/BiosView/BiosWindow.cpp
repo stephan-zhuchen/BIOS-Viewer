@@ -6,11 +6,13 @@
 #include <thread>
 #include <utility>
 #include <QFileInfo>
+#include "BaseLib.h"
 #include "Input/inputdialog.h"
 #include "Start/StartWindow.h"
 #include "IfwiRegion/FlashDescriptorRegion.h"
 #include "UefiFileSystem/FirmwareVolume.h"
 #include "CapsuleView/CapsuleWindow.h"
+#include "HexView/HexWindow.h"
 #include "ui_BiosWindow.h"
 
 using namespace BaseLibrarySpace;

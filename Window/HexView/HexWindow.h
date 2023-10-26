@@ -2,10 +2,13 @@
 
 #include <QWidget>
 #include <QMainWindow>
-#include "BiosView/BiosWindow.h"
+#include <QVBoxLayout>
+#include <QSettings>
+#include "SymbolDefinition.h"
 
 class QHexView;
 class StartWindow;
+class GeneralData;
 
 class HexViewWindow : public QWidget
 {

@@ -5,7 +5,7 @@
 #include <QSettings>
 #include <QLineEdit>
 #include <vector>
-#include "BaseLib.h"
+#include "SymbolDefinition.h"
 
 namespace Ui {
 class HexSearch;

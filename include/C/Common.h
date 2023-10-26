@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <math.h>
 #include "Base.h"
+#include "UEFI/GUID.h"
 
 #define MAX_QUI_PARAM_LEN              2000
 #define ERROR_INFO_LENGTH              400

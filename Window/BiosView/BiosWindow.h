@@ -19,12 +19,10 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 #include <exception>
-#include "BaseLib.h"
 #include "Volume.h"
 #include "DataModel.h"
 #include "IfwiRegion/BiosRegion.h"
 #include "InfoWindow/InfoWindow.h"
-#include "Search/HexSearch.h"
 #include "Search/BiosSearch.h"
 
 class QHexView;

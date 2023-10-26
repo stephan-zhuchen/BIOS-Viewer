@@ -17,12 +17,6 @@
 #ifndef __INTEL_MICROCODE_H__
 #define __INTEL_MICROCODE_H__
 
-#include "UEFI/FspHeader.h"
-#include "UEFI/Acpi.h"
-#include "UEFI/FIT.h"
-#include "UEFI/BootGuard.h"
-#include "UEFI/Microcode.h"
-#include "Volume.h"
 #include <string>
 #include "SymbolDefinition.h"
 

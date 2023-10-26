@@ -3,6 +3,7 @@
 #include <QInputDialog>
 #include <QProcess>
 #include <QClipboard>
+#include "BaseLib.h"
 #include "BiosWindow.h"
 #include "HexView/HexViewDialog.h"
 #include "TabWindow/TabWindow.h"

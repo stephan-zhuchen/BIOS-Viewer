@@ -12,6 +12,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef __PI_FIRMWARE_FILE_H__
 #define __PI_FIRMWARE_FILE_H__
 
+#include "UEFI/GUID.h"
 #include "SymbolDefinition.h"
 
 #pragma pack(1)

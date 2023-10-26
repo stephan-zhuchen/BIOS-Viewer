@@ -5,8 +5,6 @@
 #include <string>
 #include "Volume.h"
 #include "Feature/FitClass.h"
-#include "Feature/AcmClass.h"
-#include "Feature/MicrocodeClass.h"
 #include "Feature/AcpiClass.h"
 
 class BiosRegion: public Volume {

@@ -9,7 +9,8 @@
 #include "InfoWindow.h"
 #include "BaseLib.h"
 #include "ui_InfoWindow.h"
-#include "UEFI/Microcode.h"
+#include "Feature/AcmClass.h"
+#include "Feature/MicrocodeClass.h"
 
 using namespace BaseLibrarySpace;
 

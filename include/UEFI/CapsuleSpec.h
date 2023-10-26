@@ -1,5 +1,6 @@
 #pragma once
 #include "C/Base.h"
+#include "UEFI/GUID.h"
 
 typedef UINT64                    EFI_PHYSICAL_ADDRESS;
 typedef UINT64                    EFI_VIRTUAL_ADDRESS;

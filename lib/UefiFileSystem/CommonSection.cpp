@@ -10,8 +10,7 @@
 #include "LzmaDecompress/LzmaDecompressLib.h"
 #include "BaseUefiDecompress/BaseUefiDecompressLib.h"
 #include "BrotliDecompress/BrotliDecompressLib.h"
-#include "IfwiRegion/BiosRegion.h"
-#include "Feature/FspHeader.h"
+#include "Feature/AcpiClass.h"
 #include "Elf.h"
 
 using namespace BaseLibrarySpace;

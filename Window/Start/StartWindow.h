@@ -19,7 +19,6 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 #include "BiosView/BiosWindow.h"
-#include "HexView/HexWindow.h"
 
 #define __BiosViewerVersion__ "1.9"
 

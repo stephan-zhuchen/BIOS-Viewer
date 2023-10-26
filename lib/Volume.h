@@ -3,11 +3,11 @@
 //
 
 #pragma once
-#include "C/Base.h"
 #include <QString>
 #include <QVector>
 #include <QMetaType>
 #include <utility>
+#include "UEFI/GUID.h"
 
 struct Decompressed {
     std::vector<UINT8> decompressedBuffer;
