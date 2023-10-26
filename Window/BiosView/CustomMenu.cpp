@@ -456,15 +456,16 @@ void BiosViewerWindow::extractVolume() {
     if (extractVolumeName.isEmpty()) {
         return;
     }
-    saveBinary(extractVolumeName.toStdString(),
-               BiosData->RightClickedItemModel.getVolume()->getData(),
-               0,
-               BiosData->RightClickedItemModel.getVolume()->getSize());
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    saveBinary(extractVolumeName.toStdString(), selectedVolume->getData(), 0, itemSize);
 }
 
 void BiosViewerWindow::extractBodyVolume() {
-    INT64 HeaderSize = BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
-    if (HeaderSize >= BiosData->RightClickedItemModel.getVolume()->getSize()) {
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    INT64 HeaderSize = selectedVolume->getHeaderSize();
+    if (HeaderSize >= selectedVolume->getSize()) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "No Body!");
         return;
     }
@@ -479,10 +480,9 @@ void BiosViewerWindow::extractBodyVolume() {
         return;
     }
 
-    saveBinary(extractVolumeName.toStdString(),
-               BiosData->RightClickedItemModel.getVolume()->getData(),
-               HeaderSize,
-               BiosData->RightClickedItemModel.getVolume()->getSize() - HeaderSize);
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    saveBinary(extractVolumeName.toStdString(), selectedVolume->getData(), HeaderSize, itemSize);
 }
 
 void BiosViewerWindow::extractIfwiRegion() {
@@ -497,10 +497,10 @@ void BiosViewerWindow::extractIfwiRegion() {
         return;
     }
 
-    saveBinary(extractRegionName.toStdString(),
-               BiosData->RightClickedItemModel.getVolume()->getData(),
-               0,
-               BiosData->RightClickedItemModel.getVolume()->getSize());
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    saveBinary(extractRegionName.toStdString(), selectedVolume->getData(), 0, itemSize);
 }
 
 void BiosViewerWindow::replaceIfwiRegion() {
@@ -526,7 +526,10 @@ void BiosViewerWindow::replaceFfsContent() {
     file.close();
     INT64 NewFileSize = byteArray.size();
 
-    INT64 FileSize = BiosData->RightClickedItemModel.getVolume()->getSize() - BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    INT64 FileSize = itemSize - selectedVolume->getHeaderSize();
     if (NewFileSize != FileSize) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "File size does not match!");
         return;
@@ -534,7 +537,7 @@ void BiosViewerWindow::replaceFfsContent() {
     UINT8* NewFile = new UINT8[NewFileSize];
     memcpy(NewFile, byteArray.data(), NewFileSize);
 
-    INT64 ReplaceOffset = BiosData->RightClickedItemModel.getVolume()->getOffset() + BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
+    INT64 ReplaceOffset = selectedVolume->getOffset() + selectedVolume->getHeaderSize();
     auto* NewImage = new UINT8[WindowData->InputImageSize];
     for (INT64 IfwiIdx = 0; IfwiIdx < ReplaceOffset; ++IfwiIdx) {
         NewImage[IfwiIdx] = WindowData->InputImage[IfwiIdx];
@@ -559,9 +562,13 @@ void BiosViewerWindow::replaceFfsContent() {
 }
 
 void BiosViewerWindow::getMD5() const {
-    UINT8 *itemData = BiosData->RightClickedItemModel.getVolume()->getData();
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    UINT8 *itemData = selectedVolume->getData();
     UINT8 md[MD5_DIGEST_LENGTH];
-    MD5(itemData, BiosData->RightClickedItemModel.getVolume()->getSize(), md);
+
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    MD5(itemData, itemSize, md);
 
     QString hash;
     for (UINT8 i : md) {
@@ -581,9 +588,13 @@ void BiosViewerWindow::getMD5() const {
 }
 
 void BiosViewerWindow::getSHA1() const {
-    UINT8 *itemData = BiosData->RightClickedItemModel.getVolume()->getData();
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA_DIGEST_LENGTH];
-    SHA1(itemData, BiosData->RightClickedItemModel.getVolume()->getSize(), md);
+
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    SHA1(itemData, itemSize, md);
 
     QString hash;
     for (UINT8 i : md) {
@@ -604,9 +615,13 @@ void BiosViewerWindow::getSHA1() const {
 }
 
 void BiosViewerWindow::getSHA224() const {
-    UINT8 *itemData = BiosData->RightClickedItemModel.getVolume()->getData();
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA224_DIGEST_LENGTH];
-    SHA224(itemData, BiosData->RightClickedItemModel.getVolume()->getSize(), md);
+
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    SHA224(itemData, itemSize, md);
 
     QString hash;
     for (UINT8 i : md) {
@@ -626,9 +641,13 @@ void BiosViewerWindow::getSHA224() const {
 }
 
 void BiosViewerWindow::getSHA256() const {
-    UINT8 *itemData = BiosData->RightClickedItemModel.getVolume()->getData();
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA256_DIGEST_LENGTH];
-    SHA256(itemData, BiosData->RightClickedItemModel.getVolume()->getSize(), md);
+
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    SHA256(itemData, itemSize, md);
 
     QString hash;
     for (UINT8 i : md) {
@@ -648,9 +667,13 @@ void BiosViewerWindow::getSHA256() const {
 }
 
 void BiosViewerWindow::getSHA384() const {
-    UINT8 *itemData = BiosData->RightClickedItemModel.getVolume()->getData();
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA384_DIGEST_LENGTH];
-    SHA384(itemData, BiosData->RightClickedItemModel.getVolume()->getSize(), md);
+
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    SHA384(itemData, itemSize, md);
 
     QString hash;
     for (UINT8 i : md) {
@@ -670,9 +693,13 @@ void BiosViewerWindow::getSHA384() const {
 }
 
 void BiosViewerWindow::getSHA512() const {
-    UINT8 *itemData = BiosData->RightClickedItemModel.getVolume()->getData();
+    Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
+    UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA512_DIGEST_LENGTH];
-    SHA512(itemData, BiosData->RightClickedItemModel.getVolume()->getSize(), md);
+
+    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    SHA512(itemData, itemSize, md);
 
     QString hash;
     for (UINT8 i : md) {
