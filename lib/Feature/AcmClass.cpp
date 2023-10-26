@@ -39,16 +39,16 @@ void AcmHeaderClass::setInfoStr() {
        << setw(width) << "KeySize:"       << hex << uppercase << acmHeader.KeySize * 4 << "h\n"
        << setw(width) << "ScratchSize:"   << hex << uppercase << acmHeader.ScratchSize * 4 << "h\n";
 
-    if (isAcm3) {
-        ss << "ACM RSA Public Key:\n" << DumpHex(ExtAcmHeader3.Rsa3072PubKey, 384) << "\n"
-           << "ACM RSA Signature:\n" << DumpHex(ExtAcmHeader3.Rsa3072Sig, 384) << "\n"
-           << "Scratch:\n" << DumpHex(ExtAcmHeader3.Scratch, 832);
-    } else {
-        ss << setw(width) << "ACM RSA Public Key Exponent:" << hex << uppercase << ExtAcmHeader.RsaPubExp << "h\n"
-           << "ACM RSA Public Key:\n" << DumpHex(ExtAcmHeader.Rsa2048PubKey, 256) << "\n"
-           << "ACM RSA Signature:\n" << DumpHex(ExtAcmHeader.Rsa2048Sig, 256) << "\n"
-           << "Scratch:\n" << DumpHex(ExtAcmHeader.Scratch, 572);
-    }
+//    if (isAcm3) {
+//        ss << "ACM RSA Public Key:\n" << DumpHex(ExtAcmHeader3.Rsa3072PubKey, 384) << "\n"
+//           << "ACM RSA Signature:\n" << DumpHex(ExtAcmHeader3.Rsa3072Sig, 384) << "\n"
+//           << "Scratch:\n" << DumpHex(ExtAcmHeader3.Scratch, 832);
+//    } else {
+//        ss << setw(width) << "ACM RSA Public Key Exponent:" << hex << uppercase << ExtAcmHeader.RsaPubExp << "h\n"
+//           << "ACM RSA Public Key:\n" << DumpHex(ExtAcmHeader.Rsa2048PubKey, 256) << "\n"
+//           << "ACM RSA Signature:\n" << DumpHex(ExtAcmHeader.Rsa2048Sig, 256) << "\n"
+//           << "Scratch:\n" << DumpHex(ExtAcmHeader.Scratch, 572);
+//    }
 
     InfoStr = QString::fromStdString(ss.str());
 }

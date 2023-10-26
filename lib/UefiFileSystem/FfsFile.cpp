@@ -8,6 +8,7 @@
 #include "UEFI/GuidDatabase.h"
 #include "Feature/FspHeader.h"
 #include "Feature/MicrocodeClass.h"
+#include "Feature/AcmClass.h"
 using namespace BaseLibrarySpace;
 
 FfsFile::FfsFile(UINT8 *file, INT64 offset, bool Compressed, Volume* parent):
@@ -135,6 +136,10 @@ Volume* FfsFile::Reorganize() {
 
     if (guid == GuidDatabase::gIntelMicrocodeArrayFfsBinGuid) {
         newVolume = new MicrocodeHeaderClass(data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
+        newVolume->SelfDecode();
+    }
+    else if (guid == GuidDatabase::gStartupAcmPeiBinGuid) {
+        newVolume = new AcmHeaderClass(data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
         newVolume->SelfDecode();
     }
     else if (FspHeader::isFspHeader(data + getHeaderSize() + sizeof(EFI_COMMON_SECTION_HEADER))) {

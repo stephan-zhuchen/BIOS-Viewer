@@ -293,7 +293,7 @@ void DataModel::InitFromVolume(Volume *vol) {
             name = "BGUP";
             break;
         case VolumeType::BtgAcm:
-            name = "ACM";
+            name = "Startup Acm";
             break;
         case VolumeType::Microcodeversion:
             name = "Microcode Version";

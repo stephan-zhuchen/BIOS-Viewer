@@ -490,7 +490,7 @@ void CommonSection::setInfoStr() {
             break;
         case EFI_SECTION_RAW:
             if (ParentVolume->getVolumeSubType() == VolumeType::Apriori) {
-                ss << "Apriori List:\n";
+                ss << "\nApriori List:\n";
                 for (auto ApriFile: AprioriList) {
                     ss << guidData->getNameFromGuid(ApriFile) << "\n";
                 }
