@@ -288,12 +288,18 @@ void DataModel::InitFromVolume(Volume *vol) {
             break;
         case VolumeType::IniConfig:
             name = "Ini Config File";
+            type = "File";
+            subtype = "Raw";
             break;
         case VolumeType::BiosGuardPackage:
             name = "BGUP";
+            type = "File";
+            subtype = "Raw";
             break;
         case VolumeType::BtgAcm:
             name = "Startup Acm";
+            type = "File";
+            subtype = "Raw";
             break;
         case VolumeType::Microcodeversion:
             name = "Microcode Version";
