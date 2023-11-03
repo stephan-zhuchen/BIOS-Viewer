@@ -101,7 +101,7 @@ public:
     QAction*       showNvHex{nullptr};
     QAction*       ExtractRegion{nullptr};
     QAction*       ReplaceRegion{nullptr};
-    QAction*       ReplaceFile{nullptr};
+    QAction*       ReplaceAcm{nullptr};
     QAction*       md5_Menu{nullptr};
     QAction*       sha1_Menu{nullptr};
     QAction*       sha224_Menu{nullptr};
@@ -168,7 +168,7 @@ private slots:
     void extractBodyVolume();
     void extractIfwiRegion();
     void replaceIfwiRegion();
-    void replaceFfsContent();
+    void replaceAcmContent();
     void getMD5() const;
     void getSHA1() const;
     void getSHA224() const;

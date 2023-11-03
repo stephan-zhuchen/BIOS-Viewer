@@ -53,8 +53,8 @@ void BiosViewerWindow::InitCustomMenu() {
     ReplaceRegion = new QAction("Replace");
     connect(ReplaceRegion,SIGNAL(triggered(bool)),this,SLOT(replaceIfwiRegion()));
 
-    ReplaceFile = new QAction("Replace");
-    connect(ReplaceFile,SIGNAL(triggered(bool)),this,SLOT(replaceFfsContent()));
+    ReplaceAcm = new QAction("Replace");
+    connect(ReplaceAcm,SIGNAL(triggered(bool)),this,SLOT(replaceAcmContent()));
 
     md5_Menu = new QAction("MD5");
     connect(md5_Menu,SIGNAL(triggered(bool)),this,SLOT(getMD5()));
@@ -90,7 +90,7 @@ void BiosViewerWindow::CleanupCustomMenu() {
     safeDelete(showNvHex);
     safeDelete(ExtractRegion);
     safeDelete(ReplaceRegion);
-    safeDelete(ReplaceFile);
+    safeDelete(ReplaceAcm);
     safeDelete(md5_Menu);
     safeDelete(sha1_Menu);
     safeDelete(sha224_Menu);
@@ -191,9 +191,9 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
     }
 
     if (BiosData->RightClickedItemModel.getName() == "Startup Acm" && BiosData->RightClickedItemModel.getType() == "File") {
-        ReplaceFile->setText("Replace " + RegionName);
-        ReplaceFile->setIcon(replace);
-        CustomMenu->addAction(ReplaceFile);
+        ReplaceAcm->setText("Replace " + RegionName);
+        ReplaceAcm->setIcon(replace);
+        CustomMenu->addAction(ReplaceAcm);
     }
 
     DigestMenu->setIcon(key);
@@ -508,10 +508,10 @@ void BiosViewerWindow::replaceIfwiRegion() {
     ActionReplaceBIOSTriggered();
 }
 
-void BiosViewerWindow::replaceFfsContent() {
+void BiosViewerWindow::replaceAcmContent() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString FileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Replace File"),
+                                                    tr("Replace ACM"),
                                                     lastPath,
                                                     tr("File image(*.rom *.bin *.fd);;All files (*.*)"));
     if (FileName.isEmpty()) {
@@ -530,8 +530,8 @@ void BiosViewerWindow::replaceFfsContent() {
     INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     INT64 FileSize = itemSize - selectedVolume->getHeaderSize();
-    if (NewFileSize != FileSize) {
-        QMessageBox::critical(this, tr("BIOS Viewer"), "File size does not match!");
+    if (NewFileSize > FileSize) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "ACM size does not match!");
         return;
     }
     UINT8* NewFile = new UINT8[NewFileSize];
@@ -552,7 +552,7 @@ void BiosViewerWindow::replaceFfsContent() {
     QFileInfo fileInfo {WindowData->OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileInfo.baseName() + "_NewAcm.bin";
     outputPath = QFileDialog::getSaveFileName(this,
-                                              tr("Replace File"),
+                                              tr("Replace ACM"),
                                               outputPath,
                                               tr("Files(*.rom *.bin *.fd);;All files (*.*)"));
     saveBinary(outputPath.toStdString(), NewImage, 0, WindowData->InputImageSize);
