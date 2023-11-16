@@ -155,10 +155,6 @@ void BiosViewerWindow::loadBios() {
         title = BiosData->BiosImage->getBiosID();
 
     ui->titleInfomation->setText(title);
-    if (BiosData->BiosImage->isFitValid())
-        ui->infoButton->setVisible(true);
-    else
-        ui->infoButton->setVisible(false);
     ui->treeWidget->setCurrentIndex(ui->treeWidget->model()->index(0, 0, QModelIndex()));
     resizeEvent(nullptr);
 }

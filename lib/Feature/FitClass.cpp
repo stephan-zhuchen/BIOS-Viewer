@@ -74,49 +74,49 @@ QString FitTableClass::getTypeName(UINT8 type) {
             typeName = "Header";
             break;
         case FIT_TABLE_TYPE_MICROCODE:
-            typeName = "Microcode";
+            typeName = "Microcode (0x1)";
             break;
         case FIT_TABLE_TYPE_STARTUP_ACM:
-            typeName = "Startup ACM";
+            typeName = "Startup ACM (0x2)";
             break;
         case FIT_TABLE_TYPE_DIAGNST_ACM:
-            typeName = "Diagnst ACM";
+            typeName = "Diagnst ACM (0x3)";
             break;
         case FIT_TABLE_TYPE_PROT_BOOT_POLICY:
-            typeName = "Port Boot Policy";
+            typeName = "Port Boot Policy (0x4)";
             break;
         case FIT_TABLE_TYPE_BIOS_MODULE:
-            typeName = "BIOS Module";
+            typeName = "BIOS Module (0x7)";
             break;
         case FIT_TABLE_TYPE_TPM_POLICY:
-            typeName = "TPM Policy";
+            typeName = "TPM Policy (0x8)";
             break;
         case FIT_TABLE_TYPE_BIOS_POLICY:
-            typeName = "BIOS Policy";
+            typeName = "BIOS Policy (0x9)";
             break;
         case FIT_TABLE_TYPE_TXT_POLICY:
-            typeName = "TXT Policy";
+            typeName = "TXT Policy (0xA)";
             break;
         case FIT_TABLE_TYPE_KEY_MANIFEST:
-            typeName = "Key Manifest";
+            typeName = "Key Manifest (0xB)";
             break;
         case FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST:
-            typeName = "Boot Policy Manifest";
+            typeName = "Boot Policy Manifest (0xC)";
             break;
         case FIT_TABLE_TYPE_BIOS_DATA_AREA:
-            typeName = "BIOS Data Area";
+            typeName = "BIOS Data Area (0xD)";
             break;
         case FIT_TABLE_TYPE_CSE_SECURE_BOOT:
-            typeName = "CSE Secure Boot";
+            typeName = "CSE Secure Boot (0x10)";
             break;
         case FIT_TABLE_TYPE_VAB_PROVISION_TABLE:
-            typeName = "VAB Provision Table";
+            typeName = "VAB Provision Table (0x1A)";
             break;
         case FIT_TABLE_TYPE_VAB_BOOT_IMAGE_MANIFEST:
-            typeName = "Boot Image Manifest";
+            typeName = "Boot Image Manifest (0x1B)";
             break;
         case FIT_TABLE_TYPE_VAB_BOOT_KEY_MANIFEST:
-            typeName = "Boot Key Manifest";
+            typeName = "Boot Key Manifest (0x1C)";
             break;
         default:
             typeName = "Unknown";

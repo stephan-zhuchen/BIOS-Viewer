@@ -81,13 +81,21 @@ void InfoWindow::showTab() {
 }
 
 void InfoWindow::showFitTab() {
+    if (!BiosImage->isFitValid()) {
+        return;
+    }
+
     QTableWidgetItem    *item;
     FIRMWARE_INTERFACE_TABLE_ENTRY FitHeader = BiosImage->FitTable->FitHeader;
     UINT64 address = FitHeader.Address;
     QString FitSignature = QString::fromStdString(charToString((CHAR8*)&address, sizeof(UINT64), false));
     INT32 FitNum = (INT32)BiosImage->FitTable->FitEntryNum;
 
-    ui->tableWidget->setColumnCount(6);
+    QStringList headerLabels;
+    headerLabels << "Address" << "Size" << "Version" << "C_V" << "Checksum" << "Type";
+
+    ui->tableWidget->setColumnCount(headerLabels.size());
+    ui->tableWidget->setHorizontalHeaderLabels(headerLabels);
     ui->tableWidget->setRowCount(FitNum);
 
     item = new QTableWidgetItem(FitSignature);
@@ -135,6 +143,9 @@ void InfoWindow::showFitTab() {
 }
 
 void InfoWindow::showMicrocodeTab() {
+    if (!BiosImage->isFitValid()) {
+        return;
+    }
     for (auto MicrocodeEntry:BiosImage->FitTable->MicrocodeEntries) {
         QString ItemName = "Microcode";
         if (MicrocodeEntry->isEmpty)
@@ -150,6 +161,9 @@ void InfoWindow::showMicrocodeTab() {
 }
 
 void InfoWindow::showAcmTab() {
+    if (!BiosImage->isFitValid()) {
+        return;
+    }
     for (auto AcmEntry:BiosImage->FitTable->AcmEntries) {
         QString ItemName;
         if (!AcmEntry->isValid())
@@ -229,9 +243,13 @@ void InfoWindow::showFceTab() {
 //    ui->fceText->setText(text);
 }
 
+void InfoWindow::showEvent(QShowEvent *event) {
+    resizeEvent(nullptr);
+}
+
 void InfoWindow::resizeEvent(QResizeEvent *event) {
     int length = ui->tableWidget->width() / 6;
-    ui->tableWidget->setColumnWidth(InfoWindow::Address, length * 1.5);
+    ui->tableWidget->setColumnWidth(InfoWindow::Address, length);
     ui->tableWidget->setColumnWidth(InfoWindow::Size, length);
     ui->tableWidget->setColumnWidth(InfoWindow::Version, length);
     ui->tableWidget->setColumnWidth(InfoWindow::Type, length * 1.5);
