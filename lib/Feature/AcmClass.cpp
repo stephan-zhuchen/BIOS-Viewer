@@ -53,10 +53,19 @@ void AcmHeaderClass::setInfoStr() {
     InfoStr = QString::fromStdString(ss.str());
 }
 
+bool AcmHeaderClass::CheckValidation() {
+    acmHeader = *(ACM_HEADER*)data;
+    ValidFlag = (acmHeader.ModuleType == ACM_MODULE_TYPE_CHIPSET_ACM);
+    return ValidFlag;
+}
+
 INT64 AcmHeaderClass::SelfDecode() {
     Type = VolumeType::BtgAcm;
     acmHeader = *(ACM_HEADER*)data;
     ValidFlag = (acmHeader.ModuleType == ACM_MODULE_TYPE_CHIPSET_ACM);
+    if (!ValidFlag) {
+        return 0;
+    }
     ProdFlag = (acmHeader.Flags & 0x8000) == 0;
     if (acmHeader.HeaderVersion < ACM_HEADER_VERSION_3) {
         ExtAcmHeader = *(Ext_ACM_Header*)(data + sizeof(ACM_HEADER));
@@ -67,6 +76,11 @@ INT64 AcmHeaderClass::SelfDecode() {
     auto *AcmPtr = (UINT8 *)data;
     AcmPtr += acmHeader.HeaderLen * 4;
     AcmPtr += acmHeader.ScratchSize * 4;
+    INT64 AcmPtrOffset = (INT64)(AcmPtr - data);
+    if (AcmPtrOffset > size) {
+        ValidFlag = false;
+        return 0;
+    }
     AcmInfoTable = (ACM_INFO_TABLE *)AcmPtr;
     if (AcmInfoTable->AitVersion < ACM_INFO_TABLE_VERSION_9) {
         if (AcmInfoTable->Guid == GuidDatabase::gTxtAcmInfoTableGuid) {

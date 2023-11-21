@@ -21,6 +21,7 @@ public:
     AcmHeaderClass(UINT8* buffer, INT64 length, INT64 offset);
     ~AcmHeaderClass() override;
     void setInfoStr() override;
+    bool CheckValidation() override;
     INT64 SelfDecode() override;
 
     [[nodiscard]] inline bool isValid() const { return ValidFlag; };

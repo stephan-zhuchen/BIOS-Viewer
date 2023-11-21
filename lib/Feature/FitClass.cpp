@@ -48,7 +48,11 @@ FitTableClass::FitTableClass(UINT8 *fv, INT64 length) {
                     continue;
                 auto *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, 0, AcmAddress);
                 AcmEntry->SelfDecode();
-                AcmEntries.push_back(AcmEntry);
+                if (AcmEntry->isValid()) {
+                    AcmEntries.push_back(AcmEntry);
+                } else {
+                    delete AcmEntry;
+                }
             } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST || FitEntry.Type == FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST) {
                 // Use external BpmGen2 tool to parse KM and BPM info
                 continue;
