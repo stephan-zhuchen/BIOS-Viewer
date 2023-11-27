@@ -10,7 +10,7 @@
 #include <QPushButton>
 #include <QFileDialog>
 #include <QMimeData>
-#include "HexViewDialog.h"
+#include "HexViewWidget.h"
 #include "HexWindow.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
@@ -320,7 +320,7 @@ void QHexView::PasteAndInsertToContent() {
 
     BinaryEdited = true;
     if (!startFromMainWindow)
-        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+        ((HexViewWidget*)parentWidget)->setEditedState(BinaryEdited);
     else
         ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
 }
@@ -353,7 +353,7 @@ void QHexView::PasteAndOverlapToContent() {
 
     BinaryEdited = true;
     if (!startFromMainWindow)
-        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+        ((HexViewWidget*)parentWidget)->setEditedState(BinaryEdited);
     else
         ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
 }
@@ -361,8 +361,8 @@ void QHexView::PasteAndOverlapToContent() {
 void QHexView::DiscardChangedContent() {
     BinaryEdited = false;
     if (!startFromMainWindow) {
-        loadFromBuffer(((HexViewDialog*)parentWidget)->hexBuffer);
-        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+        loadFromBuffer(((HexViewWidget*)parentWidget)->hexBuffer);
+        ((HexViewWidget*)parentWidget)->setEditedState(BinaryEdited);
     }
     else {
         loadFromBuffer(((HexViewWindow*)parentWidget)->hexBuffer);

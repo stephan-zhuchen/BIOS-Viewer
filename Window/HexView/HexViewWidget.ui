@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>HexViewDialog</class>
- <widget class="QDialog" name="HexViewDialog">
+ <class>HexViewWidget</class>
+ <widget class="QWidget" name="HexViewWidget">
   <property name="geometry">
    <rect>
     <x>0</x>

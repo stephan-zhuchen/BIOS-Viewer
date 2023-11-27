@@ -1,5 +1,4 @@
-#ifndef HEXVIEWDIALOG_H
-#define HEXVIEWDIALOG_H
+#pragma once
 
 #include <QDialog>
 #include <QVBoxLayout>
@@ -7,18 +6,18 @@
 #include "Volume.h"
 
 namespace Ui {
-class HexViewDialog;
+class HexViewWidget;
 }
 
 class QHexView;
 
-class HexViewDialog : public QDialog
+class HexViewWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit HexViewDialog(bool darkMode, QWidget *parent = nullptr);
-    ~HexViewDialog();
+    explicit HexViewWidget(bool darkMode, QWidget *parent = nullptr);
+    ~HexViewWidget();
 
     void keyPressEvent(QKeyEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
@@ -29,7 +28,7 @@ public:
     void setNewHexBuffer(QByteArray &buffer);
 
     QHexView    *m_hexview;
-    Ui::HexViewDialog *ui;
+    Ui::HexViewWidget *ui;
     QAction     *AlignNoneAction;
     QAction     *AlignImageAction;
     QAction     *Align4GAction;
@@ -52,5 +51,3 @@ public slots:
     void HexDialogAlignImage();
     void HexDialogAlign4G();
 };
-
-#endif // HEXVIEWDIALOG_H

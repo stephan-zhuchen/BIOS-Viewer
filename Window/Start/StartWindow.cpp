@@ -89,6 +89,7 @@ StartWindow::~StartWindow() {
  */
 
 void StartWindow::initSettings() {
+    bool ResetSettings = false;
     DefaultSettings = {
         {"Theme",               "Light"},
         {"BiosViewerFontSize",  "12"},
@@ -108,8 +109,11 @@ void StartWindow::initSettings() {
         {"UseExternalGuid",     "false"}
     };
 
+    if (!setting.contains("Version") || setting.value("Version").toString() != "1.13") {
+        ResetSettings = true;
+    }
     for (const auto& defaultSetting : DefaultSettings) {
-        if (!setting.contains(defaultSetting.first)) {
+        if (!setting.contains(defaultSetting.first) || ResetSettings) {
             setting.setValue(defaultSetting.first, defaultSetting.second);
         }
     }
@@ -461,16 +465,22 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
         return QString(ba);
     };
 
+    QString ExternalToolInfo = "BpmGen2 Version 2.7.15 (May 12 2023)<br>"
+                               "Microsoft (R) COFF/PE Dumper Version 14.29.30146.0<br>"
+                               "ASL+ Optimizing Compiler/Disassembler Version 20230331";
+
     QString strText= QString("<html>"
                              "<head/>"
                              "<body>"
                              "<p><span style=' font-size:14pt; font-weight:700;'>%1</span></p>"
                              "<p>%2</p>"
-                             "<p>Built on %3 by <span style=' font-weight:700; color:#00aaff;'>%4</p>"
+                             "<p>%3</p>"
+                             "<p>Built on %4 by <span style=' font-weight:700; color:#00aaff;'>%5</p>"
                              "</body>"
                              "</html>").arg(
-                                            xorLambda("181315097a0c333f2d3f287a6b746b68", 0x5A),
+                                            xorLambda("181315097a0c333f2d3f287a6b746b69", 0x5A),
                                             xorLambda("13342e3f367a13342e3f28343b367a0f293f7a15343623", 0x5A),
+                                            ExternalToolInfo,
                                             __DATE__,
                                             xorLambda("00322f767a19323f34", 0x5A));
     QMessageBox::about(this, tr("About BIOS Viewer"), strText);

@@ -4,15 +4,15 @@
 #include <QActionGroup>
 #include <iostream>
 #include <string>
-#include "HexViewDialog.h"
-#include "ui_HexViewDialog.h"
+#include "HexViewWidget.h"
+#include "ui_HexViewWidget.h"
 #include "HexView/HexView.h"
 #include "BaseLib.h"
 
-HexViewDialog::HexViewDialog(bool darkMode, QWidget *parent) :
-    QDialog(parent),
+HexViewWidget::HexViewWidget(bool darkMode, QWidget *parent) :
+    QWidget(parent),
     m_hexview ( new QHexView(this) ),
-    ui(new Ui::HexViewDialog),
+    ui(new Ui::HexViewWidget),
     m_layout ( new QVBoxLayout ),
     setting(QSettings("Intel", "BiosViewer"))
 {
@@ -54,11 +54,11 @@ HexViewDialog::HexViewDialog(bool darkMode, QWidget *parent) :
     HexMenuBar->addMenu(addressMenu);
     m_layout->setMenuBar(HexMenuBar);
 
-    connect(gotoAction,       &QAction::triggered, this, &HexViewDialog::HexDialogGoto);
-    connect(searchAction,     &QAction::triggered, this, &HexViewDialog::HexDialogSearch);
-    connect(AlignNoneAction,  &QAction::triggered, this, &HexViewDialog::HexDialogAlignNone);
-    connect(AlignImageAction, &QAction::triggered, this, &HexViewDialog::HexDialogAlignImage);
-    connect(Align4GAction,    &QAction::triggered, this, &HexViewDialog::HexDialogAlign4G);
+    connect(gotoAction,       &QAction::triggered, this, &HexViewWidget::HexDialogGoto);
+    connect(searchAction,     &QAction::triggered, this, &HexViewWidget::HexDialogSearch);
+    connect(AlignNoneAction,  &QAction::triggered, this, &HexViewWidget::HexDialogAlignNone);
+    connect(AlignImageAction, &QAction::triggered, this, &HexViewWidget::HexDialogAlignImage);
+    connect(Align4GAction,    &QAction::triggered, this, &HexViewWidget::HexDialogAlign4G);
 
     title = windowTitle();
     m_hexview->setFrameShape(QFrame::NoFrame);
@@ -67,14 +67,14 @@ HexViewDialog::HexViewDialog(bool darkMode, QWidget *parent) :
     this->setLayout ( m_layout );
 }
 
-HexViewDialog::~HexViewDialog()
+HexViewWidget::~HexViewWidget()
 {
     delete ui;
     delete m_hexview;
     delete m_layout;
 }
 
-void HexViewDialog::loadBuffer(QByteArray buffer, Volume *image, INT64 imageOffset, INT64 imageSize, const QString &bufferName, const QString &imageName, bool Compressed) {
+void HexViewWidget::loadBuffer(QByteArray buffer, Volume *image, INT64 imageOffset, INT64 imageSize, const QString &bufferName, const QString &imageName, bool Compressed) {
     hexBuffer = buffer;
     NewHexBuffer = buffer;
     OpenedImage = image;
@@ -109,7 +109,7 @@ void HexViewDialog::loadBuffer(QByteArray buffer, Volume *image, INT64 imageOffs
     }
 }
 
-void HexViewDialog::saveImage() {
+void HexViewWidget::saveImage() {
     if (isCompressed) {
         int choice = QMessageBox::warning(this,
                                           tr("Hex Viewer"),
@@ -135,14 +135,14 @@ void HexViewDialog::saveImage() {
     BaseLibrarySpace::saveBinary(OpenedFileName.toStdString(), OpenedImage->getData(), 0, OpenedImage->getSize());
 }
 
-void HexViewDialog::setNewHexBuffer(QByteArray &buffer) {
+void HexViewWidget::setNewHexBuffer(QByteArray &buffer) {
     NewHexBuffer = buffer;
 }
 
-void HexViewDialog::keyPressEvent(QKeyEvent *event) {
+void HexViewWidget::keyPressEvent(QKeyEvent *event) {
 }
 
-void HexViewDialog::closeEvent(QCloseEvent *event) {
+void HexViewWidget::closeEvent(QCloseEvent *event) {
     QSettings windowSettings("Intel", "BiosViewer");
     windowSettings.setValue("HexDialog/geometry", saveGeometry());
 
@@ -179,7 +179,7 @@ void HexViewDialog::closeEvent(QCloseEvent *event) {
     }
 }
 
-void HexViewDialog::setEditedState(bool edited) {
+void HexViewWidget::setEditedState(bool edited) {
     if (edited == BinaryEdited) { // first save
         return;
     }
@@ -191,25 +191,25 @@ void HexViewDialog::setEditedState(bool edited) {
     }
 }
 
-void HexViewDialog::HexDialogGoto() {
+void HexViewWidget::HexDialogGoto() {
     m_hexview->actionGoto();
 }
 
-void HexViewDialog::HexDialogSearch() {
+void HexViewWidget::HexDialogSearch() {
     m_hexview->actionSearch();
 }
 
-void HexViewDialog::HexDialogAlignNone() {
+void HexViewWidget::HexDialogAlignNone() {
     m_hexview->setRelativeAddress();
     setting.setValue("HexAlign", "None");
 }
 
-void HexViewDialog::HexDialogAlignImage() {
+void HexViewWidget::HexDialogAlignImage() {
     m_hexview->setRelativeAddress(OpenedImageOffset);
     setting.setValue("HexAlign", "Image");
 }
 
-void HexViewDialog::HexDialogAlign4G() {
+void HexViewWidget::HexDialogAlign4G() {
     const INT64 ADDRESS_4G = 0x100000000;
     m_hexview->setRelativeAddress(ADDRESS_4G - OpenedImageSize + OpenedImageOffset);
     setting.setValue("HexAlign", "4G");

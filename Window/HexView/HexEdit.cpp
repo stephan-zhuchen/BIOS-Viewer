@@ -7,7 +7,7 @@
 #include <QMenu>
 #include <QApplication>
 #include "BaseLib.h"
-#include "HexViewDialog.h"
+#include "HexViewWidget.h"
 #include "HexWindow.h"
 
 using namespace BaseLibrarySpace;
@@ -27,9 +27,9 @@ void QHexView::keyPressEvent(QKeyEvent *event) {
     } else if( (event ->modifiers() & Qt::ControlModifier) != 0 && event ->key() == Qt::Key_S && BinaryEdited ) {
         BinaryEdited = false;
         if (!startFromMainWindow) {
-            ((HexViewDialog*)parentWidget)->setNewHexBuffer(HexDataArray);
-            ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
-            ((HexViewDialog*)parentWidget)->saveImage();
+            ((HexViewWidget*)parentWidget)->setNewHexBuffer(HexDataArray);
+            ((HexViewWidget*)parentWidget)->setEditedState(BinaryEdited);
+            ((HexViewWidget*)parentWidget)->saveImage();
         } else {
             ((HexViewWindow*)parentWidget)->setNewHexBuffer(HexDataArray);
             ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
@@ -428,7 +428,7 @@ void QHexView::binaryEdit(char inputChar) {
     setCursorPos(CursorPosition + 1);
     BinaryEdited = true;
     if (!startFromMainWindow)
-        ((HexViewDialog*)parentWidget)->setEditedState(BinaryEdited);
+        ((HexViewWidget*)parentWidget)->setEditedState(BinaryEdited);
     else
         ((HexViewWindow*)parentWidget)->setEditedState(BinaryEdited);
 }

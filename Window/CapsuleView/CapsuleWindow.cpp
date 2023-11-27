@@ -15,7 +15,7 @@
 #include "IfwiRegion/PdtRegion.h"
 #include "IfwiRegion/GbeRegion.h"
 #include "UEFI/GuidDatabase.h"
-#include "HexView/HexViewDialog.h"
+#include "HexView/HexViewWidget.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
 
@@ -503,7 +503,7 @@ void CapsuleWindow::showListCustomMenu(const QPoint &pos) {
 }
 
 void CapsuleWindow::showHexView() {
-    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     if (WindowData->DarkmodeFlag) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }

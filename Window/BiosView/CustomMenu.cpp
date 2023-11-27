@@ -5,7 +5,7 @@
 #include <QClipboard>
 #include "BaseLib.h"
 #include "BiosWindow.h"
-#include "HexView/HexViewDialog.h"
+#include "HexView/HexViewWidget.h"
 #include "TabWindow/TabWindow.h"
 #include "UefiFileSystem/NvVariable.h"
 #include "Feature/BiosGuardClass.h"
@@ -210,7 +210,7 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
 }
 
 void BiosViewerWindow::showHexView() const {
-    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -239,7 +239,7 @@ void BiosViewerWindow::showBodyHexView() {
         return;
     }
 
-    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -272,7 +272,7 @@ void BiosViewerWindow::showDecompressedHexView() {
     }
 
     auto *hexViewData = new QByteArray((char*)DecompressedVector.data(), DecompressedVector.size());
-    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -300,7 +300,7 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
     }
 
     auto *hexViewData = new QByteArray((char*)DecompressedBios.data(), DecompressedBios.size());
-    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -319,7 +319,7 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
 
 void BiosViewerWindow::showNvHexView() const {
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
-    auto *hexDialog = new HexViewDialog(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     UINT8 *NvData = ((NvVariableEntry*)(selectedVolume))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(selectedVolume))->DataSize;
     auto *hexViewData = new QByteArray((char*)NvData, NvDataSize);

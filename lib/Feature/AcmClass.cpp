@@ -76,11 +76,12 @@ INT64 AcmHeaderClass::SelfDecode() {
     auto *AcmPtr = (UINT8 *)data;
     AcmPtr += acmHeader.HeaderLen * 4;
     AcmPtr += acmHeader.ScratchSize * 4;
-    INT64 AcmPtrOffset = (INT64)(AcmPtr - data);
-    if (AcmPtrOffset > size) {
-        ValidFlag = false;
-        return 0;
-    }
+//    INT64 AcmPtrOffset = (INT64)(AcmPtr - data);
+//    if (AcmPtrOffset > size) {
+//        ValidFlag = false;
+//        qDebug() << "invalid acm size";
+//        return 0;
+//    }
     AcmInfoTable = (ACM_INFO_TABLE *)AcmPtr;
     if (AcmInfoTable->AitVersion < ACM_INFO_TABLE_VERSION_9) {
         if (AcmInfoTable->Guid == GuidDatabase::gTxtAcmInfoTableGuid) {
