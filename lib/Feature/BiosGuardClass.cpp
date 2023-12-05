@@ -291,6 +291,9 @@ BiosGuardClass::BiosGuardClass(UINT8* buffer, INT64 length, INT64 offset):
 INT64 BiosGuardClass::SelfDecode() {
     Type = VolumeType::BiosGuardPackage;
     BgupHeader = *(BGUP_HEADER*)data;
+    if (BgupHeader.Version != 0x2) {
+        return 0;
+    }
     decodeBgsl(data + sizeof(BGUP_HEADER), BgupHeader.ScriptSectionSize);
     INT64 BgupCSize = size - sizeof(BGUP_HEADER) - BgupHeader.ScriptSectionSize;
     BgupCHeader = *(BGUPC_HEADER*)(data + sizeof(BGUP_HEADER) + BgupHeader.ScriptSectionSize);

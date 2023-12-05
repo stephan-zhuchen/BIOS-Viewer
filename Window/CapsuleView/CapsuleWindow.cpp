@@ -422,10 +422,13 @@ void CapsuleWindow::ParseMicrocodeCapsule(INT64 CapsuleOffset) {
         UINT32 BgupSize = swapEndian<UINT32>(XDR);
         bgupFfsOffset += 4;
         auto bgup = new BiosGuardClass(WindowData->InputImage + bgupFfsOffset, BgupSize, bgupFfsOffset);
-        bgup->SelfDecode();
-        bgup->setVolumeType(VolumeType::UserDefined);
-        bgup->setContent("uCode");
-        CapsuleData->VolumeDataList.append(bgup);
+        if (bgup->SelfDecode() == 0) {
+            delete bgup;
+        } else {
+            bgup->setVolumeType(VolumeType::UserDefined);
+            bgup->setContent("uCode");
+            CapsuleData->VolumeDataList.append(bgup);
+        }
     }
 }
 
