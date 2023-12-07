@@ -12,9 +12,6 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QSettings>
-#include <vector>
-#include <iostream>
-#include <memory>
 #include "Capsule/CapsuleHeader.h"
 #include "DataModel.h"
 #include "./ui_CapsuleWindow.h"
@@ -34,6 +31,7 @@ public:
     Volume                       *OverviewVolume{nullptr};
     DataModel                    RightClickedItemModel;
     QString                      CapsuleType;
+    QString                      OverviewInfo;
 
     CapsuleViewerData()=default;
     ~CapsuleViewerData();

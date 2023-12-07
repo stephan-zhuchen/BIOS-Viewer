@@ -36,4 +36,5 @@ public:
 
     void setContent(QString content);
     void decodeBgsl(UINT8* buffer, INT64 length);
+    QString getPlatID();
 };

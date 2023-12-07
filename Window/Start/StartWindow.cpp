@@ -90,11 +90,13 @@ StartWindow::~StartWindow() {
 
 void StartWindow::initSettings() {
     bool ResetSettings = false;
+    QString BiosViewerVersion = "1.13";
     DefaultSettings = {
+        {"Version",             BiosViewerVersion},
         {"Theme",               "Light"},
         {"BiosViewerFontSize",  "12"},
         {"BiosViewerFont",      "Microsoft YaHei UI"},
-        {"ShowPaddingItem",     "false"},
+        {"ShowPaddingItem",     "true"},
         {"InfoFontSize",        "12"},
         {"InfoFont",            "Fira Code"},
         {"InfoLineSpacing",     "2"},
@@ -109,7 +111,7 @@ void StartWindow::initSettings() {
         {"UseExternalGuid",     "false"}
     };
 
-    if (!setting.contains("Version") || setting.value("Version").toString() != "1.13") {
+    if (!setting.contains("Version") || setting.value("Version").toString() != BiosViewerVersion) {
         ResetSettings = true;
     }
     for (const auto& defaultSetting : DefaultSettings) {

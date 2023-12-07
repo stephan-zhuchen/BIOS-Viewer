@@ -177,6 +177,10 @@ void CapsuleWindow::LoadCapsule() {
 
     addListItem(CapsuleData->VolumeDataList);
     ui->CapsuleTitle->setText("Capsule: " + CapsuleData->CapsuleType);
+    CapsuleData->OverviewVolume->setInfoText(CapsuleData->OverviewInfo);
+
+    if (ui->listWidget->model()->rowCount() != 0)
+        ui->listWidget->setCurrentRow(0);
 }
 
 void CapsuleWindow::ParseStandardCapsule(INT64 CapsuleOffset, const QString& CapsuleType) {
@@ -189,12 +193,14 @@ void CapsuleWindow::ParseStandardCapsule(INT64 CapsuleOffset, const QString& Cap
 
     // Firmware Header
     INT64 offset = CapsuleOffset;
-    auto fv = FirmwareVolume(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
-    INT64 fvSize = fv.SelfDecode();
+    auto fv = new FirmwareVolume(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 fvSize = fv->SelfDecode();
     if (fvSize == 0) {
+        delete fv;
         return;
     }
-    offset += fv.getHeaderSize();
+    CapsuleData->VolumeDataList.append(fv);
+    offset += fv->getHeaderSize();
 
     // FFS File Header + Ini Config File
     Align(offset, CapsuleOffset, 0x8);
@@ -234,12 +240,14 @@ void CapsuleWindow::ParseMonolithicCapsule(INT64 CapsuleOffset) {
 
     // Firmware Header
     INT64 offset = CapsuleOffset;
-    auto fv = FirmwareVolume(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
-    INT64 fvSize = fv.SelfDecode();
+    auto fv = new FirmwareVolume(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 fvSize = fv->SelfDecode();
     if (fvSize == 0) {
+        delete fv;
         return;
     }
-    offset += fv.getHeaderSize();
+    CapsuleData->VolumeDataList.append(fv);
+    offset += fv->getHeaderSize();
 
     // FFS File Header + Ini Config File
     Align(offset, CapsuleOffset, 0x8);
@@ -375,12 +383,15 @@ void CapsuleWindow::ParseMicrocodeCapsule(INT64 CapsuleOffset) {
 
     // Firmware Header
     INT64 offset = CapsuleOffset;
-    auto fv = FirmwareVolume(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
-    INT64 fvSize = fv.SelfDecode();
+    auto fv = new FirmwareVolume(WindowData->InputImage + offset, WindowData->InputImageSize - offset, offset);
+    INT64 fvSize = fv->SelfDecode();
     if (fvSize == 0) {
+        delete fv;
         return;
     }
-    offset += fv.getHeaderSize();
+    CapsuleData->VolumeDataList.append(fv);
+    CapsuleData->OverviewInfo += "Microcode FV size: 0x" + QString::number(fvSize, 16) + "\n\n";
+    offset += fv->getHeaderSize();
     Align(offset, CapsuleOffset, 0x8);
 
     // FFS File Header + Microcode Version file
@@ -393,7 +404,6 @@ void CapsuleWindow::ParseMicrocodeCapsule(INT64 CapsuleOffset) {
     auto version = new MicrocodeVersion(WindowData->InputImage + offset, versionFfs.getSize() - versionFfs.getHeaderSize(), offset);
     version->SelfDecode();
     CapsuleData->VolumeDataList.append(version);
-    offset += version->getSize();
 
     // FFS File Header + Microcode Payload
     // Microcode address is located at an offset of 0x1000 after the Firmware header.
@@ -413,6 +423,7 @@ void CapsuleWindow::ParseMicrocodeCapsule(INT64 CapsuleOffset) {
             continue;
         }
         CapsuleData->VolumeDataList.append(microcode);
+        CapsuleData->OverviewInfo += "Microcode ID: " + QString::number(microcode->microcodeHeader.ProcessorSignature.Uint32, 16) + "\n";
     }
 
     // XDR Header + Bgup Payload (Optional)
@@ -428,6 +439,7 @@ void CapsuleWindow::ParseMicrocodeCapsule(INT64 CapsuleOffset) {
             bgup->setVolumeType(VolumeType::UserDefined);
             bgup->setContent("uCode");
             CapsuleData->VolumeDataList.append(bgup);
+            CapsuleData->OverviewInfo += "PlatID: " + bgup->getPlatID() + "\n\n";
         }
     }
 }

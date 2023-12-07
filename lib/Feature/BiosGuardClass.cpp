@@ -395,6 +395,11 @@ void BiosGuardClass::decodeBgsl(UINT8 *buffer, INT64 length) {
     BiosGuardScript = Script.join("\n");
 }
 
+QString BiosGuardClass::getPlatID() {
+    QString PlatID = QString::fromStdString(charToString((CHAR8*)BgupHeader.PlatId, 16));
+    return PlatID;
+}
+
 void BiosGuardClass::setInfoStr() {
     INT32 width = 20;
     stringstream ss;

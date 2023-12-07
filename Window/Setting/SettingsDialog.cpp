@@ -2,7 +2,6 @@
 #include "ui_SettingsDialog.h"
 #include <QPainter>
 #include <QPainterPath>
-#include <iostream>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -125,8 +124,7 @@ void SettingsDialog::infoFontBoxActivated(int index)
     CurrentSettings.InfoFont = ui->infoFontBox->currentText();
 }
 
-void SettingsDialog::buttonBoxAccepted()
-{
+void SettingsDialog::buttonBoxAccepted() {
     setting.setValue("BiosViewerFontSize", CurrentSettings.BiosViewerFontSize);
     setting.setValue("BiosViewerFont", CurrentSettings.BiosViewerFont);
     setting.setValue("InfoFontSize", CurrentSettings.InfoFontSize);
