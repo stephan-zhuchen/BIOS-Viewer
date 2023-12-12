@@ -359,16 +359,21 @@ INT64 CapsuleWindow::ParseBgupInFfs(INT64 BgupOffset, IniConfigFile *ConfigIni) 
     if (bgupSize == 0) {
         return 0;
     }
-    INT64 offset = BgupOffset + bgupFile.getHeaderSize();
+    INT64 BgupAddress = BgupOffset + bgupFile.getHeaderSize();
     for (BgupConfig &config : ConfigIni->BgupList) {
+        INT64 offset = BgupAddress + config.BgupOffset;
         auto bgup = new BiosGuardClass(WindowData->InputImage + offset, config.BgupSize, offset);
         bgup->SelfDecode();
         bgup->setVolumeType(VolumeType::UserDefined);
         bgup->setContent(QString::fromStdString(config.BgupContent));
         CapsuleData->VolumeDataList.append(bgup);
-        offset += config.BgupOffset;
     }
-    return offset;
+
+    for (BgupConfig &config : ConfigIni->BgupList) {
+        BgupAddress += config.BgupSize;
+    }
+
+    return BgupAddress;
 }
 
 void CapsuleWindow::ParseMicrocodeCapsule(INT64 CapsuleOffset) {
