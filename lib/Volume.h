@@ -24,6 +24,7 @@ enum class VolumeType {
     UplInfo,
     Apriori,
     FspHeader,
+    FspBootManifest,
     AcpiTable,
     FlashDescriptor,
     EC,

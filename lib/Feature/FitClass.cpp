@@ -5,6 +5,7 @@
 #include "FitClass.h"
 #include "Feature/AcmClass.h"
 #include "Feature/MicrocodeClass.h"
+#include "Feature/FspBootManifestClass.h"
 
 using namespace BaseLibrarySpace;
 
@@ -56,6 +57,14 @@ FitTableClass::FitTableClass(UINT8 *fv, INT64 length) {
             } else if (FitEntry.Type == FIT_TABLE_TYPE_KEY_MANIFEST || FitEntry.Type == FIT_TABLE_TYPE_BOOT_POLICY_MANIFEST) {
                 // Use external BpmGen2 tool to parse KM and BPM info
                 continue;
+            } else if (FitEntry.Type == FIT_TABLE_TYPE_BIOS_DATA_AREA) {
+                UINT64 FbmAddress = FitEntry.Address & 0xFFFFFF;
+                UINT64 RelativeFbmAddress = adjustBufferAddress(0x1000000, FbmAddress, length);
+                FbmEntry = new FspBootManifestClass(fv + RelativeFbmAddress, 0, FbmAddress);
+                FbmEntry->SelfDecode();
+                if (!FbmEntry->isValid()) {
+                    safeDelete(FbmEntry);
+                }
             }
         }
     } else {
@@ -69,6 +78,7 @@ FitTableClass::~FitTableClass() {
         safeDelete(MicrocodeEntry);
     for (auto AcmEntry:AcmEntries)
         safeDelete(AcmEntry);
+    safeDelete(FbmEntry);
 }
 
 QString FitTableClass::getTypeName(UINT8 type) {
@@ -108,7 +118,7 @@ QString FitTableClass::getTypeName(UINT8 type) {
             typeName = "Boot Policy Manifest (0xC)";
             break;
         case FIT_TABLE_TYPE_BIOS_DATA_AREA:
-            typeName = "BIOS Data Area (0xD)";
+            typeName = "FSP Boot Manifest (0xD)";
             break;
         case FIT_TABLE_TYPE_CSE_SECURE_BOOT:
             typeName = "CSE Secure Boot (0x10)";

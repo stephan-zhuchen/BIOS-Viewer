@@ -406,16 +406,16 @@ void BiosGuardClass::setInfoStr() {
     ss.setf(ios::left);
 
     ss << "BGUP_HEADER\n";
-    ss << setw(width) << "Version:"          << hex << uppercase << BgupHeader.Version << "h\n"
-       << setw(width) << "PlatId:"           << hex << uppercase << charToString((CHAR8*)BgupHeader.PlatId, 16) << "\n"
-       << setw(width) << "PkgAttributes:"    << hex << uppercase << BgupHeader.PkgAttributes << "h\n"
-       << setw(width) << "PslMajorVer:"      << hex << uppercase << BgupHeader.PslMajorVer << "h\n"
-       << setw(width) << "PslMinorVer:"      << hex << uppercase << BgupHeader.PslMinorVer << "h\n"
+    ss << setw(width) << "Version:"           << hex << uppercase << BgupHeader.Version << "h\n"
+       << setw(width) << "PlatId:"            << hex << uppercase << charToString((CHAR8*)BgupHeader.PlatId, 16) << "\n"
+       << setw(width) << "PkgAttributes:"     << hex << uppercase << BgupHeader.PkgAttributes << "h\n"
+       << setw(width) << "PslMajorVer:"       << hex << uppercase << BgupHeader.PslMajorVer << "h\n"
+       << setw(width) << "PslMinorVer:"       << hex << uppercase << BgupHeader.PslMinorVer << "h\n"
        << setw(width) << "ScriptSectionSize:" << hex << uppercase << BgupHeader.ScriptSectionSize << "h\n"
-       << setw(width) << "DataSectionSize:"  << hex << uppercase << BgupHeader.DataSectionSize << "h\n"
-       << setw(width) << "BiosSvn:"          << hex << uppercase << BgupHeader.BiosSvn << "h\n"
-       << setw(width) << "EcSvn:"            << hex << uppercase << BgupHeader.EcSvn << "h\n"
-       << setw(width) << "VendorSpecific:"   << hex << uppercase << BgupHeader.VendorSpecific << "h\n";
+       << setw(width) << "DataSectionSize:"   << hex << uppercase << BgupHeader.DataSectionSize << "h\n"
+       << setw(width) << "BiosSvn:"           << hex << uppercase << BgupHeader.BiosSvn << "h\n"
+       << setw(width) << "EcSvn:"             << hex << uppercase << BgupHeader.EcSvn << "h\n"
+       << setw(width) << "VendorSpecific:"    << hex << uppercase << BgupHeader.VendorSpecific << "h\n";
 
     ss << "\nBios Guard Script:\n"
        << BiosGuardScript.toStdString();

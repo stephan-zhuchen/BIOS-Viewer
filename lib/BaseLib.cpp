@@ -222,7 +222,7 @@ namespace BaseLibrarySpace {
         return (INT32)*(UINT32*)address & 0xFFFFFF;
     }
 
-    string DumpHex(UINT8* HexData, INT64 length, INT64 ColumeSize, bool SingleLine) {
+    string DumpHex(UINT8* HexData, INT64 length, INT64 ColumeSize, bool SingleLine, INT64 indent) {
         auto InternalDumpData = [](stringstream &ss, UINT8* Data, INT64 Size) {
             for (INT64 Index = 0; Index < Size; Index++) {
                 ss << setw(2) << setfill('0') << hex << (UINT16)Data[Index] << " ";
@@ -231,7 +231,7 @@ namespace BaseLibrarySpace {
         stringstream ss;
         if (SingleLine) {
             for (int i = 0; i < length; ++i) {
-                ss << setw(2) << setfill('0') << hex << (UINT16)HexData[i];
+                ss << setw(indent) << std::setfill(' ') << "" << setw(2) << setfill('0') << hex << (UINT16)HexData[i];
             }
             return ss.str();
         }
@@ -240,12 +240,12 @@ namespace BaseLibrarySpace {
         INT64 Count = length / ColumeSize;
         INT64 Left  = length % ColumeSize;
         for (Index = 0; Index < Count; Index++) {
-            ss << setw(3) << setfill('0') << hex << Index * ColumeSize << ": ";
+            ss << setw(indent) << std::setfill(' ') << "" << setw(4) << setfill('0') << hex << Index * ColumeSize << ": ";
             InternalDumpData(ss, HexData + Index * ColumeSize, ColumeSize);
             ss << "\n";
         }
         if (Left != 0) {
-            ss << setw(3) << setfill('0') << hex << Index * ColumeSize << ": ";
+            ss << setw(indent) << std::setfill(' ') << "" << setw(4) << setfill('0') << hex << Index * ColumeSize << ": ";
             InternalDumpData (ss, HexData + Index * ColumeSize, Left);
             ss << "\n";
         }

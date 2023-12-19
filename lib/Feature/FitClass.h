@@ -7,6 +7,7 @@
 
 class MicrocodeHeaderClass;
 class AcmHeaderClass;
+class FspBootManifestClass;
 
 class FitTableClass {
 public:
@@ -14,6 +15,7 @@ public:
     QVector<FIRMWARE_INTERFACE_TABLE_ENTRY> FitEntries;
     QVector<MicrocodeHeaderClass*>          MicrocodeEntries;
     QVector<AcmHeaderClass*>                AcmEntries;
+    FspBootManifestClass                    *FbmEntry{nullptr};
     INT64 FitEntryNum{0};
     bool  isValid{false};
     bool  isChecksumValid{false};

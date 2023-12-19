@@ -148,6 +148,8 @@ Volume* FfsFile::Reorganize() {
         if (fspVolume->SelfDecode() != 0) {
             newVolume = fspVolume;
             RemainChild = false;
+        } else {
+            safeDelete(fspVolume);
         }
     }
 

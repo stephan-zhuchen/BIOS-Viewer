@@ -11,6 +11,7 @@
 #include "ui_InfoWindow.h"
 #include "Feature/AcmClass.h"
 #include "Feature/MicrocodeClass.h"
+#include "Feature/FspBootManifestClass.h"
 
 using namespace BaseLibrarySpace;
 
@@ -187,8 +188,14 @@ void InfoWindow::showBtgTab() {
     ui->BtgListWidget->addItem(KmItem);
 
     ItemName = "Boot Policy Manifest";
-    auto *BpItem = new QListWidgetItem(ItemName);
-    ui->BtgListWidget->addItem(BpItem);
+    auto *BpmItem = new QListWidgetItem(ItemName);
+    ui->BtgListWidget->addItem(BpmItem);
+
+    if (BiosImage->isFitValid() && BiosImage->FitTable->FbmEntry != nullptr) {
+        ItemName = "FSP Boot Manifest";
+        auto *FbmItem = new QListWidgetItem(ItemName);
+        ui->BtgListWidget->addItem(FbmItem);
+    }
 
     ItemName = "BPM DEF";
     auto *BpDefItem = new QListWidgetItem(ItemName);
@@ -313,6 +320,10 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
         text = BpmToolVersion + BpmGen2Text.mid(KmIndex);
     } else if (item->text() == "Boot Policy Manifest") {
         text = BpmToolVersion + BpmGen2Text.mid(BpmIndex, KmIndex - BpmIndex);
+    } else if (item->text() == "FSP Boot Manifest") {
+        FspBootManifestClass* FbmEntry = BiosImage->FitTable->FbmEntry;
+        FbmEntry->setInfoStr();
+        text = FbmEntry->getInfoText();
     } else if (item->text() == "BPM DEF") {
         process = new QProcess(this);
         QString lastPath = setting.value("LastFilePath").toString();

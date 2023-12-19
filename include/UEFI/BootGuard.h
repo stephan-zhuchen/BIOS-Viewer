@@ -66,6 +66,60 @@
 #define PROC_INFO_LIST_ID                               "LUPC"
 #define TPM_INFO_TABLE_ID                               "LMPT"
 
+typedef UINT32 TPM_ALGORITHM_ID;
+#define TPM_ALG_RSA     ((TPM_ALGORITHM_ID) 0x00000001)             ///< The RSA algorithm.
+#define TPM_ALG_DES     ((TPM_ALGORITHM_ID) 0x00000002)             ///< The DES algorithm
+#define TPM_ALG_3DES    ((TPM_ALGORITHM_ID) 0x00000003)             ///< The 3DES algorithm in EDE mode
+#define TPM_ALG_SHA     ((TPM_ALGORITHM_ID) 0x00000004)             ///< The SHA1 algorithm
+#define TPM_ALG_HMAC    ((TPM_ALGORITHM_ID) 0x00000005)             ///< The RFC 2104 HMAC algorithm
+#define TPM_ALG_AES128  ((TPM_ALGORITHM_ID) 0x00000006)             ///< The AES algorithm, key size 128
+#define TPM_ALG_MGF1    ((TPM_ALGORITHM_ID) 0x00000007)             ///< The XOR algorithm using MGF1 to create a string the size of the encrypted block
+#define TPM_ALG_AES192  ((TPM_ALGORITHM_ID) 0x00000008)             ///< AES, key size 192
+#define TPM_ALG_AES256  ((TPM_ALGORITHM_ID) 0x00000009)             ///< AES, key size 256
+#define TPM_ALG_XOR     ((TPM_ALGORITHM_ID) 0x0000000A)             ///< XOR using the rolling nonces
+
+typedef UINT16 TPM_ALG_ID;
+//
+// NOTE: Comment some algo which has same name as TPM1.2 (value is same, so not runtime issue)
+//
+#define TPM_ALG_ERROR  (TPM_ALG_ID)(0x0000)
+#define TPM_ALG_FIRST  (TPM_ALG_ID)(0x0001)
+// #define TPM_ALG_RSA            (TPM_ALG_ID)(0x0001)
+// #define TPM_ALG_SHA            (TPM_ALG_ID)(0x0004)
+#define TPM_ALG_SHA1  (TPM_ALG_ID)(0x0004)
+// #define TPM_ALG_HMAC           (TPM_ALG_ID)(0x0005)
+#define TPM_ALG_AES  (TPM_ALG_ID)(0x0006)
+// #define TPM_ALG_MGF1           (TPM_ALG_ID)(0x0007)
+#define TPM_ALG_KEYEDHASH  (TPM_ALG_ID)(0x0008)
+// #define TPM_ALG_XOR            (TPM_ALG_ID)(0x000A)
+#define TPM_ALG_SHA256          (TPM_ALG_ID)(0x000B)
+#define TPM_ALG_SHA384          (TPM_ALG_ID)(0x000C)
+#define TPM_ALG_SHA512          (TPM_ALG_ID)(0x000D)
+#define TPM_ALG_NULL            (TPM_ALG_ID)(0x0010)
+#define TPM_ALG_SM3_256         (TPM_ALG_ID)(0x0012)
+#define TPM_ALG_SM4             (TPM_ALG_ID)(0x0013)
+#define TPM_ALG_RSASSA          (TPM_ALG_ID)(0x0014)
+#define TPM_ALG_RSAES           (TPM_ALG_ID)(0x0015)
+#define TPM_ALG_RSAPSS          (TPM_ALG_ID)(0x0016)
+#define TPM_ALG_OAEP            (TPM_ALG_ID)(0x0017)
+#define TPM_ALG_ECDSA           (TPM_ALG_ID)(0x0018)
+#define TPM_ALG_ECDH            (TPM_ALG_ID)(0x0019)
+#define TPM_ALG_ECDAA           (TPM_ALG_ID)(0x001A)
+#define TPM_ALG_SM2             (TPM_ALG_ID)(0x001B)
+#define TPM_ALG_ECSCHNORR       (TPM_ALG_ID)(0x001C)
+#define TPM_ALG_ECMQV           (TPM_ALG_ID)(0x001D)
+#define TPM_ALG_KDF1_SP800_56a  (TPM_ALG_ID)(0x0020)
+#define TPM_ALG_KDF2            (TPM_ALG_ID)(0x0021)
+#define TPM_ALG_KDF1_SP800_108  (TPM_ALG_ID)(0x0022)
+#define TPM_ALG_ECC             (TPM_ALG_ID)(0x0023)
+#define TPM_ALG_SYMCIPHER       (TPM_ALG_ID)(0x0025)
+#define TPM_ALG_CTR             (TPM_ALG_ID)(0x0040)
+#define TPM_ALG_OFB             (TPM_ALG_ID)(0x0041)
+#define TPM_ALG_CBC             (TPM_ALG_ID)(0x0042)
+#define TPM_ALG_CFB             (TPM_ALG_ID)(0x0043)
+#define TPM_ALG_ECB             (TPM_ALG_ID)(0x0044)
+#define TPM_ALG_LAST            (TPM_ALG_ID)(0x0044)
+
 typedef struct {
   UINT16     ModuleType;
   UINT16     ModuleSubType;
@@ -157,6 +211,7 @@ struct ACM_VERSION {
 #define SHA256_DIGEST_SIZE                  32
 #define SHA384_DIGEST_SIZE                  48
 #define SM3_256_DIGEST_SIZE                 32
+#define SHA512_DIGEST_SIZE                  64
 
 typedef union {
     UINT8   digest8[SHA1_DIGEST_SIZE];
@@ -174,6 +229,12 @@ typedef union {
     UINT32  digest32[SHA384_DIGEST_SIZE / 4];
     UINT64  digest64[SHA384_DIGEST_SIZE / 8];
 } BtgSha384Digest_u;
+
+typedef union {
+    UINT8   digest8[SHA512_DIGEST_SIZE];
+    UINT32  digest32[SHA512_DIGEST_SIZE / 4];
+    UINT64  digest64[SHA512_DIGEST_SIZE / 8];
+} BtgSha512Digest_u;
 
 //
 // Hash structure
@@ -197,6 +258,12 @@ typedef struct {
 } SHA384_HASH_STRUCTURE;
 
 typedef struct {
+    UINT16               HashAlg;
+    UINT16               Size;
+    BtgSha512Digest_u    HashBuffer;
+} SHA512_HASH_STRUCTURE;
+
+typedef struct {
   UINT16               HashAlg;
   UINT16               Size;
   UINT8                HashBuffer[1];
@@ -214,12 +281,12 @@ typedef struct {
 } HASH_LIST;
 
 typedef struct {
-  UINT16                 Size;         //Total number of bytes of HASH_LIST structure
-  UINT16                 Count;        //Number of Digest elements
-  SHA1_HASH_STRUCTURE    Sha1Digest;   //Array of digests  {AlgID, Size, HashValue; ...}
-  SHA256_HASH_STRUCTURE  Sha256Digest; //Array of digests  {AlgID, Size, HashValue; ...}
-  SHA256_HASH_STRUCTURE  ShaSm3Digest; //Array of digests  {AlgID, Size, HashValue; ...}
-  SHA384_HASH_STRUCTURE  Sha384Digest; //Array of digests  {AlgID, Size, HashValue; ...}
+    UINT16                 Size;         // Total number of bytes of HASH_LIST structure
+    UINT16                 Count;        // Number of Digest elements
+    SHA256_HASH_STRUCTURE  Sha256Digest; // Array of digests  {AlgID, Size, HashValue; ...}
+    SHA384_HASH_STRUCTURE  Sha384Digest; // Array of digests  {AlgID, Size, HashValue; ...}
+    SHA512_HASH_STRUCTURE  Sha512Digest; // Array of digests  {AlgID, Size, HashValue; ...}
+    SHA256_HASH_STRUCTURE  ShaSm3Digest; // Array of digests  {AlgID, Size, HashValue; ...}
 } MAX_HASH_LIST;
 
 typedef struct {

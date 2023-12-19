@@ -218,7 +218,7 @@ void BiosViewerWindow::showHexView() const {
     UINT8 *itemData = selectedVolume->getData();
     INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
-    auto *hexViewData = new QByteArray((char*)itemData, itemSize);
+    auto *hexViewData = new QByteArray((CHAR8*)itemData, itemSize);
     hexDialog->loadBuffer(*hexViewData,
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset(),
@@ -245,7 +245,7 @@ void BiosViewerWindow::showBodyHexView() {
     }
     INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
-    auto *hexViewData = new QByteArray((char*)itemData, itemSize);
+    auto *hexViewData = new QByteArray((CHAR8*)itemData, itemSize);
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
     hexDialog->loadBuffer(BodyHexViewData,
                           BiosData->OverviewVolume,
@@ -271,7 +271,7 @@ void BiosViewerWindow::showDecompressedHexView() {
         return;
     }
 
-    auto *hexViewData = new QByteArray((char*)DecompressedVector.data(), DecompressedVector.size());
+    auto *hexViewData = new QByteArray((CHAR8*)DecompressedVector.data(), DecompressedVector.size());
     auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
@@ -299,7 +299,7 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
         DecompressedBios.insert(DecompressedBios.end(), DecompressedVector.begin(), DecompressedVector.end());
     }
 
-    auto *hexViewData = new QByteArray((char*)DecompressedBios.data(), DecompressedBios.size());
+    auto *hexViewData = new QByteArray((CHAR8*)DecompressedBios.data(), DecompressedBios.size());
     auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
@@ -322,7 +322,7 @@ void BiosViewerWindow::showNvHexView() const {
     auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
     UINT8 *NvData = ((NvVariableEntry*)(selectedVolume))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(selectedVolume))->DataSize;
-    auto *hexViewData = new QByteArray((char*)NvData, NvDataSize);
+    auto *hexViewData = new QByteArray((CHAR8*)NvData, NvDataSize);
     hexDialog->loadBuffer(*hexViewData,
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset(),
