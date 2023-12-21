@@ -68,25 +68,36 @@ void FspBootManifestClass::setInfoStr() {
 
         width = 16;
         ss << setw(indentSize) << setfill(' ') << "" << "Digest List[0]:\n"
-           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.HashAlg << "h\n"
-           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Size:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.Size << "h\n"
-           << setw(indentSize * 2) << setfill(' ') << "" << "Digest Content:\n"
-           << DumpHex((UINT8*)&FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.HashBuffer, FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.Size, 16, false, indentSize * 2);
-
-        ss << setw(indentSize) << setfill(' ') << "" << "Digest List[1]:\n"
-           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha384Digest.HashAlg << "h\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha384Digest.HashAlg
+           << "h (" << GetHashAlgFromID(FbmStruct.ComponentDigests[idx].ComponentDigests.Sha384Digest.HashAlg) << ")\n"
            << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Size:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha384Digest.Size << "h\n"
            << setw(indentSize * 2) << setfill(' ') << "" << "Digest Content:\n"
            << DumpHex((UINT8*)&FbmStruct.ComponentDigests[idx].ComponentDigests.Sha384Digest.HashBuffer, FbmStruct.ComponentDigests[idx].ComponentDigests.Sha384Digest.Size, 16, false, indentSize * 2);
 
+        ss << setw(indentSize) << setfill(' ') << "" << "Digest List[1]:\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha1Digest.HashAlg
+           << "h (" << GetHashAlgFromID(FbmStruct.ComponentDigests[idx].ComponentDigests.Sha1Digest.HashAlg) << ")\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Size:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha1Digest.Size << "h\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << "Digest Content:\n"
+           << DumpHex((UINT8*)&FbmStruct.ComponentDigests[idx].ComponentDigests.Sha1Digest.HashBuffer, FbmStruct.ComponentDigests[idx].ComponentDigests.Sha1Digest.Size, 16, false, indentSize * 2);
+
         ss << setw(indentSize) << setfill(' ') << "" << "Digest List[2]:\n"
-           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha512Digest.HashAlg << "h\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.HashAlg
+           << "h (" << GetHashAlgFromID(FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.HashAlg) << ")\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Size:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.Size << "h\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << "Digest Content:\n"
+           << DumpHex((UINT8*)&FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.HashBuffer, FbmStruct.ComponentDigests[idx].ComponentDigests.Sha256Digest.Size, 16, false, indentSize * 2);
+
+        ss << setw(indentSize) << setfill(' ') << "" << "Digest List[3]:\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha512Digest.HashAlg
+           << "h (" << GetHashAlgFromID(FbmStruct.ComponentDigests[idx].ComponentDigests.Sha512Digest.HashAlg) << ")\n"
            << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Size:" << FbmStruct.ComponentDigests[idx].ComponentDigests.Sha512Digest.Size << "h\n"
            << setw(indentSize * 2) << setfill(' ') << "" << "Digest Content:\n"
            << DumpHex((UINT8*)&FbmStruct.ComponentDigests[idx].ComponentDigests.Sha512Digest.HashBuffer, FbmStruct.ComponentDigests[idx].ComponentDigests.Sha512Digest.Size, 16, false, indentSize * 2);
 
-        ss << setw(indentSize) << setfill(' ') << "" << "Digest List[3]:\n"
-           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.ShaSm3Digest.HashAlg << "h\n"
+        ss << setw(indentSize) << setfill(' ') << "" << "Digest List[4]:\n"
+           << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Algorithm:" << FbmStruct.ComponentDigests[idx].ComponentDigests.ShaSm3Digest.HashAlg
+           << "h (" << GetHashAlgFromID(FbmStruct.ComponentDigests[idx].ComponentDigests.ShaSm3Digest.HashAlg) << ")\n"
            << setw(indentSize * 2) << setfill(' ') << "" << setw(width) << "Hash Size:" << FbmStruct.ComponentDigests[idx].ComponentDigests.ShaSm3Digest.Size << "h\n"
            << setw(indentSize * 2) << setfill(' ') << "" << "Digest Content:\n"
            << DumpHex((UINT8*)&FbmStruct.ComponentDigests[idx].ComponentDigests.ShaSm3Digest.HashBuffer, FbmStruct.ComponentDigests[idx].ComponentDigests.ShaSm3Digest.Size, 16, false, indentSize * 2);
@@ -178,7 +189,7 @@ std::string FspBootManifestClass::GetHashAlgFromID(UINT8 HashAlgID) {
     case TPM_ALG_SHA512:
         return "SHA512";
     case TPM_ALG_SM3_256:
-        return "SM3 256";
+        return "SM3";
     case TPM_ALG_SM4:
         return "SM4";
     case TPM_ALG_RSASSA:

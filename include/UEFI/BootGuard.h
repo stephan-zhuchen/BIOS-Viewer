@@ -283,8 +283,9 @@ typedef struct {
 typedef struct {
     UINT16                 Size;         // Total number of bytes of HASH_LIST structure
     UINT16                 Count;        // Number of Digest elements
-    SHA256_HASH_STRUCTURE  Sha256Digest; // Array of digests  {AlgID, Size, HashValue; ...}
     SHA384_HASH_STRUCTURE  Sha384Digest; // Array of digests  {AlgID, Size, HashValue; ...}
+    SHA1_HASH_STRUCTURE    Sha1Digest;   // Array of digests  {AlgID, Size, HashValue; ...}
+    SHA256_HASH_STRUCTURE  Sha256Digest; // Array of digests  {AlgID, Size, HashValue; ...}
     SHA512_HASH_STRUCTURE  Sha512Digest; // Array of digests  {AlgID, Size, HashValue; ...}
     SHA256_HASH_STRUCTURE  ShaSm3Digest; // Array of digests  {AlgID, Size, HashValue; ...}
 } MAX_HASH_LIST;
