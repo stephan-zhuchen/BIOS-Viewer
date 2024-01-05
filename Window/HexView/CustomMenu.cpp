@@ -257,7 +257,7 @@ void QHexView::CopyFromSelectedContent() {
 
     QString CopiedString;
     QByteArray data = HexDataArray.mid(SelectionBegin / 2, (SelectionEnd - SelectionBegin) / 2 + 1);
-    for (CHAR8 var : data) {
+    for (UINT8 var : data) {
         CopiedString += QString("%1").arg(var, 2, 16, QChar('0')).toUpper();
     }
     QClipboard *clipboard = QApplication::clipboard();
