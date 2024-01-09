@@ -165,7 +165,11 @@ void CapsuleWindow::LoadCapsule() {
         }
         CapsuleData->VolumeDataList.append(FmpHeader);
         CapsuleData->CapsuleType = FmpHeader->getCapsuleType();
-        if (CapsuleData->CapsuleType == "BIOS" || CapsuleData->CapsuleType == "Extended BIOS" || CapsuleData->CapsuleType == "BtgAcm")
+        if (CapsuleData->CapsuleType == "BIOS" ||
+            CapsuleData->CapsuleType == "Extended BIOS" ||
+            CapsuleData->CapsuleType == "BtgAcm"  ||
+            CapsuleData->CapsuleType == "FSP" ||
+            CapsuleData->CapsuleType == "IFWI")
             ParseStandardCapsule(itemOffset + offset, CapsuleData->CapsuleType);
         else if (CapsuleData->CapsuleType == "Monolithic")
             ParseMonolithicCapsule(itemOffset + offset);
@@ -348,6 +352,12 @@ INT64 CapsuleWindow::ParsePayloadInFfs(INT64 FfsOffset, const QString& CapsuleTy
         acmVolume->SelfDecode();
         CapsuleData->VolumeDataList.append(acmVolume);
         offset += acmVolume->getSize();
+    } else {
+        auto volume = new Volume(WindowData->InputImage + offset, payloadFile.getSize() - payloadFile.getHeaderSize(), offset);
+        volume->SelfDecode();
+        volume->setUniqueVolumeName(CapsuleType + " Payload");
+        CapsuleData->VolumeDataList.append(volume);
+        offset += volume->getSize();
     }
     return offset;
 }
@@ -362,8 +372,14 @@ INT64 CapsuleWindow::ParseBgupInFfs(INT64 BgupOffset, IniConfigFile *ConfigIni) 
     INT64 BgupAddress = BgupOffset + bgupFile.getHeaderSize();
     for (BgupConfig &config : ConfigIni->BgupList) {
         INT64 offset = BgupAddress + config.BgupOffset;
+        if (offset >= WindowData->InputImageSize) {
+            return 0;
+        }
         auto bgup = new BiosGuardClass(WindowData->InputImage + offset, config.BgupSize, offset);
-        bgup->SelfDecode();
+        if (bgup->SelfDecode() == 0) {
+            delete bgup;
+            return 0;
+        }
         bgup->setVolumeType(VolumeType::UserDefined);
         bgup->setContent(QString::fromStdString(config.BgupContent));
         CapsuleData->VolumeDataList.append(bgup);
