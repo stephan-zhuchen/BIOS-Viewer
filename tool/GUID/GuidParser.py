@@ -152,6 +152,7 @@ def parseGuidInInf(DirPaths, GuidDict):
                 line = line.split("#")[0].strip()
                 DefinesLines.append(line)
 
+        Name = ''
         for GuidDefinition in DefinesLines:
             Key = GuidDefinition.split("=")[0].strip()
             if Key == "BASE_NAME":
@@ -160,7 +161,8 @@ def parseGuidInInf(DirPaths, GuidDict):
                     Name = "_" + Name
             elif Key == "FILE_GUID":
                 Guid = GuidDefinition.split("=")[1].strip()
-        GuidDict[Name] = Guid
+        if Name != '':
+            GuidDict[Name] = Guid
 
         # break
 
@@ -252,6 +254,8 @@ def parseGuidInFdf(DirPaths, GuidDict):
                 if line[:10] == "FvNameGuid":
                     FvName = lines[FvLine][4:].split("]")[0].strip().replace("-", "_")
                     Guid = line.split("=")[1].strip()
+                    while FvName in GuidDict or FvName in GuidNameSet:
+                        FvName = "_" + FvName
                     GuidDict[FvName] = Guid
                     break
 
@@ -266,7 +270,7 @@ def parseGuidInFdf(DirPaths, GuidDict):
                     FvName = line.split("=")[1].strip().replace("-", "_")
                     FvName = FvName.split("/")[-1].split(".")[0]
                     Guid = lines[FvLine].split("=")[1].split("{")[0].strip()
-                    while FvName in GuidDict:
+                    while FvName in GuidDict or FvName in GuidNameSet:
                         FvName = "_" + FvName
                     GuidDict[FvName] = Guid
                     break
