@@ -27,6 +27,7 @@ public:
     void showMicrocodeTab();
     void showAcmTab();
     void showBtgTab();
+    void showVpdTab();
     void showAcpiTab();
 
 protected:
@@ -39,6 +40,7 @@ private slots:
     void microcodeListWidgetItemSelectionChanged();
     void acmListWidgetItemSelectionChanged();
     void BtgListWidgetItemSelectionChanged();
+    void VpdListWidgetItemSelectionChanged();
     void AcpiListWidgetItemSelectionChanged();
 
 private:

@@ -312,6 +312,11 @@ void DataModel::InitFromVolume(Volume *vol) {
         case VolumeType::IshPdt:
             name = "ISH PDT";
             break;
+        case VolumeType::Vpd:
+            name = "VPD Region";
+            type = "Section";
+            subtype = "Raw";
+            break;
     }
     if (vol->getUniqueVolumeName().size() > 0) {
         name = vol->getUniqueVolumeName();

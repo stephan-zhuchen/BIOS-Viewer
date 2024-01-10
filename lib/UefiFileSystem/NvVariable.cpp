@@ -27,7 +27,7 @@ INT64 NvVariableEntry::SelfDecode() {
     else {
         VariableHeader = (VARIABLE_HEADER*)data;
         size = sizeof(VARIABLE_HEADER) + VariableHeader->NameSize + VariableHeader->DataSize;
-        VariableName = wcharToString((CHAR16*)(AuthVariableHeader + 1), VariableHeader->NameSize, true);
+        VariableName = wcharToString((CHAR16*)(VariableHeader + 1), VariableHeader->NameSize, true);
         DataPtr = data + sizeof(VARIABLE_HEADER) + VariableHeader->NameSize;
         DataSize = VariableHeader->DataSize;
     }

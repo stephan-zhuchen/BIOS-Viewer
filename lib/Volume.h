@@ -42,6 +42,7 @@ enum class VolumeType {
     IniConfig,
     BiosGuardPackage,
     Microcodeversion,
+    Vpd,
     UserDefined,
     Empty,
     Other
@@ -112,5 +113,7 @@ public:
     void setInfoText(const QString &text);
     bool GetDecompressedVolume(std::vector<UINT8>& DecompressedVolume);
     void SearchDecompressedVolume(Volume *volume, std::vector<Decompressed*>& DecompressedVolumeList);
+
+    static Volume *SearchVolumeByGuid(Volume *volume, EFI_GUID &Guid);
 };
 Q_DECLARE_METATYPE(Volume);

@@ -236,6 +236,11 @@ void ELF::setInfoStr() {
            << setw(width) << "Section name strings section: " << hex << Ehdr.Elf64Hdr->e_shstrndx << "h\n";
     }
 
+    string compressed = "No";
+    if (isCompressed())
+        compressed = "Yes";
+    ss << "\nCompressed: " << compressed;
+
     InfoStr = QString::fromStdString(ss.str());
 }
 

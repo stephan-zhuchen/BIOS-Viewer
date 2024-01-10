@@ -194,3 +194,16 @@ bool Volume::GetDecompressedVolume(vector<UINT8> &DecompressedVolume) {
 
     return true;
 }
+
+Volume *Volume::SearchVolumeByGuid(Volume *volume, EFI_GUID &Guid) {
+    if (volume->getVolumeGuid() == Guid) {
+        return volume;
+    }
+    for (Volume *fv : volume->ChildVolume) {
+        Volume* result = SearchVolumeByGuid(fv, Guid);
+        if (result != nullptr) {
+            return result;
+        }
+    }
+    return nullptr;
+}

@@ -8,8 +8,11 @@
 #include "BiosView/BiosWindow.h"
 #include "InfoWindow.h"
 #include "BaseLib.h"
+#include "UefiFileSystem/NvVariable.h"
 #include "ui_InfoWindow.h"
+#include "UEFI/GuidDatabase.h"
 #include "Feature/AcmClass.h"
+#include "UefiFileSystem/Vpd.h"
 #include "Feature/MicrocodeClass.h"
 #include "Feature/FspBootManifestClass.h"
 
@@ -35,12 +38,15 @@ InfoWindow::InfoWindow(QString Dir, QWidget *parent) :
     ui->AcmTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->BtgListWidget->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->BtgTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->VpdListWidget->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
+    ui->VpdTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AcpiListWidget->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AcpiTextBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 
     connect(ui->microcodeListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(microcodeListWidgetItemSelectionChanged()));
     connect(ui->acmListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(acmListWidgetItemSelectionChanged()));
     connect(ui->BtgListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(BtgListWidgetItemSelectionChanged()));
+    connect(ui->VpdListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(VpdListWidgetItemSelectionChanged()));
     connect(ui->AcpiListWidget, SIGNAL(itemSelectionChanged()), this, SLOT(AcpiListWidgetItemSelectionChanged()));
 
     restoreGeometry(setting.value("InfoDialog/geometry").toByteArray());
@@ -74,6 +80,9 @@ void InfoWindow::showTab() {
 
     std::thread showBtg(&InfoWindow::showBtgTab, this);
     showBtg.detach();
+
+    std::thread showVpd(&InfoWindow::showVpdTab, this);
+    showVpd.detach();
 
     std::thread showAcpi(&InfoWindow::showAcpiTab, this);
     showAcpi.detach();
@@ -203,6 +212,36 @@ void InfoWindow::showBtgTab() {
         ui->BtgListWidget->setCurrentRow(0);
 }
 
+void InfoWindow::showVpdTab() {
+    EFI_GUID VpdGuid = GuidDatabase::_____gVpdFfsGuid;
+    Volume *VpdFile = Volume::SearchVolumeByGuid(BiosImage, VpdGuid);
+    if (VpdFile == nullptr) {
+        return;
+    }
+    Vpd *VpdVolume {nullptr};
+    for (Volume *vol : VpdFile->ChildVolume) {
+        if (vol->getVolumeType() == VolumeType::Vpd) {
+            VpdVolume = (Vpd*)vol;
+        }
+    }
+
+    if (VpdVolume == nullptr) {
+        return;
+    }
+
+    for (Volume *NvStorage : VpdVolume->ChildVolume) {
+        for (Volume *NvEntry : NvStorage->ChildVolume) {
+            NvVariableEntry *Entry = (NvVariableEntry*)NvEntry;
+            QString NvItemName = QString::fromStdString(Entry->VariableName);
+            auto *NvItem = new QListWidgetItem(NvItemName);
+            ui->VpdListWidget->addItem(NvItem);
+            NvItem->setData(Qt::UserRole, QVariant::fromValue(Entry));
+        }
+    }
+    if (ui->VpdListWidget->model()->rowCount() != 0)
+        ui->VpdListWidget->setCurrentRow(0);
+}
+
 void InfoWindow::showAcpiTab() {
     BiosImage->collectAcpiTable();
     for (AcpiClass* AcpiTable:BiosImage->AcpiTables) {
@@ -305,6 +344,15 @@ void InfoWindow::BtgListWidgetItemSelectionChanged()
     }
 
     ui->BtgTextBrowser->setText(text);
+}
+
+void InfoWindow::VpdListWidgetItemSelectionChanged() {
+    QListWidgetItem *NvItemList = ui->VpdListWidget->currentItem();
+    auto *NvItem = NvItemList->data(Qt::UserRole).value<NvVariableEntry*>();
+    NvItem->setInfoStr();
+
+    QString HexStr = "Variable Data:\n" + QString::fromStdString(DumpHex(NvItem->DataPtr, NvItem->DataSize));
+    ui->VpdTextBrowser->setText(NvItem->getInfoText() + "\n\n" + HexStr);
 }
 
 void InfoWindow::AcpiListWidgetItemSelectionChanged() {

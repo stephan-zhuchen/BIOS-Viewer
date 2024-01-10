@@ -12,6 +12,7 @@
 #include "BrotliDecompress/BrotliDecompressLib.h"
 #include "Feature/AcpiClass.h"
 #include "Elf.h"
+#include "Vpd.h"
 
 using namespace BaseLibrarySpace;
 
@@ -511,15 +512,31 @@ Volume* CommonSection::Reorganize() {
     Volume *newVolume = nullptr;
     if (AcpiClass::isAcpiHeader(data + HeaderSize, size - HeaderSize)) {
         AcpiClass *acpiVolume = new AcpiClass(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, false);
-        acpiVolume->SelfDecode();
-        acpiVolume->setUniqueVolumeName("ACPI Table - " + acpiVolume->AcpiTableSignature);
-        newVolume = acpiVolume;
+        if (acpiVolume->SelfDecode() != 0) {
+            acpiVolume->setUniqueVolumeName("ACPI Table - " + acpiVolume->AcpiTableSignature);
+            newVolume = acpiVolume;
+        } else {
+            delete acpiVolume;
+        }
     }
     else if (ELF::IsElfFormat(data + HeaderSize)) {
         ELF *elfVolume = new ELF(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, Compressed);
         if (elfVolume->SelfDecode() != 0) {
             elfVolume->DecodeChildVolume();
             newVolume = elfVolume;
+        } else {
+            delete elfVolume;
+        }
+    }
+    else if (this->ParentVolume != nullptr &&
+               (this->ParentVolume->getVolumeGuid() == GuidDatabase::gVpdFfsGuid ||
+                this->ParentVolume->getVolumeGuid() == GuidDatabase::_____gVpdFfsGuid)) {
+        Vpd *VpdVolume = new Vpd(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, Compressed);
+        if (VpdVolume->SelfDecode() != 0) {
+            VpdVolume->DecodeChildVolume();
+            newVolume = VpdVolume;
+        } else {
+            delete VpdVolume;
         }
     }
 
