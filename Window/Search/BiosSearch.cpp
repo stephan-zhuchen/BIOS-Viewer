@@ -47,6 +47,8 @@ BiosSearch::~BiosSearch() {
 }
 
 void BiosSearch::initSetting() {
+    if (!setting.contains("BiosSearchIndex"))
+        setting.setValue("BiosSearchIndex", "Text");
     if (!setting.contains("SearchFv"))
         setting.setValue("SearchFv", "true");
     if (!setting.contains("SearchFFS"))
@@ -66,6 +68,12 @@ void BiosSearch::initSetting() {
         setting.setValue("GuidSearchSection", "true");
     if (!setting.contains("GuidRecursiveSearch"))
         setting.setValue("GuidRecursiveSearch", "false");
+
+    if (setting.value("BiosSearchIndex") == "Guid") {
+        ui->tabWidget->setCurrentIndex(SearchMode::Guid);
+    } else {
+        ui->tabWidget->setCurrentIndex(SearchMode::Text);
+    }
 
     if (setting.value("SearchFv") == "true") {
         SearchFv = true;
@@ -354,8 +362,10 @@ void BiosSearch::tabWidgetCurrentChanged(int index) {
         ui->SearchContentBox->lineEdit()->setText(SearchedString);
         ui->SearchContentBox->lineEdit()->selectAll();
         ui->SearchContentBox->setFocus();
+        setting.setValue("BiosSearchIndex", "Text");
     } else if (ui->tabWidget->currentIndex() == SearchMode::Guid) {
         ui->Data1Edit->setFocus();
+        setting.setValue("BiosSearchIndex", "Guid");
     }
 }
 
