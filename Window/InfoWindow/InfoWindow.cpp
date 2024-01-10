@@ -77,8 +77,6 @@ void InfoWindow::showTab() {
 
     std::thread showAcpi(&InfoWindow::showAcpiTab, this);
     showAcpi.detach();
-
-//    showFceTab();
 }
 
 void InfoWindow::showFitTab() {
@@ -214,40 +212,6 @@ void InfoWindow::showAcpiTab() {
     }
     if (ui->AcpiListWidget->model()->rowCount() != 0)
         ui->AcpiListWidget->setCurrentRow(0);
-}
-
-void InfoWindow::showFceTab() {
-//    QString text;
-//    QString toolpath = appDir + "/tool/FCE/FCE.exe";
-//    QFile ToolFile(toolpath);
-//    if(!ToolFile.exists()) {
-//        text = "FCE tool not found!";
-//        ui->fceText->setText(text);
-//        return;
-//    }
-//
-//    auto *process = new QProcess(this);
-//    QString lastPath = setting.value("LastFilePath").toString();
-//    QString TempFilepath = QDir(lastPath).filePath("ClientBios.config");
-//    QStringList arguments;
-//    arguments << "read" << "-i" << OpenedFileName << "0006" <<  "005C" << "0078" << "0030" << "0034" << "0039" << "0046" << ">" << TempFilepath;
-//    QString command = toolpath + " " + arguments.join(" ");
-//    qDebug() << "Command:" << command;
-//    process->start(toolpath, arguments);
-//    process->waitForFinished();
-//
-//    text = process->readAllStandardOutput();
-//    delete process;
-
-//    QFile TempFile(TempFilepath);
-//    if(TempFile.exists()) {
-//        TempFile.open(QIODevice::ReadOnly | QIODevice::Text);
-//        text = TempFile.readAll();
-//        TempFile.close();
-//        TempFile.remove();
-//    }
-
-//    ui->fceText->setText(text);
 }
 
 void InfoWindow::showEvent(QShowEvent *event) {

@@ -28,7 +28,6 @@ public:
     void showAcmTab();
     void showBtgTab();
     void showAcpiTab();
-    void showFceTab();
 
 protected:
     void showEvent(QShowEvent *event) override;
