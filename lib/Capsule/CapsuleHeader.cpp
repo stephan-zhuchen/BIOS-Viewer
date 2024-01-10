@@ -166,18 +166,6 @@ QString FirmwareManagementHeader::getCapsuleTypeFromGuid(EFI_GUID& guid) {
     else if (guid == GuidDatabase::gFmpDeviceFspDefaultGuid) {
         return "FSP";
     }
-    else if (guid == GuidDatabase::gFmpDevicePlatformRetimerGuid) {
-        return "Retimer";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceMeFwAdlHConsGuid) {
-        return "ME H_Cons";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceMeFwAdlLpCorpGuid) {
-        return "ME Lp_Corp";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceMeFwAdlHCorpGuid) {
-        return "ME H_Corp";
-    }
     else {
         return "Unknown";
     }

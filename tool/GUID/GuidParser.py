@@ -40,7 +40,7 @@ def parseGuidInDec(DirPaths, Guidlist):
                 PpisBeginIdx = idx
             elif line == "[Guids]":
                 GuidsBeginIdx = idx
-        
+
         for line in lines[ProtocolsBeginIdx + 1:]:
             if line != "":
                 if line[0] == "#":
@@ -49,7 +49,7 @@ def parseGuidInDec(DirPaths, Guidlist):
                     break
                 line = line.split("#")[0].strip()
                 Guidlist.append(line)
-        
+
         for line in lines[PpisBeginIdx + 1:]:
             if line != "":
                 if line[0] == "#":
@@ -72,8 +72,8 @@ def parseGuidInDec(DirPaths, Guidlist):
         Name = GuidDefinition.split("=")[0].strip().replace("-", "_")
         Guid = GuidDefinition.split("=")[1].strip()
 
-        if Name in GuidNameSet:
-            continue
+        while Name in GuidNameSet:
+            Name = "_" + Name
         GuidNameSet.add(Name)
 
         GuidList = Guid.split(",")
@@ -162,9 +162,9 @@ def parseGuidInInf(DirPaths, GuidDict):
             elif Key == "FILE_GUID":
                 Guid = GuidDefinition.split("=")[1].strip()
         if Name != '':
+            while Name in GuidDict or Name in GuidNameSet:
+                Name = "_" + Name
             GuidDict[Name] = Guid
-
-        # break
 
     for key, value in GuidDict.items():
         if key in GuidNameSet:
