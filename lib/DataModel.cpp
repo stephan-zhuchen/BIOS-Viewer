@@ -32,7 +32,7 @@ void DataModel::setSectionModel(Volume *sec) {
         case EFI_SECTION_GUID_DEFINED:
             EFI_GUID guid;
             guid = section->getSectionDefinitionGuid();
-            name = QString::fromStdString(guidData->getNameFromGuid(guid));
+            name = QString::fromStdString(guidData->getNameFromGuid(guid, true));
             subtype = "GUID defined";
             break;
         case EFI_SECTION_DISPOSABLE:
@@ -77,7 +77,7 @@ void DataModel::setSectionModel(Volume *sec) {
             subtype = "Volume Image";
             break;
         case EFI_SECTION_FREEFORM_SUBTYPE_GUID:
-            name = QString::fromStdString(guidData->getNameFromGuid(section->getSubTypeGuid()));
+            name = QString::fromStdString(guidData->getNameFromGuid(section->getSubTypeGuid(), true));
             subtype = "Freeform GUID";
             break;
         case EFI_SECTION_RAW:
@@ -99,7 +99,7 @@ void DataModel::setSectionModel(Volume *sec) {
 
 void DataModel::setFfsModel(Volume *file) {
     auto ffs = (FfsFile*)file;
-    name = QString::fromStdString(guidData->getNameFromGuid(ffs->getFfsGuid()));
+    name = QString::fromStdString(guidData->getNameFromGuid(ffs->getFfsGuid(), true));
     type = "File";
 
     switch (ffs->getType()) {
@@ -169,7 +169,7 @@ void DataModel::setFfsModel(Volume *file) {
 
 void DataModel::setFirmwareVolumeModel(Volume *vol) {
     auto fv = (FirmwareVolume*)vol;
-    name = QString::fromStdString(guidData->getNameFromGuid(fv->getFvGuid()));
+    name = QString::fromStdString(guidData->getNameFromGuid(fv->getFvGuid(), true));
     type = "Volume";
 
     EFI_GUID guid = fv->getFvGuid(false);

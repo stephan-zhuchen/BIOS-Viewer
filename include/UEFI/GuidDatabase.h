@@ -15,7 +15,7 @@ public:
     static bool UseExternalDataGuid;
     GuidDatabase();
     ~GuidDatabase();
-    std::string getNameFromGuid(EFI_GUID guid);
+    std::string getNameFromGuid(EFI_GUID guid, BOOLEAN strip=false);
     static QString getFmpDeviceName(EFI_GUID guid);
 
     static void parseGuidInDec(const QStringList &DirPaths);

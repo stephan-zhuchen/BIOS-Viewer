@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <QFile>
 #include <QTextStream>
+#include <QRegularExpression>
 
 bool EFI_GUID::operator==(EFI_GUID guid) {
     if (this->Data1 != guid.Data1) {
@@ -43,79 +44,32 @@ std::string EFI_GUID::str(bool upperCase) {
 
 GuidDatabase::~GuidDatabase() = default;
 
-std::string GuidDatabase::getNameFromGuid(EFI_GUID guid) {
+std::string GuidDatabase::getNameFromGuid(EFI_GUID guid, BOOLEAN strip) {
     std::string name;
+    static QRegularExpression globalGuidPattern("^g(.*)Guid$");
+    static QRegularExpression duplicateFvPattern("^Fv(.*)Fv$");
+    static QRegularExpression firstTwoSymbolPattern("^(.{2})");
 
-    switch (guid.Data1) {
-        case gEfiFirmwareFileSystem2Guid.Data1:
-            name = "FV File System 2";
-        break;
-        case gEfiFirmwareFileSystem3Guid.Data1:
-            name = "FV File System 3";
-            break;
-        case gEfiSystemNvDataFvGuid.Data1:
-            name = "Non Volatile Variable";
-            break;
-        case gFspSiliconFvGuid.Data1:
-            name = "FSP-S";
-            break;
-        case gEfiCertTypeRsa2048Sha256Guid.Data1:
-            name = "CertType Rsa2048Sha256";
-            break;
-        case gEfiCertPkcs7Guid.Data1:
-            name = "CertType Pkcs7";
-            break;
-        case gLzmaCustomDecompressGuid.Data1:
-            name = "Lzma Compression";
-            break;
-        case gPeiAprioriFileNameGuid.Data1:
-            name = "Pei Apriori";
-            break;
-        case gAprioriGuid.Data1:
-            name = "Dxe Apriori";
-            break;
-        case gIntelMicrocodeVersionFfsBinGuid.Data1:
-            name = "Microcode Version";
-            break;
-        case gIntelMicrocodeArrayFfsBinGuid.Data1:
-            name = "Microcode";
-            break;
-        case gStartupAcmPeiBinGuid.Data1:
-            name = "Startup Acm";
-            break;
-        case gObbSha256HashBinGuid.Data1:
-            name = "Obb Sha256 Hash";
-            break;
-        case gObbRSha256HashBinGuid.Data1:
-            name = "ObbR Sha256 Hash";
-            break;
-        case gIbbRBgslBinGuid.Data1:
-            name = "IbbR Bgsl";
-            break;
-        case gObbRBgslBinGuid.Data1:
-            name = "ObbR Bgsl";
-            break;
-        case gBiosIdGuid.Data1:
-            name = "Bios ID";
-            break;
-        case gFspHeaderFileGuid.Data1:
-            name = "Fsp Header";
-            break;
-        case gTianoLogoGuid.Data1:
-            name = "Tiano Logo";
-            break;
-        default:
-            if (UseExternalDataGuid && ExternalDataGuidMap.contains(guid.Data1)) {
-                name = ExternalDataGuidMap.value(guid.Data1).toStdString();
-            }
-            else if (hashedGuid.count(guid.Data1) == 0) {
-                name = guid.str(true);
-            }
-            else
-                name = hashedGuid.at(guid.Data1);
-            break;
+    if (UseExternalDataGuid && ExternalDataGuidMap.contains(guid.Data1)) {
+        name = ExternalDataGuidMap.value(guid.Data1).toStdString();
     }
-
+    else if (hashedGuid.count(guid.Data1) == 0) {
+        name = guid.str(true);
+    }
+    else {
+        QString StripedName = QString::fromStdString(hashedGuid.at(guid.Data1));
+        if (strip) {
+            QRegularExpressionMatch globalGuidMatch = globalGuidPattern.match(StripedName);
+            if (globalGuidMatch.hasMatch()) {
+                StripedName = globalGuidMatch.captured(1);
+            }
+            QRegularExpressionMatch duplicateFvMatch = duplicateFvPattern.match(StripedName);
+            if (duplicateFvMatch.hasMatch()) {
+                StripedName = StripedName.replace(firstTwoSymbolPattern, "");
+            }
+        }
+        name = StripedName.toStdString();
+    }
     return name;
 }
 
