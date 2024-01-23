@@ -467,7 +467,7 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
         return QString(ba);
     };
 
-    QString ExternalToolInfo = "BpmGen2 Version 2.7.15 (May 12 2023)<br>"
+    QString ExternalToolInfo = "BpmGen2 Version 2.7.17 (Nov  2 2023)<br>"
                                "Microsoft (R) COFF/PE Dumper Version 14.29.30146.0<br>"
                                "ASL+ Optimizing Compiler/Disassembler Version 20230331";
 
