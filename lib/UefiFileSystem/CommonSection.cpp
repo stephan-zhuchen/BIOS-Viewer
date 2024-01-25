@@ -405,6 +405,7 @@ void CommonSection::setInfoStr() {
     stringstream ss;
     stringstream guidInfo;
     ss.setf(ios::left);
+    float rate;
 
     if (CommonHeader.Type == EFI_SECTION_GUID_DEFINED)
         guidInfo << "Section GUID:\n" << GuidDefinedSection.SectionDefinitionGuid.str(true) << "\n";
@@ -419,6 +420,8 @@ void CommonSection::setInfoStr() {
             ss << setw(width) << "Compression type:"  << hex << uppercase << (UINT32)CompressionType << "h\n"
                << setw(width) << "Decompressed size:" << hex << uppercase << decompressedSize << "h\n"
                << "Compression algorithm: EFI 1.1\n";
+            rate = (float)(getSize() - getHeaderSize()) / (float)decompressedSize;
+            ss << setprecision(4) << setw(width) << "Compresse rate:" << rate * 100 << "%\n";
             break;
         case EFI_SECTION_GUID_DEFINED:
             ss << setw(width) << "Data offset:"   << hex << uppercase << GuidDefinedSection.DataOffset << "h\n"
@@ -427,6 +430,13 @@ void CommonSection::setInfoStr() {
             if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gLzmaCustomDecompressGuid) {
                 ss << "Compression algorithm: LZMA\n"
                    << setw(width) << "Decompressed size:" << hex << uppercase << decompressedSize << "h\n";
+                rate = (float)(getSize() - getHeaderSize()) / (float)decompressedSize;
+                ss << setprecision(4) << setw(width) << "Compresse rate:" << rate * 100 << "%\n";
+            } else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gBrotliCustomDecompressGuid) {
+                ss << "Compression algorithm: Brotli\n"
+                   << setw(width) << "Decompressed size:" << hex << uppercase << decompressedSize << "h\n";
+                rate = (float)(getSize() - getHeaderSize()) / (float)decompressedSize;
+                ss << setprecision(4) << setw(width) << "Compresse rate:" << rate * 100 << "%\n";
             } else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
                 ss << setw(width) << "Certificate type:" << "RSA2048/SHA256\n"
                    << "PubKey:\n" << DumpHex(RSA2048SHA256.PublicKey, 256, 8)

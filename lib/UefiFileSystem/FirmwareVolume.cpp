@@ -170,6 +170,12 @@ void FirmwareVolume::setInfoStr() {
            << "Volume GUID:\n" << FirmwareVolumeExtHeader.FvName.str(true) << "\n";
     }
 
+    INT64 FreeSpaceSize = GetFreeSpaceSize();
+    if (FreeSpaceSize != 0) {
+        float rate = (float)FreeSpaceSize / (float)this->size;
+        ss << setprecision(4) << setw(width) << "FV Space:" << (1 - rate) * 100 << "% Full\n";
+    }
+
     string compressed = "No";
     if (isCompressed())
         compressed = "Yes";
@@ -189,6 +195,16 @@ EFI_GUID FirmwareVolume::getFvGuid(bool returnExt) const {
         }
     }
     return FirmwareVolumeHeader.FileSystemGuid;
+}
+
+INT64 FirmwareVolume::GetFreeSpaceSize() const {
+    for (Volume *vol : this->ChildVolume) {
+        if (vol->getVolumeType() == VolumeType::Empty) {
+            INT64 FreeSize = vol->getSize();
+            return FreeSize;
+        }
+    }
+    return 0;
 }
 
 bool FirmwareVolume::isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER *address) {

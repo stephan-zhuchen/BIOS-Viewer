@@ -27,6 +27,8 @@ public:
     [[nodiscard]] EFI_GUID getVolumeGuid() const override;
     [[nodiscard]] EFI_GUID getFvGuid(bool returnExt=true) const;
 
+    INT64 GetFreeSpaceSize() const;
+
     static bool isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER* address);
 };
 
