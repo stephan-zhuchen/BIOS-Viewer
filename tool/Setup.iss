@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "BIOS Viewer"
-#define MyAppVersion "1.13"
+#define MyAppVersion "1.14"
 #define MyAppExeName "BiosViewer.exe"
 #define MyAppAssocName "Binary File"
 #define MyAppAssocExt ".rom"

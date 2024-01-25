@@ -480,7 +480,7 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
                              "<p>Built on %4 by <span style=' font-weight:700; color:#00aaff;'>%5</p>"
                              "</body>"
                              "</html>").arg(
-                                            xorLambda("181315097a0c333f2d3f287a6b746b69", 0x5A),
+                                            xorLambda("181315097a0c333f2d3f287a6b746b6e", 0x5A),
                                             xorLambda("13342e3f367a13342e3f28343b367a0f293f7a15343623", 0x5A),
                                             ExternalToolInfo,
                                             __DATE__,
