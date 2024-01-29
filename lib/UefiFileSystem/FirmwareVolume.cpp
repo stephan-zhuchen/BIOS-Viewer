@@ -23,14 +23,18 @@ bool FirmwareVolume::CheckValidation() {
     auto* address = (EFI_FIRMWARE_VOLUME_HEADER*)data;
     if (address->Signature != 0x4856465F)
         return false;
-    UINT8* ZeroVector = address->ZeroVector;
-    if ((*(UINT64*)ZeroVector != 0x0) || ((*((UINT64*)ZeroVector + 1) != 0x0)))
-        return false;
+
+    // ZeroVector is reused by SBL FV, so skip checking ZeroVector value
+    // UINT8* ZeroVector = address->ZeroVector;
+    // if ((*(UINT64*)ZeroVector != 0x0) || ((*((UINT64*)ZeroVector + 1) != 0x0)))
+    //     return false;
     if (address->FileSystemGuid.Data1 == 0xFFFFFFFF || address->FileSystemGuid.Data1 == 0x0) {
         return false;
     }
-    UINT16 sumValue = CalculateSum16((UINT16 *) address,
-                                     sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof(UINT16));
+
+    // Skip caculating ZeroVector checksum
+    UINT16 sumValue = CalculateSum16((UINT16 *) ((UINT8*)address + 16),
+                                     (sizeof(EFI_FIRMWARE_VOLUME_HEADER) - 16) / sizeof(UINT16));
     if (sumValue != 0)
         return false;
     return true;
@@ -210,13 +214,17 @@ INT64 FirmwareVolume::GetFreeSpaceSize() const {
 bool FirmwareVolume::isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER *address) {
     if (address->Signature != 0x4856465F)
         return false;
-    UINT8* ZeroVector = address->ZeroVector;
-    if ((*(UINT64*)ZeroVector != 0x0) || ((*((UINT64*)ZeroVector + 1) != 0x0)))
-        return false;
+
+    // ZeroVector is reused by SBL FV, so skip checking ZeroVector value
+    // UINT8* ZeroVector = address->ZeroVector;
+    // if ((*(UINT64*)ZeroVector != 0x0) || ((*((UINT64*)ZeroVector + 1) != 0x0)))
+    //     return false;
     if (address->FileSystemGuid.Data1 == 0xFFFFFFFF || address->FileSystemGuid.Data1 == 0x0) {
         return false;
     }
-    UINT16 sumValue = CalculateSum16((UINT16 *) address, sizeof(EFI_FIRMWARE_VOLUME_HEADER) / sizeof(UINT16));
+
+    // Skip caculating ZeroVector checksum
+    UINT16 sumValue = CalculateSum16((UINT16 *) ((UINT8*)address + 16), (sizeof(EFI_FIRMWARE_VOLUME_HEADER) - 16) / sizeof(UINT16));
     if (sumValue != 0)
         return false;
     return true;
