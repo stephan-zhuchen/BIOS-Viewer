@@ -34,9 +34,15 @@ set(DECOMPRESS_LIB
         lib/BrotliDecompress/BrotliDecompressLib.h
         lib/LzmaDecompress/LzmaDecompress.cpp
         lib/LzmaDecompress/LzmaDecompressLib.h
+        lib/Lz4Decompress/Lz4Decompress.h
+        lib/Lz4Decompress/Lz4.h
+        lib/Lz4Decompress/Lz4DecompressLib.cpp
+        lib/Lz4Decompress/Lz4.cpp
+        # lib/Lz4Decompress/Lz4Hc.cpp
 )
 
 aux_source_directory(lib/LzmaDecompress/Sdk/C LZMA_SDK)
+aux_source_directory(lib/Lz4Decompress/Sdk LZ4_SDK)
 aux_source_directory(lib/BrotliDecompress/brotli/common BROTLI_COMMON_C)
 aux_source_directory(lib/BrotliDecompress/brotli/dec BROTLI_DEC_C)
 aux_source_directory(lib/BrotliDecompress/brotli/enc BROTLI_ENC_C)
@@ -109,9 +115,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 add_library(Lzma STATIC ${LZMA_SDK})
+add_library(Lz4 STATIC ${LZ4_SDK})
 add_library(Brotli STATIC ${BROTLI_COMMON_C} ${BROTLI_DEC_C} ${BROTLI_ENC_C})
 add_library(Decompress STATIC ${DECOMPRESS_LIB})
-target_link_libraries(Decompress PRIVATE Lzma Brotli)
+target_link_libraries(Decompress PRIVATE Lzma Lz4 Brotli)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Decompress)
