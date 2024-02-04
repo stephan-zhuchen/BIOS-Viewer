@@ -135,8 +135,42 @@ Volume* FfsFile::Reorganize() {
     EFI_GUID guid = this->getFfsGuid();
 
     if (guid == GuidDatabase::gIntelMicrocodeArrayFfsBinGuid) {
-        newVolume = new MicrocodeHeaderClass(data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
-        newVolume->SelfDecode();
+        INT64 MicrocodeArraySize = this->getSize() - this->getHeaderSize();
+        INT64 SecondMicrocodeEntryOffset = 0x1000;
+        INT64 SlotSize = 0;
+        while (SecondMicrocodeEntryOffset < MicrocodeArraySize) {
+            CPU_MICROCODE_HEADER *MicrocodeBuffer = (CPU_MICROCODE_HEADER*)(data + this->getHeaderSize() + SecondMicrocodeEntryOffset);
+            if (MicrocodeBuffer->HeaderVersion != 0x1) {
+                SecondMicrocodeEntryOffset += 0x1000;
+                continue;
+            } else {
+                UINT32 CheckSum = CalculateSum32((UINT32 *)MicrocodeBuffer, MicrocodeBuffer->DataSize + sizeof(CPU_MICROCODE_HEADER));
+                if (CheckSum != 0) {
+                    SecondMicrocodeEntryOffset += 0x1000;
+                    continue;
+                }
+
+                SlotSize = SecondMicrocodeEntryOffset;
+                INT64 EntryNum = MicrocodeArraySize / SlotSize;
+                if (EntryNum * SlotSize != MicrocodeArraySize) {
+                    SlotSize = 0;
+                }
+                break;
+            }
+        }
+
+        if (SlotSize == 0) {
+            auto microcode = new MicrocodeHeaderClass(data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
+            microcode->SelfDecode();
+            this->ChildVolume.push_back(microcode);
+        } else {
+            INT64 EntryNum = MicrocodeArraySize / SlotSize;
+            for (INT64 idx = 0; idx < EntryNum; ++idx) {
+                auto microcode = new MicrocodeHeaderClass(data + this->getHeaderSize() + SlotSize * idx, SlotSize, offsetFromBegin + this->getHeaderSize() + SlotSize * idx);
+                microcode->SelfDecode();
+                this->ChildVolume.push_back(microcode);
+            }
+        }
     }
     else if (guid == GuidDatabase::gStartupAcmPeiBinGuid) {
         newVolume = new AcmHeaderClass(data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());

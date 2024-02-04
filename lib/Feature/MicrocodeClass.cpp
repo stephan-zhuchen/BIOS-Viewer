@@ -28,13 +28,21 @@ INT64 MicrocodeHeaderClass::SelfDecode() {
         return 0;
     }
 
+    UINT32 CheckSum = CalculateSum32((UINT32 *)data, microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
+    if (CheckSum != 0) {
+        isCorrupted = true;
+        return 0;
+    }
+
     UINT32 ExtendedTableLength = microcodeHeader.TotalSize - (microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
     if (ExtendedTableLength != 0) {
         ExtendedTableHeader = (CPU_MICROCODE_EXTENDED_TABLE_HEADER *)(data + microcodeHeader.DataSize + sizeof(CPU_MICROCODE_HEADER));
         if ((ExtendedTableLength > sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) && ((ExtendedTableLength & 0x3) == 0)) {
             UINT32 CheckSum32 = CalculateSum32((UINT32 *) ExtendedTableHeader, ExtendedTableLength);
-            if (CheckSum32 != 0)
+            if (CheckSum32 != 0) {
+                isCorrupted = true;
                 return 0;
+            }
             UINT32 ExtendedTableCount = ExtendedTableHeader->ExtendedSignatureCount;
             if (ExtendedTableCount <= (ExtendedTableLength - sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) / sizeof(CPU_MICROCODE_EXTENDED_TABLE)) {
                 auto *ExtendedTable = (CPU_MICROCODE_EXTENDED_TABLE *)(ExtendedTableHeader + 1);
@@ -56,7 +64,7 @@ void MicrocodeHeaderClass::setInfoStr() {
 
     ss << "Microcode Info:" << "\n"
        << std::setw(width) << "Offset:" << std::hex << std::uppercase << offsetFromBegin << "h\n";
-    if (!isEmpty) {
+    if (!isEmpty && !isCorrupted) {
         ss << std::setw(width) << "HeaderVersion:" << std::hex << std::uppercase << microcodeHeader.HeaderVersion << "h\n"
            << std::setw(width) << "UpdateRevision:" << std::hex << std::uppercase << microcodeHeader.UpdateRevision << "h\n"
            << std::setw(width) << "Date:" << std::hex << std::uppercase << microcodeHeader.Date.Bits.Year << "-" << microcodeHeader.Date.Bits.Month << "-" << microcodeHeader.Date.Bits.Day << "\n"

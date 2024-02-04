@@ -9,6 +9,7 @@
 class MicrocodeHeaderClass: public Volume {
 public:
     bool                                    isEmpty{false};
+    bool                                    isCorrupted{false};
     CPU_MICROCODE_HEADER                    microcodeHeader{};
     CPU_MICROCODE_EXTENDED_TABLE_HEADER     *ExtendedTableHeader;
     QVector<CPU_MICROCODE_EXTENDED_TABLE>   ExtendedMicrocodeList;

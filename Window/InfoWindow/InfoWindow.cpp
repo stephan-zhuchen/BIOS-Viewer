@@ -158,6 +158,8 @@ void InfoWindow::showMicrocodeTab() {
         QString ItemName = "Microcode";
         if (MicrocodeEntry->isEmpty)
             ItemName += " (Empty)";
+        else if (MicrocodeEntry->isCorrupted)
+            ItemName += " (Corrupted)";
         else
             ItemName = ItemName + "  " + QString::number(MicrocodeEntry->microcodeHeader.ProcessorSignature.Uint32, 16).toUpper();
         auto *MicrocodeItem = new QListWidgetItem(ItemName);
