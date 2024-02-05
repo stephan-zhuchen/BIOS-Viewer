@@ -7,6 +7,7 @@
 #include "UefiFileSystem/CommonSection.h"
 #include "UefiFileSystem/FfsFile.h"
 #include "UefiFileSystem/FirmwareVolume.h"
+#include "UefiFileSystem/CompressedVolume.h"
 #include "UefiFileSystem/NvVariable.h"
 #include "UEFI/GuidDatabase.h"
 
@@ -182,6 +183,12 @@ void DataModel::setFirmwareVolumeModel(Volume *vol) {
     }
 }
 
+void DataModel::setCompressedVolumeModel(Volume *vol) {
+    auto compressed = (CompressedVolume*)vol;
+    name = compressed->GetComprssedType();
+    type = "Compressed";
+}
+
 void DataModel::setNvVariableHeaderModel(Volume *var) {
     name = "Nv Storage";
 }
@@ -316,6 +323,9 @@ void DataModel::InitFromVolume(Volume *vol) {
             name = "VPD Region";
             type = "Section";
             subtype = "Raw";
+            break;
+        case VolumeType::Compressed:
+            setCompressedVolumeModel(vol);
             break;
     }
     if (vol->getUniqueVolumeName().size() > 0) {

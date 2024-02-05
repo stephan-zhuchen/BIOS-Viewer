@@ -17,6 +17,7 @@ private:
     void setSectionModel(Volume *sec);
     void setFfsModel(Volume *file);
     void setFirmwareVolumeModel(Volume *vol);
+    void setCompressedVolumeModel(Volume *vol);
     void setNvVariableHeaderModel(Volume *var);
     void setNvVariableEntryModel(Volume *entry);
 public:

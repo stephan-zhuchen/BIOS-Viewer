@@ -116,7 +116,7 @@ public:
     void DecodeBiosFileSystem();
     void ReorganizeVolume(Volume *volume);
     void setInfoWindowState(bool opened) const;
-    void AddVolumeList(INT64 offset, INT64 length, Volume *parent, bool Empty = false) const;
+    void AddVolumeList(INT64 offset, INT64 length, Volume *parent, VolumeType type) const;
     bool isDarkMode() const;
 
     // Tree Widget

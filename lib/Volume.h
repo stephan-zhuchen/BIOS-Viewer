@@ -43,6 +43,7 @@ enum class VolumeType {
     BiosGuardPackage,
     Microcodeversion,
     Vpd,
+    Compressed,
     UserDefined,
     Empty,
     Other

@@ -10,6 +10,7 @@
 #include "IfwiRegion/OsseRegion.h"
 #include "IfwiRegion/BiosRegion.h"
 #include "UefiFileSystem/FirmwareVolume.h"
+#include "UefiFileSystem/CompressedVolume.h"
 #include <iostream>
 #include "ui_BiosWindow.h"
 
@@ -135,34 +136,50 @@ void BiosViewerWindow::setBiosFvData() {
 
     while (offset < bufferSize) {
         if (bufferSize - offset < 0x40) {
-            AddVolumeList(offset, bufferSize - offset, parentVolume, true);
+            AddVolumeList(offset, bufferSize - offset, parentVolume, VolumeType::Empty);
             return;
         }
         auto fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(WindowData->InputImage + offset);
         INT64 FvLength = (INT64)fvHeader->FvLength;
+        bool IsFirmwareVolume = FirmwareVolume::isValidFirmwareVolume(fvHeader);
+
+        auto CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER*)(WindowData->InputImage + offset);
+        INT64 CompressedVolumeLength = sizeof(LOADER_COMPRESSED_HEADER) + CompressedVolumeHeader->CompressedSize;
+        bool IsCompressedVolume = CompressedVolume::IsCompressedVolume(CompressedVolumeHeader);
 
         INT64 searchInterval = 0x40;
         INT64 EmptyVolumeLength = 0;
-        while (!FirmwareVolume::isValidFirmwareVolume(fvHeader)) {
+        while (!IsFirmwareVolume && !IsCompressedVolume) {
             EmptyVolumeLength += searchInterval;
             if (offset + EmptyVolumeLength >= bufferSize) {
-                AddVolumeList(offset, bufferSize - offset, parentVolume, true);
+                AddVolumeList(offset, bufferSize - offset, parentVolume, VolumeType::Empty);
                 return;
             }
             fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(WindowData->InputImage + offset + EmptyVolumeLength);
+            CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER*)(WindowData->InputImage + offset + EmptyVolumeLength);
+            IsFirmwareVolume = FirmwareVolume::isValidFirmwareVolume(fvHeader);
+            IsCompressedVolume = CompressedVolume::IsCompressedVolume(CompressedVolumeHeader);
         }
 
         if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
-            ui->titleInfomation->setText("No Firmware Found!");
             return;
         }
 
         if (EmptyVolumeLength != 0) {
-            FvLength = EmptyVolumeLength;
+            AddVolumeList(offset, EmptyVolumeLength, parentVolume, VolumeType::Empty);
+            offset += EmptyVolumeLength;
+            continue;
         }
 
-        AddVolumeList(offset, FvLength, parentVolume);
-        offset += FvLength;
+        if (IsFirmwareVolume) {
+            AddVolumeList(offset, FvLength, parentVolume, VolumeType::FirmwareVolume);
+            offset += FvLength;
+        } else if (IsCompressedVolume) {
+            AddVolumeList(offset, CompressedVolumeLength, parentVolume, VolumeType::Compressed);
+            offset += CompressedVolumeLength;
+            Align(offset, 0, 0x1000);
+        }
+
     }
 }
 
@@ -203,21 +220,32 @@ void BiosViewerWindow::ReorganizeVolume(Volume *volume) {
     }
 }
 
-void BiosViewerWindow::AddVolumeList(INT64 offset, INT64 length, Volume *parent, bool Empty) const {
+void BiosViewerWindow::AddVolumeList(INT64 offset, INT64 length, Volume *parent, VolumeType type) const {
     Volume *volume{nullptr};
-    if (Empty) {
-        volume = new Volume(WindowData->InputImage + offset, length, offset, false, parent);
-    } else {
+    UINT8* volumeData = WindowData->InputImage + offset;
+    if (type == VolumeType::Empty) {
+        volume = new Volume(volumeData, length, offset, false, parent);
+    } else if (type == VolumeType::FirmwareVolume) {
         try {
-            UINT8* fvData = WindowData->InputImage + offset;
-            volume = new FirmwareVolume(fvData, length, offset, false, parent);
+            volume = new FirmwareVolume(volumeData, length, offset, false, parent);
             if (volume->SelfDecode() == 0) {
                 safeDelete(volume);
-                volume = new Volume(fvData, length, offset, false, parent);
+                volume = new Volume(volumeData, length, offset, false, parent);
             }
         } catch (...) {
             safeDelete(volume);
-            volume = new Volume(WindowData->InputImage + offset, length, offset, false, parent);
+            volume = new Volume(volumeData, length, offset, false, parent);
+        }
+    } else if (type == VolumeType::Compressed) {
+        try {
+            volume = new CompressedVolume(volumeData, length, offset, parent);
+            if (volume->SelfDecode() == 0) {
+                safeDelete(volume);
+                volume = new Volume(volumeData, length, offset, false, parent);
+            }
+        } catch (...) {
+            safeDelete(volume);
+            volume = new Volume(volumeData, length, offset, false, parent);
         }
     }
 
