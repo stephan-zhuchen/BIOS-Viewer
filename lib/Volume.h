@@ -20,6 +20,7 @@ enum class VolumeType {
     FirmwareVolume,
     FfsFile,
     CommonSection,
+    PE32,
     ELF,
     UplInfo,
     Apriori,

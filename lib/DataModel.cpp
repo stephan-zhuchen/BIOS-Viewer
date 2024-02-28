@@ -219,6 +219,11 @@ void DataModel::InitFromVolume(Volume *vol) {
         case VolumeType::CommonSection:
             setSectionModel(vol);
             break;
+        case VolumeType::PE32:
+            name = "PE32";
+            type = "Payload";
+            subtype = "PE32 image";
+            break;
         case VolumeType::ELF:
             name = "ELF";
             type = "Section";

@@ -4,6 +4,7 @@
 
 #include "Volume.h"
 #include "BaseLib.h"
+#include "Payload/PE32.h"
 #include <string>
 
 using  namespace BaseLibrarySpace;
@@ -132,6 +133,33 @@ void Volume::setInfoStr() {
 }
 
 Volume* Volume::Reorganize() {
+    Volume *newVolume = nullptr;
+    if (Type == VolumeType::Empty) {
+        PE32 *pe32 = new PE32(data, size, offsetFromBegin, Compressed);
+        if (pe32->SelfDecode() != 0) {
+            newVolume = pe32;
+        } else {
+            delete pe32;
+        }
+    }
+
+    if (newVolume != nullptr) {
+        newVolume->setCompressedFlag(this->Compressed);
+        newVolume->ParentVolume = this->ParentVolume;
+        for(int i = 0; i < this->ParentVolume->ChildVolume.size(); ++i) {
+            if (this->ParentVolume->ChildVolume[i] == this) {
+                this->ParentVolume->ChildVolume[i] = newVolume;
+            }
+        }
+        for (auto child:this->ChildVolume) {
+            newVolume->ChildVolume.append(child);
+            child->ParentVolume = newVolume;
+        }
+        this->ParentVolume = nullptr;
+        this->ChildVolume.clear();
+        return newVolume;
+    }
+
     return nullptr;
 }
 

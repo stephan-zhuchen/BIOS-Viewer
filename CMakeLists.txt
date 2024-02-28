@@ -52,11 +52,13 @@ file(GLOB UI_SOURCES "Window/*.ui")
 file(GLOB_RECURSE WINDOW_SOURCES "Window/*")
 file(GLOB LIBRARY_H_SOURCES "lib/*.h")
 file(GLOB FILE_SYSTEM_H_SOURCES "lib/UefiFileSystem/*.h")
+file(GLOB PAYLOAD_H_SOURCES "lib/Payload/*.h")
 file(GLOB IFWI_REGION_H_SOURCES "lib/IfwiRegion/*.h")
 file(GLOB CAPSULE_H_SOURCES "lib/Capsule/*.h")
 file(GLOB FEATURE_H_SOURCES "lib/Feature/*.h")
 aux_source_directory(lib LIBRARY_SOURCES)
 aux_source_directory(lib/UefiFileSystem FILE_SYSTEM_SOURCES)
+aux_source_directory(lib/Payload PAYLOAD_SOURCES)
 aux_source_directory(lib/IfwiRegion IFWI_REGION_SOURCES)
 aux_source_directory(lib/Capsule CAPSULE_SOURCES)
 aux_source_directory(lib/Feature FEATURE_SOURCES)
@@ -71,6 +73,7 @@ set(PROJECT_SOURCES
         ${COMPATIBILITY_SOURCES}
         ${FILE_SYSTEM_H_SOURCES}
         ${FILE_SYSTEM_SOURCES}
+        ${PAYLOAD_SOURCES}
         ${IFWI_REGION_H_SOURCES}
         ${IFWI_REGION_SOURCES}
         ${CAPSULE_H_SOURCES}
