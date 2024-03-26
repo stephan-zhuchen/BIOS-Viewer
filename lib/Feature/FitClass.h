@@ -3,24 +3,27 @@
 //
 #pragma once
 #include <QVector>
+#include "Volume.h"
 #include "UEFI/FIT.h"
 
 class MicrocodeHeaderClass;
 class AcmHeaderClass;
 class FspBootManifestClass;
 
-class FitTableClass {
+class FitTableClass: public Volume {
 public:
     FIRMWARE_INTERFACE_TABLE_ENTRY          FitHeader{};
     QVector<FIRMWARE_INTERFACE_TABLE_ENTRY> FitEntries;
     QVector<MicrocodeHeaderClass*>          MicrocodeEntries;
     QVector<AcmHeaderClass*>                AcmEntries;
     FspBootManifestClass                    *FbmEntry{nullptr};
-    INT64 FitEntryNum{0};
-    bool  isValid{false};
-    bool  isChecksumValid{false};
+    INT64                                   FitEntryNum{0};
+    bool                                    isValid{false};
+    bool                                    isChecksumValid{false};
 public:
-    FitTableClass(UINT8* fv, INT64 length);
+    FitTableClass(UINT8* buffer, INT64 length, INT64 offset);
     ~FitTableClass();
+
+    INT64 SelfDecode() override;
     static QString getTypeName(UINT8 type);
 };

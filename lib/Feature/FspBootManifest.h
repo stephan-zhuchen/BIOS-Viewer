@@ -7,8 +7,8 @@
 #include "UEFI/FbmDef.h"
 
 struct FSP_REGION {
-    FSP_REGION_STRUCTURE FSP_REGION_Header;
-    QVector<IBB_SEGMENT> SegmentArray;
+    FSP_REGION_STRUCTURE    FSP_REGION_Header;
+    QVector<REGION_SEGMENT> SegmentArray;
 };
 
 #pragma pack(push, 1)

@@ -14,7 +14,7 @@
 #include "Feature/AcmClass.h"
 #include "UefiFileSystem/Vpd.h"
 #include "Feature/MicrocodeClass.h"
-#include "Feature/FspBootManifestClass.h"
+#include "Feature/FspBootManifest.h"
 
 using namespace BaseLibrarySpace;
 

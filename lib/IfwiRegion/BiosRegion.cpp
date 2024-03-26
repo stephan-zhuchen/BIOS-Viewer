@@ -20,26 +20,25 @@ bool BiosRegion::CheckValidation() {
 INT64 BiosRegion::SelfDecode() {
     Type = VolumeType::BIOS;
     // Initialize the FIT table.
-    try {
-        FitValid = true;
-        FitTable = new FitTableClass(data, size);
-        const INT64 IBB_length = 0x400000;
-        if (size >= IBB_length * 2) {
-            // Check for resiliency.
-            INT64 IBB_begin_address = size - IBB_length;
-            INT64 IBBR_begin_address = size - IBB_length * 2;
-            isResiliency = true;
-            for (int index = 0; index < IBB_length; ++index) {
-                if (data[IBB_begin_address + index] != data[IBBR_begin_address + index]) {
-                    isResiliency = false;
-                    break;
-                }
+    FitValid = true;
+    FitTable = new FitTableClass(data, size, 0);
+    if (FitTable->SelfDecode() == 0) {
+        FitValid = false;
+        safeDelete(FitTable);
+        return 0;
+    }
+    const INT64 IBB_length = 0x400000;
+    if (size >= IBB_length * 2) {
+        // Check for resiliency.
+        INT64 IBB_begin_address = size - IBB_length;
+        INT64 IBBR_begin_address = size - IBB_length * 2;
+        isResiliency = true;
+        for (int index = 0; index < IBB_length; ++index) {
+            if (data[IBB_begin_address + index] != data[IBBR_begin_address + index]) {
+                isResiliency = false;
+                break;
             }
         }
-    } catch (...) {
-        FitValid = false;
-        FitTable = nullptr;
-        return 0;
     }
     return size;
 }

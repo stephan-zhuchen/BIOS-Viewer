@@ -13,6 +13,7 @@
 #include "Feature/AcpiClass.h"
 #include "Elf.h"
 #include "Vpd.h"
+#include <QDebug>
 
 using namespace BaseLibrarySpace;
 
@@ -30,8 +31,9 @@ PeCoff::PeCoff(UINT8 *file, INT64 length):
     } else if (magic == EFI_TE_IMAGE_HEADER_SIGNATURE) {
         isTE = true;
         teHeader = *(EFI_TE_IMAGE_HEADER*)file;
-    } else
-        throw BiosException("Wrong Magic number");
+    } else {
+        isValid = false;
+    }
 }
 
 string PeCoff::getMachineType() const {
@@ -175,7 +177,8 @@ string Depex::getOpcodeString(UINT8 op) {
             opStr = "End";
             break;
         default:
-            throw BiosException("Invalid opcode");
+            opStr = "Unknown";
+            break;
     }
     return opStr;
 }
@@ -240,15 +243,17 @@ void CommonSection::DecodeChildVolume() {
                 ScratchSize = 0;
                 status = UefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
-                    throw exception();
+                    qDebug("UEFI Decompress failure, offset = 0x%x", offsetFromBegin);
+                    return;
                 }
 
                 DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
                 status = UefiTianoDecompress(data + HeaderSize, DecompressedBufferOnHeap, scratch, 1);
                 if (status != RETURN_SUCCESS) {
+                    qDebug("UEFI Decompress failure, offset = 0x%x", offsetFromBegin);
                     free(scratch);
-                    throw exception();
+                    return;
                 }
                 DecodeDecompressedBuffer(DecompressedBufferOnHeap, decompressedSize);
                 free(scratch);
@@ -293,15 +298,17 @@ void CommonSection::DecodeChildVolume() {
                 ScratchSize = 0;
                 status = LzmaUefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
-                    throw exception();
+                    qDebug("Lzma Decompress failure, offset = 0x%x", offsetFromBegin);
+                    return;
                 }
 
                 DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
                 status = LzmaUefiDecompress(data + HeaderSize, size - HeaderSize, DecompressedBufferOnHeap, scratch);
                 if (status != RETURN_SUCCESS) {
+                    qDebug("Lzma Decompress failure, offset = 0x%x", offsetFromBegin);
                     free(scratch);
-                    throw exception();
+                    return;
                 }
                 DecodeDecompressedBuffer(DecompressedBufferOnHeap, decompressedSize);
                 free(scratch);
@@ -312,15 +319,17 @@ void CommonSection::DecodeChildVolume() {
                 ScratchSize = 0;
                 status = BrotliUefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
-                    throw exception();
+                    qDebug("Brotli Decompress failure, offset = 0x%x", offsetFromBegin);
+                    return;
                 }
 
                 DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
                 status = BrotliUefiDecompress(data + HeaderSize, size - HeaderSize, DecompressedBufferOnHeap, scratch);
                 if (status != RETURN_SUCCESS) {
+                    qDebug("Brotli Decompress failure, offset = 0x%x", offsetFromBegin);
                     free(scratch);
-                    throw exception();
+                    return;
                 }
                 DecodeDecompressedBuffer(DecompressedBufferOnHeap, decompressedSize);
                 free(scratch);
@@ -331,15 +340,17 @@ void CommonSection::DecodeChildVolume() {
                 ScratchSize = 0;
                 status = UefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
-                    throw exception();
+                    qDebug("Tiano Decompress failure, offset = 0x%x", offsetFromBegin);
+                    return;
                 }
 
                 DecompressedBufferOnHeap = new UINT8[decompressedSize];
                 scratch = malloc(ScratchSize);
                 status = UefiTianoDecompress(data + HeaderSize, DecompressedBufferOnHeap, scratch, 2);
                 if (status != RETURN_SUCCESS) {
+                    qDebug("Tiano Decompress failure, offset = 0x%x", offsetFromBegin);
                     free(scratch);
-                    throw exception();
+                    return;
                 }
                 DecodeDecompressedBuffer(DecompressedBufferOnHeap, decompressedSize);
                 free(scratch);
@@ -448,40 +459,51 @@ void CommonSection::setInfoStr() {
             UINT32 peSignature;
             UINT16 peOptionalSignature;
             UINT16 SubSystem;
-            e_magic = peCoffHeader->dosHeader.e_magic;
-            peSignature = peCoffHeader->pe32Header.Signature;
-            peOptionalSignature = peCoffHeader->pe32Header.OptionalHeader.Magic;
-            SubSystem = peCoffHeader->pe32Header.OptionalHeader.Subsystem;
+            if (peCoffHeader->isValid) {
+                e_magic = peCoffHeader->dosHeader.e_magic;
+                peSignature = peCoffHeader->pe32Header.Signature;
+                peOptionalSignature = peCoffHeader->pe32Header.OptionalHeader.Magic;
+                SubSystem = peCoffHeader->pe32Header.OptionalHeader.Subsystem;
 
-            ss << setw(width) << "DOS signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
-               << setw(width) << "PE signature:" << hex << uppercase << peSignature << "h (" << charToString((CHAR8*)&peSignature, sizeof(UINT32), false) << ")\n"
-               << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
-               << setw(width) << "Number of sections:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.NumberOfSections << "h\n"
-               << setw(width) << "Characteristics:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.Characteristics << "h\n"
-               << setw(width) << "Optional header signature:" << hex << uppercase << peOptionalSignature << "h\n"
-               << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
-               << setw(width) << "EntryPoint Address:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.AddressOfEntryPoint << "h\n"
-               << setw(width) << "Base of code:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.BaseOfCode << "h\n"
-               << setw(width) << "Base of data:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.BaseOfData << "h\n";
-            if (peCoffHeader->isPe32Plus)
-                ss << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->pe32plusHeader.OptionalHeader.ImageBase << "h\n";
-            else
-                ss << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.ImageBase << "h\n";
-            break;
+                ss << setw(width) << "DOS signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
+                   << setw(width) << "PE signature:" << hex << uppercase << peSignature << "h (" << charToString((CHAR8*)&peSignature, sizeof(UINT32), false) << ")\n"
+                   << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
+                   << setw(width) << "Number of sections:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.NumberOfSections << "h\n"
+                   << setw(width) << "Characteristics:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.Characteristics << "h\n"
+                   << setw(width) << "Optional header signature:" << hex << uppercase << peOptionalSignature << "h\n"
+                   << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
+                   << setw(width) << "EntryPoint Address:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.AddressOfEntryPoint << "h\n"
+                   << setw(width) << "Base of code:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.BaseOfCode << "h\n"
+                   << setw(width) << "Base of data:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.BaseOfData << "h\n";
+                if (peCoffHeader->isPe32Plus)
+                    ss << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->pe32plusHeader.OptionalHeader.ImageBase << "h\n";
+                else
+                    ss << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.ImageBase << "h\n";
+                break;
+            } else {
+                ss << "Invalid PE32 Image";
+                break;
+            }
+
         case EFI_SECTION_TE:
-            e_magic = peCoffHeader->teHeader.Signature;
-            SubSystem = peCoffHeader->teHeader.Subsystem;
+            if (peCoffHeader->isValid) {
+                e_magic = peCoffHeader->teHeader.Signature;
+                SubSystem = peCoffHeader->teHeader.Subsystem;
 
-            ss << setw(width) << "TE signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
-               << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
-               << setw(width) << "Number of sections:" << hex << uppercase << (UINT32)peCoffHeader->teHeader.NumberOfSections << "h\n"
-               << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
-               << setw(width) << "Stripped size:" << hex << uppercase << peCoffHeader->teHeader.StrippedSize << "h\n"
-               << setw(width) << "Base of code:" << hex << uppercase << peCoffHeader->teHeader.BaseOfCode << "h\n"
-               << setw(width) << "EntryPoint Address:" << hex << uppercase << peCoffHeader->teHeader.AddressOfEntryPoint << "h\n"
-               << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->teHeader.ImageBase << "h\n"
-               << setw(width) << "VirtualAddress:" << hex << uppercase << peCoffHeader->teHeader.DataDirectory->VirtualAddress << "h\n";
-            break;
+                ss << setw(width) << "TE signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
+                   << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
+                   << setw(width) << "Number of sections:" << hex << uppercase << (UINT32)peCoffHeader->teHeader.NumberOfSections << "h\n"
+                   << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
+                   << setw(width) << "Stripped size:" << hex << uppercase << peCoffHeader->teHeader.StrippedSize << "h\n"
+                   << setw(width) << "Base of code:" << hex << uppercase << peCoffHeader->teHeader.BaseOfCode << "h\n"
+                   << setw(width) << "EntryPoint Address:" << hex << uppercase << peCoffHeader->teHeader.AddressOfEntryPoint << "h\n"
+                   << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->teHeader.ImageBase << "h\n"
+                   << setw(width) << "VirtualAddress:" << hex << uppercase << peCoffHeader->teHeader.DataDirectory->VirtualAddress << "h\n";
+                break;
+            } else {
+                ss << "Invalid TE Image";
+                break;
+            }
         case EFI_SECTION_FREEFORM_SUBTYPE_GUID:
             ss << "Section GUID:\n" << SubTypeGuid.str(true) << "\n";
             break;

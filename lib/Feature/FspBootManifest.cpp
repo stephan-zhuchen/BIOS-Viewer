@@ -1,5 +1,5 @@
 #include "BaseLib.h"
-#include "FspBootManifestClass.h"
+#include "FspBootManifest.h"
 
 using namespace BaseLibrarySpace;
 
@@ -12,20 +12,20 @@ INT64 FspBootManifestClass::SelfDecode() {
     Type = VolumeType::FspBootManifest;
     FbmStruct = *(FSP_BOOT_MANIFEST_STRUCTURE*)data;
     QString StructureId = QString::fromStdString(charToString((CHAR8*)FbmStruct.StructureId, 8));
-    if (StructureId != "__FBMS__") {
+    if (StructureId != "__FBMS__" || FbmStruct.CompCnt > 3) {
         ValidFlag = false;
         return 0;
     }
 
     INT64 FspRegionOffset = sizeof(FSP_BOOT_MANIFEST_STRUCTURE);
-    for (INT32 idx = 0; idx < FbmStruct.FspRgnCnt; ++idx) {
+    for (INT32 idx = 0; idx < FbmStruct.CompCnt; ++idx) {
         FSP_REGION FspRegion;
         FspRegion.FSP_REGION_Header = *(FSP_REGION_STRUCTURE*)(data + FspRegionOffset);
         FspRegionOffset += sizeof(FSP_REGION_STRUCTURE);
         for (INT32 count = 0; count < FspRegion.FSP_REGION_Header.SegmentCnt; ++count) {
-            IBB_SEGMENT segment = *(IBB_SEGMENT*)(data + FspRegionOffset);
+            REGION_SEGMENT segment = *(REGION_SEGMENT*)(data + FspRegionOffset);
             FspRegion.SegmentArray.push_back(segment);
-            FspRegionOffset += sizeof(IBB_SEGMENT);
+            FspRegionOffset += sizeof(REGION_SEGMENT);
         }
         FspRegions.push_back(FspRegion);
     }
@@ -57,9 +57,9 @@ void FspBootManifestClass::setInfoStr() {
        << setw(width) << "FspVersion:"           << hex << uppercase << (UINT32)(FbmStruct.FspVersion >> 8) << "." << (UINT32)(FbmStruct.FspVersion & 0xFF) << "\n"
        << setw(width) << "FspSvn:"               << hex << uppercase << (UINT32)FbmStruct.FspSvn << "h\n"
        << setw(width) << "Flags:"                << hex << uppercase << FbmStruct.Flags << "h\n"
-       << setw(width) << "FSP component Number:" << hex << uppercase << (UINT32)FbmStruct.CompDigestCnt << "h\n";
+       << setw(width) << "FSP component Number:" << hex << uppercase << (UINT32)FbmStruct.CompCnt << "h\n";
 
-    for (INT32 idx = 0; idx < FbmStruct.CompDigestCnt; ++idx) {
+    for (INT32 idx = 0; idx < FbmStruct.CompCnt; ++idx) {
         width = 20;
         ss << "FSP Component List[" << idx << "]:\n"
            << setw(indentSize) << setfill(' ') << "" << setw(width) << "Fsp Component:" << (UINT32)FbmStruct.ComponentDigests[idx].ComponentID << " (" << GetFspComponentFromID(FbmStruct.ComponentDigests[idx].ComponentID) <<")\n"
@@ -103,8 +103,7 @@ void FspBootManifestClass::setInfoStr() {
            << DumpHex((UINT8*)&FbmStruct.ComponentDigests[idx].ComponentDigests.ShaSm3Digest.HashBuffer, FbmStruct.ComponentDigests[idx].ComponentDigests.ShaSm3Digest.Size, 16, false, indentSize * 2);
     }
 
-    ss << setw(width) << "FSP Region Info Count:"    << hex << uppercase << (UINT32)FbmStruct.FspRgnCnt << "h\n";
-    for (INT32 idx = 0; idx < FbmStruct.FspRgnCnt; ++idx) {
+    for (INT32 idx = 0; idx < FbmStruct.CompCnt; ++idx) {
         width = 20;
         ss << "FSP Region[" << idx << "]:\n"
            << setw(indentSize) << setfill(' ') << "" << setw(width) << "Fsp Component:"    << (UINT32)FspRegions[idx].FSP_REGION_Header.ComponentID << " (" << GetFspComponentFromID(FspRegions[idx].FSP_REGION_Header.ComponentID) <<")\n"

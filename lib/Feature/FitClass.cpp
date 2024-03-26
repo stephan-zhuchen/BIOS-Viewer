@@ -5,45 +5,57 @@
 #include "FitClass.h"
 #include "Feature/AcmClass.h"
 #include "Feature/MicrocodeClass.h"
-#include "Feature/FspBootManifestClass.h"
+#include "Feature/FspBootManifest.h"
 
 using namespace BaseLibrarySpace;
 
-FitTableClass::FitTableClass(UINT8 *fv, INT64 length) {
-    INT64 FitTableAddress = *(INT64*)(fv + length - DEFAULT_FIT_TABLE_POINTER_OFFSET) & 0xFFFFFF;
-    FitTableAddress = adjustBufferAddress(0x1000000, FitTableAddress, length); // get the relative address of FIT table
-    if (FitTableAddress > length || FitTableAddress < 0) {
-        throw BiosException("NO FIT table!");
+FitTableClass::FitTableClass(UINT8* buffer, INT64 length, INT64 offset):
+    Volume(buffer, length, offset, false, nullptr) { }
+
+FitTableClass::~FitTableClass() {
+    for (auto MicrocodeEntry:MicrocodeEntries)
+        safeDelete(MicrocodeEntry);
+    for (auto AcmEntry:AcmEntries)
+        safeDelete(AcmEntry);
+    safeDelete(FbmEntry);
+}
+
+INT64 FitTableClass::SelfDecode() {
+    INT64 FitTableAddress = *(INT64*)(data + size - DEFAULT_FIT_TABLE_POINTER_OFFSET) & 0xFFFFFF;
+    FitTableAddress = adjustBufferAddress(0x1000000, FitTableAddress, size); // get the relative address of FIT table
+    if (FitTableAddress > size || FitTableAddress < 0) {
+        isValid = false;
+        return 0;
     }
-    FitHeader = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(fv + FitTableAddress);
+    FitHeader = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(data + FitTableAddress);
     UINT64 FitSignature = FitHeader.Address;
     if (FitSignature == (UINT64)FIT_SIGNATURE) {
         isValid = true;
         FitEntryNum = *(UINT32*)(FitHeader.Size) & 0xFFFFFF;
 
-        UINT8 Checksum = CalculateSum8((UINT8 *) (fv + FitTableAddress),
+        UINT8 Checksum = CalculateSum8((UINT8 *) (data + FitTableAddress),
                                        sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * FitEntryNum);
         if (Checksum == 0) {
             isChecksumValid = true;
         }
 
         for (INT64 index = 1; index < FitEntryNum; ++index) {
-            FIRMWARE_INTERFACE_TABLE_ENTRY FitEntry = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(fv + FitTableAddress + sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * index);
+            FIRMWARE_INTERFACE_TABLE_ENTRY FitEntry = *(FIRMWARE_INTERFACE_TABLE_ENTRY*)(data + FitTableAddress + sizeof(FIRMWARE_INTERFACE_TABLE_ENTRY) * index);
             FitEntries.push_back(FitEntry);
             if (FitEntry.Type == FIT_TABLE_TYPE_MICROCODE) {
                 UINT64 MicrocodeAddress = FitEntry.Address & 0xFFFFFF;
-                UINT64 RelativeMicrocodeAddress = adjustBufferAddress(0x1000000, MicrocodeAddress, length);
-                if (RelativeMicrocodeAddress > (UINT64)length)
+                UINT64 RelativeMicrocodeAddress = adjustBufferAddress(0x1000000, MicrocodeAddress, size);
+                if (RelativeMicrocodeAddress > (UINT64)size)
                     continue;
-                auto *MicrocodeEntry = new MicrocodeHeaderClass(fv + RelativeMicrocodeAddress, 0, MicrocodeAddress);
+                auto *MicrocodeEntry = new MicrocodeHeaderClass(data + RelativeMicrocodeAddress, 0, MicrocodeAddress);
                 MicrocodeEntry->SelfDecode();
                 MicrocodeEntries.push_back(MicrocodeEntry);
             } else if (FitEntry.Type == FIT_TABLE_TYPE_STARTUP_ACM) {
                 UINT64 AcmAddress = FitEntry.Address & 0xFFFFFF;
-                UINT64 RelativeAcmAddress = adjustBufferAddress(0x1000000, AcmAddress, length);
-                if (RelativeAcmAddress > (UINT64)length)
+                UINT64 RelativeAcmAddress = adjustBufferAddress(0x1000000, AcmAddress, size);
+                if (RelativeAcmAddress > (UINT64)size)
                     continue;
-                auto *AcmEntry = new AcmHeaderClass(fv + RelativeAcmAddress, 0, AcmAddress);
+                auto *AcmEntry = new AcmHeaderClass(data + RelativeAcmAddress, 0, AcmAddress);
                 AcmEntry->SelfDecode();
                 if (AcmEntry->isValid()) {
                     AcmEntries.push_back(AcmEntry);
@@ -55,8 +67,8 @@ FitTableClass::FitTableClass(UINT8 *fv, INT64 length) {
                 continue;
             } else if (FitEntry.Type == FIT_TABLE_TYPE_BIOS_DATA_AREA) {
                 UINT64 FbmAddress = FitEntry.Address & 0xFFFFFF;
-                UINT64 RelativeFbmAddress = adjustBufferAddress(0x1000000, FbmAddress, length);
-                FbmEntry = new FspBootManifestClass(fv + RelativeFbmAddress, 0, FbmAddress);
+                UINT64 RelativeFbmAddress = adjustBufferAddress(0x1000000, FbmAddress, size);
+                FbmEntry = new FspBootManifestClass(data + RelativeFbmAddress, 0, FbmAddress);
                 FbmEntry->SelfDecode();
                 if (!FbmEntry->isValid()) {
                     safeDelete(FbmEntry);
@@ -65,16 +77,9 @@ FitTableClass::FitTableClass(UINT8 *fv, INT64 length) {
         }
     } else {
         isValid = false;
-        throw BiosException("NO FIT table!");
+        return 0;
     }
-}
-
-FitTableClass::~FitTableClass() {
-    for (auto MicrocodeEntry:MicrocodeEntries)
-        safeDelete(MicrocodeEntry);
-    for (auto AcmEntry:AcmEntries)
-        safeDelete(AcmEntry);
-    safeDelete(FbmEntry);
+    return size;
 }
 
 QString FitTableClass::getTypeName(UINT8 type) {

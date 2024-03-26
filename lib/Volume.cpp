@@ -5,11 +5,8 @@
 #include "Volume.h"
 #include "BaseLib.h"
 #include "Payload/PE32.h"
-#include <string>
 
 using  namespace BaseLibrarySpace;
-const std::string SizeErrorMsg = "offset larger than size!";
-
 Volume::Volume(UINT8* buffer, INT64 length, INT64 offset, bool Compressed, Volume* parent):
         data(buffer),
         size(length),
@@ -28,7 +25,7 @@ Volume::~Volume() {
 
 EFI_GUID Volume::getGUID(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return EFI_GUID();
     }
     EFI_GUID guid = *(EFI_GUID*)(data + offset);
     return guid;
@@ -36,28 +33,28 @@ EFI_GUID Volume::getGUID(INT64 offset) {
 
 UINT8 Volume::getUINT8(INT64 offset)  {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     return data[offset];
 }
 
 UINT16 Volume::getUINT16(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     return *(UINT16*)(data + offset);
 }
 
 UINT32 Volume::getUINT32(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     return *(UINT32*)(data + offset);
 }
 
 UINT8* Volume::getBytes(INT64 offset, INT64 length) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return nullptr;
     }
     auto *value = new UINT8[length];
     for (INT64 i = 0; i < length; i++) {
@@ -68,28 +65,28 @@ UINT8* Volume::getBytes(INT64 offset, INT64 length) {
 
 UINT64 Volume::getUINT64(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     return *(UINT64*)(data + offset);
 }
 
 CHAR8 Volume::getINT8(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     return (CHAR8) data[offset];
 }
 
 INT16 Volume::getINT16(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     return *(INT16*)(data + offset);
 }
 
 INT32 Volume::getINT24(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     UINT8 value[4] {0};
     for (INT64 i = 0; i < 3; i++) {
@@ -100,14 +97,14 @@ INT32 Volume::getINT24(INT64 offset) {
 
 INT32 Volume::getINT32(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     return *(INT32*)(data + offset);
 }
 
 INT64 Volume::getINT64(INT64 offset) {
     if (offset > size) {
-        throw BiosException(SizeErrorMsg);
+        return 0;
     }
     return *(INT64*)(data + offset);
 }

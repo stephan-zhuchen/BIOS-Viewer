@@ -20,9 +20,6 @@ DataModel::DataModel(Volume *vol, QString nm, QString typ, QString sbtyp):
         modelData(vol) { }
 
 void DataModel::setSectionModel(Volume *sec) {
-    if (sec->getVolumeType() != VolumeType::CommonSection) {
-        throw BiosException("");
-    }
     auto *section = (CommonSection*)sec;
     type = "Section";
     switch (section->getSectionType()) {

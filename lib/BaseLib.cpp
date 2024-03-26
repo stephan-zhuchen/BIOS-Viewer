@@ -3,20 +3,13 @@
 //
 #include "BaseLib.h"
 #include <string>
-#include <algorithm>
 #include <iomanip>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
 namespace BaseLibrarySpace {
-    BiosException::BiosException() : message("Error.") {}
-
-    BiosException::BiosException(const string& str) : message("Error : " + str) {}
-
-    const char* BiosException::what() const noexcept {
-        return message.c_str();
-    }
-
     /**
     * @brief Aligns a given address to a specified alignment.
     *
@@ -97,6 +90,9 @@ namespace BaseLibrarySpace {
     * @return Converted std::string object.
     */
     string wcharToString(const CHAR16* wcharAddress, INT64 length, bool hasZeroEnding) {
+        if (wcharAddress == nullptr) {
+            return "";
+        }
         UINT8* charAddress;
         INT64 charSize = length / 2;
         if (hasZeroEnding)
@@ -124,6 +120,9 @@ namespace BaseLibrarySpace {
     * @return The standard string representation of the wide character string.
     */
     string wstringToString(CHAR16* wcharAddress) {
+        if (wcharAddress == nullptr) {
+            return "";
+        }
         UINT8* charAddress;
         CHAR16* temp = wcharAddress;
         INT64 charSize = 1;

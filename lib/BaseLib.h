@@ -3,25 +3,12 @@
 //
 #pragma once
 
-#include <iostream>
 #include <string>
-#include <sstream>
-#include <exception>
-#include <fstream>
 #include "SymbolDefinition.h"
 
 namespace BaseLibrarySpace {
 
     using namespace std;
-
-    class BiosException : public exception {
-    private:
-        string message;
-    public:
-        BiosException();
-        explicit BiosException(const string& str);
-        const char* what() const noexcept override;
-    };
 
     template <typename T>
     void safeDelete(T*& ptr) {
