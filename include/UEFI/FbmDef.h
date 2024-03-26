@@ -20,10 +20,11 @@
     (FSP_REGION_STRUCTURE *)((UINT8 *)(Fbm) + sizeof (FSP_BOOT_MANIFEST_STRUCTURE))
 
 #define IBB_SEGMENTS_PTR(FspRegion)  \
-    (IBB_SEGMENT *) ((UINT8 *) FspRegion + sizeof (FSP_REGION_STRUCTURE))
+    (REGION_SEGMENT *) ((UINT8 *) FspRegion + sizeof (FSP_REGION_STRUCTURE))
 
     //
     // In FBM, all TPM required type digest should be there.
+    // Only SHA384 digest will be verified, others are kept for measurement use.
     //
     typedef struct {
     UINT8             ComponentID;  //0: FSP-O/T  1: FSP-M  2: FSP-S
@@ -33,7 +34,7 @@
 typedef struct {
     UINT8             ComponentID;  //0: FSP-O/T  1: FSP-M  2: FSP-S
     UINT8             SegmentCnt;
-    //IBB_SEGMENT     SegmentArray[];
+    //REGION_SEGMENT     SegmentArray[];
 } FSP_REGION_STRUCTURE;
 
 #define FSP_BOOT_MANIFEST_STRUCTURE_ID  (*(UINT64 *)"__FBMS__")
@@ -49,10 +50,9 @@ typedef struct {
     UINT8                         Reserved2;
     UINT32                        Flags;                 // UINT32 Alignment
 
-    UINT8                         CompDigestCnt;
-    FSP_REGION_DIGEST             ComponentDigests[3];   // digest for FSP/T, FSP-M, FSP-S
+    UINT8                         CompCnt;
+    FSP_REGION_DIGEST             ComponentDigests[3];   // digest for FSP-T, FSP-M, FSP-S
 
-    UINT8                         FspRgnCnt;
     //FSP_REGION_STRUCTURE        FspRegions_0;          // FSP-O/T
     //FSP_REGION_STRUCTURE        FspRegions[2];         // FSP-M, FSP-S
 

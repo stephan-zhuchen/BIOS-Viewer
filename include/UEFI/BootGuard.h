@@ -403,7 +403,7 @@ typedef struct {
   UINT16             Flags;            // Control flags
   UINT32             Base;             // Segment base
   UINT32             Size;             // Segment size
-} IBB_SEGMENT;
+} REGION_SEGMENT;
 
 #define BOOT_POLICY_MANIFEST_IBB_ELEMENT_STRUCTURE_ID  (*(UINT64 *)"__IBBS__")
 #define BOOT_POLICY_MANIFEST_IBB_ELEMENT_DIGEST_ID     (*(UINT64 *)"__DIGE__")
@@ -457,7 +457,7 @@ typedef struct {
   HASH_LIST           DigestList;
   UINT8               Reserved3[3];
   UINT8               SegmentCount;
-  IBB_SEGMENT*        TxtSegment;      // TxtSegment[SegmentCount]
+  REGION_SEGMENT*     TxtSegment;      // TxtSegment[SegmentCount]
 } TXT_ELEMENT;
 
 typedef struct {
@@ -491,7 +491,7 @@ typedef struct {
   UINT8               StructVersion; // 0x10
   UINT16              SizeOfData;
   UINT8               Reserved;
-  IBB_SEGMENT         BufferData;
+  REGION_SEGMENT      BufferData;
 } CNBS_SEGMENT;
 
 typedef struct {
