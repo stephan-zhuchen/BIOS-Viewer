@@ -1,6 +1,7 @@
 #ifndef INFOWINDOW_H
 #define INFOWINDOW_H
 
+#include <QMap>
 #include <QWidget>
 #include <QSettings>
 #include <QTableWidgetItem>
@@ -50,6 +51,9 @@ private:
     QString          appDir;
     QString          OpenedFileName;
     QSettings        setting{"Intel", "BiosViewer"};
+
+    QMap<QString, QString> ManifestList;
+    // QMap<QString, QString> AcpiList;
 
     enum tableColNum {Address=0, Size, Version, C_V, Checksum, Type};
 };

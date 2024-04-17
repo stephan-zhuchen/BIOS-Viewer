@@ -191,24 +191,65 @@ void InfoWindow::showAcmTab() {
 }
 
 void InfoWindow::showBtgTab() {
+    QString text;
+    QString toolpath = appDir + "/tool/BpmGen2/BpmGen2.exe";
+    QString BpmHeaderStr("######################\r\n"
+                         "# BootPolicyManifest #\r\n"
+                         "######################");
+    QString KmHeaderStr("################\r\n"
+                        "# Key Manifest #\r\n"
+                        "################");
+
+    auto *process = new QProcess(this);
+    process->start(toolpath, QStringList() << "INFO" << OpenedFileName);
+    process->waitForFinished();
+    QString BpmGen2Text = process->readAllStandardOutput();
+    delete process;
+
+    INT64 FirstLineLength = BpmGen2Text.indexOf("\r\n");
+    INT64 BpmIndex = BpmGen2Text.indexOf(BpmHeaderStr);
+    INT64 KmIndex = BpmGen2Text.indexOf(KmHeaderStr);
+    QString BpmToolVersion = BpmGen2Text.mid(0, FirstLineLength) + "\n\n";
+
     QString ItemName;
     ItemName = "Key Manifest";
     auto *KmItem = new QListWidgetItem(ItemName);
     ui->BtgListWidget->addItem(KmItem);
+    text = BpmToolVersion + BpmGen2Text.mid(KmIndex);
+    ManifestList.insert(ItemName, text);
 
     ItemName = "Boot Policy Manifest";
     auto *BpmItem = new QListWidgetItem(ItemName);
     ui->BtgListWidget->addItem(BpmItem);
+    text = BpmToolVersion + BpmGen2Text.mid(BpmIndex, KmIndex - BpmIndex);
+    ManifestList.insert(ItemName, text);
 
     if (BiosImage->isFitValid() && BiosImage->FitTable->FbmEntry != nullptr) {
         ItemName = "FSP Boot Manifest";
         auto *FbmItem = new QListWidgetItem(ItemName);
         ui->BtgListWidget->addItem(FbmItem);
+        text = BiosImage->FitTable->FbmEntry->getInfoText();
+        ManifestList.insert(ItemName, text);
     }
 
     ItemName = "BPM DEF";
     auto *BpDefItem = new QListWidgetItem(ItemName);
     ui->BtgListWidget->addItem(BpDefItem);
+
+    process = new QProcess(this);
+    QString lastPath = setting.value("LastFilePath").toString();
+    QString TempFilepath = QDir(lastPath).filePath("temp.txt");
+    process->start(toolpath, QStringList() << "PARSE" << OpenedFileName << "-o" << TempFilepath);
+    process->waitForFinished();
+    delete process;
+    QFile TempFile(TempFilepath);
+    if (TempFile.exists()) {
+        TempFile.open(QIODevice::ReadOnly | QIODevice::Text);
+        text = TempFile.readAll();
+        ManifestList.insert(ItemName, text);
+        TempFile.close();
+        TempFile.remove();
+    }
 
     if (ui->BtgListWidget->model()->rowCount() != 0)
         ui->BtgListWidget->setCurrentRow(0);
@@ -293,59 +334,14 @@ void InfoWindow::acmListWidgetItemSelectionChanged() {
     ui->AcmTextBrowser->setText(EntryHeader->getInfoText());
 }
 
-void InfoWindow::BtgListWidgetItemSelectionChanged()
-{
+void InfoWindow::BtgListWidgetItemSelectionChanged() {
     QModelIndex index = ui->BtgListWidget->currentIndex();
     if (!index.isValid())
         return;
     QListWidgetItem *item = ui->BtgListWidget->currentItem();
-
-    QString text;
-    QString toolpath = appDir + "/tool/BpmGen2/BpmGen2.exe";
-    QString BpmHeaderStr("######################\r\n"
-                         "# BootPolicyManifest #\r\n"
-                         "######################");
-    QString KmHeaderStr("################\r\n"
-                        "# Key Manifest #\r\n"
-                        "################");
-
-    auto *process = new QProcess(this);
-    process->start(toolpath, QStringList() << "INFO" << OpenedFileName);
-    process->waitForFinished();
-    QString BpmGen2Text = process->readAllStandardOutput();
-    delete process;
-
-    INT64 FirstLineLength = BpmGen2Text.indexOf("\r\n");
-    INT64 BpmIndex = BpmGen2Text.indexOf(BpmHeaderStr);
-    INT64 KmIndex = BpmGen2Text.indexOf(KmHeaderStr);
-
-    QString BpmToolVersion = BpmGen2Text.mid(0, FirstLineLength) + "\n\n";
-
-    if (item->text() == "Key Manifest") {
-        text = BpmToolVersion + BpmGen2Text.mid(KmIndex);
-    } else if (item->text() == "Boot Policy Manifest") {
-        text = BpmToolVersion + BpmGen2Text.mid(BpmIndex, KmIndex - BpmIndex);
-    } else if (item->text() == "FSP Boot Manifest") {
-        FspBootManifestClass* FbmEntry = BiosImage->FitTable->FbmEntry;
-        FbmEntry->setInfoStr();
-        text = FbmEntry->getInfoText();
-    } else if (item->text() == "BPM DEF") {
-        process = new QProcess(this);
-        QString lastPath = setting.value("LastFilePath").toString();
-        QString TempFilepath = QDir(lastPath).filePath("temp.txt");
-        process->start(toolpath, QStringList() << "PARSE" << OpenedFileName << "-o" << TempFilepath);
-        process->waitForFinished();
-        delete process;
-        QFile TempFile(TempFilepath);
-        if (TempFile.exists()) {
-            TempFile.open(QIODevice::ReadOnly | QIODevice::Text);
-            text = TempFile.readAll();
-            TempFile.close();
-            TempFile.remove();
-        }
+    if (ManifestList.contains(item->text())) {
+        ui->BtgTextBrowser->setText(ManifestList.value(item->text()));
     }
-
-    ui->BtgTextBrowser->setText(text);
 }
 
 void InfoWindow::VpdListWidgetItemSelectionChanged() {
