@@ -471,21 +471,38 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
                                "Microsoft (R) COFF/PE Dumper Version 14.29.30146.0<br>"
                                "ASL+ Optimizing Compiler/Disassembler Version 20230331";
 
-    QString strText= QString("<html>"
+    QString SelfDescription = "BIOS Viewer is a software tool designed for the reverse<br>"
+                              "engineering of UEFI binaries. It offers a range of features<br>"
+                              "including the ability to view the UEFI file system, inspect<br>"
+                              "or modify binary data, and disassemble executable code.<br><br>"
+                              "This software is released under the GNU General Public<br>"
+                              "License (GPL), embracing the principles of open-source<br>"
+                              "collaboration. The source code is hosted on GitHub at<br>"
+                              "<a href=\"https://github.com/stephan-zhuchen/BIOS-Viewer\">"
+                              "https://github.com/stephan-zhuchen/BIOS-Viewer</a>, where<br>"
+                              "we actively encourage the community to contribute by<br>"
+                              "making suggestions and submitting pull requests.<br><br>"
+                              "By using BIOS Viewer, you agree to comply with the terms<br>"
+                              "set forth in the GPL. We welcome contributions from all<br>"
+                              "users and developers in an effort to improve the tool and<br>"
+                              "foster a vibrant open-source ecosystem around BIOS and<br>"
+                              "UEFI technology.";
+
+    QString AboutText= QString("<html>"
                              "<head/>"
                              "<body>"
                              "<p><span style=' font-size:14pt; font-weight:700;'>%1</span></p>"
-                             "<p>%2</p>"
-                             "<p>%3</p>"
+                             "<p><br>%2<br></p>"
+                             "<p> External Tool:<br> %3</p>"
                              "<p>Built on %4 by <span style=' font-weight:700; color:#00aaff;'>%5</p>"
                              "</body>"
                              "</html>").arg(
-                                            xorLambda("181315097a0c333f2d3f287a6b746b6e", 0x5A),
-                                            xorLambda("13342e3f367a13342e3f28343b367a0f293f7a15343623", 0x5A),
+                                            xorLambda("181315097a0c333f2d3f287a6b746b6f", 0x5A),
+                                            SelfDescription,
                                             ExternalToolInfo,
                                             __DATE__,
                                             xorLambda("00322f767a19323f34", 0x5A));
-    QMessageBox::about(this, tr("About BIOS Viewer"), strText);
+    QMessageBox::about(this, tr("About BIOS Viewer"), AboutText);
 }
 
 void StartWindow::OpenInNewWindowTriggered() {

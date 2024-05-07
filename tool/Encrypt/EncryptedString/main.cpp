@@ -2,9 +2,8 @@
 #include <QByteArray>
 #include <iostream>
 
-#define __BiosViewerVersion__   "BIOS Viewer 1.14"
+#define __BiosViewerVersion__   "BIOS Viewer 1.15"
 #define __BiosViewerAuthor__    "Zhu, Chen"
-#define __BiosViewerCopyright__ "Intel Internal Use Only"
 
 QString xorEncrypt(const QString& str, char key) {
     QByteArray ba = str.toLatin1();
@@ -27,6 +26,5 @@ void EncryptAndShow(const QString& str) {
 
 int main() {
     EncryptAndShow(__BiosViewerVersion__);
-    EncryptAndShow(__BiosViewerCopyright__);
     EncryptAndShow(__BiosViewerAuthor__);
 }
