@@ -17,93 +17,6 @@
 
 using namespace BaseLibrarySpace;
 
-PeCoff::PeCoff(UINT8 *file, INT64 length):
-        data(file), size(length)
-{
-    UINT16 magic = *(UINT16*)file;
-    if (magic == EFI_IMAGE_DOS_SIGNATURE) {
-        dosHeader = *(EFI_IMAGE_DOS_HEADER*)file;
-        pe32Header = *(EFI_IMAGE_NT_HEADERS32*)(file + dosHeader.e_lfanew);
-        if (pe32Header.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
-            isPe32Plus = true;
-            pe32plusHeader = *(EFI_IMAGE_NT_HEADERS64*)(file + dosHeader.e_lfanew);
-        }
-    } else if (magic == EFI_TE_IMAGE_HEADER_SIGNATURE) {
-        isTE = true;
-        teHeader = *(EFI_TE_IMAGE_HEADER*)file;
-    } else {
-        isValid = false;
-    }
-}
-
-string PeCoff::getMachineType() const {
-    UINT16 machine;
-    if (isTE)
-        machine = teHeader.Machine;
-    else
-        machine = pe32Header.FileHeader.Machine;
-    switch (machine) {
-        case IMAGE_FILE_MACHINE_I386:
-            return "x86";
-        case IMAGE_FILE_MACHINE_EBC:
-            return "EBC";
-        case IMAGE_FILE_MACHINE_X64:
-            return "x86_64";
-        case IMAGE_FILE_MACHINE_ARM:
-            return "ARM";
-        case IMAGE_FILE_MACHINE_ARMT:
-            return "ARMT";
-        case IMAGE_FILE_MACHINE_ARM64:
-            return "ARM64";
-        case IMAGE_FILE_MACHINE_RISCV64:
-            return "RISC-V";
-        case IMAGE_FILE_MACHINE_LOONGARCH64:
-            return "LoongArch";
-        default:
-            break;
-    }
-    return "";
-}
-
-string PeCoff::getSubsystemName(UINT16 subsystem) {
-    string SubSystemName;
-    switch (subsystem) {
-        case EFI_IMAGE_SUBSYSTEM_UNKNOWN:
-            SubSystemName = "Unknown";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_NATIVE:
-            SubSystemName = "Native";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_WINDOWS_GUI:
-            SubSystemName = "Windows GUI";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_WINDOWS_CUI:
-            SubSystemName = "Windows CUI";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_OS2_CUI:
-            SubSystemName = "OS2 CUI";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_POSIX_CUI:
-            SubSystemName = "POSIX CUI";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION:
-            SubSystemName = "Application";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER:
-            SubSystemName = "Boot Service Driver";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
-            SubSystemName = "Runtime Driver";
-            break;
-        case EFI_IMAGE_SUBSYSTEM_SAL_RUNTIME_DRIVER:
-            SubSystemName = "SAL Runtime Driver";
-            break;
-        default:
-            break;
-    }
-    return SubSystemName;
-}
-
 Depex::Depex(UINT8 *file, INT64 length):
         data(file), size(length)
 {
@@ -187,8 +100,8 @@ CommonSection::CommonSection(UINT8 *file, INT64 length, INT64 offset, bool Compr
         Volume(file, length, offset, Compressed, parent) {}
 
 CommonSection::~CommonSection() {
-    safeDelete(peCoffHeader);
-    safeDelete(dependency);
+    safeDelete(Pe32Header);
+    safeDelete(Dependency);
 }
 
 bool CommonSection::CheckValidation() {
@@ -358,7 +271,8 @@ void CommonSection::DecodeChildVolume() {
             break;
         case EFI_SECTION_PE32:
         case EFI_SECTION_TE:
-            peCoffHeader = new PeCoff(data + HeaderSize, size - HeaderSize);
+            Pe32Header = new PE32(data + HeaderSize, size - HeaderSize, offsetFromBegin + HeaderSize, Compressed, this);
+            Pe32Header->SelfDecode();
             break;
         case EFI_SECTION_USER_INTERFACE:
             UINT16* char16FileName;
@@ -388,7 +302,7 @@ void CommonSection::DecodeChildVolume() {
         case EFI_SECTION_DXE_DEPEX:
         case EFI_SECTION_PEI_DEPEX:
         case EFI_SECTION_MM_DEPEX:
-            dependency = new Depex(data + HeaderSize, size - HeaderSize);
+            Dependency = new Depex(data + HeaderSize, size - HeaderSize);
             break;
         case EFI_SECTION_RAW:
             if (ParentVolume->getVolumeSubType() == VolumeType::Apriori) {
@@ -455,53 +369,13 @@ void CommonSection::setInfoStr() {
             }
             break;
         case EFI_SECTION_PE32:
-            UINT16 e_magic;
-            UINT32 peSignature;
-            UINT16 peOptionalSignature;
-            UINT16 SubSystem;
-            if (peCoffHeader->isValid) {
-                e_magic = peCoffHeader->dosHeader.e_magic;
-                peSignature = peCoffHeader->pe32Header.Signature;
-                peOptionalSignature = peCoffHeader->pe32Header.OptionalHeader.Magic;
-                SubSystem = peCoffHeader->pe32Header.OptionalHeader.Subsystem;
-
-                ss << setw(width) << "DOS signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
-                   << setw(width) << "PE signature:" << hex << uppercase << peSignature << "h (" << charToString((CHAR8*)&peSignature, sizeof(UINT32), false) << ")\n"
-                   << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
-                   << setw(width) << "Number of sections:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.NumberOfSections << "h\n"
-                   << setw(width) << "Characteristics:" << hex << uppercase << peCoffHeader->pe32Header.FileHeader.Characteristics << "h\n"
-                   << setw(width) << "Optional header signature:" << hex << uppercase << peOptionalSignature << "h\n"
-                   << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
-                   << setw(width) << "EntryPoint Address:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.AddressOfEntryPoint << "h\n"
-                   << setw(width) << "Base of code:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.BaseOfCode << "h\n"
-                   << setw(width) << "Base of data:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.BaseOfData << "h\n";
-                if (peCoffHeader->isPe32Plus)
-                    ss << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->pe32plusHeader.OptionalHeader.ImageBase << "h\n";
-                else
-                    ss << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->pe32Header.OptionalHeader.ImageBase << "h\n";
+        case EFI_SECTION_TE:
+            if (Pe32Header->isValid) {
+                Pe32Header->setInfoStr();
+                ss << Pe32Header->getInfoText().toStdString();
                 break;
             } else {
                 ss << "Invalid PE32 Image";
-                break;
-            }
-
-        case EFI_SECTION_TE:
-            if (peCoffHeader->isValid) {
-                e_magic = peCoffHeader->teHeader.Signature;
-                SubSystem = peCoffHeader->teHeader.Subsystem;
-
-                ss << setw(width) << "TE signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
-                   << setw(width) << "Machine type:" << peCoffHeader->getMachineType() << "\n"
-                   << setw(width) << "Number of sections:" << hex << uppercase << (UINT32)peCoffHeader->teHeader.NumberOfSections << "h\n"
-                   << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << PeCoff::getSubsystemName(SubSystem) << ")\n"
-                   << setw(width) << "Stripped size:" << hex << uppercase << peCoffHeader->teHeader.StrippedSize << "h\n"
-                   << setw(width) << "Base of code:" << hex << uppercase << peCoffHeader->teHeader.BaseOfCode << "h\n"
-                   << setw(width) << "EntryPoint Address:" << hex << uppercase << peCoffHeader->teHeader.AddressOfEntryPoint << "h\n"
-                   << setw(width) << "Image base:" << hex << uppercase << peCoffHeader->teHeader.ImageBase << "h\n"
-                   << setw(width) << "VirtualAddress:" << hex << uppercase << peCoffHeader->teHeader.DataDirectory->VirtualAddress << "h\n";
-                break;
-            } else {
-                ss << "Invalid TE Image";
                 break;
             }
         case EFI_SECTION_FREEFORM_SUBTYPE_GUID:
@@ -518,7 +392,7 @@ void CommonSection::setInfoStr() {
         case EFI_SECTION_PEI_DEPEX:
         case EFI_SECTION_MM_DEPEX:
             ss << "\n" << "Dependency:\n";
-            for (auto &depexStr : dependency->OrganizedDepexList)
+            for (auto &depexStr : Dependency->OrganizedDepexList)
                 ss << depexStr << "\n";
             break;
         case EFI_SECTION_RAW:

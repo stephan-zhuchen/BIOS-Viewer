@@ -1,7 +1,7 @@
 #ifndef PE32_H
 #define PE32_H
 
-#include "string"
+//#include "string"
 #include "Volume.h"
 #include "UEFI/PeImage.h"
 
@@ -16,6 +16,9 @@ public:
     EFI_IMAGE_NT_HEADERS64    pe32plusHeader{};
     bool                      isTE{false};
     bool                      isPe32Plus{false};
+    bool                      isValid{true};
+    UINT8                     *convertedPe32Data{nullptr};
+    INT64                     convertedPe32Size{0};
 
     PE32()=delete;
     PE32(UINT8* file, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
@@ -26,6 +29,7 @@ public:
     // void  DecodeChildVolume() override;
     void  setInfoStr() override;
 
+    void convert2Pe();
     [[nodiscard]] string getMachineType() const;
     static string getSubsystemName(UINT16 subsystem);
 };

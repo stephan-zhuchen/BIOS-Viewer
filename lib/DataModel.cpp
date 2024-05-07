@@ -38,7 +38,7 @@ void DataModel::setSectionModel(Volume *sec) {
             subtype = "Disposable";
             break;
         case EFI_SECTION_PE32:
-            if (section->peCoffHeader->isPe32Plus){
+            if (section->Pe32Header->isPe32Plus){
                 name = "PE32+ Image Section";
                 subtype = "PE32+ image";
             } else {

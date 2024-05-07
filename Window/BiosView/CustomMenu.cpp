@@ -9,6 +9,7 @@
 #include "TabWindow/TabWindow.h"
 #include "UefiFileSystem/NvVariable.h"
 #include "Feature/BiosGuardClass.h"
+#include "Payload/PE32.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
 #include "ui_BiosWindow.h"
@@ -123,14 +124,11 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
 
     CustomMenu->clear();
     if (BiosData->RightClickedItemModel.getSubType() == "PE32 image" ||
-            BiosData->RightClickedItemModel.getSubType() == "PE32+ image") {
-        QString filepath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
-        QFile file(filepath);
-        if (file.exists()) {
-            showPeCoff->setIcon(windows);
-            CustomMenu->addAction(showPeCoff);
-            file.close();
-        }
+        BiosData->RightClickedItemModel.getSubType() == "PE32+ image" ||
+        BiosData->RightClickedItemModel.getSubType() == "TE image")
+    {
+        showPeCoff->setIcon(windows);
+        CustomMenu->addAction(showPeCoff);
     }
 
     if (BiosData->RightClickedItemModel.getName().mid(0, 10) == "ACPI Table") {
@@ -338,17 +336,29 @@ void BiosViewerWindow::showPeCoffView() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString filepath = QDir(lastPath).filePath("temp.bin");
     QString toolpath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
-//    QFileInfo fileInfo(toolpath);
-//    if(fileInfo.isFile() && fileInfo.exists()) {
-//        QMessageBox::critical(this, tr("BIOS Viewer"), "Microsoft dumpbin tool not found!");
-//        return;
-//    }
+    QFileInfo fileInfo(toolpath);
+    if(!fileInfo.exists()) {
+        QMessageBox::critical(this, tr("BIOS Viewer"), "Microsoft dumpbin tool not found!");
+        return;
+    }
 
     INT64 HeaderSize = BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
-    saveBinary(filepath.toStdString(),
-               BiosData->RightClickedItemModel.getVolume()->getData(),
-               HeaderSize,
-               BiosData->RightClickedItemModel.getVolume()->getSize() - HeaderSize);
+    UINT8* Pe32Data = BiosData->RightClickedItemModel.getVolume()->getData() + HeaderSize;
+    PE32 Pe32 = PE32(Pe32Data, BiosData->RightClickedItemModel.getVolume()->getSize() - HeaderSize, 0);
+    Pe32.SelfDecode();
+
+    if (Pe32.isTE) {
+        Pe32.convert2Pe();
+        saveBinary(filepath.toStdString(),
+                   Pe32.convertedPe32Data,
+                   0,
+                   Pe32.convertedPe32Size);
+    } else {
+        saveBinary(filepath.toStdString(),
+                   BiosData->RightClickedItemModel.getVolume()->getData(),
+                   HeaderSize,
+                   BiosData->RightClickedItemModel.getVolume()->getSize() - HeaderSize);
+    }
 
     auto *TabView = new TabWindow();
     TabView->SetTabViewTitle("PE/COFF");

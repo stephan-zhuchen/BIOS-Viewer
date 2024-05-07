@@ -47,5 +47,5 @@ namespace BaseLibrarySpace {
     INT32  getSizeFromUINT24(const UINT8* address);
     string DumpHex(UINT8* HexData, INT64 length, INT64 ColumeSize = 16, bool SingleLine = false, INT64 indent = 0);
 
-    void   saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size);
+    void   saveBinary(const string& filename, UINT8* data, INT64 offset, INT64 size);
 }

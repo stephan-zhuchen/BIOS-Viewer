@@ -4,35 +4,14 @@
 
 #pragma once
 #include "Volume.h"
-#include "string"
 #include "UEFI/PiFirmwareFile.h"
-#include "UEFI/PeImage.h"
 #include "UEFI/CapsuleSpec.h"
+#include "Payload/PE32.h"
 
 using std::string;
 class FspHeader;
 class AcpiClass;
 class ELF;
-
-class PeCoff {
-private:
-    UINT8* data{};
-    INT64  size{};
-public:
-    EFI_IMAGE_DOS_HEADER      dosHeader{};
-    EFI_TE_IMAGE_HEADER       teHeader{};
-    EFI_IMAGE_NT_HEADERS32    pe32Header{};
-    EFI_IMAGE_NT_HEADERS64    pe32plusHeader{};
-    bool                      isValid{true};
-    bool                      isTE{false};
-    bool                      isPe32Plus{false};
-
-    PeCoff()=delete;
-    PeCoff(UINT8* file, INT64 length);
-
-    [[nodiscard]] string getMachineType() const;
-    static string getSubsystemName(UINT16 subsystem);
-};
 
 class Depex {
 private:
@@ -67,8 +46,8 @@ private:
     bool                      isValid;
     QVector<EFI_GUID>         AprioriList;
 public:
-    PeCoff                    *peCoffHeader{nullptr};
-    Depex                     *dependency{nullptr};
+    PE32                      *Pe32Header{nullptr};
+    Depex                     *Dependency{nullptr};
 
     CommonSection()=delete;
     CommonSection(UINT8* file, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);

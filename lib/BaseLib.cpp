@@ -264,9 +264,12 @@ namespace BaseLibrarySpace {
     * @return void
     *
     */
-    void saveBinary(const string& filename, UINT8* address, INT64 offset, INT64 size) {
+    void saveBinary(const string& filename, UINT8* data, INT64 offset, INT64 size) {
+        if (data == nullptr) {
+            return;
+        }
         ofstream outFile(filename, ios::out | ios::binary);
-        outFile.write((CHAR8*)(address + offset), size);
+        outFile.write((CHAR8*)(data + offset), size);
         outFile.close();
     }
 }
