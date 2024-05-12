@@ -39,7 +39,6 @@ set(DECOMPRESS_LIB
         lib/Lz4Decompress/Lz4.h
         lib/Lz4Decompress/Lz4DecompressLib.cpp
         lib/Lz4Decompress/Lz4.cpp
-        # lib/Lz4Decompress/Lz4Hc.cpp
 )
 
 aux_source_directory(lib/LzmaDecompress/Sdk/C LZMA_SDK)

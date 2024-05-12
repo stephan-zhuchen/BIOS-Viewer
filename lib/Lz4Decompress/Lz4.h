@@ -52,8 +52,6 @@ typedef UINT64                U64;
 typedef UINTN                 reg_t;
 typedef UINTN*                uptrval;
 
-// #define memcpy                CopyMem
-#define memmove               CopyMem
 #define LZ4_readLE16(x)       (*(UINT16 *)(x))
 #define LZ4_read16(x)         (*(UINT16 *)(x))
 #define LZ4_writeLE16(x, y)   *(UINT16*)(x) = y
