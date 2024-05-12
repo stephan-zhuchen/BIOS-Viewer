@@ -335,12 +335,16 @@ void BiosViewerWindow::showNvHexView() const {
 void BiosViewerWindow::showPeCoffView() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString filepath = QDir(lastPath).filePath("temp.bin");
+#ifdef Q_OS_WIN
     QString toolpath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
     QFileInfo fileInfo(toolpath);
     if(!fileInfo.exists()) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "Microsoft dumpbin tool not found!");
         return;
     }
+#elif defined(Q_OS_LINUX)
+    QString toolpath = "objdump";
+#endif
 
     INT64 HeaderSize = BiosData->RightClickedItemModel.getVolume()->getHeaderSize();
     UINT8* Pe32Data = BiosData->RightClickedItemModel.getVolume()->getData() + HeaderSize;
@@ -366,6 +370,7 @@ void BiosViewerWindow::showPeCoffView() {
         TabView->setWindowIcon(QIcon(":/windows_light.svg"));
     }
     auto *process = new QProcess(this);
+#ifdef Q_OS_WIN
     process->start(toolpath, QStringList() << "/DISASM" << filepath);
     process->waitForFinished();
     QString DisAssembly = process->readAllStandardOutput();
@@ -380,6 +385,17 @@ void BiosViewerWindow::showPeCoffView() {
     process->waitForFinished();
     QString Relocation = process->readAllStandardOutput();
     TabView->SetNewTabAndText("Relocation", Relocation);
+#elif defined(Q_OS_LINUX)
+    process->start(toolpath, QStringList() << "-d" << filepath);
+    process->waitForFinished();
+    QString DisAssembly = process->readAllStandardOutput();
+    TabView->SetNewTabAndText("DisAssembly", DisAssembly);
+
+    process->start(toolpath, QStringList() << "-x" << filepath);
+    process->waitForFinished();
+    QString Header = process->readAllStandardOutput();
+    TabView->SetNewTabAndText("Header", Header);
+#endif
 
     delete process;
 

@@ -481,10 +481,6 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
         return QString(ba);
     };
 
-    QString ExternalToolInfo = "BpmGen2 Version 2.7.17 (Nov  2 2023)<br>"
-                               "Microsoft (R) COFF/PE Dumper Version 14.29.30146.0<br>"
-                               "ASL+ Optimizing Compiler/Disassembler Version 20230331";
-
     QString SelfDescription = "BIOS Viewer is a software tool designed for the reverse<br>"
                               "engineering of UEFI binaries. It offers a range of features<br>"
                               "including the ability to view the UEFI file system, inspect<br>"
@@ -507,13 +503,11 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
                              "<body>"
                              "<p><span style=' font-size:14pt; font-weight:700;'>%1</span></p>"
                              "<p><br>%2<br></p>"
-                             "<p> External Tool:<br> %3</p>"
-                             "<p>Built on %4 by <span style=' font-weight:700; color:#00aaff;'>%5</p>"
+                             "<p>Built on %3 by <span style=' font-weight:700; color:#00aaff;'>%4</p>"
                              "</body>"
                              "</html>").arg(
                                             xorLambda("181315097a0c333f2d3f287a6b746b6f", 0x5A),
                                             SelfDescription,
-                                            ExternalToolInfo,
                                             __DATE__,
                                             xorLambda("00322f767a19323f34", 0x5A));
     QMessageBox::about(this, tr("About BIOS Viewer"), AboutText);
