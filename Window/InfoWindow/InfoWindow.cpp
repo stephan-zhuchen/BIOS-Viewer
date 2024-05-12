@@ -78,8 +78,10 @@ void InfoWindow::showTab() {
     std::thread showAcm(&InfoWindow::showAcmTab, this);
     showAcm.detach();
 
+#ifdef Q_OS_WIN
     std::thread showBtg(&InfoWindow::showBtgTab, this);
     showBtg.detach();
+#endif
 
     std::thread showVpd(&InfoWindow::showVpdTab, this);
     showVpd.detach();
@@ -357,11 +359,12 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
     INT32 currentRow = ui->AcpiListWidget->currentRow();
     AcpiClass* ACPI_Entry = BiosImage->AcpiTables.at(currentRow);
 
+    QString AcpiText;
     QString lastPath = setting.value("LastFilePath").toString();
     QString filePath = QDir(lastPath).filePath("temp.bin");
     QString Dslpath = QDir(lastPath).filePath("temp.dsl");
+#ifdef Q_OS_WIN
     QString toolpath = appDir + "/tool/ACPI/iasl.exe";
-    QString AcpiText;
 
     QFile ToolFile(toolpath);
     if(!ToolFile.exists()) {
@@ -369,6 +372,9 @@ void InfoWindow::AcpiListWidgetItemSelectionChanged() {
         ui->AcpiTextBrowser->setText(AcpiText);
         return;
     }
+#elif defined(Q_OS_LINUX)
+    QString toolpath = "iasl";
+#endif
 
     saveBinary(filePath.toStdString(), ACPI_Entry->getData(), 0, ACPI_Entry->getSize());
     auto *process = new QProcess(this);
