@@ -49,7 +49,6 @@ typedef unsigned char         BYTE;
 typedef unsigned int          U32;
 typedef unsigned short        U16;
 typedef UINT64                U64;
-typedef UINTN                 size_t;
 typedef UINTN                 reg_t;
 typedef UINTN*                uptrval;
 

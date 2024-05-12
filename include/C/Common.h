@@ -58,7 +58,6 @@
 #define CR(Record, TYPE, Field, TestSignature)  ((TYPE *) ((CHAR8 *) (Record) - (CHAR8 *) &(((TYPE *) 0)->Field)))
 #define AllocateZeroPool(a)  calloc(a, sizeof (CHAR8))
 #define FreePool(a) free(a)
-#define CopyMem(a, b, c)  memcpy(a, b, c)
 #define ZeroMem(a, b) memset(a, 0, b)
 #define CompareMem(a, b, c)  memcmp(a, b, c)
 #define AllocatePool(a)  malloc(a)
