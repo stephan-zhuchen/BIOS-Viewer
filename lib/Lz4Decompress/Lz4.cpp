@@ -34,7 +34,7 @@
 */
 
 #include "Lz4.h"
-#include <cstring>
+#include <algorithm>
 
 /*-*****************************
 *  Decompression functions
@@ -114,7 +114,7 @@ FORCE_INLINE int LZ4_decompress_generic(
                 if ((!endOnInput) && (cpy != oend)) goto _output_error;       /* Error : block decoding must stop exactly there */
                 if ((endOnInput) && ((ip+length != iend) || (cpy > oend))) goto _output_error;   /* Error : input must be consumed */
             }
-            memcpy(op, ip, length);
+            std::copy_n(ip, length, op);
             ip += length;
             op += length;
             break;     /* Necessarily EOF, due to parsing restrictions */
@@ -177,7 +177,7 @@ FORCE_INLINE int LZ4_decompress_generic(
             op[2] = match[2];
             op[3] = match[3];
             match += dec32table[offset];
-            memcpy(op+4, match, 4);
+            std::copy_n(match, 4, op+4);
             match -= dec64;
         } else { LZ4_copy8(op, match); match+=8; }
         op += 8;
@@ -211,5 +211,6 @@ _output_error:
 
 int LZ4_decompress_safe(const char* source, char* dest, int compressedSize, int maxDecompressedSize)
 {
-    return LZ4_decompress_generic(source, dest, compressedSize, maxDecompressedSize, endOnInputSize, full, 0, noDict, (BYTE*)dest, NULL, 0);
+    return LZ4_decompress_generic(source, dest, compressedSize, maxDecompressedSize, endOnInputSize, full, 0, noDict, (BYTE*)dest,
+                                  nullptr, 0);
 }

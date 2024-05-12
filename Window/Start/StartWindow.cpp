@@ -90,7 +90,7 @@ StartWindow::~StartWindow() {
 
 void StartWindow::initSettings() {
     bool ResetSettings = false;
-    QString BiosViewerVersion = "1.13";
+    QString BiosViewerVersion = "1.15";
     DefaultSettings = {
         {"Version",             BiosViewerVersion},
         {"Theme",               "Light"},
@@ -126,6 +126,7 @@ void StartWindow::initSettings() {
         DisableBiosViewer = false;
     }
 
+#ifdef Q_OS_WIN
     if (setting.value("Theme").toString() == "System") {
         if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
             DarkmodeFlag = true;
@@ -146,6 +147,7 @@ void StartWindow::initSettings() {
         QApplication::setStyle(QStyleFactory::create("windowsvista"));
         QPalette palette = QApplication::style()->standardPalette();
         palette.setColor(QPalette::Base, Qt::white);
+        palette.setColor(QPalette::WindowText, Qt::black);
         palette.setColor(QPalette::Window, QColor(240, 240, 240));
         palette.setColor(QPalette::AlternateBase, QColor(240, 240, 240));
         QApplication::setPalette(palette);
@@ -177,8 +179,19 @@ void StartWindow::initSettings() {
         darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, QColor(127, 127, 127));
         QApplication::setPalette(darkPalette);
     }
+#elif defined(Q_OS_LINUX)
+    const QColor backgroundColor = QApplication::palette().window().color();
+    if (backgroundColor.lightness() < 128) {
+        DarkmodeFlag = true;
+        qDebug() << "Ubuntu Dark Mode";
+    } else {
+        DarkmodeFlag = false;
+        qDebug() << "Ubuntu Light Mode";
+    }
+#endif
 
     if (DarkmodeFlag) {
+        qDebug() << "Dark Mode";
         ui->OpenFile->setIcon(QIcon(":/open_light.svg"));
         ui->OpenInHexView->setIcon(QIcon(":/file-binary_light.svg"));
         ui->OpenInNewWindow->setIcon(QIcon(":/open_light.svg"));
@@ -196,6 +209,7 @@ void StartWindow::initSettings() {
         ui->actionAboutBiosViewer->setIcon(QIcon(":/about_light.svg"));
         ui->actionAboutQt->setIcon(QIcon(":/about_light.svg"));
     } else {
+        qDebug() << "Light Mode";
         ui->OpenFile->setIcon(QIcon(":/open.svg"));
         ui->OpenInHexView->setIcon(QIcon(":/file-binary.svg"));
         ui->OpenInNewWindow->setIcon(QIcon(":/open.svg"));

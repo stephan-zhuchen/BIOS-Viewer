@@ -47,18 +47,18 @@ CONST CHAR8 *mStatusString[] = {
 };
 
 /**
-  Copies one Null-terminated Unicode string to another Null-terminated Unicode
+  Copies one nullptr-terminated Unicode string to another nullptr-terminated Unicode
   string and returns the new Unicode string.
 
   This function copies the contents of the Unicode string Source to the Unicode
   string Destination, and returns Destination. If Source and Destination
   overlap, then the results are undefined.
 
-  If Destination is NULL, then return NULL.
-  If Destination is not aligned on a 16-bit boundary, then return NULL.
+  If Destination is nullptr, then return nullptr.
+  If Destination is not aligned on a 16-bit boundary, then return nullptr.
 
-  @param  Destination A pointer to a Null-terminated Unicode string.
-  @param  Source      A pointer to a Null-terminated Unicode string.
+  @param  Destination A pointer to a nullptr-terminated Unicode string.
+  @param  Source      A pointer to a nullptr-terminated Unicode string.
 
   @return Destination.
 
@@ -71,10 +71,10 @@ StrCpy (
 {
     CHAR16                            *ReturnValue;
 
-    ReturnValue = NULL;
+    ReturnValue = nullptr;
 
-    if ((Destination == NULL) || ((UINTN) Destination % 2 != 0)) {
-        return NULL;
+    if ((Destination == nullptr) || ((UINTN) Destination % 2 != 0)) {
+        return nullptr;
     }
 
     ReturnValue = Destination;
@@ -86,14 +86,14 @@ StrCpy (
 }
 
 /**
-  Returns the length of a Null-terminated Unicode string.
+  Returns the length of a nullptr-terminated Unicode string.
 
-  This function returns the number of Unicode characters in the Null-terminated
+  This function returns the number of Unicode characters in the nullptr-terminated
   Unicode string specified by String.
 
-  If String is NULL, then return 0.
+  If String is nullptr, then return 0.
 
-  @param  String  A pointer to a Null-terminated Unicode string.
+  @param  String  A pointer to a nullptr-terminated Unicode string.
 
   @return The length of String.
 
@@ -105,7 +105,7 @@ FceStrLen (
 {
     UINTN           Length;
 
-    if (String == NULL) {
+    if (String == nullptr) {
         return 0;
     }
     for (Length = 0; *String != L'\0'; String++, Length++) {
@@ -115,19 +115,19 @@ FceStrLen (
 }
 
 /**
-  Returns the size of a Null-terminated Unicode string in bytes, including the
-  Null terminator.
+  Returns the size of a nullptr-terminated Unicode string in bytes, including the
+  nullptr terminator.
 
-  This function returns the size, in bytes, of the Null-terminated Unicode string
+  This function returns the size, in bytes, of the nullptr-terminated Unicode string
   specified by String.
 
-  If String is NULL, then ASSERT().
+  If String is nullptr, then ASSERT().
   If String is not aligned on a 16-bit boundary, then ASSERT().
   If PcdMaximumUnicodeStringLength is not zero, and String contains more than
   PcdMaximumUnicodeStringLength Unicode characters, not including the
-  Null-terminator, then ASSERT().
+  nullptr-terminator, then ASSERT().
 
-  @param  String  A pointer to a Null-terminated Unicode string.
+  @param  String  A pointer to a nullptr-terminated Unicode string.
 
   @return The size of String.
 
@@ -141,17 +141,17 @@ FceStrSize (
 }
 
 /**
-  Compares two Null-terminated Unicode strings, and returns the difference
+  Compares two nullptr-terminated Unicode strings, and returns the difference
   between the first mismatched Unicode characters.
 
-  This function compares the Null-terminated Unicode string FirstString to the
-  Null-terminated Unicode string SecondString. If FirstString is identical to
+  This function compares the nullptr-terminated Unicode string FirstString to the
+  nullptr-terminated Unicode string SecondString. If FirstString is identical to
   SecondString, then 0 is returned. Otherwise, the value returned is the first
   mismatched Unicode character in SecondString subtracted from the first
   mismatched Unicode character in FirstString.
 
-  @param  FirstString   A pointer to a Null-terminated Unicode string.
-  @param  SecondString  A pointer to a Null-terminated Unicode string.
+  @param  FirstString   A pointer to a nullptr-terminated Unicode string.
+  @param  SecondString  A pointer to a nullptr-terminated Unicode string.
 
   @retval 0      FirstString is identical to SecondString.
   @return others FirstString is not identical to SecondString.
@@ -171,33 +171,33 @@ FceStrCmp (
 }
 
 /**
-  Concatenates one Null-terminated Unicode string to another Null-terminated
+  Concatenates one nullptr-terminated Unicode string to another nullptr-terminated
   Unicode string, and returns the concatenated Unicode string.
 
-  This function concatenates two Null-terminated Unicode strings. The contents
-  of Null-terminated Unicode string Source are concatenated to the end of
-  Null-terminated Unicode string Destination. The Null-terminated concatenated
+  This function concatenates two nullptr-terminated Unicode strings. The contents
+  of nullptr-terminated Unicode string Source are concatenated to the end of
+  nullptr-terminated Unicode string Destination. The nullptr-terminated concatenated
   Unicode String is returned. If Source and Destination overlap, then the
   results are undefined.
 
-  If Destination is NULL, then ASSERT().
+  If Destination is nullptr, then ASSERT().
   If Destination is not aligned on a 16-bit boundary, then ASSERT().
-  If Source is NULL, then ASSERT().
+  If Source is nullptr, then ASSERT().
   If Source is not aligned on a 16-bit boundary, then ASSERT().
   If Source and Destination overlap, then ASSERT().
   If PcdMaximumUnicodeStringLength is not zero, and Destination contains more
   than PcdMaximumUnicodeStringLength Unicode characters, not including the
-  Null-terminator, then ASSERT().
+  nullptr-terminator, then ASSERT().
   If PcdMaximumUnicodeStringLength is not zero, and Source contains more than
   PcdMaximumUnicodeStringLength Unicode characters, not including the
-  Null-terminator, then ASSERT().
+  nullptr-terminator, then ASSERT().
   If PcdMaximumUnicodeStringLength is not zero, and concatenating Destination
   and Source results in a Unicode string with more than
   PcdMaximumUnicodeStringLength Unicode characters, not including the
-  Null-terminator, then ASSERT().
+  nullptr-terminator, then ASSERT().
 
-  @param  Destination A pointer to a Null-terminated Unicode string.
-  @param  Source      A pointer to a Null-terminated Unicode string.
+  @param  Destination A pointer to a nullptr-terminated Unicode string.
+  @param  Source      A pointer to a nullptr-terminated Unicode string.
 
   @return Destination.
 
@@ -219,28 +219,28 @@ StrCat (
 }
 
 /**
-  Returns the first occurrence of a Null-terminated Unicode sub-string
-  in a Null-terminated Unicode string.
+  Returns the first occurrence of a nullptr-terminated Unicode sub-string
+  in a nullptr-terminated Unicode string.
 
-  This function scans the contents of the Null-terminated Unicode string
+  This function scans the contents of the nullptr-terminated Unicode string
   specified by String and returns the first occurrence of SearchString.
-  If SearchString is not found in String, then NULL is returned.  If
+  If SearchString is not found in String, then nullptr is returned.  If
   the length of SearchString is zero, then String is
   returned.
 
-  If String is NULL, then ASSERT().
+  If String is nullptr, then ASSERT().
   If String is not aligned on a 16-bit boundary, then ASSERT().
-  If SearchString is NULL, then ASSERT().
+  If SearchString is nullptr, then ASSERT().
   If SearchString is not aligned on a 16-bit boundary, then ASSERT().
 
   If PcdMaximumUnicodeStringLength is not zero, and SearchString
   or String contains more than PcdMaximumUnicodeStringLength Unicode
-  characters, not including the Null-terminator, then ASSERT().
+  characters, not including the nullptr-terminator, then ASSERT().
 
-  @param  String          A pointer to a Null-terminated Unicode string.
-  @param  SearchString    A pointer to a Null-terminated Unicode string to search for.
+  @param  String          A pointer to a nullptr-terminated Unicode string.
+  @param  SearchString    A pointer to a nullptr-terminated Unicode string to search for.
 
-  @retval NULL            If the SearchString does not appear in String.
+  @retval nullptr            If the SearchString does not appear in String.
   @return others          If there is a match.
 
 **/
@@ -279,30 +279,30 @@ StrStr (
         }
 
         if (*String == L'\0') {
-            return NULL;
+            return nullptr;
         }
 
         String = FirstMatch + 1;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /**
-  Convert one Null-terminated ASCII string to a Null-terminated
+  Convert one nullptr-terminated ASCII string to a nullptr-terminated
   Unicode string and returns the Unicode string.
 
   This function converts the contents of the ASCII string Source to the Unicode
   string Destination, and returns Destination.  The function terminates the
-  Unicode string Destination by appending a Null-terminator character at the end.
+  Unicode string Destination by appending a nullptr-terminator character at the end.
   The caller is responsible to make sure Destination points to a buffer with size
   equal or greater than ((AsciiStrLen (Source) + 1) * sizeof (CHAR16)) in bytes.
 
-  @param  Source        A pointer to a Null-terminated ASCII string.
-  @param  Destination   A pointer to a Null-terminated Unicode string.
+  @param  Source        A pointer to a nullptr-terminated ASCII string.
+  @param  Destination   A pointer to a nullptr-terminated Unicode string.
 
   @return Destination.
-  @return NULL          If Destination or Source is NULL, return NULL.
+  @return nullptr          If Destination or Source is nullptr, return nullptr.
 
 **/
 CHAR16 *
@@ -313,17 +313,17 @@ AsciiStrToUnicodeStr (
 {
     CHAR16                            *ReturnValue;
 
-    ReturnValue = NULL;
+    ReturnValue = nullptr;
 
-    if ((Destination == NULL) || (Source == NULL) || (strlen (Source) == 0)) {
-        return NULL;
+    if ((Destination == nullptr) || (Source == nullptr) || (strlen (Source) == 0)) {
+        return nullptr;
     }
     ReturnValue = Destination;
     while (*Source != '\0') {
         *(Destination++) = (CHAR16) *(Source++);
     }
     //
-    // End the Destination with a NULL.
+    // End the Destination with a nullptr.
     //
     *Destination = '\0';
 
@@ -372,7 +372,7 @@ BasePrintLibValueToString (
   This function returns the 16-bit value pointed to by Buffer. The function
   guarantees that the read operation does not produce an alignment fault.
 
-  If the Buffer is NULL, then ASSERT().
+  If the Buffer is nullptr, then ASSERT().
 
   @param  Buffer  A pointer to a 16-bit value that may be unaligned.
 
@@ -384,7 +384,7 @@ FceReadUnaligned16 (
     IN CONST UINT16              *Buffer
     )
 {
-    ASSERT (Buffer != NULL);
+    ASSERT (Buffer != nullptr);
 
     return *Buffer;
 }
@@ -428,8 +428,8 @@ BasePrintLibFillBuffer (
 }
 
 /**
-  Worker function that produces a Null-terminated string in an output buffer
-  based on a Null-terminated format string and a VA_LIST argument list.
+  Worker function that produces a nullptr-terminated string in an output buffer
+  based on a nullptr-terminated format string and a VA_LIST argument list.
 
   VSPrint function to process format and place the results in Buffer. Since a
   VA_LIST is used this routine allows the nesting of Vararg routines. Thus
@@ -444,13 +444,13 @@ BasePrintLibFillBuffer (
   @param[in]  Flags           Initial flags value.
                               Can only have FORMAT_UNICODE, OUTPUT_UNICODE,
                               and COUNT_ONLY_NO_PRINT set.
-  @param[in]  Format          A Null-terminated format string.
+  @param[in]  Format          A nullptr-terminated format string.
   @param[in]  VaListMarker    VA_LIST style variable argument list consumed by
                               processing Format.
   @param[in]  BaseListMarker  BASE_LIST style variable argument list consumed
                               by processing Format.
 
-  @return The number of characters printed not including the Null-terminator.
+  @return The number of characters printed not including the nullptr-terminator.
           If COUNT_ONLY_NO_PRINT was set returns the same, but without any
           modification to Buffer.
 
@@ -504,7 +504,7 @@ BasePrintLibSPrintMarker (
 
     if ((Flags & COUNT_ONLY_NO_PRINT) != 0) {
         if (BufferSize == 0) {
-            Buffer = NULL;
+            Buffer = nullptr;
         }
     } else {
         //
@@ -513,7 +513,7 @@ BasePrintLibSPrintMarker (
         if (BufferSize == 0) {
             return 0;
         }
-        ASSERT (Buffer != NULL);
+        ASSERT (Buffer != nullptr);
     }
 
     if ((Flags & OUTPUT_UNICODE) != 0) {
@@ -525,7 +525,7 @@ BasePrintLibSPrintMarker (
     LengthToReturn = 0;
 
     //
-    // Reserve space for the Null terminator.
+    // Reserve space for the nullptr terminator.
     //
     BufferSize--;
     OriginalBuffer = Buffer;
@@ -609,13 +609,13 @@ BasePrintLibSPrintMarker (
                 case '*':
                     if ((Flags & PRECISION) == 0) {
                         Flags |= PAD_TO_WIDTH;
-                        if (BaseListMarker == NULL) {
+                        if (BaseListMarker == nullptr) {
                             Width = VA_ARG (VaListMarker, UINTN);
                         } else {
                             Width = BASE_ARG (BaseListMarker, UINTN);
                         }
                     } else {
-                        if (BaseListMarker == NULL) {
+                        if (BaseListMarker == nullptr) {
                             Precision = VA_ARG (VaListMarker, UINTN);
                         } else {
                             Precision = BASE_ARG (BaseListMarker, UINTN);
@@ -697,13 +697,13 @@ BasePrintLibSPrintMarker (
                     // provides an implementation that is compatible with that largest possible set of CPU
                     // architectures.  This is why the type "int" is used in this one case.
                     //
-                    if (BaseListMarker == NULL) {
+                    if (BaseListMarker == nullptr) {
                         Value = VA_ARG (VaListMarker, int);
                     } else {
                         Value = BASE_ARG (BaseListMarker, int);
                     }
                 } else {
-                    if (BaseListMarker == NULL) {
+                    if (BaseListMarker == nullptr) {
                         Value = VA_ARG (VaListMarker, INT64);
                     } else {
                         Value = BASE_ARG (BaseListMarker, INT64);
@@ -784,14 +784,14 @@ BasePrintLibSPrintMarker (
                 // break skipped on purpose
                 //
             case 'a':
-                if (BaseListMarker == NULL) {
+                if (BaseListMarker == nullptr) {
                     ArgumentString = VA_ARG (VaListMarker, CHAR8 *);
                 } else {
                     ArgumentString = BASE_ARG (BaseListMarker, CHAR8 *);
                 }
-                if (ArgumentString == NULL) {
+                if (ArgumentString == nullptr) {
                     Flags &= (~ARGUMENT_UNICODE);
-                    ArgumentString = "<null string>";
+                    ArgumentString = "<nullptr string>";
                 }
                 //
                 // Set the default precision for string to be zero if not specified.
@@ -802,7 +802,7 @@ BasePrintLibSPrintMarker (
                 break;
 
             case 'c':
-                if (BaseListMarker == NULL) {
+                if (BaseListMarker == nullptr) {
                     Character = VA_ARG (VaListMarker, UINTN) & 0xffff;
                 } else {
                     Character = BASE_ARG (BaseListMarker, UINTN) & 0xffff;
@@ -812,13 +812,13 @@ BasePrintLibSPrintMarker (
                 break;
 
             case 'g':
-                if (BaseListMarker == NULL) {
+                if (BaseListMarker == nullptr) {
                     TmpGuid = VA_ARG (VaListMarker, EFI_GUID *);
                 } else {
                     TmpGuid = BASE_ARG (BaseListMarker, EFI_GUID *);
                 }
-                if (TmpGuid == NULL) {
-                    ArgumentString = "<null guid>";
+                if (TmpGuid == nullptr) {
+                    ArgumentString = "<nullptr guid>";
                 } else {
                     GuidData1 = ReadUnaligned32 (&(TmpGuid->Data1));
                     GuidData2 = FceReadUnaligned16 (&(TmpGuid->Data2));
@@ -845,13 +845,13 @@ BasePrintLibSPrintMarker (
                 break;
 
             case 't':
-                if (BaseListMarker == NULL) {
+                if (BaseListMarker == nullptr) {
                     TmpTime = VA_ARG (VaListMarker, TIME *);
                 } else {
                     TmpTime = BASE_ARG (BaseListMarker, TIME *);
                 }
-                if (TmpTime == NULL) {
-                    ArgumentString = "<null time>";
+                if (TmpTime == nullptr) {
+                    ArgumentString = "<nullptr time>";
                 } else {
                     BasePrintLibSPrint (
                         ValueBuffer,
@@ -869,7 +869,7 @@ BasePrintLibSPrintMarker (
                 break;
 
             case 'r':
-                if (BaseListMarker == NULL) {
+                if (BaseListMarker == nullptr) {
                     Status = VA_ARG (VaListMarker, RETURN_STATUS);
                 } else {
                     Status = BASE_ARG (BaseListMarker, RETURN_STATUS);
@@ -984,7 +984,7 @@ BasePrintLibSPrintMarker (
         } else {
             //
             // Compute the number of characters in ArgumentString and store it in Count
-            // ArgumentString is either null-terminated, or it contains Precision characters
+            // ArgumentString is either nullptr-terminated, or it contains Precision characters
             //
             for (Count = 0; Count < Precision || ((Flags & PRECISION) == 0); Count++) {
                 ArgumentCharacter = ((ArgumentString[Count * BytesPerArgumentCharacter] & 0xff) | ((ArgumentString[Count * BytesPerArgumentCharacter + 1]) << 8)) & ArgumentMask;
@@ -1003,7 +1003,7 @@ BasePrintLibSPrintMarker (
         //
         if ((Flags & (PAD_TO_WIDTH | LEFT_JUSTIFY)) == (PAD_TO_WIDTH)) {
             LengthToReturn += ((Width - Precision) * BytesPerOutputCharacter);
-            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != NULL) {
+            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != nullptr) {
                 Buffer = BasePrintLibFillBuffer (Buffer, EndBuffer, Width - Precision, ' ', BytesPerOutputCharacter);
             }
         }
@@ -1011,22 +1011,22 @@ BasePrintLibSPrintMarker (
         if (ZeroPad) {
             if (Prefix != 0) {
                 LengthToReturn += (1 * BytesPerOutputCharacter);
-                if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != NULL) {
+                if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != nullptr) {
                     Buffer = BasePrintLibFillBuffer (Buffer, EndBuffer, 1, Prefix, BytesPerOutputCharacter);
                 }
             }
             LengthToReturn += ((Precision - Count) * BytesPerOutputCharacter);
-            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != NULL) {
+            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != nullptr) {
                 Buffer = BasePrintLibFillBuffer (Buffer, EndBuffer, Precision - Count, '0', BytesPerOutputCharacter);
             }
         } else {
             LengthToReturn += ((Precision - Count) * BytesPerOutputCharacter);
-            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != NULL) {
+            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != nullptr) {
                 Buffer = BasePrintLibFillBuffer (Buffer, EndBuffer, Precision - Count, ' ', BytesPerOutputCharacter);
             }
             if (Prefix != 0) {
                 LengthToReturn += (1 * BytesPerOutputCharacter);
-                if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != NULL) {
+                if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != nullptr) {
                     Buffer = BasePrintLibFillBuffer (Buffer, EndBuffer, 1, Prefix, BytesPerOutputCharacter);
                 }
             }
@@ -1047,7 +1047,7 @@ BasePrintLibSPrintMarker (
             ArgumentCharacter = ((*ArgumentString & 0xff) | (*(ArgumentString + 1) << 8)) & ArgumentMask;
 
             LengthToReturn += (1 * BytesPerOutputCharacter);
-            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != NULL) {
+            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != nullptr) {
                 Buffer = BasePrintLibFillBuffer (Buffer, EndBuffer, 1, ArgumentCharacter, BytesPerOutputCharacter);
             }
             ArgumentString    += BytesPerArgumentCharacter;
@@ -1059,7 +1059,7 @@ BasePrintLibSPrintMarker (
                     Index++;
                     if (Index < Count) {
                         LengthToReturn += (1 * BytesPerOutputCharacter);
-                        if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != NULL) {
+                        if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != nullptr) {
                             Buffer = BasePrintLibFillBuffer (Buffer, EndBuffer, 1, ',', BytesPerOutputCharacter);
                         }
                     }
@@ -1072,7 +1072,7 @@ BasePrintLibSPrintMarker (
         //
         if ((Flags & (PAD_TO_WIDTH | LEFT_JUSTIFY)) == (PAD_TO_WIDTH | LEFT_JUSTIFY)) {
             LengthToReturn += ((Width - Precision) * BytesPerOutputCharacter);
-            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != NULL) {
+            if ((Flags & COUNT_ONLY_NO_PRINT) == 0 && Buffer != nullptr) {
                 Buffer = BasePrintLibFillBuffer (Buffer, EndBuffer, Width - Precision, ' ', BytesPerOutputCharacter);
             }
         }
@@ -1092,9 +1092,9 @@ BasePrintLibSPrintMarker (
         return (LengthToReturn / BytesPerOutputCharacter);
     }
 
-    ASSERT (Buffer != NULL);
+    ASSERT (Buffer != nullptr);
     //
-    // Null terminate the Unicode or ASCII string
+    // nullptr terminate the Unicode or ASCII string
     //
     BasePrintLibFillBuffer (Buffer, EndBuffer + BytesPerOutputCharacter, 1, 0, BytesPerOutputCharacter);
     //
@@ -1112,8 +1112,8 @@ BasePrintLibSPrintMarker (
 }
 
 /**
-  Worker function that produces a Null-terminated string in an output buffer
-  based on a Null-terminated format string and variable argument list.
+  Worker function that produces a nullptr-terminated string in an output buffer
+  based on a nullptr-terminated format string and variable argument list.
 
   VSPrint function to process format and place the results in Buffer. Since a
   VA_LIST is used this routine allows the nesting of Vararg routines. Thus
@@ -1125,7 +1125,7 @@ BasePrintLibSPrintMarker (
                         Zero means no limit.
   @param  Flags         Initial flags value.
                         Can only have FORMAT_UNICODE and OUTPUT_UNICODE set
-  @param  FormatString  A Null-terminated format string.
+  @param  FormatString  A nullptr-terminated format string.
   @param  ...           The variable argument list.
 
   @return The number of characters printed.
@@ -1143,41 +1143,41 @@ BasePrintLibSPrint (
     VA_LIST  Marker;
 
     VA_START (Marker, FormatString);
-    return BasePrintLibSPrintMarker (StartOfBuffer, BufferSize, Flags, FormatString, Marker, NULL);
+    return BasePrintLibSPrintMarker (StartOfBuffer, BufferSize, Flags, FormatString, Marker, nullptr);
 }
 
 /**
-  Produces a Null-terminated Unicode string in an output buffer based on
-  a Null-terminated Unicode format string and a VA_LIST argument list
+  Produces a nullptr-terminated Unicode string in an output buffer based on
+  a nullptr-terminated Unicode format string and a VA_LIST argument list
 
-  Produces a Null-terminated Unicode string in the output buffer specified by StartOfBuffer
+  Produces a nullptr-terminated Unicode string in the output buffer specified by StartOfBuffer
   and BufferSize.
   The Unicode string is produced by parsing the format string specified by FormatString.
   Arguments are pulled from the variable argument list specified by Marker based on the
   contents of the format string.
   The number of Unicode characters in the produced output buffer is returned not including
-  the Null-terminator.
+  the nullptr-terminator.
   If BufferSize is 0 or 1, then no output buffer is produced and 0 is returned.
 
-  If BufferSize > 1 and StartOfBuffer is NULL, then ASSERT().
+  If BufferSize > 1 and StartOfBuffer is nullptr, then ASSERT().
   If BufferSize > 1 and StartOfBuffer is not aligned on a 16-bit boundary, then ASSERT().
-  If BufferSize > 1 and FormatString is NULL, then ASSERT().
+  If BufferSize > 1 and FormatString is nullptr, then ASSERT().
   If BufferSize > 1 and FormatString is not aligned on a 16-bit boundary, then ASSERT().
   If PcdMaximumUnicodeStringLength is not zero, and FormatString contains more than
-  PcdMaximumUnicodeStringLength Unicode characters not including the Null-terminator, then
+  PcdMaximumUnicodeStringLength Unicode characters not including the nullptr-terminator, then
   ASSERT().
-  If PcdMaximumUnicodeStringLength is not zero, and produced Null-terminated Unicode string
+  If PcdMaximumUnicodeStringLength is not zero, and produced nullptr-terminated Unicode string
   contains more than PcdMaximumUnicodeStringLength Unicode characters not including the
-  Null-terminator, then ASSERT().
+  nullptr-terminator, then ASSERT().
 
-  @param  StartOfBuffer   A pointer to the output buffer for the produced Null-terminated
+  @param  StartOfBuffer   A pointer to the output buffer for the produced nullptr-terminated
                           Unicode string.
   @param  BufferSize      The size, in bytes, of the output buffer specified by StartOfBuffer.
-  @param  FormatString    A Null-terminated Unicode format string.
+  @param  FormatString    A nullptr-terminated Unicode format string.
   @param  Marker          VA_LIST marker for the variable argument list.
 
   @return The number of Unicode characters in the produced output buffer not including the
-          Null-terminator.
+          nullptr-terminator.
 
 **/
 UINTN
@@ -1190,41 +1190,41 @@ UnicodeVSPrint (
 {
     ASSERT_UNICODE_BUFFER (StartOfBuffer);
     ASSERT_UNICODE_BUFFER (FormatString);
-    return BasePrintLibSPrintMarker ((CHAR8 *)StartOfBuffer, BufferSize >> 1, FORMAT_UNICODE | OUTPUT_UNICODE, (CHAR8 *)FormatString, Marker, NULL);
+    return BasePrintLibSPrintMarker ((CHAR8 *)StartOfBuffer, BufferSize >> 1, FORMAT_UNICODE | OUTPUT_UNICODE, (CHAR8 *)FormatString, Marker, nullptr);
 }
 
 /**
-  Produces a Null-terminated Unicode string in an output buffer based on a Null-terminated
+  Produces a nullptr-terminated Unicode string in an output buffer based on a nullptr-terminated
   Unicode format string and variable argument list.
 
-  Produces a Null-terminated Unicode string in the output buffer specified by StartOfBuffer
+  Produces a nullptr-terminated Unicode string in the output buffer specified by StartOfBuffer
   and BufferSize.
   The Unicode string is produced by parsing the format string specified by FormatString.
   Arguments are pulled from the variable argument list based on the contents of the format string.
   The number of Unicode characters in the produced output buffer is returned not including
-  the Null-terminator.
+  the nullptr-terminator.
   If BufferSize is 0 or 1, then no output buffer is produced and 0 is returned.
 
-  If BufferSize > 1 and StartOfBuffer is NULL, then ASSERT().
+  If BufferSize > 1 and StartOfBuffer is nullptr, then ASSERT().
   If BufferSize > 1 and StartOfBuffer is not aligned on a 16-bit boundary, then ASSERT().
-  If BufferSize > 1 and FormatString is NULL, then ASSERT().
+  If BufferSize > 1 and FormatString is nullptr, then ASSERT().
   If BufferSize > 1 and FormatString is not aligned on a 16-bit boundary, then ASSERT().
   If PcdMaximumUnicodeStringLength is not zero, and FormatString contains more than
-  PcdMaximumUnicodeStringLength Unicode characters not including the Null-terminator, then
+  PcdMaximumUnicodeStringLength Unicode characters not including the nullptr-terminator, then
   ASSERT().
-  If PcdMaximumUnicodeStringLength is not zero, and produced Null-terminated Unicode string
+  If PcdMaximumUnicodeStringLength is not zero, and produced nullptr-terminated Unicode string
   contains more than PcdMaximumUnicodeStringLength Unicode characters not including the
-  Null-terminator, then ASSERT().
+  nullptr-terminator, then ASSERT().
 
-  @param  StartOfBuffer   A pointer to the output buffer for the produced Null-terminated
+  @param  StartOfBuffer   A pointer to the output buffer for the produced nullptr-terminated
                           Unicode string.
   @param  BufferSize      The size, in bytes, of the output buffer specified by StartOfBuffer.
-  @param  FormatString    A Null-terminated Unicode format string.
+  @param  FormatString    A nullptr-terminated Unicode format string.
   @param  ...             Variable argument list whose contents are accessed based on the
                           format string specified by FormatString.
 
   @return The number of Unicode characters in the produced output buffer not including the
-          Null-terminator.
+          nullptr-terminator.
 
 **/
 UINTN
@@ -1242,26 +1242,26 @@ UnicodeSPrint (
 }
 
 /**
-  Convert a Null-terminated Unicode string to a Null-terminated
+  Convert a nullptr-terminated Unicode string to a nullptr-terminated
   ASCII string and returns the ASCII string.
 
   This function converts the content of the Unicode string Source
   to the ASCII string Destination by copying the lower 8 bits of
   each Unicode character. It returns Destination. The function terminates
-  the ASCII string Destination  by appending a Null-terminator character
+  the ASCII string Destination  by appending a nullptr-terminator character
   at the end. The caller is responsible to make sure Destination points
   to a buffer with size equal or greater than (FceStrLen (Source) + 1) in bytes.
 
-  If Destination is NULL, then ASSERT().
-  If Source is NULL, then ASSERT().
+  If Destination is nullptr, then ASSERT().
+  If Source is nullptr, then ASSERT().
   If Source is not aligned on a 16-bit boundary, then ASSERT().
   If Source and Destination overlap, then ASSERT().
 
   If any Unicode characters in Source contain non-zero value in
   the upper 8 bits, then ASSERT().
 
-  @param  Source        Pointer to a Null-terminated Unicode string.
-  @param  Destination   Pointer to a Null-terminated ASCII string.
+  @param  Source        Pointer to a nullptr-terminated Unicode string.
+  @param  Destination   Pointer to a nullptr-terminated ASCII string.
 
   @reture Destination
 
@@ -1275,8 +1275,8 @@ UnicodeStrToAsciiStr (
     CHAR8          *ReturnValue;
 
     ReturnValue = Destination;
-    assert (Destination != NULL);
-    assert (Source != NULL);
+    assert (Destination != nullptr);
+    assert (Source != nullptr);
     assert (((UINTN) Source & 0x01) == 0);
 
     while (*Source != L'\0') {
@@ -1306,11 +1306,11 @@ NewStringCpy (
     IN CHAR16           *Src
     )
 {
-    if (*Dest != NULL) {
+    if (*Dest != nullptr) {
         FreePool (*Dest);
     }
     *Dest = (CHAR16*)FceAllocateCopyPool (FceStrSize (Src), Src);
-    ASSERT (*Dest != NULL);
+    ASSERT (*Dest != nullptr);
 }
 
 /**
@@ -1413,7 +1413,7 @@ FceInternalIsHexaDecimalDigitCharacter (
 
 
 /**
-  Convert a Null-terminated Unicode decimal string to a value of
+  Convert a nullptr-terminated Unicode decimal string to a value of
   type UINT64.
 
   This function returns a value of type UINT64 by interpreting the contents
@@ -1427,9 +1427,9 @@ FceInternalIsHexaDecimalDigitCharacter (
   tab characters, before [decimal digits]. The running zero in the
   beginning of [decimal digits] will be ignored. Then, the function
   stops at the first character that is a not a valid decimal character
-  or a Null-terminator, whichever one comes first.
+  or a nullptr-terminator, whichever one comes first.
 
-  If String is NULL, then ASSERT().
+  If String is nullptr, then ASSERT().
   If String is not aligned in a 16-bit boundary, then ASSERT().
   If String has only pad spaces, then 0 is returned.
   If String has no pad spaces or valid decimal digits,
@@ -1439,9 +1439,9 @@ FceInternalIsHexaDecimalDigitCharacter (
 
   If PcdMaximumUnicodeStringLength is not zero, and String contains
   more than PcdMaximumUnicodeStringLength Unicode characters, not including
-  the Null-terminator, then ASSERT().
+  the nullptr-terminator, then ASSERT().
 
-  @param  String          A pointer to a Null-terminated Unicode string.
+  @param  String          A pointer to a nullptr-terminated Unicode string.
 
   @retval Value translated from String.
 
@@ -1491,7 +1491,7 @@ FceStrDecimalToUint64 (
 
 
 /**
-  Convert a Null-terminated Unicode hexadecimal string to a value of type UINT64.
+  Convert a nullptr-terminated Unicode hexadecimal string to a value of type UINT64.
 
   This function returns a value of type UINT64 by interpreting the contents
   of the Unicode string specified by String as a hexadecimal number.
@@ -1506,9 +1506,9 @@ FceStrDecimalToUint64 (
   before [zeros], [x] or [hexadecimal digit]. The running zero before [x] or
   [hexadecimal digit] will be ignored. Then, the decoding starts after [x] or the
   first valid hexadecimal digit. Then, the function stops at the first character that is
-  a not a valid hexadecimal character or NULL, whichever one comes first.
+  a not a valid hexadecimal character or nullptr, whichever one comes first.
 
-  If String is NULL, then ASSERT().
+  If String is nullptr, then ASSERT().
   If String is not aligned in a 16-bit boundary, then ASSERT().
   If String has only pad spaces, then zero is returned.
   If String has no leading pad spaces, leading zeros or valid hexadecimal digits,
@@ -1517,7 +1517,7 @@ FceStrDecimalToUint64 (
   UINT64, then ASSERT().
 
   If PcdMaximumUnicodeStringLength is not zero, and String contains more than
-  PcdMaximumUnicodeStringLength Unicode characters, not including the Null-terminator,
+  PcdMaximumUnicodeStringLength Unicode characters, not including the nullptr-terminator,
   then ASSERT().
 
   @param  String          A pointer to a Null-terminated Unicode string.
@@ -1606,11 +1606,11 @@ ToLower (
 }
 
 /**
-  Performs a case-insensitive comparison between a Null-terminated
-  Unicode pattern string and a Null-terminated Unicode string.
+  Performs a case-insensitive comparison between a nullptr-terminated
+  Unicode pattern string and a nullptr-terminated Unicode string.
 
-  @param  String   - A pointer to a Null-terminated Unicode string.
-  @param  Pattern  - A pointer to a Null-terminated Unicode pattern string.
+  @param  String   - A pointer to a nullptr-terminated Unicode string.
+  @param  Pattern  - A pointer to a nullptr-terminated Unicode pattern string.
 
 
   @retval TRUE     - Pattern was found in String.
@@ -1626,8 +1626,8 @@ MetaiMatch (
     CHAR16  c;
     CHAR16  p;
 
-    assert (String != NULL);
-    assert (Pattern != NULL);
+    assert (String != nullptr);
+    assert (Pattern != nullptr);
 
     for (;;) {
         p     = *Pattern;
@@ -1712,7 +1712,7 @@ DivU64x32 (
 
   This function divides the 64-bit unsigned value Dividend by the 32-bit
   unsigned value Divisor and generates a 64-bit unsigned quotient. If Remainder
-  is not NULL, then the 32-bit unsigned remainder is returned in Remainder.
+  is not nullptr, then the 32-bit unsigned remainder is returned in Remainder.
   This function returns the 64-bit unsigned quotient.
 
   If Divisor is 0, then ASSERT().
@@ -1720,7 +1720,7 @@ DivU64x32 (
   @param  Dividend  A 64-bit unsigned value.
   @param  Divisor   A 32-bit unsigned value.
   @param  Remainder A pointer to a 32-bit unsigned value. This parameter is
-                    optional and may be NULL.
+                    optional and may be nullptr.
 
   @return Dividend / Divisor
 
@@ -1734,7 +1734,7 @@ DivU64x32Remainder (
 {
     ASSERT (Divisor != 0);
 
-    if (Remainder != NULL) {
+    if (Remainder != nullptr) {
         *Remainder = (UINT32)(Dividend % Divisor);
     }
     return Dividend / Divisor;
@@ -1746,14 +1746,14 @@ DivU64x32Remainder (
   Allocates the number bytes specified by AllocationSize, copies allocationSize bytes
   from Buffer to the newly allocated buffer, and returns a pointer to the allocated
   buffer.  If AllocationSize is 0, then a valid buffer of 0 size is returned.  If there
-  is not enough memory remaining to satisfy the request, then NULL is returned.
+  is not enough memory remaining to satisfy the request, then nullptr is returned.
 
-  If Buffer is NULL, then ASSERT().
+  If Buffer is nullptr, then ASSERT().
 
   @param  AllocationSize        The number of bytes to allocate and zero.
   @param  Buffer                The buffer to copy to the allocated buffer.
 
-  @return A pointer to the allocated buffer or NULL if allocation fails.
+  @return A pointer to the allocated buffer or nullptr if allocation fails.
 
 **/
 VOID *
@@ -1764,15 +1764,15 @@ FceAllocateCopyPool (
 {
     VOID  *Memory;
 
-    Memory = NULL;
+    Memory = nullptr;
 
-    if ((Buffer == NULL) || (AllocationSize == 0)) {
+    if ((Buffer == nullptr) || (AllocationSize == 0)) {
         return Memory;
     }
 
     Memory = calloc (AllocationSize, sizeof (CHAR8));
-    if (Memory != NULL) {
-        Memory = memcpy (Memory, Buffer, AllocationSize);
+    if (Memory != nullptr) {
+        Memory = CopyMem(Memory, Buffer, AllocationSize);
     }
     return Memory;
 }
@@ -1786,7 +1786,7 @@ FceAllocateCopyPool (
   functions may be used to add and remove nodes from the linked list. It is up
   to the caller of this function to allocate the memory for ListHead.
 
-  If ListHead is NULL, then ASSERT().
+  If ListHead is nullptr, then ASSERT().
 
   @param  ListHead  A pointer to the head node of a new doubly-linked list.
 
@@ -1799,7 +1799,7 @@ InitializeListHead (
     )
 
 {
-    assert (ListHead != NULL);
+    assert (ListHead != nullptr);
 
     ListHead->ForwardLink = ListHead;
     ListHead->BackLink = ListHead;
@@ -1813,8 +1813,8 @@ InitializeListHead (
   Adds the node Entry at the beginning of the doubly-linked list denoted by
   ListHead, and returns ListHead.
 
-  If ListHead is NULL, then ASSERT().
-  If Entry is NULL, then ASSERT().
+  If ListHead is nullptr, then ASSERT().
+  If Entry is nullptr, then ASSERT().
   If ListHead was not initialized with INTIALIZE_LIST_HEAD_VARIABLE() or
   InitializeListHead(), then ASSERT().
   If PcdMaximumLinkedListLenth is not zero, and prior to insertion the number
@@ -1834,7 +1834,7 @@ InsertHeadList (
     IN OUT  UEFI_LIST_ENTRY                *Entry
     )
 {
-    assert ((ListHead != NULL) && (Entry != NULL));
+    assert ((ListHead != nullptr) && (Entry != nullptr));
 
     Entry->ForwardLink = ListHead->ForwardLink;
     Entry->BackLink = ListHead;
@@ -1850,8 +1850,8 @@ InsertHeadList (
   Adds the node Entry to the end of the doubly-linked list denoted by ListHead,
   and returns ListHead.
 
-  If ListHead is NULL, then ASSERT().
-  If Entry is NULL, then ASSERT().
+  If ListHead is nullptr, then ASSERT().
+  If Entry is nullptr, then ASSERT().
   If ListHead was not initialized with INTIALIZE_LIST_HEAD_VARIABLE() or
   InitializeListHead(), then ASSERT().
   If PcdMaximumLinkedListLenth is not zero, and prior to insertion the number
@@ -1871,7 +1871,7 @@ InsertTailList (
     IN OUT  UEFI_LIST_ENTRY                *Entry
     )
 {
-    assert ((ListHead != NULL) && (Entry != NULL));
+    assert ((ListHead != nullptr) && (Entry != nullptr));
 
     Entry->ForwardLink = ListHead;
     Entry->BackLink = ListHead->BackLink;
@@ -1887,7 +1887,7 @@ InsertTailList (
   initialized with INTIALIZE_LIST_HEAD_VARIABLE() or InitializeListHead().
   If List is empty, then List is returned.
 
-  If List is NULL, then ASSERT().
+  If List is nullptr, then ASSERT().
   If List was not initialized with INTIALIZE_LIST_HEAD_VARIABLE() or
   InitializeListHead(), then ASSERT().
   If PcdMaximumLinkedListLenth is not zero, and the number of nodes
@@ -1897,7 +1897,7 @@ InsertTailList (
   @param  List  A pointer to the head node of a doubly-linked list.
 
   @return The first node of a doubly-linked list.
-  @retval NULL  The list is empty.
+  @retval nullptr  The list is empty.
 
 **/
 UEFI_LIST_ENTRY *
@@ -1905,7 +1905,7 @@ GetFirstNode (
     IN      CONST UEFI_LIST_ENTRY          *List
     )
 {
-    assert (List != NULL);
+    assert (List != nullptr);
 
     return List->ForwardLink;
 }
@@ -1917,8 +1917,8 @@ GetFirstNode (
   List must have been initialized with INTIALIZE_LIST_HEAD_VARIABLE()
   or InitializeListHead().  If List is empty, then List is returned.
 
-  If List is NULL, then ASSERT().
-  If Node is NULL, then ASSERT().
+  If List is nullptr, then ASSERT().
+  If Node is nullptr, then ASSERT().
   If List was not initialized with INTIALIZE_LIST_HEAD_VARIABLE() or
   InitializeListHead(), then ASSERT().
   If PcdMaximumLinkedListLenth is not zero, and List contains more than
@@ -1937,7 +1937,7 @@ GetNextNode (
     IN      CONST UEFI_LIST_ENTRY          *Node
     )
 {
-    assert ((List != NULL) && (Node != NULL));
+    assert ((List != nullptr) && (Node != nullptr));
 
     return Node->ForwardLink;
 }
@@ -1949,8 +1949,8 @@ GetNextNode (
   List must have been initialized with INTIALIZE_LIST_HEAD_VARIABLE()
   or InitializeListHead().  If List is empty, then List is returned.
 
-  If List is NULL, then ASSERT().
-  If Node is NULL, then ASSERT().
+  If List is nullptr, then ASSERT().
+  If Node is nullptr, then ASSERT().
   If List was not initialized with INTIALIZE_LIST_HEAD_VARIABLE() or
   InitializeListHead(), then ASSERT().
   If PcdMaximumLinkedListLenth is not zero, and List contains more than
@@ -1969,7 +1969,7 @@ GetPreviousNode (
     IN      CONST UEFI_LIST_ENTRY          *Node
     )
 {
-    assert ((List != NULL) && (Node != NULL));
+    assert ((List != nullptr) && (Node != nullptr));
 
     return Node->BackLink;
 }
@@ -1980,7 +1980,7 @@ GetPreviousNode (
   Checks to see if the doubly-linked list is empty. If the linked list contains
   zero nodes, this function returns TRUE. Otherwise, it returns FALSE.
 
-  If ListHead is NULL, then ASSERT().
+  If ListHead is nullptr, then ASSERT().
   If ListHead was not initialized with INTIALIZE_LIST_HEAD_VARIABLE() or
   InitializeListHead(), then ASSERT().
   If PcdMaximumLinkedListLenth is not zero, and the number of nodes
@@ -1998,7 +1998,7 @@ IsListEmpty (
     IN      CONST UEFI_LIST_ENTRY          *ListHead
     )
 {
-    assert (ListHead != NULL);
+    assert (ListHead != nullptr);
 
     return (BOOLEAN)(ListHead->ForwardLink == ListHead);
 }
@@ -2012,8 +2012,8 @@ IsListEmpty (
   nodes in the doubly-linked list specified by List.  List must have been
   initialized with INTIALIZE_LIST_HEAD_VARIABLE() or InitializeListHead().
 
-  If List is NULL, then ASSERT().
-  If Node is NULL, then ASSERT().
+  If List is nullptr, then ASSERT().
+  If Node is nullptr, then ASSERT().
   If List was not initialized with INTIALIZE_LIST_HEAD_VARIABLE() or InitializeListHead(),
   then ASSERT().
   If PcdMaximumLinkedListLenth is not zero, and the number of nodes
@@ -2030,12 +2030,12 @@ IsListEmpty (
 
 **/
 BOOLEAN
-IsNull (
+Isnullptr (
     IN      CONST UEFI_LIST_ENTRY          *List,
     IN      CONST UEFI_LIST_ENTRY          *Node
     )
 {
-    assert ((List != NULL) && (Node != NULL));
+    assert ((List != nullptr) && (Node != nullptr));
 
     return (BOOLEAN)(Node == List);
 }
@@ -2047,8 +2047,8 @@ IsNull (
   List. Otherwise, FALSE is returned. List must have been initialized with
   INTIALIZE_LIST_HEAD_VARIABLE() or InitializeListHead().
 
-  If List is NULL, then ASSERT().
-  If Node is NULL, then ASSERT().
+  If List is nullptr, then ASSERT().
+  If Node is nullptr, then ASSERT().
   If List was not initialized with INTIALIZE_LIST_HEAD_VARIABLE() or
   InitializeListHead(), then ASSERT().
   If PcdMaximumLinkedListLenth is not zero, and the number of nodes
@@ -2069,9 +2069,9 @@ IsNodeAtEnd (
     IN      CONST UEFI_LIST_ENTRY          *Node
     )
 {
-    assert ((List != NULL) && (Node != NULL));
+    assert ((List != nullptr) && (Node != nullptr));
 
-    return (BOOLEAN)(!IsNull (List, Node) && (List->BackLink == Node));
+    return (BOOLEAN)(!Isnullptr (List, Node) && (List->BackLink == Node));
 }
 
 /**
@@ -2084,7 +2084,7 @@ IsNodeAtEnd (
   Entry is the only node in the linked list, then the head node of the linked
   list is returned.
 
-  If Entry is NULL, then ASSERT().
+  If Entry is nullptr, then ASSERT().
   If Entry is the head node of an empty list, then ASSERT().
   If PcdMaximumLinkedListLength is not zero, and the number of nodes in the
   linked list containing Entry, including the Entry node, is greater than
@@ -2113,8 +2113,8 @@ RemoveEntryList (
   This function compares Guid1 to Guid2.  If the GUIDs are identical then TRUE is returned.
   If there are any bit differences in the two GUIDs, then FALSE is returned.
 
-  If Guid1 is NULL, then ASSERT().
-  If Guid2 is NULL, then ASSERT().
+  If Guid1 is nullptr, then ASSERT().
+  If Guid2 is nullptr, then ASSERT().
 
   @param  Guid1       A pointer to a 128 bit GUID.
   @param  Guid2       A pointer to a 128 bit GUID.

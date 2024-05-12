@@ -20,6 +20,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     link_directories(${LINK_DIR})
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(LINK_DIR  lib/Openssl/lib/linux)
+    set(CMAKE_PREFIX_PATH "/home/stephan/Qt/6.7.0/gcc_64")
     link_directories(${LINK_DIR})
 endif()
 
