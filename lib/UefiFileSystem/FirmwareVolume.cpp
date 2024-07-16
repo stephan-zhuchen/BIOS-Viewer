@@ -94,6 +94,7 @@ void FirmwareVolume::DecodeChildVolume() {
             case EFI_FV_FILETYPE_SECURITY_CORE:
             case EFI_FV_FILETYPE_PEI_CORE:
             case EFI_FV_FILETYPE_DXE_CORE:
+            case EFI_FV_FILETYPE_MM_CORE:
             case EFI_FV_FILETYPE_PEIM:
             case EFI_FV_FILETYPE_DRIVER:
             case EFI_FV_FILETYPE_APPLICATION:
@@ -149,7 +150,11 @@ void FirmwareVolume::DecodeChildVolume() {
     for (thread &t:threadPool) {
         t.join();
     }
-    std::sort(ChildVolume.begin(), ChildVolume.end(), [](Volume *v1, Volume *v2) { return v1->getOffset() < v2->getOffset(); });
+    std::sort(ChildVolume.begin(), ChildVolume.end(), [](Volume *v1, Volume *v2) {
+        if ((v1 == nullptr) || (v2 == nullptr))
+            return true;
+        return v1->getOffset() < v2->getOffset();
+    });
 }
 
 void FirmwareVolume::setInfoStr() {
