@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>220</height>
+    <height>240</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,13 +19,13 @@
   <property name="minimumSize">
    <size>
     <width>400</width>
-    <height>220</height>
+    <height>240</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>400</width>
-    <height>220</height>
+    <height>240</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -93,7 +93,7 @@
          <widget class="QCheckBox" name="FvCheckbox">
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
             <bold>false</bold>
            </font>
           </property>
@@ -106,7 +106,7 @@
          <widget class="QCheckBox" name="FfsCheckbox">
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
             <bold>false</bold>
            </font>
           </property>
@@ -119,7 +119,7 @@
          <widget class="QCheckBox" name="SectionCheckbox">
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
             <bold>false</bold>
            </font>
           </property>
@@ -157,7 +157,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>9</pointsize>
+         <pointsize>10</pointsize>
          <bold>false</bold>
         </font>
        </property>
@@ -244,6 +244,11 @@
          <height>20</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Clear</string>
        </property>
@@ -281,7 +286,7 @@
          <widget class="QCheckBox" name="GuidFvCheckbox">
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
             <bold>false</bold>
            </font>
           </property>
@@ -294,7 +299,7 @@
          <widget class="QCheckBox" name="GuidFfsCheckbox">
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
             <bold>false</bold>
            </font>
           </property>
@@ -307,7 +312,7 @@
          <widget class="QCheckBox" name="GuidSectionCheckbox">
           <property name="font">
            <font>
-            <pointsize>9</pointsize>
+            <pointsize>10</pointsize>
             <bold>false</bold>
            </font>
           </property>
