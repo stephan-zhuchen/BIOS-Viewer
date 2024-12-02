@@ -132,6 +132,7 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
     }
 
     if (BiosData->RightClickedItemModel.getName().mid(0, 10) == "ACPI Table") {
+#ifdef Q_OS_WIN
         QString filepath = WindowData->appDir + "/tool/ACPI/iasl.exe";
         QFile file(filepath);
         if (file.exists()) {
@@ -139,6 +140,11 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
             CustomMenu->addAction(showAcpiTable);
             file.close();
         }
+#elif defined(Q_OS_LINUX)
+        showAcpiTable->setIcon(windows);
+        CustomMenu->addAction(showAcpiTable);
+#endif
+
     }
 
     if (BiosData->RightClickedItemModel.getName().right(4).toLower() == "bgsl") {
@@ -411,7 +417,11 @@ void BiosViewerWindow::showAcpiTableView() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString filepath = QDir(lastPath).filePath("temp.bin");
     QString Dslpath = QDir(lastPath).filePath("temp.dsl");
+#ifdef Q_OS_WIN
     QString toolpath = WindowData->appDir + "/tool/ACPI/iasl.exe";
+#elif defined(Q_OS_LINUX)
+    QString toolpath = "iasl";
+#endif
 //    QFileInfo fileInfo(toolpath.trimmed());
 //    qDebug() << toolpath;
 //    if (fileInfo.isFile()/* && fileInfo.exists()*/) {
