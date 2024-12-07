@@ -10,6 +10,7 @@
 #include <QFormLayout>
 #include <QDialogButtonBox>
 #include <QMessageBox>
+#include <QApplication>
 #include "Input/inputdialog.h"
 #include "Search/HexSearch.h"
 
@@ -71,6 +72,7 @@ void QHexView::InitSetting() {
         CursorColor = QColor(38, 95, 153, 0xff);
     };
 
+#ifdef Q_OS_WIN
     if (setting.value("Theme").toString() == "System") {
         if (SysSettings.value("AppsUseLightTheme", 1).toInt() == 0) {
             SetDarkMode();
@@ -88,6 +90,14 @@ void QHexView::InitSetting() {
     } else if (setting.value("EnableHexEditing").toString() == "true") {
         setReadOnly(false);
     }
+#elif defined(Q_OS_LINUX)
+    const QColor backgroundColor = QApplication::palette().window().color();
+    if (backgroundColor.lightness() < 128) {
+        SetDarkMode();
+    } else {
+        SetLightMode();
+    }
+#endif
 
     UpdateHexPosition();
 }

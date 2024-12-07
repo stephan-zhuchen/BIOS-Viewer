@@ -221,7 +221,12 @@ void BiosViewerWindow::showHexView() const {
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
     UINT8 *itemData = selectedVolume->getData();
     INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
-    INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    INT64 itemSize = 0;
+    if (selectedVolume->isCompressed()) {
+        itemSize = selectedVolume->getSize();
+    } else {
+        itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
+    }
     auto *hexViewData = new QByteArray((CHAR8*)itemData, itemSize);
     hexDialog->loadBuffer(*hexViewData,
                           BiosData->OverviewVolume,
