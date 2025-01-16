@@ -3,8 +3,10 @@
 //
 #include "BaseLib.h"
 #include "MeRegion.h"
-#include <QDebug>
 #include <utility>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 
 using namespace BaseLibrarySpace;
 
@@ -54,7 +56,7 @@ void MeRegion::setInfoStr() {
     ss.setf(ios::left);
     ss << setw(width) << "Version Signature:" << hex << BaseLibrarySpace::charToString((CHAR8*)&MeVersion.Signature, sizeof(UINT32), false) << "\n"
        << setw(width) << "ME Version:" << dec << MeVersion.Major << "." << MeVersion.Minor << "." << MeVersion.Bugfix << "." << MeVersion.Build << "\n";
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 MeRegion::~MeRegion() = default;
@@ -102,7 +104,7 @@ void CSE_LayoutClass::DecodeChildVolume() {
             if (ifwiHeader.ifwi17Header.BootPartition[i].Size == 0) {
                 continue;
             }
-            QString PartitionName = "Boot Partition " + QString::number(i + 1);
+            string PartitionName = "Boot Partition " + std::to_string(i + 1);
             auto *BootPartition = new CSE_PartitionClass(data + ifwiHeader.ifwi17Header.BootPartition[i].Offset,
                                                          ifwiHeader.ifwi17Header.BootPartition[i].Size,
                                                          offsetFromBegin + ifwiHeader.ifwi17Header.BootPartition[i].Offset,
@@ -150,18 +152,19 @@ void CSE_LayoutClass::setInfoStr() {
         default:
             break;
     }
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
-QStringList CSE_LayoutClass::getUserDefinedName() const {
-    QStringList UserDefinedName;
-    UserDefinedName << "CSE Layout Table" << "Layout";
+vector<string> CSE_LayoutClass::getUserDefinedName() const {
+    vector<string> UserDefinedName;
+    UserDefinedName.push_back("CSE Layout Table");
+    UserDefinedName.push_back("Layout");
     return UserDefinedName;
 }
 
 CSE_LayoutClass::~CSE_LayoutClass() = default;
 
-CSE_PartitionClass::CSE_PartitionClass(UINT8 *file, INT64 RegionLength, INT64 offset, Volume *parent, QString name, PartitionLevel lv):
+CSE_PartitionClass::CSE_PartitionClass(UINT8 *file, INT64 RegionLength, INT64 offset, Volume *parent, string name, PartitionLevel lv):
     Volume(file, RegionLength, offset, false, parent), PartitionName(std::move(name)), level(lv) {}
 
 bool CSE_PartitionClass::CheckValidation() {
@@ -187,7 +190,7 @@ void CSE_PartitionClass::decodeBootPartition() {
     auto* firstPtEntry = (BPDT_ENTRY*)(data + sizeof(BPDT_HEADER));
     for (UINT16 i = 0; i < numEntries; i++) {
         BPDT_ENTRY* ptEntry = firstPtEntry + i;
-        QString name = bpdtEntryTypeToString(ptEntry->Type);
+        string name = bpdtEntryTypeToString(ptEntry->Type);
         if (ptEntry->Size == 0)
             continue;
         auto ChildPartition = new CSE_PartitionClass(data + ptEntry->Offset, ptEntry->Size, offsetFromBegin + ptEntry->Offset, this, name, PartitionLevel::Level2);
@@ -203,7 +206,7 @@ void CSE_PartitionClass::decodeDataPartition() {
     auto* firstPtEntry = (FPT_HEADER_ENTRY*)(data + sizeof(FPT_HEADER));
     for (UINT16 i = 0; i < numEntries; i++) {
         FPT_HEADER_ENTRY* fptEntry = firstPtEntry + i;
-        QString name = QString::fromStdString(charToString(fptEntry->Name, 4, false));
+        string name = charToString(fptEntry->Name, 4, false);
         if (fptEntry->Size == 0)
             continue;
         auto ChildPartition = new CSE_PartitionClass(data + fptEntry->Offset, fptEntry->Size, offsetFromBegin + fptEntry->Offset, this, name, PartitionLevel::Level2);
@@ -213,7 +216,7 @@ void CSE_PartitionClass::decodeDataPartition() {
     std::sort(ChildVolume.begin(), ChildVolume.end(), [](Volume *p1, Volume *p2) { return p1->getOffset() < p2->getOffset(); });
 }
 
-QString CSE_PartitionClass::bpdtEntryTypeToString(UINT16 type) {
+string CSE_PartitionClass::bpdtEntryTypeToString(UINT16 type) {
     switch (type) {
         case BPDT_ENTRY_TYPE_SMIP:        return "OEM SMIP";
         case BPDT_ENTRY_TYPE_RBEP:        return "CSE RBE Partition";
@@ -268,9 +271,10 @@ QString CSE_PartitionClass::bpdtEntryTypeToString(UINT16 type) {
     return "Unknown";
 }
 
-QStringList CSE_PartitionClass::getUserDefinedName() const {
-    QStringList UserDefinedName;
-    UserDefinedName << PartitionName << "Partition";
+vector<string> CSE_PartitionClass::getUserDefinedName() const {
+    vector<string> UserDefinedName;
+    UserDefinedName.push_back(PartitionName);
+    UserDefinedName.push_back("Partition");
     return UserDefinedName;
 }
 

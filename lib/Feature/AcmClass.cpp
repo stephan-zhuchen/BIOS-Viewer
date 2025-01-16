@@ -2,11 +2,11 @@
 // Created by stephan on 9/5/2023.
 //
 #include "AcmClass.h"
-#include "BaseLib.h"
 #include "UEFI/GuidDatabase.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
-using namespace BaseLibrarySpace;
 
 AcmHeaderClass::AcmHeaderClass(UINT8* buffer, INT64 length, INT64 offset):
     Volume(buffer, length, offset, false, nullptr) { }
@@ -49,7 +49,7 @@ void AcmHeaderClass::setInfoStr() {
 //           << "Scratch:\n" << DumpHex(ExtAcmHeader.Scratch, 572);
 //    }
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 bool AcmHeaderClass::CheckValidation() {
@@ -78,7 +78,6 @@ INT64 AcmHeaderClass::SelfDecode() {
 //    INT64 AcmPtrOffset = (INT64)(AcmPtr - data);
 //    if (AcmPtrOffset > size) {
 //        ValidFlag = false;
-//        qDebug() << "invalid acm size";
 //        return 0;
 //    }
     AcmInfoTable = (ACM_INFO_TABLE *)AcmPtr;

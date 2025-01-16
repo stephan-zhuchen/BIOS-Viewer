@@ -7,6 +7,8 @@
 #include "UEFI/PiFirmwareFile.h"
 #include "UefiFileSystem/CommonSection.h"
 #include <thread>
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -72,7 +74,7 @@ void BiosRegion::setInfoStr() {
             ss << "Release BIOS" << "\n";
     }
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 BiosRegion::~BiosRegion() {
@@ -84,7 +86,7 @@ void BiosRegion::setBiosID() {
         Volume *volume = ChildVolume.at(idx - 1);
         for (auto file:volume->ChildVolume) {
             if (file->getVolumeGuid() == GuidDatabase::gBiosIdGuid) {
-                if (file->ChildVolume.isEmpty())
+                if (file->ChildVolume.size() == 0)
                     return;
                 Volume *sec = file->ChildVolume.at(0);
                 auto *biosIdStr = (CHAR16*)(sec->getData() + sizeof(EFI_COMMON_SECTION_HEADER) + 8);

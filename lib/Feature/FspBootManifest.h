@@ -1,14 +1,12 @@
 #ifndef FSPBOOTMANIFESTCLASS_H
 #define FSPBOOTMANIFESTCLASS_H
 
-#include <string>
-#include <QVector>
 #include "Volume.h"
 #include "UEFI/FbmDef.h"
 
 struct FSP_REGION {
     FSP_REGION_STRUCTURE    FSP_REGION_Header;
-    QVector<REGION_SEGMENT> SegmentArray;
+    vector<REGION_SEGMENT>  SegmentArray;
 };
 
 #pragma pack(push, 1)
@@ -28,10 +26,10 @@ struct RSASSA_SIGNATURE {
 struct KEY_AND_SIGNATURE {
     KEY_AND_SIGNATURE_STRUCT_HEADER Header;
     RSA_PUBKEY                      RsaKey;
-    QByteArray                      KEY_Modulus;
+    vector<UINT8>                   KEY_Modulus;
     UINT16                          SigScheme;
     RSASSA_SIGNATURE                SignatureRsa;
-    QByteArray                      Signature;
+    vector<UINT8>                   Signature;
 };
 
 class FspBootManifestClass : public Volume
@@ -39,7 +37,7 @@ class FspBootManifestClass : public Volume
 private:
     bool                        ValidFlag{true};
     FSP_BOOT_MANIFEST_STRUCTURE FbmStruct;
-    QVector<FSP_REGION>         FspRegions;
+    vector<FSP_REGION>          FspRegions;
     KEY_AND_SIGNATURE           KeyAndSignature;
 public:
     FspBootManifestClass()=delete;
@@ -48,9 +46,9 @@ public:
 
     INT64 SelfDecode() override;
     void setInfoStr() override;
-    std::string GetFspComponentFromID(UINT8 ComponentID);
-    std::string GetRsaAlgFromID(UINT8 RsaAlgID);
-    std::string GetHashAlgFromID(UINT8 HashAlgID);
+    string GetFspComponentFromID(UINT8 ComponentID);
+    string GetRsaAlgFromID(UINT8 RsaAlgID);
+    string GetHashAlgFromID(UINT8 HashAlgID);
 
     [[nodiscard]] inline bool isValid() const { return ValidFlag; };
 };

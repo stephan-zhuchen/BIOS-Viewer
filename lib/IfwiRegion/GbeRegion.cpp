@@ -3,6 +3,8 @@
 //
 
 #include "GbeRegion.h"
+#include <sstream>
+#include <iomanip>
 
 GbeRegion::GbeRegion(UINT8 *buffer, INT64 length, INT64 offset):
     Volume(buffer, length, offset, false, nullptr) {}
@@ -37,7 +39,7 @@ void GbeRegion::setInfoStr() {
        << setw(width) << "Image ID:"  << (UINT16)GbeVersion.id << "\n"
        << setw(width) << "Version:" << (UINT16)GbeVersion.major << "." << (UINT16)GbeVersion.minor << endl;
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 GbeRegion::~GbeRegion() = default;

@@ -1,5 +1,7 @@
 #include "PE32.h"
 #include "BaseLib.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -78,7 +80,7 @@ void PE32::setInfoStr() {
            << setw(width) << "Image base:" << hex << uppercase << teHeader.ImageBase << "h\n"
            << setw(width) << "VirtualAddress:" << hex << uppercase << teHeader.DataDirectory->VirtualAddress << "h\n";
     }
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 void PE32::convert2Pe() {

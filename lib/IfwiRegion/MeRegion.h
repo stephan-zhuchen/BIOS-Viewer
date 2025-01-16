@@ -35,7 +35,7 @@ private:
         IFWI_17_LAYOUT_HEADER   ifwi17Header;
     } ifwiHeader{};
 public:
-    QVector<CSE_PartitionClass*>  CSE_Partitions;
+    vector<CSE_PartitionClass*>  CSE_Partitions;
     CSE_LayoutClass(UINT8* file, INT64 RegionLength, INT64 offset, Volume *parent);
     ~CSE_LayoutClass() override;
 
@@ -43,26 +43,26 @@ public:
     INT64 SelfDecode() override;
     void  DecodeChildVolume() override;
     void setInfoStr() override;
-    [[nodiscard]] QStringList getUserDefinedName() const override;
+    [[nodiscard]] vector<string> getUserDefinedName() const override;
 };
 
 class CSE_PartitionClass : public Volume {
 private:
     BPDT_HEADER bpdt_Header{};
     FPT_HEADER  fpt_Header{};
-    QString     PartitionName;
+    string      PartitionName;
     PartitionLevel level;
 public:
-    CSE_PartitionClass(UINT8* file, INT64 RegionLength, INT64 offset, Volume *parent, QString name, PartitionLevel lv);
+    CSE_PartitionClass(UINT8* file, INT64 RegionLength, INT64 offset, Volume *parent, string name, PartitionLevel lv);
     ~CSE_PartitionClass() override;
 
     bool  CheckValidation() override;
     INT64 SelfDecode() override;
     void  DecodeChildVolume() override;
     void setInfoStr() override;
-    [[nodiscard]] QStringList getUserDefinedName() const override;
+    [[nodiscard]] vector<string> getUserDefinedName() const override;
 
     void decodeBootPartition();
     void decodeDataPartition();
-    static QString bpdtEntryTypeToString(UINT16 type);
+    static string bpdtEntryTypeToString(UINT16 type);
 };

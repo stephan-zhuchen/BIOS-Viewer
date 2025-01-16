@@ -160,8 +160,8 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered() {
     INT64 NewBiosSize = byteArray.size();
     memcpy(NewBios, byteArray.data(), NewBiosSize);
 
-    QVector<FlashRegionBaseArea> &RegionList = ((FlashDescriptorRegion*)FlashDescriptor)->RegionList;
-    QVector<FlashRegionBaseArea> ValidRegionList;
+    vector<FlashRegionBaseArea> &RegionList = ((FlashDescriptorRegion*)FlashDescriptor)->RegionList;
+    vector<FlashRegionBaseArea> ValidRegionList;
     for (FlashRegionBaseArea &region:RegionList) {
         if (region.limit == 0) {
             continue;

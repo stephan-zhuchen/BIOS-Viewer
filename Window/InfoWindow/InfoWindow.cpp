@@ -117,7 +117,7 @@ void InfoWindow::showFitTab() {
     item = new QTableWidgetItem(QString("%1").arg(FitHeader.Version, 4, 16, QLatin1Char('0')).toUpper() + "h");
     ui->tableWidget->setItem(0, InfoWindow::Version, item);
 
-    item = new QTableWidgetItem(FitTableClass::getTypeName(FitHeader.Type));
+    item = new QTableWidgetItem(QString::fromStdString(FitTableClass::getTypeName(FitHeader.Type)));
     ui->tableWidget->setItem(0, InfoWindow::Type, item);
 
     item = new QTableWidgetItem(QString::number(FitHeader.C_V, 16).toUpper() + "h");
@@ -141,7 +141,7 @@ void InfoWindow::showFitTab() {
         item = new QTableWidgetItem(QString("%1").arg(Entry.Version, 4, 16, QLatin1Char('0')).toUpper() + "h");
         ui->tableWidget->setItem(index + 1, InfoWindow::Version, item);
 
-        item = new QTableWidgetItem(FitTableClass::getTypeName(Entry.Type));
+        item = new QTableWidgetItem(QString::fromStdString(FitTableClass::getTypeName(Entry.Type)));
         ui->tableWidget->setItem(index + 1, InfoWindow::Type, item);
 
         item = new QTableWidgetItem(QString::number(Entry.C_V, 16).toUpper() + "h");
@@ -230,7 +230,7 @@ void InfoWindow::showBtgTab() {
         ItemName = "FSP Boot Manifest";
         auto *FbmItem = new QListWidgetItem(ItemName);
         ui->BtgListWidget->addItem(FbmItem);
-        text = BiosImage->FitTable->FbmEntry->getInfoText();
+        text = QString::fromStdString(BiosImage->FitTable->FbmEntry->getInfoText());
         ManifestList.insert(ItemName, text);
     }
 
@@ -290,7 +290,7 @@ void InfoWindow::showVpdTab() {
 void InfoWindow::showAcpiTab() {
     BiosImage->collectAcpiTable();
     for (AcpiClass* AcpiTable:BiosImage->AcpiTables) {
-        QString AcpiItemName = AcpiTable->AcpiTableSignature + " - " + AcpiTable->AcpiTableOemID + " - " + AcpiTable->AcpiTableOemTableID;
+        QString AcpiItemName = QString::fromStdString(AcpiTable->AcpiTableSignature + " - " + AcpiTable->AcpiTableOemID + " - " + AcpiTable->AcpiTableOemTableID);
         auto *AcpiItem = new QListWidgetItem(AcpiItemName);
         ui->AcpiListWidget->addItem(AcpiItem);
     }
@@ -326,14 +326,14 @@ void InfoWindow::microcodeListWidgetItemSelectionChanged() {
     INT32 currentRow = ui->microcodeListWidget->currentRow();
     MicrocodeHeaderClass* EntryHeader = BiosImage->FitTable->MicrocodeEntries.at(currentRow);
     EntryHeader->setInfoStr();
-    ui->MicrocodeTextBrowser->setText(EntryHeader->getInfoText());
+    ui->MicrocodeTextBrowser->setText(QString::fromStdString(EntryHeader->getInfoText()));
 }
 
 void InfoWindow::acmListWidgetItemSelectionChanged() {
     INT32 currentRow = ui->acmListWidget->currentRow();
     AcmHeaderClass* EntryHeader = BiosImage->FitTable->AcmEntries.at(currentRow);
     EntryHeader->setInfoStr();
-    ui->AcmTextBrowser->setText(EntryHeader->getInfoText());
+    ui->AcmTextBrowser->setText(QString::fromStdString(EntryHeader->getInfoText()));
 }
 
 void InfoWindow::BtgListWidgetItemSelectionChanged() {
@@ -352,7 +352,7 @@ void InfoWindow::VpdListWidgetItemSelectionChanged() {
     NvItem->setInfoStr();
 
     QString HexStr = "Variable Data:\n" + QString::fromStdString(DumpHex(NvItem->DataPtr, NvItem->DataSize));
-    ui->VpdTextBrowser->setText(NvItem->getInfoText() + "\n\n" + HexStr);
+    ui->VpdTextBrowser->setText(QString::fromStdString(NvItem->getInfoText()) + "\n\n" + HexStr);
 }
 
 void InfoWindow::AcpiListWidgetItemSelectionChanged() {

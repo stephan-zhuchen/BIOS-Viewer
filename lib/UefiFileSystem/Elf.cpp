@@ -5,6 +5,8 @@
 #include "BaseLib.h"
 #include "Elf.h"
 #include "FirmwareVolume.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -241,7 +243,7 @@ void ELF::setInfoStr() {
         compressed = "Yes";
     ss << "\nCompressed: " << compressed;
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 INT64 ELF::getHeaderSize() const {

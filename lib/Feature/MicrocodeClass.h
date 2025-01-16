@@ -3,7 +3,6 @@
 //
 #pragma once
 #include "Volume.h"
-#include <string>
 #include "UEFI/Microcode.h"
 
 class MicrocodeHeaderClass: public Volume {
@@ -12,7 +11,7 @@ public:
     bool                                    isCorrupted{false};
     CPU_MICROCODE_HEADER                    microcodeHeader{};
     CPU_MICROCODE_EXTENDED_TABLE_HEADER     *ExtendedTableHeader;
-    QVector<CPU_MICROCODE_EXTENDED_TABLE>   ExtendedMicrocodeList;
+    vector<CPU_MICROCODE_EXTENDED_TABLE>   ExtendedMicrocodeList;
 
     MicrocodeHeaderClass()=delete;
     MicrocodeHeaderClass(UINT8* buffer, INT64 length, INT64 offset);
@@ -21,9 +20,9 @@ public:
     bool CheckValidation() override;
     INT64 SelfDecode() override;
     void setInfoStr() override;
-    [[nodiscard]] QStringList getUserDefinedName() const override;
+    [[nodiscard]] vector<string> getUserDefinedName() const override;
 
-    static QVector<INT64> SearchMicrocodeEntryNum(const UINT8* buffer, INT64 MicrocodeRegionSize);
+    static vector<INT64> SearchMicrocodeEntryNum(const UINT8* buffer, INT64 MicrocodeRegionSize);
 };
 
 class MicrocodeVersion: public Volume {

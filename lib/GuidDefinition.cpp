@@ -1,9 +1,12 @@
 #include "UEFI/GuidDatabase.h"
-#include "BaseLib.h"
 #include <iomanip>
+#include <regex>
+#include <sstream>
+#include <iomanip>
+#ifdef GUI_BIOS_VIEWER
 #include <QFile>
 #include <QTextStream>
-#include <QRegularExpression>
+#endif
 
 bool EFI_GUID::operator==(EFI_GUID guid) {
     if (this->Data1 != guid.Data1) {
@@ -46,35 +49,39 @@ GuidDatabase::~GuidDatabase() = default;
 
 std::string GuidDatabase::getNameFromGuid(EFI_GUID guid, BOOLEAN strip) {
     std::string name;
-    static QRegularExpression globalGuidPattern("^g(.*)Guid$");
-    static QRegularExpression duplicateFvPattern("^Fv(.*)Fv$");
-    static QRegularExpression firstTwoSymbolPattern("^(.{2})");
+    static std::regex globalGuidPattern("^g(.*)Guid$");
+    static std::regex duplicateFvPattern("^Fv(.*)Fv$");
+    static std::regex firstTwoSymbolPattern("^(.{2})");
 
+#ifdef GUI_BIOS_VIEWER
     if (UseExternalDataGuid && ExternalDataGuidMap.contains(guid.Data1)) {
         name = ExternalDataGuidMap.value(guid.Data1).toStdString();
     }
-    else if (hashedGuid.count(guid.Data1) == 0) {
+    else
+#endif
+    if (hashedGuid.count(guid.Data1) == 0) {
         name = guid.str(true);
     }
     else {
-        QString StripedName = QString::fromStdString(hashedGuid.at(guid.Data1));
+        std::string StripedName = hashedGuid.at(guid.Data1);
         if (strip) {
-            QRegularExpressionMatch globalGuidMatch = globalGuidPattern.match(StripedName);
-            if (globalGuidMatch.hasMatch()) {
-                StripedName = globalGuidMatch.captured(1);
+            std::smatch globalGuidMatch;
+            if (std::regex_match(StripedName, globalGuidMatch, globalGuidPattern)) {
+                StripedName = globalGuidMatch[1].str();
             }
-            QRegularExpressionMatch duplicateFvMatch = duplicateFvPattern.match(StripedName);
-            if (duplicateFvMatch.hasMatch()) {
-                StripedName = StripedName.replace(firstTwoSymbolPattern, "");
+
+            std::smatch duplicateFvMatch;
+            if (std::regex_match(StripedName, duplicateFvMatch, duplicateFvPattern)) {
+                StripedName = std::regex_replace(StripedName, firstTwoSymbolPattern, "");
             }
         }
-        name = StripedName.toStdString();
+        name = StripedName;
     }
     return name;
 }
 
-QString GuidDatabase::getFmpDeviceName(EFI_GUID guid) {
-    QString FmpName;
+std::string GuidDatabase::getFmpDeviceName(EFI_GUID guid) {
+    std::string FmpName;
     switch (guid.Data1) {
         case GuidDatabase::gFmpDeviceMonolithicDefaultGuid.Data1:
             FmpName = "Monolithic";
@@ -103,6 +110,7 @@ QString GuidDatabase::getFmpDeviceName(EFI_GUID guid) {
     return FmpName;
 }
 
+#ifdef GUI_BIOS_VIEWER
 QHash<UINT32, QString> GuidDatabase::ExternalDataGuidMap;
 bool GuidDatabase::UseExternalDataGuid {false};
 
@@ -278,6 +286,7 @@ void GuidDatabase::parseGuidInFdf(const QStringList &DirPaths) {
             }
     }
 }
+#endif
 
 GuidDatabase::GuidDatabase() {
 

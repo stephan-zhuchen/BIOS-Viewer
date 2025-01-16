@@ -1,5 +1,7 @@
 #include "BaseLib.h"
 #include "FspBootManifest.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -11,7 +13,8 @@ FspBootManifestClass::~FspBootManifestClass() = default;
 INT64 FspBootManifestClass::SelfDecode() {
     Type = VolumeType::FspBootManifest;
     FbmStruct = *(FSP_BOOT_MANIFEST_STRUCTURE*)data;
-    QString StructureId = QString::fromStdString(charToString((CHAR8*)FbmStruct.StructureId, 8));
+
+    std::string StructureId = charToString((CHAR8*)FbmStruct.StructureId, 8);
     if (StructureId != "__FBMS__" || FbmStruct.CompCnt > 3) {
         ValidFlag = false;
         return 0;
@@ -22,6 +25,7 @@ INT64 FspBootManifestClass::SelfDecode() {
         FSP_REGION FspRegion;
         FspRegion.FSP_REGION_Header = *(FSP_REGION_STRUCTURE*)(data + FspRegionOffset);
         FspRegionOffset += sizeof(FSP_REGION_STRUCTURE);
+
         for (INT32 count = 0; count < FspRegion.FSP_REGION_Header.SegmentCnt; ++count) {
             REGION_SEGMENT segment = *(REGION_SEGMENT*)(data + FspRegionOffset);
             FspRegion.SegmentArray.push_back(segment);
@@ -33,15 +37,22 @@ INT64 FspBootManifestClass::SelfDecode() {
     INT64 KeyAndSigOffset = FbmStruct.KeySignatureOffset;
     KeyAndSignature.Header = *(KEY_AND_SIGNATURE_STRUCT_HEADER*)(data + KeyAndSigOffset);
     KeyAndSigOffset += sizeof(KEY_AND_SIGNATURE_STRUCT_HEADER);
+
     KeyAndSignature.RsaKey = *(RSA_PUBKEY*)(data + KeyAndSigOffset);
     KeyAndSigOffset += sizeof(RSA_PUBKEY);
-    KeyAndSignature.KEY_Modulus = QByteArray((CHAR8*)(data + KeyAndSigOffset), KeyAndSignature.RsaKey.KeySizeBits / 8);
+
+    KeyAndSignature.KEY_Modulus.resize(KeyAndSignature.RsaKey.KeySizeBits / 8);
+    std::memcpy(KeyAndSignature.KEY_Modulus.data(), data + KeyAndSigOffset, KeyAndSignature.RsaKey.KeySizeBits / 8);
     KeyAndSigOffset += KeyAndSignature.RsaKey.KeySizeBits / 8;
+
     KeyAndSignature.SigScheme = *(UINT16*)(data + KeyAndSigOffset);
     KeyAndSigOffset += sizeof(UINT16);
+
     KeyAndSignature.SignatureRsa = *(RSASSA_SIGNATURE*)(data + KeyAndSigOffset);
     KeyAndSigOffset += sizeof(RSASSA_SIGNATURE);
-    KeyAndSignature.Signature = QByteArray((CHAR8*)(data + KeyAndSigOffset), KeyAndSignature.SignatureRsa.KeySizeBits / 8);
+
+    KeyAndSignature.Signature.resize(KeyAndSignature.SignatureRsa.KeySizeBits / 8);
+    std::memcpy(KeyAndSignature.Signature.data(), data + KeyAndSigOffset, KeyAndSignature.SignatureRsa.KeySizeBits / 8);
 
     return sizeof(FSP_BOOT_MANIFEST_STRUCTURE);
 }
@@ -132,10 +143,10 @@ void FspBootManifestClass::setInfoStr() {
        << setw(indentSize) << setfill(' ') << "" << "Signature:\n"
        << DumpHex((UINT8*)KeyAndSignature.Signature.data(), KeyAndSignature.Signature.size(), 16, false, indentSize) << "\n";
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
-std::string FspBootManifestClass::GetFspComponentFromID(UINT8 ComponentID) {
+string FspBootManifestClass::GetFspComponentFromID(UINT8 ComponentID) {
     switch (ComponentID) {
     case 0:
         return "FSP-O/T";
@@ -148,7 +159,7 @@ std::string FspBootManifestClass::GetFspComponentFromID(UINT8 ComponentID) {
     }
 }
 
-std::string FspBootManifestClass::GetRsaAlgFromID(UINT8 RsaAlgID) {
+string FspBootManifestClass::GetRsaAlgFromID(UINT8 RsaAlgID) {
     switch (RsaAlgID) {
     case TPM_ALG_RSA:
         return "RSA";
@@ -175,7 +186,7 @@ std::string FspBootManifestClass::GetRsaAlgFromID(UINT8 RsaAlgID) {
     }
 }
 
-std::string FspBootManifestClass::GetHashAlgFromID(UINT8 HashAlgID) {
+string FspBootManifestClass::GetHashAlgFromID(UINT8 HashAlgID) {
     switch (HashAlgID) {
     case TPM_ALG_SHA1:
         return "SHA1";

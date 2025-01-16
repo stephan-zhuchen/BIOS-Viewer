@@ -2,14 +2,15 @@
 #include "Lz4Decompress/Lz4Decompress.h"
 #include "LzmaDecompress/LzmaDecompressLib.h"
 #include "UefiFileSystem/FirmwareVolume.h"
-#include <QDebug>
+#include <sstream>
+#include <iomanip>
 
 CompressedVolume::CompressedVolume(UINT8* buffer, INT64 length, INT64 offset, Volume* parent):
     Volume(buffer, length, offset, false, parent) { }
 
 CompressedVolume::~CompressedVolume() { }
 
-QString CompressedVolume::GetComprssedType() {
+string CompressedVolume::GetComprssedType() {
     return ComprssedType;
 }
 
@@ -96,10 +97,10 @@ void CompressedVolume::setInfoStr() {
     float rate;
     ss.setf(ios::left);
 
-    ss << setw(width) << "Compression algorithm:" << ComprssedType.toStdString() << "\n"
+    ss << setw(width) << "Compression algorithm:" << ComprssedType << "\n"
        << setw(width) << "Decompressed size:" << hex << uppercase << CompressHdr->Size << "h\n";
     rate = (float)(CompressHdr->CompressedSize) / (float)CompressHdr->Size;
     ss << setprecision(4) << setw(width) << "Compresse rate:" << rate * 100 << "%\n";
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }

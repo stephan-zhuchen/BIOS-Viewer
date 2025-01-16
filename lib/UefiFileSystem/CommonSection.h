@@ -18,7 +18,7 @@ private:
     UINT8* data{};
     INT64  size{};
 public:
-    QVector<string>            OrganizedDepexList;
+    vector<string>            OrganizedDepexList;
     Depex()=delete;
     Depex(UINT8* file, INT64 length);
     static string getOpcodeString(UINT8 op);
@@ -44,7 +44,7 @@ private:
     UINT32                    HeaderSize;
     bool                      isExtSection{false};
     bool                      isValid;
-    QVector<EFI_GUID>         AprioriList;
+    vector<EFI_GUID>          AprioriList;
 public:
     PE32                      *Pe32Header{nullptr};
     Depex                     *Dependency{nullptr};
@@ -62,7 +62,7 @@ public:
     [[nodiscard]] EFI_GUID getVolumeGuid() const override;
 
     [[nodiscard]] UINT8 getSectionType() const;
-    [[nodiscard]] inline QString getUiName() const { return QString::fromStdString(FileNameString); }
+    [[nodiscard]] inline string getUiName() const { return FileNameString; }
     [[nodiscard]] inline EFI_GUID getSubTypeGuid() const { return SubTypeGuid; };
     [[nodiscard]] inline EFI_GUID getSectionDefinitionGuid() const { return GuidDefinedSection.SectionDefinitionGuid; };
 

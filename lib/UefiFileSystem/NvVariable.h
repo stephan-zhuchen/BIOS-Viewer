@@ -13,7 +13,7 @@ public:
     VARIABLE_HEADER               *VariableHeader;
     AUTHENTICATED_VARIABLE_HEADER *AuthVariableHeader;
     bool                          AuthFlag;
-    std::string                   VariableName;
+    string                        VariableName;
     UINT8                         *DataPtr;
     INT64                         DataSize;
 
@@ -27,7 +27,7 @@ public:
     void  setInfoStr() override;
 
     [[nodiscard]] INT64   getHeaderSize() const override;
-    [[nodiscard]] QStringList getUserDefinedName() const override;
+    [[nodiscard]] vector<string> getUserDefinedName() const override;
 };
 
 class NvStorageVariable : public Volume {

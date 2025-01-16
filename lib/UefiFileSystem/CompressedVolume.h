@@ -25,12 +25,12 @@ class CompressedVolume : public Volume
 {
 private:
     LOADER_COMPRESSED_HEADER  *CompressHdr;
-    QString                   ComprssedType;
+    string                    ComprssedType;
 public:
     CompressedVolume()=delete;
     CompressedVolume(UINT8* buffer, INT64 length, INT64 offset, Volume* parent= nullptr);
     ~CompressedVolume() override;
-    QString GetComprssedType();
+    string GetComprssedType();
 
     bool  CheckValidation() override;
     INT64 SelfDecode() override;

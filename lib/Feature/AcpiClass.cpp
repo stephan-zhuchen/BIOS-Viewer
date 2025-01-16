@@ -3,6 +3,8 @@
 //
 #include "BaseLib.h"
 #include "AcpiClass.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 using namespace BaseLibrarySpace;
@@ -33,9 +35,9 @@ INT64 AcpiClass::SelfDecode() {
     Type = VolumeType::AcpiTable;
     ValidFlag = true;
     AcpiHeader = *(EFI_ACPI_DESCRIPTION_HEADER*)data;
-    AcpiTableSignature = QString::fromStdString(charToString((CHAR8*)data, sizeof(UINT32), false));
-    AcpiTableOemID = QString::fromStdString(charToString((CHAR8*)&AcpiHeader.OemId, sizeof(UINT32), false));
-    AcpiTableOemTableID = QString::fromStdString(charToString((CHAR8*)&AcpiHeader.OemTableId, sizeof(UINT32), false));
+    AcpiTableSignature = charToString((CHAR8*)data, sizeof(UINT32), false);
+    AcpiTableOemID = charToString((CHAR8*)&AcpiHeader.OemId, sizeof(UINT32), false);
+    AcpiTableOemTableID = charToString((CHAR8*)&AcpiHeader.OemTableId, sizeof(UINT32), false);
     return size;
 }
 
@@ -63,11 +65,11 @@ void AcpiClass::setInfoStr() {
     stringstream guidInfo;
     ss.setf(ios::left);
 
-    ss << setw(width) << "Signature:"   << AcpiTableSignature.toStdString() << "\n"
+    ss << setw(width) << "Signature:"   << AcpiTableSignature << "\n"
        << setw(width) << "Length:"      << hex << uppercase << AcpiHeader.Length << "h\n"
        << setw(width) << "Revision:"    << hex << uppercase << (UINT16)AcpiHeader.Revision << "h\n"
        << setw(width) << "OemId:"       << charToString((CHAR8*)&AcpiHeader.OemId, 6, false) << "\n"
        << setw(width) << "OemTableId:"  << charToString((CHAR8*)&AcpiHeader.OemTableId, 8, false) << "\n";
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }

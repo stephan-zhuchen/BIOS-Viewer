@@ -1,9 +1,10 @@
 //
 // Created by stephan on 9/5/2023.
 //
-#include "UEFI/GuidDatabase.h"
 #include "BaseLib.h"
 #include "MicrocodeClass.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -83,13 +84,13 @@ void MicrocodeHeaderClass::setInfoStr() {
         }
     }
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
-QVector<INT64> MicrocodeHeaderClass::SearchMicrocodeEntryNum(const UINT8* buffer, INT64 MicrocodeRegionSize) {
+vector<INT64> MicrocodeHeaderClass::SearchMicrocodeEntryNum(const UINT8* buffer, INT64 MicrocodeRegionSize) {
     INT64 searchOffset = 0;
     UINT32 HeaderVersion;
-    QVector<INT64> MicrocodeEntryList;
+    vector<INT64> MicrocodeEntryList;
 
     while (searchOffset < MicrocodeRegionSize) {
         HeaderVersion = *(UINT32 *)(buffer + searchOffset);
@@ -102,9 +103,13 @@ QVector<INT64> MicrocodeHeaderClass::SearchMicrocodeEntryNum(const UINT8* buffer
     return MicrocodeEntryList;
 }
 
-QStringList MicrocodeHeaderClass::getUserDefinedName() const {
-    QStringList UserDefinedName;
-    UserDefinedName << "Microcode  " + QString::number(microcodeHeader.ProcessorSignature.Uint32, 16).toUpper();
+std::vector<string> MicrocodeHeaderClass::getUserDefinedName() const {
+    std::vector<string> UserDefinedName;
+
+    std::stringstream ss;
+    ss << "Microcode  " << std::uppercase << std::hex << microcodeHeader.ProcessorSignature.Uint32;
+    UserDefinedName.push_back(ss.str());
+
     return UserDefinedName;
 }
 
@@ -128,7 +133,7 @@ void MicrocodeVersion::setInfoStr() {
        << setw(width) << "LowestSupportedVersion:" << hex << uppercase << LowestSupportedVersion << "h\n"
        << setw(width) << "FwVersionString:"        << FwVersionString << "\n";
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 MicrocodeVersion::~MicrocodeVersion() = default;

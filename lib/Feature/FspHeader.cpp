@@ -1,9 +1,10 @@
 //
 // Created by stephan on 9/5/2023.
 //
-#include <string>
 #include "BaseLib.h"
 #include "FspHeader.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -61,7 +62,7 @@ void FspHeader::setInfoStr() {
        << setw(width) << "FspProducerDataSize:"             << hex << uppercase << mTable.FspInfoExtendedHeader.FspProducerDataSize << "h\n"
        << setw(width) << "BuildTimeStamp:"                  << hex << uppercase << mTable.FspProduceDataType1.BuildTimeStamp << "\n"
        << setw(width) << "PatchEntryNum:"                   << hex << uppercase << mTable.FspPatchTable.PatchEntryNum << "h\n";
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 bool FspHeader::isFspHeader(const UINT8 *ImageBase) {

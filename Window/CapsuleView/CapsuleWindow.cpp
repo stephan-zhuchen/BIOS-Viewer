@@ -18,6 +18,7 @@
 #include "HexView/HexViewWidget.h"
 #include "openssl/sha.h"
 #include "openssl/md5.h"
+#include <sstream>
 
 using namespace BaseLibrarySpace;
 
@@ -126,7 +127,7 @@ void CapsuleWindow::listWidget_itemSelectionChanged() {
     INT32 currentRow = ui->listWidget->currentRow();
     Volume *Entry = CapsuleData->VolumeDataList.at(currentRow);
     Entry->setInfoStr();
-    ui->textBrowser->setText(Entry->getInfoText());
+    ui->textBrowser->setText(QString::fromStdString(Entry->getInfoText()));
     INT64 offset = Entry->getOffset();
     INT64 size = Entry->getSize();
     setPanelInfo(offset, size);
@@ -164,7 +165,7 @@ void CapsuleWindow::LoadCapsule() {
             continue;
         }
         CapsuleData->VolumeDataList.append(FmpHeader);
-        CapsuleData->CapsuleType = FmpHeader->getCapsuleType();
+        CapsuleData->CapsuleType = QString::fromStdString(FmpHeader->getCapsuleType());
         if (CapsuleData->CapsuleType == "BIOS" ||
             CapsuleData->CapsuleType == "Extended BIOS" ||
             CapsuleData->CapsuleType == "BtgAcm"  ||
@@ -181,7 +182,7 @@ void CapsuleWindow::LoadCapsule() {
 
     addListItem(CapsuleData->VolumeDataList);
     ui->CapsuleTitle->setText("Capsule: " + CapsuleData->CapsuleType);
-    CapsuleData->OverviewVolume->setInfoText(CapsuleData->OverviewInfo);
+    CapsuleData->OverviewVolume->setInfoText(CapsuleData->OverviewInfo.toStdString());
 
     if (ui->listWidget->model()->rowCount() != 0)
         ui->listWidget->setCurrentRow(0);
@@ -355,7 +356,7 @@ INT64 CapsuleWindow::ParsePayloadInFfs(INT64 FfsOffset, const QString& CapsuleTy
     } else {
         auto volume = new Volume(WindowData->InputImage + offset, payloadFile.getSize() - payloadFile.getHeaderSize(), offset);
         volume->SelfDecode();
-        volume->setUniqueVolumeName(CapsuleType + " Payload");
+        volume->setUniqueVolumeName(CapsuleType.toStdString() + " Payload");
         CapsuleData->VolumeDataList.append(volume);
         offset += volume->getSize();
     }
@@ -381,7 +382,7 @@ INT64 CapsuleWindow::ParseBgupInFfs(INT64 BgupOffset, IniConfigFile *ConfigIni) 
             return 0;
         }
         bgup->setVolumeType(VolumeType::UserDefined);
-        bgup->setContent(QString::fromStdString(config.BgupContent));
+        bgup->setContent(config.BgupContent);
         CapsuleData->VolumeDataList.append(bgup);
     }
 
@@ -435,7 +436,7 @@ void CapsuleWindow::ParseMicrocodeCapsule(INT64 CapsuleOffset) {
         return;
     }
     offset = microcodeFfsOffset + microcodeFfs.getHeaderSize();
-    QVector<INT64> MicrocodeOffsetVector = MicrocodeHeaderClass::SearchMicrocodeEntryNum(WindowData->InputImage + offset, microcodeFfs.getSize() - microcodeFfs.getHeaderSize());
+    vector<INT64> MicrocodeOffsetVector = MicrocodeHeaderClass::SearchMicrocodeEntryNum(WindowData->InputImage + offset, microcodeFfs.getSize() - microcodeFfs.getHeaderSize());
     for (INT64 microcodeOffset : MicrocodeOffsetVector) {
         auto microcode = new MicrocodeHeaderClass(WindowData->InputImage + offset + microcodeOffset, microcodeFfs.getSize() - microcodeFfs.getHeaderSize() - microcodeOffset, offset + microcodeOffset);
         INT64 microcodeSize = microcode->SelfDecode();

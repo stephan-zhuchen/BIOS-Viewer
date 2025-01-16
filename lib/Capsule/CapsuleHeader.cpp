@@ -4,6 +4,9 @@
 #include "BaseLib.h"
 #include "CapsuleHeader.h"
 #include "UEFI/GuidDatabase.h"
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 
 using namespace BaseLibrarySpace;
 
@@ -68,7 +71,7 @@ void CapsuleCommonHeader::setInfoStr() {
        << setw(width) << "EmbeddedDriverCount:"  << hex << uppercase << FmpHeader.EmbeddedDriverCount << "h\n"
        << setw(width) << "PayloadItemCount:"     << hex << uppercase << FmpHeader.PayloadItemCount << "h\n";
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 FirmwareManagementHeader::FirmwareManagementHeader(UINT8* buffer, INT64 length, INT64 offset):
@@ -97,7 +100,7 @@ INT64 FirmwareManagementHeader::SelfDecode() {
     INT64 MonotonicCountSize = 8;
     offset += FmpAuthHeader.AuthInfo.Hdr.dwLength + MonotonicCountSize;
     FmpPayloadHeader = *(FMP_PAYLOAD_HEADER*)(data + offset);
-    QString Signature = QString::fromStdString(charToString((CHAR8*)&FmpPayloadHeader.Signature, sizeof(FmpPayloadHeader.Signature), false));
+    string Signature = charToString((CHAR8*)&FmpPayloadHeader.Signature, sizeof(FmpPayloadHeader.Signature), false);
     if (Signature != "MSS1")
         return 0;
 
@@ -135,10 +138,10 @@ void FirmwareManagementHeader::setInfoStr() {
        << setw(width) << "FwVersion:"              << hex << uppercase << FmpPayloadHeader.FwVersion << "h\n"
        << setw(width) << "LowestSupportedVersion:" << hex << uppercase << FmpPayloadHeader.LowestSupportedVersion << "h\n";
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
-QString FirmwareManagementHeader::getCapsuleTypeFromGuid(EFI_GUID& guid) {
+string FirmwareManagementHeader::getCapsuleTypeFromGuid(EFI_GUID& guid) {
     if (guid == GuidDatabase::gFmpDeviceMonolithicDefaultGuid) {
         return "Monolithic";
     }
@@ -226,7 +229,7 @@ INT64 IniConfigFile::SelfDecode() {
 }
 
 void IniConfigFile::setInfoStr() {
-    InfoStr = QString::fromStdString(iniContext);
+    InfoStr = iniContext;
 }
 
 std::string IniConfigFile::TrimString(const string &inputString) {

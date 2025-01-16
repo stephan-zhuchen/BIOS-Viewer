@@ -5,8 +5,8 @@
 #pragma once
 #include "SymbolDefinition.h"
 #include <string>
-#include <sstream>
-#include <iomanip>
+// #include <sstream>
+// #include <iomanip>
 
 struct EFI_GUID {
     UINT32    Data1;

@@ -482,7 +482,7 @@ void BiosViewerWindow::showBgupView() {
     if (isDarkMode()) {
         TabView->setWindowIcon(QIcon(":/windows_light.svg"));
     }
-    TabView->SetNewTabAndText("BGUP", bgup.getInfoText());
+    TabView->SetNewTabAndText("BGUP", QString::fromStdString(bgup.getInfoText()));
     TabView->CollectTabAndShow();
 }
 

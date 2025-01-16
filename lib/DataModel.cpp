@@ -182,7 +182,7 @@ void DataModel::setFirmwareVolumeModel(Volume *vol) {
 
 void DataModel::setCompressedVolumeModel(Volume *vol) {
     auto compressed = (CompressedVolume*)vol;
-    name = compressed->GetComprssedType();
+    name = QString::fromStdString(compressed->GetComprssedType());
     type = "Compressed";
 }
 
@@ -277,13 +277,13 @@ void DataModel::InitFromVolume(Volume *vol) {
             break;
         case VolumeType::UserDefined:
             if (vol->getUserDefinedName().size() >= 1) {
-                name = vol->getUserDefinedName()[0];
+                name = QString::fromStdString(vol->getUserDefinedName()[0]);
             }
             if (vol->getUserDefinedName().size() >= 2) {
-                type = vol->getUserDefinedName()[1];
+                type = QString::fromStdString(vol->getUserDefinedName()[1]);
             }
             if (vol->getUserDefinedName().size() >= 3) {
-                subtype = vol->getUserDefinedName()[2];
+                subtype = QString::fromStdString(vol->getUserDefinedName()[2]);
             }
             break;
         case VolumeType::FaultTolerantBlock:
@@ -331,6 +331,6 @@ void DataModel::InitFromVolume(Volume *vol) {
             break;
     }
     if (vol->getUniqueVolumeName().size() > 0) {
-        name = vol->getUniqueVolumeName();
+        name = QString::fromStdString(vol->getUniqueVolumeName());
     }
 }

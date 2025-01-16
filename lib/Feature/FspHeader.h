@@ -2,7 +2,6 @@
 // Created by stephan on 9/5/2023.
 //
 #pragma once
-#include <QString>
 #include "Volume.h"
 #include "UEFI/FspHeader.h"
 

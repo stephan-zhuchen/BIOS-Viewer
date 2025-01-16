@@ -13,7 +13,9 @@
 #include "Feature/AcpiClass.h"
 #include "Elf.h"
 #include "Vpd.h"
-#include <QDebug>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
 
 using namespace BaseLibrarySpace;
 
@@ -156,7 +158,7 @@ void CommonSection::DecodeChildVolume() {
                 ScratchSize = 0;
                 status = UefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
-                    qDebug("UEFI Decompress failure, offset = 0x%x", offsetFromBegin);
+                    std::cout << "UEFI Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     return;
                 }
 
@@ -164,7 +166,7 @@ void CommonSection::DecodeChildVolume() {
                 scratch = malloc(ScratchSize);
                 status = UefiTianoDecompress(data + HeaderSize, DecompressedBufferOnHeap, scratch, 1);
                 if (status != RETURN_SUCCESS) {
-                    qDebug("UEFI Decompress failure, offset = 0x%x", offsetFromBegin);
+                    std::cout << "UEFI Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     free(scratch);
                     return;
                 }
@@ -211,7 +213,7 @@ void CommonSection::DecodeChildVolume() {
                 ScratchSize = 0;
                 status = LzmaUefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
-                    qDebug("Lzma Decompress failure, offset = 0x%x", offsetFromBegin);
+                    std::cout << "Lzma Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     return;
                 }
 
@@ -219,7 +221,7 @@ void CommonSection::DecodeChildVolume() {
                 scratch = malloc(ScratchSize);
                 status = LzmaUefiDecompress(data + HeaderSize, size - HeaderSize, DecompressedBufferOnHeap, scratch);
                 if (status != RETURN_SUCCESS) {
-                    qDebug("Lzma Decompress failure, offset = 0x%x", offsetFromBegin);
+                    std::cout << "Lzma Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     free(scratch);
                     return;
                 }
@@ -232,7 +234,7 @@ void CommonSection::DecodeChildVolume() {
                 ScratchSize = 0;
                 status = BrotliUefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
-                    qDebug("Brotli Decompress failure, offset = 0x%x", offsetFromBegin);
+                    std::cout << "Brotli Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     return;
                 }
 
@@ -240,7 +242,7 @@ void CommonSection::DecodeChildVolume() {
                 scratch = malloc(ScratchSize);
                 status = BrotliUefiDecompress(data + HeaderSize, size - HeaderSize, DecompressedBufferOnHeap, scratch);
                 if (status != RETURN_SUCCESS) {
-                    qDebug("Brotli Decompress failure, offset = 0x%x", offsetFromBegin);
+                    std::cout << "Brotli Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     free(scratch);
                     return;
                 }
@@ -253,7 +255,7 @@ void CommonSection::DecodeChildVolume() {
                 ScratchSize = 0;
                 status = UefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
-                    qDebug("Tiano Decompress failure, offset = 0x%x", offsetFromBegin);
+                    std::cout << "Tiano Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     return;
                 }
 
@@ -261,7 +263,7 @@ void CommonSection::DecodeChildVolume() {
                 scratch = malloc(ScratchSize);
                 status = UefiTianoDecompress(data + HeaderSize, DecompressedBufferOnHeap, scratch, 2);
                 if (status != RETURN_SUCCESS) {
-                    qDebug("Tiano Decompress failure, offset = 0x%x", offsetFromBegin);
+                    std::cout << "Tiano Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     free(scratch);
                     return;
                 }
@@ -279,9 +281,9 @@ void CommonSection::DecodeChildVolume() {
             char16FileName = (UINT16*)this->getBytes(offset, size - HeaderSize);
             FileNameString = wstringToString(char16FileName);
             if (FileNameString == "FmpDxe") {
-                ParentVolume->setUniqueVolumeName(QString::fromStdString(FileNameString) + " " + GuidDatabase::getFmpDeviceName(ParentVolume->getVolumeGuid()));
+                ParentVolume->setUniqueVolumeName(FileNameString + " " + GuidDatabase::getFmpDeviceName(ParentVolume->getVolumeGuid()));
             } else {
-                ParentVolume->setUniqueVolumeName(QString::fromStdString(FileNameString));
+                ParentVolume->setUniqueVolumeName(FileNameString);
             }
             safeArrayDelete(char16FileName);
             break;
@@ -372,7 +374,7 @@ void CommonSection::setInfoStr() {
         case EFI_SECTION_TE:
             if (Pe32Header->isValid) {
                 Pe32Header->setInfoStr();
-                ss << Pe32Header->getInfoText().toStdString();
+                ss << Pe32Header->getInfoText();
                 break;
             } else {
                 ss << "Invalid PE32 Image";
@@ -411,7 +413,7 @@ void CommonSection::setInfoStr() {
     if (isCompressed())
         compressed = "Yes";
     ss << "\nCompressed: " << compressed;
-    InfoStr = QString::fromStdString(guidInfo.str() +  ss.str());
+    InfoStr = guidInfo.str() +  ss.str();
 }
 
 Volume* CommonSection::Reorganize() {
@@ -455,7 +457,7 @@ Volume* CommonSection::Reorganize() {
                 }
         }
         for (auto child:this->ChildVolume) {
-                newVolume->ChildVolume.append(child);
+                newVolume->ChildVolume.push_back(child);
                 child->ParentVolume = newVolume;
         }
         this->ParentVolume = nullptr;

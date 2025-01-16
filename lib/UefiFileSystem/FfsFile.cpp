@@ -9,6 +9,8 @@
 #include "Feature/FspHeader.h"
 #include "Feature/MicrocodeClass.h"
 #include "Feature/AcmClass.h"
+#include <sstream>
+#include <iomanip>
 using namespace BaseLibrarySpace;
 
 FfsFile::FfsFile(UINT8 *file, INT64 offset, bool Compressed, Volume* parent):
@@ -126,7 +128,7 @@ void FfsFile::setInfoStr() {
         compressed = "Yes";
     ss << "\nCompressed: " << compressed;
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 Volume* FfsFile::Reorganize() {
@@ -197,7 +199,7 @@ Volume* FfsFile::Reorganize() {
         }
         if (RemainChild) {
             for (auto child:this->ChildVolume) {
-                newVolume->ChildVolume.append(child);
+                newVolume->ChildVolume.push_back(child);
                 child->ParentVolume = newVolume;
             }
         } else {

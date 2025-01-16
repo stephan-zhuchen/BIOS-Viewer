@@ -3,9 +3,11 @@
 //
 
 #pragma once
-#include <QMetaType>
 #include <QStringList>
 #include "Volume.h"
+#ifdef GUI_BIOS_VIEWER
+#include <QMetaType>
+#endif
 
 class DataModel {
 private:

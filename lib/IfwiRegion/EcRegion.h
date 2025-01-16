@@ -7,7 +7,7 @@
 
 class EcRegion: public Volume {
 private:
-    QString Signature;
+    string  Signature;
     UINT8   PlatId{};
     UINT8   MajorVer{};
     UINT8   MinorVer{};

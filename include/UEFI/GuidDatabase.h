@@ -2,25 +2,29 @@
 
 #include <string>
 #include <unordered_map>
-#include <QHash>
-#include <QString>
-#include <QStringList>
 #include "GUID.h"
 #include "SymbolDefinition.h"
+#ifdef GUI_BIOS_VIEWER
+#include <QHash>
+#include <QStringList>
+#endif
 
 class GuidDatabase {
 public:
     std::unordered_map<UINT32, std::string> hashedGuid;
-    static QHash<UINT32, QString> ExternalDataGuidMap;
-    static bool UseExternalDataGuid;
     GuidDatabase();
     ~GuidDatabase();
     std::string getNameFromGuid(EFI_GUID guid, BOOLEAN strip=false);
-    static QString getFmpDeviceName(EFI_GUID guid);
+    static std::string getFmpDeviceName(EFI_GUID guid);
+
+#ifdef GUI_BIOS_VIEWER
+    static bool UseExternalDataGuid;
+    static QHash<UINT32, QString> ExternalDataGuidMap;
 
     static void parseGuidInDec(const QStringList &DirPaths);
     static void parseGuidInInf(const QStringList &DirPaths);
     static void parseGuidInFdf(const QStringList &DirPaths);
+#endif
 
     // GUID Definition
     constexpr static EFI_GUID gCommonBinPkgTokenSpaceGuid                   = {0x96e89711, 0x65b3, 0x4cc9, {0xa2, 0xb4, 0x5d, 0xe5, 0xa0, 0x1f, 0xf8, 0x2a}};

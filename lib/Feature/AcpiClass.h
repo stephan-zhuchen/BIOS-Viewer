@@ -4,7 +4,6 @@
 #pragma once
 #include "Volume.h"
 #include "UEFI/Acpi.h"
-#include <QString>
 
 class AcpiClass: public Volume {
 private:
@@ -12,9 +11,9 @@ private:
     bool                          ValidFlag{false};
     bool                          needValidation;
 public:
-    QString                       AcpiTableSignature;
-    QString                       AcpiTableOemID;
-    QString                       AcpiTableOemTableID;
+    string                        AcpiTableSignature;
+    string                        AcpiTableOemID;
+    string                        AcpiTableOemTableID;
 
     AcpiClass()=delete;
     AcpiClass(UINT8* buffer, INT64 length, INT64 offset, bool needValidation=true);

@@ -82,8 +82,8 @@ INT64 FitTableClass::SelfDecode() {
     return size;
 }
 
-QString FitTableClass::getTypeName(UINT8 type) {
-    QString typeName;
+string FitTableClass::getTypeName(UINT8 type) {
+    string typeName;
     switch (type) {
         case FIT_TABLE_TYPE_HEADER:
             typeName = "Header";

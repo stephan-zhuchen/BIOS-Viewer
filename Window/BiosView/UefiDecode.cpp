@@ -12,6 +12,7 @@
 #include "UefiFileSystem/FirmwareVolume.h"
 #include "UefiFileSystem/CompressedVolume.h"
 #include <iostream>
+#include <sstream>
 #include "ui_BiosWindow.h"
 
 using namespace BaseLibrarySpace;

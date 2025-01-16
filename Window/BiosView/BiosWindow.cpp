@@ -152,7 +152,7 @@ void BiosViewerWindow::loadBios() {
         QFileInfo fileInfo(WindowData->OpenedFileName);
         title = fileInfo.fileName();
     } else
-        title = BiosData->BiosImage->getBiosID();
+        title = QString::fromStdString(BiosData->BiosImage->getBiosID());
 
     ui->titleInfomation->setText(title);
     ui->treeWidget->setCurrentIndex(ui->treeWidget->model()->index(0, 0, QModelIndex()));
@@ -252,7 +252,7 @@ void BiosViewerWindow::TreeWidgetItemSelectionChanged() const {
     setPanelInfo(itemVolume->getOffset(), itemVolume->getSize());
 
     itemVolume->setInfoStr();
-    ui->infoBrowser->setText(itemVolume->getInfoText());
+    ui->infoBrowser->setText(QString::fromStdString(itemVolume->getInfoText()));
 }
 
 void BiosViewerWindow::InfoButtonClicked() {

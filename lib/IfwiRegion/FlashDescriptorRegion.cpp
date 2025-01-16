@@ -3,6 +3,8 @@
 //
 
 #include "FlashDescriptorRegion.h"
+#include <sstream>
+#include <iomanip>
 
 UINT32 FlashRegionBaseArea::getBase() const {
     return (UINT32)base * 0x1000;
@@ -108,7 +110,7 @@ void FlashDescriptorRegion::setInfoStr() {
         ss << setw(width) << "\nTop Swap Block Size: " << topSwapSize << "\n";
     }
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 FlashDescriptorRegion::~FlashDescriptorRegion() = default;

@@ -2,7 +2,6 @@
 // Created by stephan on 9/5/2023.
 //
 #pragma once
-#include <QVector>
 #include "Volume.h"
 #include "UEFI/FIT.h"
 
@@ -13,9 +12,9 @@ class FspBootManifestClass;
 class FitTableClass: public Volume {
 public:
     FIRMWARE_INTERFACE_TABLE_ENTRY          FitHeader{};
-    QVector<FIRMWARE_INTERFACE_TABLE_ENTRY> FitEntries;
-    QVector<MicrocodeHeaderClass*>          MicrocodeEntries;
-    QVector<AcmHeaderClass*>                AcmEntries;
+    vector<FIRMWARE_INTERFACE_TABLE_ENTRY>  FitEntries;
+    vector<MicrocodeHeaderClass*>           MicrocodeEntries;
+    vector<AcmHeaderClass*>                 AcmEntries;
     FspBootManifestClass                    *FbmEntry{nullptr};
     INT64                                   FitEntryNum{0};
     bool                                    isValid{false};
@@ -25,5 +24,5 @@ public:
     ~FitTableClass();
 
     INT64 SelfDecode() override;
-    static QString getTypeName(UINT8 type);
+    static string getTypeName(UINT8 type);
 };

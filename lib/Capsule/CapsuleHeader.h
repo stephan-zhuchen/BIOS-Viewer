@@ -2,9 +2,9 @@
 // Created by stephan on 9/4/2023.
 //
 #pragma once
-#include <string>
 #include "Volume.h"
 #include "UEFI/CapsuleSpec.h"
+#include <map>
 
 class CapsuleCommonHeader: public Volume {
 private:
@@ -14,7 +14,7 @@ private:
     bool   PopulateSystemTable{false};
     bool   InitiateReset{false};
 public:
-    QVector<INT64>                          ItemOffsetVector;
+    vector<INT64>                           ItemOffsetVector;
 
     CapsuleCommonHeader() = delete;
     CapsuleCommonHeader(UINT8* buffer, INT64 length, INT64 offset);
@@ -30,7 +30,7 @@ private:
     EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  FmpCapsuleImageHeader;
     EFI_FIRMWARE_IMAGE_AUTHENTICATION             FmpAuthHeader;
     FMP_PAYLOAD_HEADER                            FmpPayloadHeader;
-    QString                                       CapsuleType;
+    string                                       CapsuleType;
 public:
     FirmwareManagementHeader() = delete;
     FirmwareManagementHeader(UINT8* buffer, INT64 length, INT64 offset);
@@ -40,23 +40,23 @@ public:
     INT64 SelfDecode() override;
     void  setInfoStr() override;
 
-    inline QString getCapsuleType() {return CapsuleType;}
-    static QString getCapsuleTypeFromGuid(EFI_GUID& guid);
+    inline string getCapsuleType() {return CapsuleType;}
+    static string getCapsuleTypeFromGuid(EFI_GUID& guid);
 };
 
 struct BgupConfig {
-    std::string BgupContent;
+    string      BgupContent;
     UINT32      BgupOffset;
     UINT32      BgupSize;
 };
 
 class IniConfigFile: public Volume {
 private:
-    std::string         iniContext;
-    INT32               NumOfUpdate;
-    std::map<std::string, std::map<std::string, std::string>> iniData;
+    string      iniContext;
+    INT32       NumOfUpdate;
+    std::map<string, std::map<string, string>> iniData;
 public:
-    QVector<BgupConfig> BgupList;
+    vector<BgupConfig> BgupList;
 
     IniConfigFile() = delete;
     IniConfigFile(UINT8* buffer, INT64 length, INT64 offset);
@@ -66,6 +66,6 @@ public:
     INT64 SelfDecode() override;
     void  setInfoStr() override;
 
-    std::string TrimString(const std::string& inputString);
-    std::string GetIniValue(const std::string& section, const std::string& key);
+    string TrimString(const string& inputString);
+    string GetIniValue(const string& section, const string& key);
 };

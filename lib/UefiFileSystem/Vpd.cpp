@@ -1,6 +1,8 @@
 #include "Vpd.h"
 #include "BaseLib.h"
 #include "UefiFileSystem/NvVariable.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -56,5 +58,5 @@ void Vpd::setInfoStr() {
     if (isCompressed())
         compressed = "Yes";
     ss << "\nCompressed: " << compressed;
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }

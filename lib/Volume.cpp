@@ -5,6 +5,7 @@
 #include "Volume.h"
 #include "BaseLib.h"
 #include "Payload/PE32.h"
+#include <algorithm>
 
 using  namespace BaseLibrarySpace;
 Volume::Volume(UINT8* buffer, INT64 length, INT64 offset, bool Compressed, Volume* parent):
@@ -149,7 +150,7 @@ Volume* Volume::Reorganize() {
             }
         }
         for (auto child:this->ChildVolume) {
-            newVolume->ChildVolume.append(child);
+            newVolume->ChildVolume.push_back(child);
             child->ParentVolume = newVolume;
         }
         this->ParentVolume = nullptr;
@@ -164,11 +165,11 @@ EFI_GUID Volume::getVolumeGuid() const {
     return {};
 }
 
-void Volume::setInfoText(const QString &text) {
+void Volume::setInfoText(const string &text) {
     InfoStr = text;
 }
 
-QStringList Volume::getUserDefinedName() const {
+std::vector<string> Volume::getUserDefinedName() const {
     return {};
 }
 

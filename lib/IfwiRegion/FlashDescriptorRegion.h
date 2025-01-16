@@ -35,9 +35,9 @@ private:
     FLASH_DESCRIPTOR_REGION_SECTION     FlashRegionSection{};
     INT64                               FlashTotalSize;
     UINT8                               descriptorVersion{2};
-    std::string                         topSwapSize;
+    string                              topSwapSize;
 public:
-    QVector<FlashRegionBaseArea>        RegionList;
+    vector<FlashRegionBaseArea>         RegionList;
 
     FlashDescriptorRegion() = delete;
     FlashDescriptorRegion(UINT8* buffer, INT64 length, INT64 offset=0);

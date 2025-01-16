@@ -3,6 +3,8 @@
 //
 
 #include "EcRegion.h"
+#include <sstream>
+#include <iomanip>
 
 EcRegion::EcRegion(UINT8 *buffer, INT64 length, INT64 offset):
     Volume(buffer, length, offset, false, nullptr) {}
@@ -39,12 +41,12 @@ void EcRegion::setInfoStr() {
     stringstream ss;
     ss.setf(ios::left);
 
-    ss << setw(width) << "EC signature:"  << Signature.toStdString() << "\n"
+    ss << setw(width) << "EC signature:"  << Signature << "\n"
        << setw(width) << "Plat ID:"       << hex << (INT32)PlatId << "h\n"
        << setw(width) << "Build Version:" << hex << (INT32)BuildVer << "h\n"
        << setw(width) << "EC Version:"    << hex << (INT32)MajorVer << "." << hex << (INT32)MinorVer << "\n";
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 EcRegion::~EcRegion() = default;

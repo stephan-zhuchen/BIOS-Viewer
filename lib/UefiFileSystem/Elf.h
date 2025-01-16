@@ -17,7 +17,7 @@ public:
         Elf32_Shdr *Elf32Shdr;
         Elf64_Shdr *Elf64Shdr;
     } Shdr;
-    QList<SectionHeader*> SectionList;
+    vector<SectionHeader*> SectionList;
     UINT32 SectionListOffset;
     UINT32 SectionNum;
     UINT32 SectionHdrSize;

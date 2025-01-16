@@ -3,14 +3,19 @@
 //
 
 #pragma once
-#include <QString>
-#include <QVector>
-#include <QMetaType>
+#include <string>
+#include <vector>
 #include <utility>
 #include "UEFI/GUID.h"
+#ifdef GUI_BIOS_VIEWER
+#include <QMetaType>
+#endif
+
+using std::string;
+using std::vector;
 
 struct Decompressed {
-    std::vector<UINT8> decompressedBuffer;
+    vector<UINT8> decompressedBuffer;
     UINT32 decompressedOffset;
     UINT32 CompressedSize;
 };
@@ -63,11 +68,11 @@ protected:
     UINT8               *DecompressedBufferOnHeap{nullptr};
     VolumeType          Type{VolumeType::Empty};
     VolumeType          SubType{VolumeType::Empty};
-    QString             InfoStr;
-    QString             UniqueVolumeName;
+    string              InfoStr;
+    string              UniqueVolumeName;
 public:
     Volume              *ParentVolume{nullptr};
-    QList<Volume*>      ChildVolume;
+    vector<Volume*>      ChildVolume;
 
     Volume() = default;
     Volume(UINT8* buffer, INT64 length, INT64 offset=0, bool Compressed=false, Volume* parent= nullptr);
@@ -95,12 +100,12 @@ public:
     [[nodiscard]] inline bool   isCorrupted()  const { return Corrupted; }
     [[nodiscard]] inline VolumeType getVolumeType() const { return Type; }
     [[nodiscard]] inline VolumeType getVolumeSubType() const { return SubType; }
-    [[nodiscard]] inline QString    getInfoText() const { return InfoStr; }
-    [[nodiscard]] inline QString    getUniqueVolumeName() const { return UniqueVolumeName; }
+    [[nodiscard]] inline string     getInfoText() const { return InfoStr; }
+    [[nodiscard]] inline string     getUniqueVolumeName() const { return UniqueVolumeName; }
     inline void setCompressedFlag(bool flag) { Compressed = flag; }
     inline void setVolumeType(VolumeType tp) { Type = tp; }
     inline void setVolumeSubType(VolumeType tp) { SubType = tp; }
-    inline void setUniqueVolumeName(QString name) { UniqueVolumeName = std::move(name); }
+    inline void setUniqueVolumeName(string name) { UniqueVolumeName = std::move(name); }
 
     // Virtual function
     virtual bool   CheckValidation();
@@ -110,12 +115,14 @@ public:
     virtual Volume *Reorganize();
     [[nodiscard]] virtual INT64       getHeaderSize() const;
     [[nodiscard]] virtual EFI_GUID    getVolumeGuid() const;
-    [[nodiscard]] virtual QStringList getUserDefinedName() const;
+    [[nodiscard]] virtual vector<string> getUserDefinedName() const;
 
-    void setInfoText(const QString &text);
-    bool GetDecompressedVolume(std::vector<UINT8>& DecompressedVolume);
-    void SearchDecompressedVolume(Volume *volume, std::vector<Decompressed*>& DecompressedVolumeList);
+    void setInfoText(const string &text);
+    bool GetDecompressedVolume(vector<UINT8>& DecompressedVolume);
+    void SearchDecompressedVolume(Volume *volume, vector<Decompressed*>& DecompressedVolumeList);
 
     static Volume *SearchVolumeByGuid(Volume *volume, EFI_GUID &Guid);
 };
+#ifdef GUI_BIOS_VIEWER
 Q_DECLARE_METATYPE(Volume);
+#endif

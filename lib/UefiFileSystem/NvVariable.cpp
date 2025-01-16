@@ -5,6 +5,8 @@
 #include "BaseLib.h"
 #include "NvVariable.h"
 #include "UEFI/GuidDatabase.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -52,7 +54,7 @@ void NvVariableEntry::setInfoStr() {
            << setw(width) << "Variable Name:"   << VariableName << "\n"
            << setw(width) << "Variable Size:"   << hex << DataSize << "h\n";
     }
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 INT64 NvVariableEntry::getHeaderSize() const {
@@ -62,9 +64,10 @@ INT64 NvVariableEntry::getHeaderSize() const {
         return sizeof(VARIABLE_HEADER);
 }
 
-QStringList NvVariableEntry::getUserDefinedName() const {
-    QStringList UserDefinedName;
-    UserDefinedName << QString::fromStdString(VariableName) << "Variable";
+std::vector<string> NvVariableEntry::getUserDefinedName() const {
+    std::vector<string> UserDefinedName;
+    UserDefinedName.push_back(VariableName);
+    UserDefinedName.push_back("Variable");
     return UserDefinedName;
 }
 
@@ -114,7 +117,7 @@ void NvStorageVariable::setInfoStr() {
        << setw(width) << "Header size:" << hex << uppercase << sizeof(VARIABLE_STORE_HEADER) << "h\n"
        << setw(width) << "Format:"      << hex << uppercase << NvStoreHeader.Format << "h\n"
        << setw(width) << "State:"       << hex << uppercase << (UINT32)NvStoreHeader.State << "h\n";
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 NvStorageVariable::~NvStorageVariable() = default;
@@ -148,7 +151,7 @@ void FaultTolerantBlock::setInfoStr() {
     ss << "Signature:\n" << TolerantHeader.Signature.str(true) << "\n"
        << setw(width) << "Crc:"             << hex << uppercase << TolerantHeader.Crc << "h\n"
        << setw(width) << "WriteQueue Size:" << hex << uppercase << TolerantHeader.WriteQueueSize << "h\n";
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 FaultTolerantBlock::~FaultTolerantBlock() = default;

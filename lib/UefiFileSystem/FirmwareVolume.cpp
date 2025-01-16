@@ -11,6 +11,8 @@
 #include "UEFI/GuidDatabase.h"
 #include "UEFI/PiFirmwareFile.h"
 #include "NvVariable.h"
+#include <sstream>
+#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
@@ -190,7 +192,7 @@ void FirmwareVolume::setInfoStr() {
         compressed = "Yes";
     ss << "\nCompressed: " << compressed;
 
-    InfoStr = QString::fromStdString(ss.str());
+    InfoStr = ss.str();
 }
 
 INT64 FirmwareVolume::getHeaderSize() const {
