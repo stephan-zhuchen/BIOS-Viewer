@@ -83,9 +83,7 @@ void FirmwareVolume::DecodeChildVolume() {
     INT64 offset = FirmwareVolumeHeaderSize;
     Align(offset, 0, 0x8);
 
-    vector<thread> threadPool;
-    std::mutex mtx;
-    auto FvDecoder = [this, &mtx](INT64 off) {
+    auto FvDecoder = [this](INT64 off) {
         auto *Ffs = new FfsFile(data + off, offsetFromBegin + off, Compressed, this);
         Ffs->SelfDecode();
 
@@ -107,7 +105,6 @@ void FirmwareVolume::DecodeChildVolume() {
             default:
                 break;
         }
-        std::lock_guard<std::mutex> lock(mtx);
         ChildVolume.push_back(Ffs);
     };
     while (offset < size) {
@@ -134,7 +131,7 @@ void FirmwareVolume::DecodeChildVolume() {
             ChildVolume.push_back(FaultTolerant);
             FfsSize = NvSize + TolerantSize;
         } else {
-            threadPool.emplace_back(FvDecoder, offset);
+            FvDecoder(offset);
         }
 
         // If the current FFS file size is valid, then update the offset to point to the next FFS file.
@@ -149,14 +146,6 @@ void FirmwareVolume::DecodeChildVolume() {
             break;
         }
     }
-    for (thread &t:threadPool) {
-        t.join();
-    }
-    std::sort(ChildVolume.begin(), ChildVolume.end(), [](Volume *v1, Volume *v2) {
-        if ((v1 == nullptr) || (v2 == nullptr))
-            return true;
-        return v1->getOffset() < v2->getOffset();
-    });
 }
 
 void FirmwareVolume::setInfoStr() {
