@@ -3,17 +3,13 @@
 //
 
 #pragma once
-#include <QStringList>
 #include "Volume.h"
-#ifdef GUI_BIOS_VIEWER
-#include <QMetaType>
-#endif
 
 class DataModel {
 private:
-    QString name;
-    QString type;
-    QString subtype;
+    string name;
+    string type;
+    string subtype;
     Volume* modelData{};
 
     void setSectionModel(Volume *sec);
@@ -24,17 +20,17 @@ private:
     void setNvVariableEntryModel(Volume *entry);
 public:
     DataModel()=default;
-    DataModel(Volume* vol, QString nm, QString typ = "", QString sbtyp = "");
+    DataModel(Volume* vol, string nm, string typ = "", string sbtyp = "");
     ~DataModel() = default;
 
     void InitFromVolume(Volume* vol);
-    inline void setName(QString txt) { name = std::move(txt); };
-    inline void setType(QString txt) { type = std::move(txt); };
-    inline void setSubtype(QString txt) { subtype = std::move(txt); };
-    [[nodiscard]] inline QString getName() const { return name; };
-    [[nodiscard]] inline QString getType() const { return type; };
-    [[nodiscard]] inline QString getSubType() const {return subtype; };
+    inline void setName(string txt) { name = std::move(txt); };
+    inline void setType(string txt) { type = std::move(txt); };
+    inline void setSubtype(string txt) { subtype = std::move(txt); };
+    [[nodiscard]] inline string getName() const { return name; };
+    [[nodiscard]] inline string getType() const { return type; };
+    [[nodiscard]] inline string getSubType() const {return subtype; };
     [[nodiscard]] inline Volume* getVolume() const {return modelData; };
-    [[nodiscard]] inline QStringList getData() const { return QStringList() << name << type << subtype; };
+    [[nodiscard]] inline vector<string> getData() const { return {name, type, subtype}; };
 };
 

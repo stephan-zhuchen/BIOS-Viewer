@@ -17,6 +17,15 @@
 
 using namespace BaseLibrarySpace;
 
+QStringList vectorToQStringList(const std::vector<std::string>& vec) {
+    QStringList qsl;
+    qsl.reserve(vec.size()); // 预分配内存提升性能
+    for (const auto& str : vec) {
+        qsl.append(QString::fromStdString(str));
+    }
+    return qsl;
+}
+
 bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     using namespace std;
 
@@ -258,7 +267,7 @@ void BiosViewerWindow::AddVolumeList(INT64 offset, INT64 length, Volume *parent,
 }
 
 void BiosViewerWindow::setTreeData() {
-    auto *ImageOverviewItem = new QTreeWidgetItem(BiosData->OverviewImageModel->getData());
+    auto *ImageOverviewItem = new QTreeWidgetItem(vectorToQStringList(BiosData->OverviewImageModel->getData()));
     ImageOverviewItem->setData(treeColNum::Name, Qt::UserRole, QVariant::fromValue(BiosData->OverviewVolume));
     ImageOverviewItem->setFont(treeColNum::Name, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
     ImageOverviewItem->setFont(treeColNum::Type, QFont(setting.value("BiosViewerFont").toString(), setting.value("BiosViewerFontSize").toInt() + 2, 700));
@@ -282,7 +291,7 @@ void BiosViewerWindow::addTreeItem(QTreeWidgetItem *parentItem, Volume *volume, 
     DataModel item;
     item.InitFromVolume(volume);
 
-    auto *treeItem = new QTreeWidgetItem(item.getData());
+    auto *treeItem = new QTreeWidgetItem(vectorToQStringList(item.getData()));
     treeItem->setData(treeColNum::Name, Qt::UserRole, QVariant::fromValue(volume));
     if (parentItem == nullptr) {
         ui->treeWidget->addTopLevelItem(treeItem);

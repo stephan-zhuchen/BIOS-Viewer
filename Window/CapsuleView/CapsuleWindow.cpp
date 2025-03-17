@@ -116,7 +116,7 @@ void CapsuleWindow::addListItem(const QList<Volume*> &volumeList) {
     for (Volume *volume : volumeList) {
         DataModel dataModel;
         dataModel.InitFromVolume(volume);
-        QString volumeName = dataModel.getName();
+        QString volumeName = QString::fromStdString(dataModel.getName());
         QListWidgetItem *item = new QListWidgetItem;
         item->setText(volumeName);
         ui->listWidget->addItem(item);
@@ -556,7 +556,7 @@ void CapsuleWindow::showHexView() {
                           CapsuleData->OverviewVolume,
                           offset,
                           WindowData->InputImageSize,
-                          CapsuleData->RightClickedItemModel.getName(),
+                          QString::fromStdString(CapsuleData->RightClickedItemModel.getName()),
                           WindowData->OpenedFileName,
                           false);
     hexDialog->show();
@@ -570,7 +570,7 @@ void CapsuleWindow::openInNewTab() {
     auto *itemData = new UINT8[size];
     memcpy(itemData, Entry->getData(), size);
 
-    WindowData->parentWindow->OpenBuffer(itemData, size, CapsuleData->RightClickedItemModel.getName());
+    WindowData->parentWindow->OpenBuffer(itemData, size, QString::fromStdString(CapsuleData->RightClickedItemModel.getName()));
 }
 
 void CapsuleWindow::extractCapsuleRegion() {
@@ -579,9 +579,9 @@ void CapsuleWindow::extractCapsuleRegion() {
     INT64 size = Entry->getSize();
     UINT8 *itemData = Entry->getData();
 
-    QString filename = CapsuleData->RightClickedItemModel.getName() + ".bin";
+    QString filename = QString::fromStdString(CapsuleData->RightClickedItemModel.getName()) + ".bin";
     QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
-    QString DialogTitle = "Extract " + CapsuleData->RightClickedItemModel.getName();
+    QString DialogTitle = "Extract " + QString::fromStdString(CapsuleData->RightClickedItemModel.getName());
     QString extractVolumeName = QFileDialog::getSaveFileName(this,
                                                              DialogTitle,
                                                              outputPath,

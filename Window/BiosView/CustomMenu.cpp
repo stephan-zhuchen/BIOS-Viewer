@@ -131,7 +131,7 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
         CustomMenu->addAction(showPeCoff);
     }
 
-    if (BiosData->RightClickedItemModel.getName().mid(0, 10) == "ACPI Table") {
+    if (QString::fromStdString(BiosData->RightClickedItemModel.getName()).mid(0, 10) == "ACPI Table") {
 #ifdef Q_OS_WIN
         QString filepath = WindowData->appDir + "/tool/ACPI/iasl.exe";
         QFile file(filepath);
@@ -147,7 +147,7 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
 
     }
 
-    if (BiosData->RightClickedItemModel.getName().right(4).toLower() == "bgsl") {
+    if (QString::fromStdString(BiosData->RightClickedItemModel.getName()).right(4).toLower() == "bgsl") {
         showBgup->setIcon(windows);
         CustomMenu->addAction(showBgup);
     }
@@ -167,9 +167,9 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
 
     if (BiosData->RightClickedItemModel.getType() == "Volume" || BiosData->RightClickedItemModel.getType() == "File" || BiosData->RightClickedItemModel.getType() == "Section") {
         showBodyHex->setIcon(hexBinary);
-        extractVolumeAction->setText("Extract " + BiosData->RightClickedItemModel.getType());
+        extractVolumeAction->setText("Extract " + QString::fromStdString(BiosData->RightClickedItemModel.getType()));
         extractVolumeAction->setIcon(box_arrow_up);
-        extractBodyVolumeAction->setText("Extract " + BiosData->RightClickedItemModel.getType() + " Body");
+        extractBodyVolumeAction->setText("Extract " + QString::fromStdString(BiosData->RightClickedItemModel.getType()) + " Body");
         extractBodyVolumeAction->setIcon(box_arrow_up);
         CustomMenu->addAction(showBodyHex);
         CustomMenu->addAction(extractVolumeAction);
@@ -181,7 +181,7 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
         CustomMenu->addAction(showNvHex);
     }
 
-    QString RegionName = BiosData->RightClickedItemModel.getName();
+    QString RegionName = QString::fromStdString(BiosData->RightClickedItemModel.getName());
     if (BiosData->RightClickedItemModel.getType() == "Region") {
         ExtractRegion->setText("Extract " + RegionName);
         ExtractRegion->setIcon(box_arrow_up);
@@ -232,7 +232,7 @@ void BiosViewerWindow::showHexView() const {
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset(),
                           WindowData->InputImageSize,
-                          BiosData->RightClickedItemModel.getName(),
+                          QString::fromStdString(BiosData->RightClickedItemModel.getName()),
                           WindowData->OpenedFileName,
                           selectedVolume->isCompressed());
     hexDialog->show();
@@ -260,7 +260,7 @@ void BiosViewerWindow::showBodyHexView() {
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset() + HeaderSize,
                           WindowData->InputImageSize,
-                          BiosData->RightClickedItemModel.getName(),
+                          QString::fromStdString(BiosData->RightClickedItemModel.getName()),
                           WindowData->OpenedFileName,
                           selectedVolume->isCompressed());
     hexDialog->show();
@@ -290,7 +290,7 @@ void BiosViewerWindow::showDecompressedHexView() {
                           BiosData->OverviewVolume,
                           BiosData->RightClickedItemModel.getVolume()->getOffset(),
                           WindowData->InputImageSize,
-                          BiosData->RightClickedItemModel.getName() + " Decompressed",
+                          QString::fromStdString(BiosData->RightClickedItemModel.getName()) + " Decompressed",
                           WindowData->OpenedFileName,
                           true);
 
@@ -318,7 +318,7 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
                           BiosData->OverviewVolume,
                           BiosData->RightClickedItemModel.getVolume()->getOffset(),
                           WindowData->InputImageSize,
-                          BiosData->RightClickedItemModel.getName() + " Decompressed",
+                          QString::fromStdString(BiosData->RightClickedItemModel.getName()) + " Decompressed",
                           WindowData->OpenedFileName,
                           true);
 
@@ -336,7 +336,7 @@ void BiosViewerWindow::showNvHexView() const {
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset(),
                           WindowData->InputImageSize,
-                          BiosData->RightClickedItemModel.getName(),
+                          QString::fromStdString(BiosData->RightClickedItemModel.getName()),
                           WindowData->OpenedFileName,
                           selectedVolume->isCompressed());
     hexDialog->show();
@@ -487,9 +487,9 @@ void BiosViewerWindow::showBgupView() {
 }
 
 void BiosViewerWindow::extractVolume() {
-    QString filename = BiosData->RightClickedItemModel.getName() + "_" + BiosData->RightClickedItemModel.getType() + ".fd";
+    QString filename = QString::fromStdString(BiosData->RightClickedItemModel.getName()) + "_" + QString::fromStdString(BiosData->RightClickedItemModel.getType()) + ".fd";
     QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
-    QString DialogTitle = "Extract " + BiosData->RightClickedItemModel.getType();
+    QString DialogTitle = "Extract " + QString::fromStdString(BiosData->RightClickedItemModel.getType());
     QString extractVolumeName = QFileDialog::getSaveFileName(this,
                                                              DialogTitle,
                                                              outputPath,
@@ -510,9 +510,9 @@ void BiosViewerWindow::extractBodyVolume() {
         QMessageBox::critical(this, tr("BIOS Viewer"), "No Body!");
         return;
     }
-    QString filename = BiosData->RightClickedItemModel.getName() + "_" + BiosData->RightClickedItemModel.getType() + "_body.fd";
+    QString filename = QString::fromStdString(BiosData->RightClickedItemModel.getName()) + "_" + QString::fromStdString(BiosData->RightClickedItemModel.getType()) + "_body.fd";
     QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
-    QString DialogTitle = "Extract " + BiosData->RightClickedItemModel.getType() + " Body";
+    QString DialogTitle = "Extract " + QString::fromStdString(BiosData->RightClickedItemModel.getType()) + " Body";
     QString extractVolumeName = QFileDialog::getSaveFileName(this,
                                                              DialogTitle,
                                                              outputPath,
@@ -527,9 +527,9 @@ void BiosViewerWindow::extractBodyVolume() {
 }
 
 void BiosViewerWindow::extractIfwiRegion() {
-    QString filename = BiosData->RightClickedItemModel.getName() + ".bin";
+    QString filename = QString::fromStdString(BiosData->RightClickedItemModel.getName()) + ".bin";
     QString outputPath = setting.value("LastFilePath").toString() + "/" + filename;
-    QString DialogTitle = "Extract " + BiosData->RightClickedItemModel.getName() + " " + BiosData->RightClickedItemModel.getType();
+    QString DialogTitle = "Extract " + QString::fromStdString(BiosData->RightClickedItemModel.getName()) + " " + QString::fromStdString(BiosData->RightClickedItemModel.getType());
     QString extractRegionName = QFileDialog::getSaveFileName(this,
                                                              DialogTitle,
                                                              outputPath,
