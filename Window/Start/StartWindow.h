@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QMainWindow>
+#include <QSettings>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
@@ -18,13 +19,11 @@
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include "BiosView/BiosWindow.h"
+#include "WindowData.h"
 
 namespace Ui {
 class StartWindow;
 }
-
-class GeneralData;
 
 class StartWindow : public QMainWindow {
     Q_OBJECT
@@ -32,7 +31,7 @@ class StartWindow : public QMainWindow {
 public:
     Ui::StartWindow         *ui;
     QTabWidget              *MainTabWidget{};
-    QVector<GeneralData*>   TabData;
+    QVector<WindowData*>    TabData;
     bool                    DisableBiosViewer{false};
     QList<QPair<QString, QString>> DefaultSettings;
 

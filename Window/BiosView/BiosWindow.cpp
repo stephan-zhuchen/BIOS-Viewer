@@ -3,27 +3,15 @@
 #include <QMessageBox>
 #include <QFormLayout>
 #include <QDialogButtonBox>
-#include <utility>
 #include <QFileInfo>
 #include "BaseLib.h"
 #include "Input/inputdialog.h"
 #include "Start/StartWindow.h"
 #include "IfwiRegion/FlashDescriptorRegion.h"
 #include "UefiFileSystem/FirmwareVolume.h"
-#include "CapsuleView/CapsuleWindow.h"
-#include "HexView/HexWindow.h"
 #include "ui_BiosWindow.h"
 
 using namespace BaseLibrarySpace;
-
-GeneralData::GeneralData(QString dir):appDir(std::move(dir)) {}
-
-GeneralData::~GeneralData() {
-    safeDelete(BiosViewerUi);
-    safeDelete(HexViewerUi);
-    safeDelete(CapsuleViewerUi);
-    safeDelete(InputImage);
-}
 
 BiosViewerData::~BiosViewerData() {
     BiosValidFlag = true;
@@ -85,8 +73,8 @@ BiosViewerWindow::~BiosViewerWindow() {
     CleanupCustomMenu();
 }
 
-void BiosViewerWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
-    WindowData = wData;
+void BiosViewerWindow::setupUi(QMainWindow *MainWindow, WindowData *wData) {
+    winData = wData;
     ui->setupUi(MainWindow);
 
     initSetting();
@@ -112,7 +100,7 @@ void BiosViewerWindow::initSetting() const {
     ui->infoBrowser->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
     ui->AddressPanel->setFont(QFont(setting.value("InfoFont").toString(), setting.value("InfoFontSize").toInt()));
 
-    if (WindowData->DarkmodeFlag) {
+    if (winData->DarkmodeFlag) {
         ui->searchButton->setIcon(QIcon(":/search_light.svg"));
     }
 }
@@ -127,7 +115,7 @@ bool BiosViewerWindow::TryOpenBios(UINT8 *image, INT64 imageLength) {
 
 void BiosViewerWindow::loadBios() {
     BiosData = new BiosViewerData;
-    BiosData->OverviewVolume = new Volume(WindowData->InputImage, WindowData->InputImageSize);
+    BiosData->OverviewVolume = new Volume(winData->InputImage, winData->InputImageSize);
     BiosData->OverviewImageModel = new DataModel(BiosData->OverviewVolume, "IFWI Overview", "Image");
     setBiosFvData();
     DecodeBiosFileSystem();
@@ -148,7 +136,7 @@ void BiosViewerWindow::loadBios() {
 
     QString title;
     if (BiosData->BiosImage->getBiosID() == "") {
-        QFileInfo fileInfo(WindowData->OpenedFileName);
+        QFileInfo fileInfo(winData->OpenedFileName);
         title = fileInfo.fileName();
     } else
         title = QString::fromStdString(BiosData->BiosImage->getBiosID());
@@ -200,7 +188,7 @@ void BiosViewerWindow::ActionGotoTriggered() {
     // Process when OK button is clicked
     if (dialog.exec() == QDialog::Accepted) {
         INT64 SearchOffset = OffsetSpinbox->value();
-        if (SearchOffset < 0 || SearchOffset >= WindowData->InputImageSize) {
+        if (SearchOffset < 0 || SearchOffset >= winData->InputImageSize) {
             QMessageBox::critical(this, tr("Goto ..."), "Invalid offset!");
             return;
         }
@@ -257,10 +245,10 @@ void BiosViewerWindow::TreeWidgetItemSelectionChanged() const {
 void BiosViewerWindow::InfoButtonClicked() {
     if (!BiosData->infoWindowOpened) {
         BiosData->infoWindowOpened = true;
-        BiosData->infoWindow = new InfoWindow(WindowData->appDir);
+        BiosData->infoWindow = new InfoWindow(winData->appDir);
         if (BiosData->BiosImage != nullptr) {
             BiosData->infoWindow->setBiosImage(BiosData->BiosImage);
-            BiosData->infoWindow->setOpenedFileName(WindowData->OpenedFileName);
+            BiosData->infoWindow->setOpenedFileName(winData->OpenedFileName);
             BiosData->infoWindow->setParentWidget(this);
             BiosData->infoWindow->showTab();
         }

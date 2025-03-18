@@ -14,6 +14,7 @@
 #include <QSettings>
 #include "Capsule/CapsuleHeader.h"
 #include "DataModel.h"
+#include "WindowData.h"
 #include "./ui_CapsuleWindow.h"
 
 using namespace std;
@@ -22,7 +23,6 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class CapsuleUiClass; }
 QT_END_NAMESPACE
 
-class GeneralData;
 class StartWindow;
 
 class CapsuleViewerData {
@@ -45,9 +45,9 @@ class CapsuleWindow : public QWidget
 public:
     CapsuleWindow(StartWindow *parent);
     ~CapsuleWindow();
-    void setupUi(QMainWindow *MainWindow, GeneralData *wData);
+    void setupUi(QMainWindow *MainWindow, WindowData *wData);
 
-    GeneralData         *WindowData{nullptr};
+    WindowData          *winData{nullptr};
     CapsuleViewerData   *CapsuleData{nullptr};
     QSettings           setting{"Intel", "BiosViewer"};
 

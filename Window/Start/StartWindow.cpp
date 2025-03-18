@@ -20,6 +20,7 @@
 #include "StartWindow.h"
 #include "CapsuleView/CapsuleWindow.h"
 #include "HexView/HexWindow.h"
+#include "BiosView/BiosWindow.h"
 #include "Tool/MergeFilesWindow.h"
 #include "ui_StartWindow.h"
 
@@ -73,7 +74,7 @@ StartWindow::~StartWindow() {
     if (guidData != nullptr && OpenedWindow == 0)
         delete guidData;
     delete ui;
-    for (GeneralData *data:TabData)
+    for (WindowData *data:TabData)
         delete data;
 }
 
@@ -257,11 +258,11 @@ void StartWindow::refresh() {
     initSettings();
     if (TabData.empty())
         return;
-    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-    if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        WindowData->BiosViewerUi->refresh();
-    } else if (WindowData->CurrentWindow == WindowMode::Hex) {
-        WindowData->HexViewerUi->refresh();
+    WindowData *winData = TabData.at(MainTabWidget->currentIndex());
+    if (winData->CurrentWindow == WindowMode::BIOS) {
+        winData->BiosViewerUi->refresh();
+    } else if (winData->CurrentWindow == WindowMode::Hex) {
+        winData->HexViewerUi->refresh();
     }
 }
 
@@ -289,7 +290,7 @@ void StartWindow::OpenBuffer(UINT8* data, UINT64 length, const QString& path, bo
         showTabWindow();
 
     this->setWindowTitle("BIOS Viewer -- " + path);
-    auto *newTabData = new GeneralData(appPath);
+    auto *newTabData = new WindowData(appPath);
     TabData.push_back(newTabData);
     newTabData->OpenedFileName = path;
     newTabData->WindowTitle += this->windowTitle();
@@ -377,14 +378,14 @@ void StartWindow::showTabWindow() {
 void StartWindow::closeEvent(QCloseEvent *event) {
     auto CleanTabData = [this, event]() {
         for (INT32 index = 0; index < TabData.size(); ++index) {
-            GeneralData *WindowData = TabData.at(index);
-            if (WindowData->CurrentWindow == WindowMode::Hex)
-                WindowData->HexViewerUi->closeEvent(event);
-            else if (WindowData->CurrentWindow == WindowMode::BIOS)
-                WindowData->BiosViewerUi->closeEvent(event);
+            WindowData *winData = TabData.at(index);
+            if (winData->CurrentWindow == WindowMode::Hex)
+                winData->HexViewerUi->closeEvent(event);
+            else if (winData->CurrentWindow == WindowMode::BIOS)
+                winData->BiosViewerUi->closeEvent(event);
 
             if (event->isAccepted()) {
-                safeDelete(WindowData);
+                safeDelete(winData);
                 TabData.erase(TabData.begin() + index);
                 index -= 1;
             }
@@ -532,23 +533,23 @@ void StartWindow::OpenInNewWindowTriggered() {
 void StartWindow::ActionExtractBIOSTriggered() {
     if (TabData.empty())
         return;
-    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-    if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        WindowData->BiosViewerUi->ActionExtractBIOSTriggered();
+    WindowData *winData = TabData.at(MainTabWidget->currentIndex());
+    if (winData->CurrentWindow == WindowMode::BIOS) {
+        winData->BiosViewerUi->ActionExtractBIOSTriggered();
     }
 }
 
 void StartWindow::ActionReplaceBIOSTriggered() {
     if (TabData.empty())
         return;
-    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-    if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        WindowData->BiosViewerUi->ActionReplaceBIOSTriggered();
+    WindowData *winData = TabData.at(MainTabWidget->currentIndex());
+    if (winData->CurrentWindow == WindowMode::BIOS) {
+        winData->BiosViewerUi->ActionReplaceBIOSTriggered();
     }
 }
 
 void StartWindow::MainTabWidgetCloseRequested(int index) {
-    GeneralData *data = TabData.at(index);
+    WindowData *data = TabData.at(index);
     QCloseEvent event;
     if (data->CurrentWindow == WindowMode::Hex)
         data->HexViewerUi->closeEvent(&event);
@@ -598,18 +599,18 @@ void StartWindow::CurrentTabChanged(int index) {
         ui->actionGoto->setEnabled(false);
     }
 
-    for (GeneralData *WindowData:TabData) {
-        if (WindowData->CurrentWindow == WindowMode::BIOS && WindowData->BiosViewerUi->BiosData->searchDialogOpened) {
-            WindowData->BiosViewerUi->BiosData->BiosSearchDialog->close();
+    for (WindowData *winData:TabData) {
+        if (winData->CurrentWindow == WindowMode::BIOS && winData->BiosViewerUi->BiosData->searchDialogOpened) {
+            winData->BiosViewerUi->BiosData->BiosSearchDialog->close();
         }
     }
 
     if (index >= 0) {
-        GeneralData *WindowData = TabData.at(index);
-        if (WindowData->HexViewerUi->BinaryEdited)
-            this->setWindowTitle("BIOS Viewer -- " + WindowData->OpenedFileName + " *");
+        WindowData *winData = TabData.at(index);
+        if (winData->HexViewerUi->BinaryEdited)
+            this->setWindowTitle("BIOS Viewer -- " + winData->OpenedFileName + " *");
         else
-            this->setWindowTitle("BIOS Viewer -- " + WindowData->OpenedFileName);
+            this->setWindowTitle("BIOS Viewer -- " + winData->OpenedFileName);
     } else {
         this->setWindowTitle("BIOS Viewer");
     }

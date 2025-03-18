@@ -3,6 +3,7 @@
 #include <thread>
 #include "BaseLib.h"
 #include "BiosWindow.h"
+#include "WindowData.h"
 #include "IfwiRegion/FlashDescriptorRegion.h"
 #include "IfwiRegion/EcRegion.h"
 #include "IfwiRegion/GbeRegion.h"
@@ -29,7 +30,7 @@ QStringList vectorToQStringList(const std::vector<std::string>& vec) {
 bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     using namespace std;
 
-    INT64 bufferSize = WindowData->InputImageSize;
+    INT64 bufferSize = winData->InputImageSize;
     if (bufferSize < 0x4000) {
         return false;
     }
@@ -42,7 +43,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     };
 
     INT64 IfwiOffset = 0;
-    auto *flashDescriptor = new FlashDescriptorRegion(WindowData->InputImage, bufferSize, IfwiOffset);
+    auto *flashDescriptor = new FlashDescriptorRegion(winData->InputImage, bufferSize, IfwiOffset);
     if (flashDescriptor->SelfDecode() == 0) {
         safeDelete(flashDescriptor);
         CleanVolumeDataList();
@@ -62,7 +63,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     }
 
     if (EcRegionArea.limit != 0) {
-        UINT8* EcBuffer = WindowData->InputImage + EcRegionArea.getBase();
+        UINT8* EcBuffer = winData->InputImage + EcRegionArea.getBase();
         auto *EcVolume = new EcRegion(EcBuffer, EcRegionArea.getSize(), EcRegionArea.getBase());
         if (EcVolume->SelfDecode() == 0) {
             safeDelete(EcVolume);
@@ -77,7 +78,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
         return false;
     }
     if (GbERegionArea.limit != 0) {
-        UINT8* GbeBuffer = WindowData->InputImage + GbERegionArea.getBase();
+        UINT8* GbeBuffer = winData->InputImage + GbERegionArea.getBase();
         auto *GbEVolume = new GbeRegion(GbeBuffer, GbERegionArea.getSize(), GbERegionArea.getBase());
         if (GbEVolume->SelfDecode() == 0) {
             safeDelete(GbEVolume);
@@ -92,7 +93,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
         return false;
     }
     if (MeRegionArea.limit != 0) {
-        UINT8* MeBuffer = WindowData->InputImage + MeRegionArea.getBase();
+        UINT8* MeBuffer = winData->InputImage + MeRegionArea.getBase();
         auto *MeVolume = new MeRegion(MeBuffer, MeRegionArea.getSize(), MeRegionArea.getBase());
         if (MeVolume->SelfDecode() == 0) {
             safeDelete(MeVolume);
@@ -107,7 +108,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
         return false;
     }
     if (OsseRegionArea.limit != 0) {
-        UINT8* GbeBuffer = WindowData->InputImage + OsseRegionArea.getBase();
+        UINT8* GbeBuffer = winData->InputImage + OsseRegionArea.getBase();
         auto *OsseVolume = new OsseRegion(GbeBuffer, OsseRegionArea.getSize(), OsseRegionArea.getBase());
         if (OsseVolume->SelfDecode() == 0) {
             safeDelete(OsseVolume);
@@ -122,7 +123,7 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
         return false;
     }
     if (BiosRegionArea.limit != 0) {
-        UINT8* BiosBuffer = WindowData->InputImage + BiosRegionArea.getBase();
+        UINT8* BiosBuffer = winData->InputImage + BiosRegionArea.getBase();
         BiosData->BiosImage = new BiosRegion(BiosBuffer, BiosRegionArea.getSize(), BiosRegionArea.getBase());
         BiosData->VolumeDataList.push_back(BiosData->BiosImage);
         BiosOffset = BiosRegionArea.getBase();
@@ -133,13 +134,13 @@ bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
 void BiosViewerWindow::setBiosFvData() {
     using namespace std;
     INT64 offset = 0;
-    INT64 bufferSize = WindowData->InputImageSize;
+    INT64 bufferSize = winData->InputImageSize;
     BiosData->IFWI_exist = detectIfwi(offset);
 
     Volume *parentVolume = BiosData->BiosImage;
     if (!BiosData->IFWI_exist) {
         parentVolume = nullptr;
-        BiosData->BiosImage = new BiosRegion(WindowData->InputImage, bufferSize);
+        BiosData->BiosImage = new BiosRegion(winData->InputImage, bufferSize);
         BiosData->OverviewImageModel->setName("BIOS Image Overview");
     }
     BiosData->BiosImage->SelfDecode();
@@ -149,11 +150,11 @@ void BiosViewerWindow::setBiosFvData() {
             AddVolumeList(offset, bufferSize - offset, parentVolume, VolumeType::Empty);
             return;
         }
-        auto fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(WindowData->InputImage + offset);
+        auto fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(winData->InputImage + offset);
         INT64 FvLength = (INT64)fvHeader->FvLength;
         bool IsFirmwareVolume = FirmwareVolume::isValidFirmwareVolume(fvHeader);
 
-        auto CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER*)(WindowData->InputImage + offset);
+        auto CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER*)(winData->InputImage + offset);
         INT64 CompressedVolumeLength = sizeof(LOADER_COMPRESSED_HEADER) + CompressedVolumeHeader->CompressedSize;
         bool IsCompressedVolume = CompressedVolume::IsCompressedVolume(CompressedVolumeHeader);
 
@@ -165,8 +166,8 @@ void BiosViewerWindow::setBiosFvData() {
                 AddVolumeList(offset, bufferSize - offset, parentVolume, VolumeType::Empty);
                 return;
             }
-            fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(WindowData->InputImage + offset + EmptyVolumeLength);
-            CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER*)(WindowData->InputImage + offset + EmptyVolumeLength);
+            fvHeader = (EFI_FIRMWARE_VOLUME_HEADER*)(winData->InputImage + offset + EmptyVolumeLength);
+            CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER*)(winData->InputImage + offset + EmptyVolumeLength);
             IsFirmwareVolume = FirmwareVolume::isValidFirmwareVolume(fvHeader);
             IsCompressedVolume = CompressedVolume::IsCompressedVolume(CompressedVolumeHeader);
         }
@@ -232,7 +233,7 @@ void BiosViewerWindow::ReorganizeVolume(Volume *volume) {
 
 void BiosViewerWindow::AddVolumeList(INT64 offset, INT64 length, Volume *parent, VolumeType type) const {
     Volume *volume{nullptr};
-    UINT8* volumeData = WindowData->InputImage + offset;
+    UINT8* volumeData = winData->InputImage + offset;
     if (type == VolumeType::Empty) {
         volume = new Volume(volumeData, length, offset, false, parent);
     } else if (type == VolumeType::FirmwareVolume) {
@@ -319,5 +320,5 @@ void BiosViewerWindow::setPanelInfo(INT64 offset, INT64 size) const {
 }
 
 bool BiosViewerWindow::isDarkMode() const {
-    return WindowData->DarkmodeFlag;
+    return winData->DarkmodeFlag;
 }

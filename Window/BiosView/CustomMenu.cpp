@@ -133,7 +133,7 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
 
     if (QString::fromStdString(BiosData->RightClickedItemModel.getName()).mid(0, 10) == "ACPI Table") {
 #ifdef Q_OS_WIN
-        QString filepath = WindowData->appDir + "/tool/ACPI/iasl.exe";
+        QString filepath = winData->appDir + "/tool/ACPI/iasl.exe";
         QFile file(filepath);
         if (file.exists()) {
             showAcpiTable->setIcon(windows);
@@ -214,13 +214,13 @@ void BiosViewerWindow::showTreeCustomMenu(QPoint pos) const {
 }
 
 void BiosViewerWindow::showHexView() const {
-    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(winData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
     UINT8 *itemData = selectedVolume->getData();
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = 0;
     if (selectedVolume->isCompressed()) {
         itemSize = selectedVolume->getSize();
@@ -231,9 +231,9 @@ void BiosViewerWindow::showHexView() const {
     hexDialog->loadBuffer(*hexViewData,
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset(),
-                          WindowData->InputImageSize,
+                          winData->InputImageSize,
                           QString::fromStdString(BiosData->RightClickedItemModel.getName()),
-                          WindowData->OpenedFileName,
+                          winData->OpenedFileName,
                           selectedVolume->isCompressed());
     hexDialog->show();
     delete hexViewData;
@@ -248,20 +248,20 @@ void BiosViewerWindow::showBodyHexView() {
         return;
     }
 
-    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(winData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     auto *hexViewData = new QByteArray((CHAR8*)itemData, itemSize);
     QByteArray BodyHexViewData = hexViewData->mid(HeaderSize);
     hexDialog->loadBuffer(BodyHexViewData,
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset() + HeaderSize,
-                          WindowData->InputImageSize,
+                          winData->InputImageSize,
                           QString::fromStdString(BiosData->RightClickedItemModel.getName()),
-                          WindowData->OpenedFileName,
+                          winData->OpenedFileName,
                           selectedVolume->isCompressed());
     hexDialog->show();
     delete hexViewData;
@@ -269,7 +269,7 @@ void BiosViewerWindow::showBodyHexView() {
 
 void BiosViewerWindow::showDecompressedHexView() {
     Volume *volume = BiosData->RightClickedItemModel.getVolume();
-    INT64 RemainingSize = WindowData->InputImageSize - volume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - volume->getOffset();
     if (RemainingSize < volume->getSize()) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "Incomplete Section");
         return;
@@ -281,7 +281,7 @@ void BiosViewerWindow::showDecompressedHexView() {
     }
 
     auto *hexViewData = new QByteArray((CHAR8*)DecompressedVector.data(), DecompressedVector.size());
-    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(winData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -289,9 +289,9 @@ void BiosViewerWindow::showDecompressedHexView() {
     hexDialog->loadBuffer(*hexViewData,
                           BiosData->OverviewVolume,
                           BiosData->RightClickedItemModel.getVolume()->getOffset(),
-                          WindowData->InputImageSize,
+                          winData->InputImageSize,
                           QString::fromStdString(BiosData->RightClickedItemModel.getName()) + " Decompressed",
-                          WindowData->OpenedFileName,
+                          winData->OpenedFileName,
                           true);
 
     hexDialog->show();
@@ -309,7 +309,7 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
     }
 
     auto *hexViewData = new QByteArray((CHAR8*)DecompressedBios.data(), DecompressedBios.size());
-    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(winData->DarkmodeFlag);
     if (isDarkMode()) {
         hexDialog->setWindowIcon(QIcon(":/file-binary_light.svg"));
     }
@@ -317,9 +317,9 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
     hexDialog->loadBuffer(*hexViewData,
                           BiosData->OverviewVolume,
                           BiosData->RightClickedItemModel.getVolume()->getOffset(),
-                          WindowData->InputImageSize,
+                          winData->InputImageSize,
                           QString::fromStdString(BiosData->RightClickedItemModel.getName()) + " Decompressed",
-                          WindowData->OpenedFileName,
+                          winData->OpenedFileName,
                           true);
 
     hexDialog->show();
@@ -328,16 +328,16 @@ void BiosViewerWindow::showDecompressedBiosHexView() {
 
 void BiosViewerWindow::showNvHexView() const {
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
-    auto *hexDialog = new HexViewWidget(WindowData->DarkmodeFlag);
+    auto *hexDialog = new HexViewWidget(winData->DarkmodeFlag);
     UINT8 *NvData = ((NvVariableEntry*)(selectedVolume))->DataPtr;
     INT64 NvDataSize = ((NvVariableEntry*)(selectedVolume))->DataSize;
     auto *hexViewData = new QByteArray((CHAR8*)NvData, NvDataSize);
     hexDialog->loadBuffer(*hexViewData,
                           BiosData->OverviewVolume,
                           selectedVolume->getOffset(),
-                          WindowData->InputImageSize,
+                          winData->InputImageSize,
                           QString::fromStdString(BiosData->RightClickedItemModel.getName()),
-                          WindowData->OpenedFileName,
+                          winData->OpenedFileName,
                           selectedVolume->isCompressed());
     hexDialog->show();
     delete hexViewData;
@@ -347,7 +347,7 @@ void BiosViewerWindow::showPeCoffView() {
     QString lastPath = setting.value("LastFilePath").toString();
     QString filepath = QDir(lastPath).filePath("temp.bin");
 #ifdef Q_OS_WIN
-    QString toolpath = WindowData->appDir + "/tool/PECOFF/dumpbin.exe";
+    QString toolpath = winData->appDir + "/tool/PECOFF/dumpbin.exe";
     QFileInfo fileInfo(toolpath);
     if(!fileInfo.exists()) {
         QMessageBox::critical(this, tr("BIOS Viewer"), "Microsoft dumpbin tool not found!");
@@ -423,7 +423,7 @@ void BiosViewerWindow::showAcpiTableView() {
     QString filepath = QDir(lastPath).filePath("temp.bin");
     QString Dslpath = QDir(lastPath).filePath("temp.dsl");
 #ifdef Q_OS_WIN
-    QString toolpath = WindowData->appDir + "/tool/ACPI/iasl.exe";
+    QString toolpath = winData->appDir + "/tool/ACPI/iasl.exe";
 #elif defined(Q_OS_LINUX)
     QString toolpath = "iasl";
 #endif
@@ -498,7 +498,7 @@ void BiosViewerWindow::extractVolume() {
         return;
     }
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     saveBinary(extractVolumeName.toStdString(), selectedVolume->getData(), 0, itemSize);
 }
@@ -521,7 +521,7 @@ void BiosViewerWindow::extractBodyVolume() {
         return;
     }
 
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     saveBinary(extractVolumeName.toStdString(), selectedVolume->getData(), HeaderSize, itemSize);
 }
@@ -539,7 +539,7 @@ void BiosViewerWindow::extractIfwiRegion() {
     }
 
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     saveBinary(extractRegionName.toStdString(), selectedVolume->getData(), 0, itemSize);
 }
@@ -568,7 +568,7 @@ void BiosViewerWindow::replaceAcmContent() {
     INT64 NewFileSize = byteArray.size();
 
     Volume *selectedVolume = BiosData->RightClickedItemModel.getVolume();
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     INT64 FileSize = itemSize - selectedVolume->getHeaderSize();
     if (NewFileSize > FileSize) {
@@ -579,24 +579,24 @@ void BiosViewerWindow::replaceAcmContent() {
     memcpy(NewFile, byteArray.data(), NewFileSize);
 
     INT64 ReplaceOffset = selectedVolume->getOffset() + selectedVolume->getHeaderSize();
-    auto* NewImage = new UINT8[WindowData->InputImageSize];
+    auto* NewImage = new UINT8[winData->InputImageSize];
     for (INT64 IfwiIdx = 0; IfwiIdx < ReplaceOffset; ++IfwiIdx) {
-        NewImage[IfwiIdx] = WindowData->InputImage[IfwiIdx];
+        NewImage[IfwiIdx] = winData->InputImage[IfwiIdx];
     }
     for (INT64 FileIdx = 0; FileIdx < NewFileSize; ++FileIdx) {
         NewImage[ReplaceOffset + FileIdx] = NewFile[FileIdx];
     }
-    for (INT64 IfwiIdx = ReplaceOffset + NewFileSize; IfwiIdx < WindowData->InputImageSize; ++IfwiIdx) {
-        NewImage[IfwiIdx] = WindowData->InputImage[IfwiIdx];
+    for (INT64 IfwiIdx = ReplaceOffset + NewFileSize; IfwiIdx < winData->InputImageSize; ++IfwiIdx) {
+        NewImage[IfwiIdx] = winData->InputImage[IfwiIdx];
     }
 
-    QFileInfo fileInfo {WindowData->OpenedFileName};
+    QFileInfo fileInfo {winData->OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileInfo.baseName() + "_NewAcm.bin";
     outputPath = QFileDialog::getSaveFileName(this,
                                               tr("Replace ACM"),
                                               outputPath,
                                               tr("Files(*.rom *.bin *.fd);;All files (*.*)"));
-    saveBinary(outputPath.toStdString(), NewImage, 0, WindowData->InputImageSize);
+    saveBinary(outputPath.toStdString(), NewImage, 0, winData->InputImageSize);
 
     safeArrayDelete(NewFile);
     safeArrayDelete(NewImage);
@@ -607,7 +607,7 @@ void BiosViewerWindow::getMD5() const {
     UINT8 *itemData = selectedVolume->getData();
     UINT8 md[MD5_DIGEST_LENGTH];
 
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     MD5(itemData, itemSize, md);
 
@@ -633,7 +633,7 @@ void BiosViewerWindow::getSHA1() const {
     UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA_DIGEST_LENGTH];
 
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     SHA1(itemData, itemSize, md);
 
@@ -660,7 +660,7 @@ void BiosViewerWindow::getSHA224() const {
     UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA224_DIGEST_LENGTH];
 
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     SHA224(itemData, itemSize, md);
 
@@ -686,7 +686,7 @@ void BiosViewerWindow::getSHA256() const {
     UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA256_DIGEST_LENGTH];
 
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     SHA256(itemData, itemSize, md);
 
@@ -712,7 +712,7 @@ void BiosViewerWindow::getSHA384() const {
     UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA384_DIGEST_LENGTH];
 
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     SHA384(itemData, itemSize, md);
 
@@ -738,7 +738,7 @@ void BiosViewerWindow::getSHA512() const {
     UINT8 *itemData = selectedVolume->getData();
     UINT8 md[SHA512_DIGEST_LENGTH];
 
-    INT64 RemainingSize = WindowData->InputImageSize - selectedVolume->getOffset();
+    INT64 RemainingSize = winData->InputImageSize - selectedVolume->getOffset();
     INT64 itemSize = RemainingSize > selectedVolume->getSize() ? selectedVolume->getSize() : RemainingSize;
     SHA512(itemData, itemSize, md);
 

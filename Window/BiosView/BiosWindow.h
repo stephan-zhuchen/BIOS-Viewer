@@ -20,40 +20,14 @@
 #include <QtWidgets/QWidget>
 #include "Volume.h"
 #include "DataModel.h"
+#include "WindowData.h"
 #include "IfwiRegion/BiosRegion.h"
 #include "InfoWindow/InfoWindow.h"
 #include "Search/BiosSearch.h"
 
-class QHexView;
-class StartWindow;
-class BiosViewerWindow;
-class HexViewWindow;
-class CapsuleWindow;
-
 namespace Ui {
 class BiosWindow;
 }
-
-enum class WindowMode { None, Hex, BIOS, CAPSULE };
-
-class GeneralData {
-public:
-    QString           appDir;
-    QString           OpenedFileName;
-    QString           WindowTitle;
-    bool              DarkmodeFlag{false};
-    UINT8             *InputImage{nullptr};
-    INT64             InputImageSize{};
-    INT32             CurrentTabIndex{};
-    WindowMode        CurrentWindow {WindowMode::None};
-    StartWindow       *parentWindow{nullptr};
-    BiosViewerWindow  *BiosViewerUi{nullptr};
-    HexViewWindow     *HexViewerUi{nullptr};
-    CapsuleWindow     *CapsuleViewerUi{nullptr};
-
-    explicit GeneralData(QString dir);
-    ~GeneralData();
-};
 
 enum treeColNum {Name=0, Type, SubType};
 
@@ -128,12 +102,12 @@ public:
     // Data
     StartWindow     *mWindow{nullptr};
     QSettings       setting;
-    GeneralData     *WindowData{nullptr};
+    WindowData      *winData{nullptr};
     BiosViewerData  *BiosData{nullptr};
 
     explicit BiosViewerWindow(StartWindow *parent);
     ~BiosViewerWindow() override;
-    void setupUi(QMainWindow *MainWindow, GeneralData *wData);
+    void setupUi(QMainWindow *MainWindow, WindowData *wData);
     static bool TryOpenBios(UINT8 *image, INT64 imageLength);
     void loadBios();
     void ActionSearchBiosTriggered();

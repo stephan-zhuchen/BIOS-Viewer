@@ -5,6 +5,7 @@
 #include "BaseLib.h"
 #include "Start/StartWindow.h"
 #include "BiosWindow.h"
+#include "WindowData.h"
 #include "HexView/HexWindow.h"
 #include "Input/inputdialog.h"
 #include "IfwiRegion/FlashDescriptorRegion.h"
@@ -16,8 +17,8 @@ void StartWindow::ActionSeparateBinaryTriggered()
 {
     if (TabData.empty())
         return;
-    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-    if (WindowData->InputImage == nullptr) {
+    WindowData *winData = TabData.at(MainTabWidget->currentIndex());
+    if (winData->InputImage == nullptr) {
         QMessageBox::critical(this, tr("Seperate Binary"), "No Binary Opened!");
         return;
     }
@@ -41,12 +42,12 @@ void StartWindow::ActionSeparateBinaryTriggered()
     // Process when OK button is clicked
     if (dialog.exec() == QDialog::Accepted) {
         INT64 InputOffset = OffsetSpinbox->value();
-        if (InputOffset < 0 ||InputOffset >= WindowData->InputImageSize) {
+        if (InputOffset < 0 ||InputOffset >= winData->InputImageSize) {
             QMessageBox::critical(this, tr("Extract Binary"), "Invalid offset!");
             return;
         }
 
-        QFileInfo fileInfo {WindowData->OpenedFileName};
+        QFileInfo fileInfo {winData->OpenedFileName};
         QString dirName = QFileDialog::getExistingDirectory(this,
                                                             tr("Open directory"),
                                                             fileInfo.dir().path(),
@@ -54,17 +55,17 @@ void StartWindow::ActionSeparateBinaryTriggered()
         QString upperFilePath = dirName + "/" + fileInfo.baseName() + "_upper.bin";
         QString lowerFilePath = dirName + "/" + fileInfo.baseName() + "_lower.bin";
 
-        saveBinary(upperFilePath.toStdString(), WindowData->InputImage, 0, InputOffset);
-        saveBinary(lowerFilePath.toStdString(), WindowData->InputImage, InputOffset, WindowData->InputImageSize - InputOffset);
+        saveBinary(upperFilePath.toStdString(), winData->InputImage, 0, InputOffset);
+        saveBinary(lowerFilePath.toStdString(), winData->InputImage, InputOffset, winData->InputImageSize - InputOffset);
     }
 }
 
 void BiosViewerWindow::ActionExtractBIOSTriggered() {
-    if (WindowData->InputImage == nullptr) {
+    if (winData->InputImage == nullptr) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "No Binary Opened!");
         return;
     }
-    if (WindowData->InputImageSize != 0x2000000) {
+    if (winData->InputImageSize != 0x2000000) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "This is not an IFWI Binary!");
         return;
     }
@@ -77,7 +78,7 @@ void BiosViewerWindow::ActionExtractBIOSTriggered() {
     INT64 BIOS_Offset = BiosRegion.getBase();
     INT64 BIOS_Size = BiosRegion.getSize();
 
-    QFileInfo fileinfo {WindowData->OpenedFileName};
+    QFileInfo fileinfo {winData->OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_BIOS.bin";
     QString BiosName = QFileDialog::getSaveFileName(this,
                                                     tr("Extract BIOS"),
@@ -87,48 +88,48 @@ void BiosViewerWindow::ActionExtractBIOSTriggered() {
         return;
     }
 
-    saveBinary(BiosName.toStdString(), WindowData->InputImage, BIOS_Offset, BIOS_Size);
+    saveBinary(BiosName.toStdString(), winData->InputImage, BIOS_Offset, BIOS_Size);
 }
 
 void StartWindow::ActionSearchTriggered() const {
     if (TabData.empty())
         return;
-    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-    if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        WindowData->BiosViewerUi->ActionSearchBiosTriggered();
-    } else if (WindowData->CurrentWindow == WindowMode::Hex) {
-        WindowData->HexViewerUi->ActionSearchHexTriggered();
+    WindowData *winData = TabData.at(MainTabWidget->currentIndex());
+    if (winData->CurrentWindow == WindowMode::BIOS) {
+        winData->BiosViewerUi->ActionSearchBiosTriggered();
+    } else if (winData->CurrentWindow == WindowMode::Hex) {
+        winData->HexViewerUi->ActionSearchHexTriggered();
     }
 }
 
 void StartWindow::ActionGotoTriggered() const {
     if (TabData.empty())
         return;
-    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-    if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        WindowData->BiosViewerUi->ActionGotoTriggered();
-    } else if (WindowData->CurrentWindow == WindowMode::Hex) {
-        WindowData->HexViewerUi->ActionGotoTriggered();
+    WindowData *winData = TabData.at(MainTabWidget->currentIndex());
+    if (winData->CurrentWindow == WindowMode::BIOS) {
+        winData->BiosViewerUi->ActionGotoTriggered();
+    } else if (winData->CurrentWindow == WindowMode::Hex) {
+        winData->HexViewerUi->ActionGotoTriggered();
     }
 }
 
 void StartWindow::ActionCollapseTriggered() const {
     if (TabData.empty())
         return;
-    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-    if (WindowData->CurrentWindow == WindowMode::BIOS) {
-        WindowData->BiosViewerUi->ui->treeWidget->collapseAll();
+    WindowData *winData = TabData.at(MainTabWidget->currentIndex());
+    if (winData->CurrentWindow == WindowMode::BIOS) {
+        winData->BiosViewerUi->ui->treeWidget->collapseAll();
     }
 }
 
 void BiosViewerWindow::ActionReplaceBIOSTriggered() {
     const INT64 IFWI_SIZE = 0x2000000;
 //    const INT64 BLOCK_SIZE = 0x1000;
-    if (WindowData->InputImage == nullptr) {
+    if (winData->InputImage == nullptr) {
         QMessageBox::critical(this, tr("Extract BIOS Tool"), "No Binary Opened!");
         return;
     }
-    if (WindowData->InputImageSize != IFWI_SIZE) {
+    if (winData->InputImageSize != IFWI_SIZE) {
         QMessageBox::critical(this, tr("About BIOS Viewer"), "This is not an IFWI Binary!");
         return;
     }
@@ -184,7 +185,7 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered() {
 
     UINT8* NewIFWI = new UINT8[IFWI_SIZE];
     for (UINT32 IfwiIdx = 0; IfwiIdx < PaddingRegion.getBase(); ++IfwiIdx) {
-        NewIFWI[IfwiIdx] = WindowData->InputImage[IfwiIdx];
+        NewIFWI[IfwiIdx] = winData->InputImage[IfwiIdx];
     }
     for (UINT32 PaddingIdx = 0; PaddingIdx < PaddingRegion.getSize(); ++PaddingIdx) {
         NewIFWI[PaddingRegion.getBase() + PaddingIdx] = 0xFF;
@@ -201,7 +202,7 @@ void BiosViewerWindow::ActionReplaceBIOSTriggered() {
 //    ((FlashRegionBaseArea*)(FRLB + FLASH_REGION_TYPE::FlashRegionBios))->setBase(IFWI_SIZE - NewBiosSize);
 //    ((FlashRegionBaseArea*)(FRLB + FLASH_REGION_TYPE::FlashRegionDeviceExpansion2))->setLimit(IFWI_SIZE - NewBiosSize);
 
-    QFileInfo fileinfo {WindowData->OpenedFileName};
+    QFileInfo fileinfo {winData->OpenedFileName};
     QString outputPath = setting.value("LastFilePath").toString() + "/" + fileinfo.baseName() + "_IntegratedBIOS.bin";
     saveBinary(outputPath.toStdString(), NewIFWI, 0, IFWI_SIZE);
 
@@ -216,8 +217,8 @@ void BiosViewerWindow::SearchButtonClicked() {
 void StartWindow::ActionExtractBinaryTriggered() {
     if (TabData.empty())
         return;
-    GeneralData *WindowData = TabData.at(MainTabWidget->currentIndex());
-    if (WindowData->InputImage == nullptr) {
+    WindowData *winData = TabData.at(MainTabWidget->currentIndex());
+    if (winData->InputImage == nullptr) {
         QMessageBox::critical(this, tr("Extract Binary"), "No Binary Opened!");
         return;
     }
@@ -246,18 +247,18 @@ void StartWindow::ActionExtractBinaryTriggered() {
     if (dialog.exec() == QDialog::Accepted) {
         INT64 InputOffset = OffsetSpinbox->value();
         INT64 InputLength = LengthSpinbox->value();
-        if (InputOffset < 0 || InputLength <= 0 || InputOffset >= WindowData->InputImageSize || InputLength + InputLength > WindowData->InputImageSize) {
+        if (InputOffset < 0 || InputLength <= 0 || InputOffset >= winData->InputImageSize || InputLength + InputLength > winData->InputImageSize) {
             QMessageBox::critical(this, tr("Extract Binary"), "Invalid offset and size!");
             return;
         }
 
-        QFileInfo fileInfo {WindowData->OpenedFileName};
+        QFileInfo fileInfo {winData->OpenedFileName};
         QString outputPath = fileInfo.dir().path() + "/" + fileInfo.baseName() + "_Extract.bin";
         QString BinaryName = QFileDialog::getSaveFileName(this,
                                                         tr("Extract Binary"),
                                                         outputPath,
                                                         tr("BIOS image(*.rom *.bin *.cap);;All files (*.*)"));
 
-        saveBinary(BinaryName.toStdString(), WindowData->InputImage, InputOffset, InputLength);
+        saveBinary(BinaryName.toStdString(), winData->InputImage, InputOffset, InputLength);
     }
 }

@@ -16,8 +16,8 @@ HexViewWindow::HexViewWindow(StartWindow *parent) :
 
 HexViewWindow::~HexViewWindow() = default;
 
-void HexViewWindow::setupUi(QMainWindow *MainWindow, GeneralData *wData) {
-    WindowData = wData;
+void HexViewWindow::setupUi(QMainWindow *MainWindow, WindowData *wData) {
+    winData = wData;
     centralwidget = new QWidget(MainWindow);
     centralwidget->setObjectName("centralwidget");
     CentralwidgetVerticalLayout = new QVBoxLayout(centralwidget);
@@ -48,7 +48,7 @@ void HexViewWindow::closeEvent(QCloseEvent *event) {
         } else if (choice == QMessageBox::Discard) {
             m_hexview->loadFromBuffer(hexBuffer);
             BinaryEdited = false;
-            mWindow->setWindowTitle(WindowData->WindowTitle);
+            mWindow->setWindowTitle(winData->WindowTitle);
             event->ignore();
         } else {
             event->ignore();
@@ -62,21 +62,21 @@ void HexViewWindow::setEditedState(bool edited) {
     }
     BinaryEdited = edited;
     if (edited) {
-        mWindow->setWindowTitle(WindowData->WindowTitle + " *");
+        mWindow->setWindowTitle(winData->WindowTitle + " *");
     } else {
-        mWindow->setWindowTitle(WindowData->WindowTitle);
+        mWindow->setWindowTitle(winData->WindowTitle);
     }
 }
 
 void HexViewWindow::saveImage() {
     // save backup image
-    std::string NewFileName = WindowData->OpenedFileName.toStdString() + ".bak";
-    if (rename(WindowData->OpenedFileName.toStdString().c_str(), NewFileName.c_str())) {
+    std::string NewFileName = winData->OpenedFileName.toStdString() + ".bak";
+    if (rename(winData->OpenedFileName.toStdString().c_str(), NewFileName.c_str())) {
         qDebug("rename error");
     }
 
     // save edited image
-    BaseLibrarySpace::saveBinary(WindowData->OpenedFileName.toStdString(), (UINT8*)NewHexBuffer.data(), 0, NewHexBuffer.size());
+    BaseLibrarySpace::saveBinary(winData->OpenedFileName.toStdString(), (UINT8*)NewHexBuffer.data(), 0, NewHexBuffer.size());
 }
 
 void HexViewWindow::setNewHexBuffer(QByteArray &buffer) {

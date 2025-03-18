@@ -4,11 +4,11 @@
 #include <QMainWindow>
 #include <QVBoxLayout>
 #include <QSettings>
+#include "WindowData.h"
 #include "SymbolDefinition.h"
 
 class QHexView;
 class StartWindow;
-class GeneralData;
 
 class HexViewWindow : public QWidget
 {
@@ -17,7 +17,7 @@ class HexViewWindow : public QWidget
 public:
     explicit HexViewWindow(StartWindow *parent);
     ~HexViewWindow() override;
-    void setupUi(QMainWindow *MainWindow, GeneralData *wData);
+    void setupUi(QMainWindow *MainWindow, WindowData *wData);
     void refresh() const;
 
     void closeEvent(QCloseEvent *event) override;
@@ -29,7 +29,7 @@ public:
     void ActionGotoTriggered() const;
 
     StartWindow *mWindow;
-    GeneralData *WindowData{ nullptr };
+    WindowData  *winData{ nullptr };
     QHexView    *m_hexview{ nullptr };
     QWidget     *centralwidget{ nullptr };
     QVBoxLayout *CentralwidgetVerticalLayout{};
