@@ -26,7 +26,14 @@ endif()
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-include_directories(include lib lib/Openssl/include lib/BrotliDecompress/brotli/include Window)
+include_directories(
+  include
+  lib
+  lib/Openssl/include
+  lib/BrotliDecompress/brotli/include
+  Volume
+  Window
+)
 
 set(DECOMPRESS_LIB
         lib/BaseUefiDecompress/BaseUefiDecompressLib.h
@@ -51,23 +58,27 @@ set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
 file(GLOB UI_SOURCES "Window/*.ui")
 file(GLOB_RECURSE WINDOW_SOURCES "Window/*")
 file(GLOB LIBRARY_H_SOURCES "lib/*.h")
-file(GLOB FILE_SYSTEM_H_SOURCES "lib/UefiFileSystem/*.h")
-file(GLOB PAYLOAD_H_SOURCES "lib/Payload/*.h")
-file(GLOB IFWI_REGION_H_SOURCES "lib/IfwiRegion/*.h")
-file(GLOB CAPSULE_H_SOURCES "lib/Capsule/*.h")
-file(GLOB FEATURE_H_SOURCES "lib/Feature/*.h")
+file(GLOB VOLUME_H_SOURCES "Volume/*.h")
+file(GLOB FILE_SYSTEM_H_SOURCES "Volume/UefiFileSystem/*.h")
+file(GLOB PAYLOAD_H_SOURCES "Volume/Payload/*.h")
+file(GLOB IFWI_REGION_H_SOURCES "Volume/IfwiRegion/*.h")
+file(GLOB CAPSULE_H_SOURCES "Volume/Capsule/*.h")
+file(GLOB FEATURE_H_SOURCES "Volume/Feature/*.h")
 aux_source_directory(lib LIBRARY_SOURCES)
-aux_source_directory(lib/UefiFileSystem FILE_SYSTEM_SOURCES)
-aux_source_directory(lib/Payload PAYLOAD_SOURCES)
-aux_source_directory(lib/IfwiRegion IFWI_REGION_SOURCES)
-aux_source_directory(lib/Capsule CAPSULE_SOURCES)
-aux_source_directory(lib/Feature FEATURE_SOURCES)
+aux_source_directory(Volume VOLUME_SOURCES)
+aux_source_directory(Volume/UefiFileSystem FILE_SYSTEM_SOURCES)
+aux_source_directory(Volume/Payload PAYLOAD_SOURCES)
+aux_source_directory(Volume/IfwiRegion IFWI_REGION_SOURCES)
+aux_source_directory(Volume/Capsule CAPSULE_SOURCES)
+aux_source_directory(Volume/Feature FEATURE_SOURCES)
 file(GLOB_RECURSE COMPATIBILITY_SOURCES "lib/Compatibility/*")
 
 set(PROJECT_SOURCES
         logo/Images.qrc
         font/Fonts.qrc
         ${LIBRARY_SOURCES}
+        ${VOLUME_SOURCES}
+        ${VOLUME_H_SOURCES}
         ${LIBRARY_H_SOURCES}
         ${COMPATIBILITY_SOURCES}
         ${FILE_SYSTEM_H_SOURCES}

@@ -20,8 +20,6 @@
 #include <QtWidgets/QWidget>
 #include "BiosView/BiosWindow.h"
 
-#define __BiosViewerVersion__ "1.9"
-
 namespace Ui {
 class StartWindow;
 }

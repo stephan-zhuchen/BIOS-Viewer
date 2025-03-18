@@ -1,0 +1,235 @@
+//
+// Created by stephan on 8/28/2023.
+//
+
+#include "Volume.h"
+#include "BaseLib.h"
+#include "Payload/PE32.h"
+#include <algorithm>
+
+using  namespace BaseLibrarySpace;
+Volume::Volume(UINT8* buffer, INT64 length, INT64 offset, bool Compressed, Volume* parent):
+        data(buffer),
+        size(length),
+        offsetFromBegin(offset),
+        Compressed(Compressed),
+        ParentVolume(parent) {}
+
+Volume::~Volume() {
+    if (Type == VolumeType::Empty)
+        return;
+    for (Volume* vol : ChildVolume) {
+        safeDelete(vol);
+    }
+    safeArrayDelete(DecompressedBufferOnHeap);
+}
+
+EFI_GUID Volume::getGUID(INT64 offset) {
+    if (offset > size) {
+        return EFI_GUID();
+    }
+    EFI_GUID guid = *(EFI_GUID*)(data + offset);
+    return guid;
+}
+
+UINT8 Volume::getUINT8(INT64 offset)  {
+    if (offset > size) {
+        return 0;
+    }
+    return data[offset];
+}
+
+UINT16 Volume::getUINT16(INT64 offset) {
+    if (offset > size) {
+        return 0;
+    }
+    return *(UINT16*)(data + offset);
+}
+
+UINT32 Volume::getUINT32(INT64 offset) {
+    if (offset > size) {
+        return 0;
+    }
+    return *(UINT32*)(data + offset);
+}
+
+UINT8* Volume::getBytes(INT64 offset, INT64 length) {
+    if (offset > size) {
+        return nullptr;
+    }
+    auto *value = new UINT8[length];
+    for (INT64 i = 0; i < length; i++) {
+        value[i] = data[offset + i];
+    }
+    return value;
+}
+
+UINT64 Volume::getUINT64(INT64 offset) {
+    if (offset > size) {
+        return 0;
+    }
+    return *(UINT64*)(data + offset);
+}
+
+CHAR8 Volume::getINT8(INT64 offset) {
+    if (offset > size) {
+        return 0;
+    }
+    return (CHAR8) data[offset];
+}
+
+INT16 Volume::getINT16(INT64 offset) {
+    if (offset > size) {
+        return 0;
+    }
+    return *(INT16*)(data + offset);
+}
+
+INT32 Volume::getINT24(INT64 offset) {
+    if (offset > size) {
+        return 0;
+    }
+    UINT8 value[4] {0};
+    for (INT64 i = 0; i < 3; i++) {
+        value[i] = data[offset + i];
+    }
+    return *(INT32*)value;
+}
+
+INT32 Volume::getINT32(INT64 offset) {
+    if (offset > size) {
+        return 0;
+    }
+    return *(INT32*)(data + offset);
+}
+
+INT64 Volume::getINT64(INT64 offset) {
+    if (offset > size) {
+        return 0;
+    }
+    return *(INT64*)(data + offset);
+}
+
+INT64 Volume::getHeaderSize() const {
+    return 0;
+}
+
+bool Volume::CheckValidation() {
+    return true;
+}
+
+INT64 Volume::SelfDecode() {
+    return size;
+}
+
+void Volume::DecodeChildVolume() {}
+
+void Volume::setInfoStr() {
+    if (InfoStr != "") {
+        return;
+    }
+}
+
+Volume* Volume::Reorganize() {
+    Volume *newVolume = nullptr;
+    if (Type == VolumeType::Empty) {
+        PE32 *pe32 = new PE32(data, size, offsetFromBegin, Compressed);
+        if (pe32->SelfDecode() != 0) {
+            newVolume = pe32;
+        } else {
+            delete pe32;
+        }
+    }
+
+    if (newVolume != nullptr) {
+        newVolume->setCompressedFlag(this->Compressed);
+        newVolume->ParentVolume = this->ParentVolume;
+        for(int i = 0; i < this->ParentVolume->ChildVolume.size(); ++i) {
+            if (this->ParentVolume->ChildVolume[i] == this) {
+                this->ParentVolume->ChildVolume[i] = newVolume;
+            }
+        }
+        for (auto child:this->ChildVolume) {
+            newVolume->ChildVolume.push_back(child);
+            child->ParentVolume = newVolume;
+        }
+        this->ParentVolume = nullptr;
+        this->ChildVolume.clear();
+        return newVolume;
+    }
+
+    return nullptr;
+}
+
+EFI_GUID Volume::getVolumeGuid() const {
+    return {};
+}
+
+void Volume::setInfoText(const string &text) {
+    InfoStr = text;
+}
+
+std::vector<string> Volume::getUserDefinedName() const {
+    return {};
+}
+
+void Volume::SearchDecompressedVolume(Volume *volume, std::vector<Decompressed *> &DecompressedVolumeList) {
+    for (Volume* childVolume:volume->ChildVolume) {
+        if (volume->Type == VolumeType::CommonSection && volume->DecompressedBufferOnHeap != nullptr) {
+            UINT32 DecompressedSectionSize = volume->getHeaderSize() + volume->decompressedSize;
+
+            vector<UINT8> DecompressedVolume;
+            DecompressedVolume.reserve(DecompressedSectionSize);
+            DecompressedVolume.insert(DecompressedVolume.end(), volume->data, volume->data + volume->getHeaderSize());
+            DecompressedVolume.insert(DecompressedVolume.end(), volume->DecompressedBufferOnHeap,
+                                      volume->DecompressedBufferOnHeap + volume->decompressedSize);
+
+            Decompressed *decompressed = new Decompressed;
+            decompressed->decompressedBuffer = DecompressedVolume;
+            decompressed->decompressedOffset = volume->offsetFromBegin;
+            decompressed->CompressedSize = volume->size;
+            DecompressedVolumeList.push_back(decompressed);
+            return;
+        } else {
+            SearchDecompressedVolume(childVolume, DecompressedVolumeList);
+        }
+    }
+    return;
+}
+
+bool Volume::GetDecompressedVolume(vector<UINT8> &DecompressedVolume) {
+    vector<Decompressed*> DecompressedVolumeList;
+    SearchDecompressedVolume(this, DecompressedVolumeList);
+    if (DecompressedVolumeList.empty()) {
+        return false;
+    }
+    std::sort(DecompressedVolumeList.begin(), DecompressedVolumeList.end(),
+              [](Decompressed * v1, Decompressed * v2){ return v1->decompressedOffset < v2->decompressedOffset; });
+    DecompressedVolume = vector<UINT8>(this->data, this->data + size);
+    UINT32 OffsetCorrection = 0;
+    for (Decompressed *decompressed:DecompressedVolumeList) {
+        UINT32 ReplaceOffset = decompressed->decompressedOffset - this->offsetFromBegin + OffsetCorrection;
+        DecompressedVolume.erase(DecompressedVolume.begin() + ReplaceOffset, DecompressedVolume.begin() + ReplaceOffset + decompressed->CompressedSize);
+        OffsetCorrection += (UINT32)decompressed->decompressedBuffer.size() - decompressed->CompressedSize;
+        DecompressedVolume.insert(DecompressedVolume.begin() + ReplaceOffset, decompressed->decompressedBuffer.begin(), decompressed->decompressedBuffer.end());
+    }
+
+    for (Decompressed *decompressed:DecompressedVolumeList) {
+        safeDelete(decompressed);
+    }
+
+    return true;
+}
+
+Volume *Volume::SearchVolumeByGuid(Volume *volume, EFI_GUID &Guid) {
+    if (volume->getVolumeGuid() == Guid) {
+        return volume;
+    }
+    for (Volume *fv : volume->ChildVolume) {
+        Volume* result = SearchVolumeByGuid(fv, Guid);
+        if (result != nullptr) {
+            return result;
+        }
+    }
+    return nullptr;
+}

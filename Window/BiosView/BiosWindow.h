@@ -18,7 +18,6 @@
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include <exception>
 #include "Volume.h"
 #include "DataModel.h"
 #include "IfwiRegion/BiosRegion.h"

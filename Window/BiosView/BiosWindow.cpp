@@ -3,7 +3,6 @@
 #include <QMessageBox>
 #include <QFormLayout>
 #include <QDialogButtonBox>
-#include <thread>
 #include <utility>
 #include <QFileInfo>
 #include "BaseLib.h"
