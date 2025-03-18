@@ -21,6 +21,7 @@
 #include "CapsuleView/CapsuleWindow.h"
 #include "HexView/HexWindow.h"
 #include "BiosView/BiosWindow.h"
+#include "BinaryView/BinaryWindow.h"
 #include "Tool/MergeFilesWindow.h"
 #include "ui_StartWindow.h"
 
@@ -301,6 +302,7 @@ void StartWindow::OpenBuffer(UINT8* data, UINT64 length, const QString& path, bo
     newTabData->BiosViewerUi = new BiosViewerWindow(this);
     newTabData->HexViewerUi = new HexViewWindow(this);
     newTabData->CapsuleViewerUi = new CapsuleWindow(this);
+    newTabData->BinaryViewerUi = new BinaryWindow(this);
     QFileInfo FileInfo(path);
     bool onlyHex = DisableBiosViewer || onlyHexView;
     auto *tabWidget = new QMainWindow;
@@ -318,6 +320,12 @@ void StartWindow::OpenBuffer(UINT8* data, UINT64 length, const QString& path, bo
         ui->actionCollapse->setEnabled(true);
         ui->actionHex_View->setEnabled(true);
         ui->actionBios_View->setDisabled(true);
+        MainTabWidget->addTab(tabWidget, FileInfo.fileName());
+    } else if (!onlyHex && BinaryWindow::TryOpenBinary(newTabData->InputImage, newTabData->InputImageSize)) {
+        // Show Binary File
+        newTabData->CurrentWindow = WindowMode::BINARY;
+        newTabData->BinaryViewerUi->setupUi(tabWidget, newTabData);
+        newTabData->BinaryViewerUi->loadBinary();
         MainTabWidget->addTab(tabWidget, FileInfo.fileName());
     } else {
         // Show Hex View

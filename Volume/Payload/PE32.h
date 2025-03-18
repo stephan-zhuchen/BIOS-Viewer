@@ -1,7 +1,6 @@
 #ifndef PE32_H
 #define PE32_H
 
-//#include "string"
 #include "Volume.h"
 #include "UEFI/PeImage.h"
 
@@ -32,6 +31,7 @@ public:
     void convert2Pe();
     [[nodiscard]] string getMachineType() const;
     static string getSubsystemName(UINT16 subsystem);
+    static bool IsPe32Format(const UINT8* ImageBase);
 };
 
 #endif // PE32_H

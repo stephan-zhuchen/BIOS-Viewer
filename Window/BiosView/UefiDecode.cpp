@@ -18,15 +18,6 @@
 
 using namespace BaseLibrarySpace;
 
-QStringList vectorToQStringList(const std::vector<std::string>& vec) {
-    QStringList qsl;
-    qsl.reserve(vec.size()); // 预分配内存提升性能
-    for (const auto& str : vec) {
-        qsl.append(QString::fromStdString(str));
-    }
-    return qsl;
-}
-
 bool BiosViewerWindow::detectIfwi(INT64 &BiosOffset) const {
     using namespace std;
 

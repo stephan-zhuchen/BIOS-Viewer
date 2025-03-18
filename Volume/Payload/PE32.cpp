@@ -229,3 +229,14 @@ string PE32::getSubsystemName(UINT16 subsystem) {
     }
     return SubSystemName;
 }
+
+bool PE32::IsPe32Format(const UINT8* ImageBase) {
+    UINT16 magic = *(UINT16*)ImageBase;
+    if (magic == EFI_IMAGE_DOS_SIGNATURE) {
+        return true;
+    } else if (magic == EFI_TE_IMAGE_HEADER_SIGNATURE) {
+        return true;
+    } else {
+        return false;
+    }
+}

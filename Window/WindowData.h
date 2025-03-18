@@ -9,8 +9,9 @@ class StartWindow;
 class BiosViewerWindow;
 class HexViewWindow;
 class CapsuleWindow;
+class BinaryWindow;
 
-enum class WindowMode { None, Hex, BIOS, CAPSULE };
+enum class WindowMode { None, Hex, BIOS, CAPSULE, BINARY };
 
 class WindowData {
 public:
@@ -26,9 +27,12 @@ public:
     BiosViewerWindow  *BiosViewerUi{nullptr};
     HexViewWindow     *HexViewerUi{nullptr};
     CapsuleWindow     *CapsuleViewerUi{nullptr};
+    BinaryWindow      *BinaryViewerUi{nullptr};
 
     explicit WindowData(QString dir);
     ~WindowData();
 };
+
+QStringList vectorToQStringList(const std::vector<std::string>& vec);
 
 #endif // WINDOWDATA_H
