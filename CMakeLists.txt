@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(BiosViewer VERSION 0.1 LANGUAGES CXX)
+project(BiosViewerCli VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -9,30 +10,27 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(LINK_DIR  lib/Openssl/lib/windows)
-    link_directories(${LINK_DIR})
     include_directories(lib/VisualLeakDetector/include)
     set(VLD_LINK_DIR  lib/VisualLeakDetector/lib/Win64)
     link_directories(${VLD_LINK_DIR})
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(LINK_DIR  lib/Openssl/lib/macos)
-    link_directories(${LINK_DIR})
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(LINK_DIR  lib/Openssl/lib/linux)
-    set(CMAKE_PREFIX_PATH "/home/stephan/Qt/6.7.0/gcc_64")
-    link_directories(${LINK_DIR})
 endif()
+include_directories(lib/PDCurses/include)
+set(PDCURSES_LINK_DIR  lib/PDCurses)
+link_directories(${PDCURSES_LINK_DIR})
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+get_filename_component(QT_INSTALL_PREFIX "${CMAKE_PREFIX_PATH}/../.." ABSOLUTE)
+set(OPENSSL_ROOT_DIR "${QT_INSTALL_PREFIX}/Tools/OpenSSLv3/Win_x64")
+find_package(OpenSSL REQUIRED)
 include_directories(
-  include
-  lib
-  lib/Openssl/include
-  lib/BrotliDecompress/brotli/include
-  Volume
-  Window
+        include
+        lib
+        lib/BrotliDecompress/brotli/include
+        Volume
+        Window
 )
 
 set(DECOMPRESS_LIB
@@ -57,6 +55,7 @@ file(GLOB_RECURSE INCLUDE_FILES "include/*")
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
 file(GLOB UI_SOURCES "Window/*.ui")
 file(GLOB_RECURSE WINDOW_SOURCES "Window/*")
+file(GLOB_RECURSE CLI_SOURCES "Cli/*")
 file(GLOB LIBRARY_H_SOURCES "lib/*.h")
 file(GLOB VOLUME_H_SOURCES "Volume/*.h")
 file(GLOB FILE_SYSTEM_H_SOURCES "Volume/UefiFileSystem/*.h")
@@ -96,6 +95,27 @@ set(PROJECT_SOURCES
         ${UI_SOURCES}
 )
 
+set(CLI_PROJECT_SOURCES
+        ${CLI_SOURCES}
+        ${LIBRARY_SOURCES}
+        ${VOLUME_SOURCES}
+        ${VOLUME_H_SOURCES}
+        ${LIBRARY_H_SOURCES}
+        ${COMPATIBILITY_SOURCES}
+        ${FILE_SYSTEM_H_SOURCES}
+        ${FILE_SYSTEM_SOURCES}
+        ${PAYLOAD_SOURCES}
+        ${IFWI_REGION_H_SOURCES}
+        ${IFWI_REGION_SOURCES}
+        ${CAPSULE_H_SOURCES}
+        ${CAPSULE_SOURCES}
+        ${FEATURE_H_SOURCES}
+        ${FEATURE_SOURCES}
+        ${INCLUDE_FILES}
+        Cli/HexView/HexCli.cpp
+        Cli/HexView/HexCli.h
+)
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(BiosViewer
         MANUAL_FINALIZATION
@@ -107,6 +127,9 @@ else()
         ${PROJECT_SOURCES}
     )
 endif()
+
+add_executable(BiosViewerCli ${CLI_PROJECT_SOURCES})
+target_compile_definitions(BiosViewerCli PRIVATE CLI_BIOS_VIEWER)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(BiosViewer PRIVATE -Wno-deprecated-declarations)
@@ -120,12 +143,13 @@ add_library(Lzma STATIC ${LZMA_SDK})
 add_library(Lz4 STATIC ${LZ4_SDK})
 add_library(Brotli STATIC ${BROTLI_COMMON_C} ${BROTLI_DEC_C} ${BROTLI_ENC_C})
 add_library(Decompress STATIC ${DECOMPRESS_LIB})
-target_link_libraries(Decompress PRIVATE Lzma Lz4 Brotli)
+target_link_libraries(Decompress PRIVATE Lzma Lz4 Brotli pdcurses)
+target_link_libraries(BiosViewerCli OpenSSL::Crypto Decompress)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets libcrypto vld Decompress)
+    target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets OpenSSL::Crypto vld Decompress)
 else()
-    target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets crypto Decompress)
+    target_link_libraries(BiosViewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets OpenSSL::Crypto Decompress)
 endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
