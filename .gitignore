@@ -76,3 +76,4 @@ CMakeLists.txt.user*
 *cmake-build*/
 build/
 CMakeFiles/
+.vscode/

@@ -643,10 +643,6 @@ void BiosCliView::ReorganizeVolume(Volume *volume) {
     }
 }
 
-BinaryData::~BinaryData() {
-    delete [] InputImage;
-}
-
 BiosCliData::~BiosCliData() {
     for (auto *volume: VolumeDataList) {
         safeDelete(volume);

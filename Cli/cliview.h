@@ -4,6 +4,7 @@
 #include "Volume.h"
 #include "BiosView/BiosCli.h"
 #include "HexView/HexCli.h"
+#include "DataModel.h"
 
 enum class ViewType {
     BiosView,

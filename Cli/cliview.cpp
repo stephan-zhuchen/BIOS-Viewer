@@ -53,7 +53,7 @@ int CliView::openFile(const std::string &path, ViewType type)
             return -1;
         }
     } else if (type == ViewType::HexView) {
-        hexUi = new HexCliView(binary->InputImage, binary->InputImageSize);
+        hexUi = new HexCliView(binary);
         hexUi->show();
     } else {
         std::cerr << "Error: Unsupported view type." << std::endl;

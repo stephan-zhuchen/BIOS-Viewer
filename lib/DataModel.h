@@ -5,6 +5,23 @@
 #pragma once
 #include "Volume.h"
 
+struct BinaryData
+{
+    string OpenedFileName;
+    UINT8 *InputImage{nullptr};
+    INT64 InputImageSize{};
+
+    BinaryData() = default;
+    ~BinaryData()
+    {
+        if (InputImage)
+        {
+            delete[] InputImage; // 释放动态分配的内存
+            InputImage = nullptr;
+        }
+    }
+};
+
 class DataModel {
 private:
     string name;

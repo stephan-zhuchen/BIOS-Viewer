@@ -10,16 +10,6 @@
 
 using std::unique_ptr;
 
-struct BinaryData
-{
-    string OpenedFileName;
-    UINT8 *InputImage{nullptr};
-    INT64 InputImageSize{};
-
-    BinaryData() = default;
-    ~BinaryData();
-};
-
 class BiosCliData
 {
 public:

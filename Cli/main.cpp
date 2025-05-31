@@ -2,6 +2,12 @@
 #include "BaseLib.h"
 #include "cliview.h"
 #include <string>
+#ifdef _WIN32
+#include "curses.h"
+#else
+#include <ncurses.h>
+#include <clocale>
+#endif
 // #include "vld.h"
  
 void help()
@@ -17,6 +23,65 @@ void help()
     std::cout << "Example: binary-tool myfile.bin" << std::endl;
     std::cout << "This tool opens a binary file and displays its contents in a suitable view." << std::endl;
 }
+
+class CursesManager
+{
+public:
+    CursesManager() : initialized_successfully(false)
+    {
+#ifndef _WIN32
+        setlocale(LC_ALL, ""); // 支持Unicode等
+#endif
+        // 初始化curses屏幕
+        if (initscr() == NULL)
+        {
+            fprintf(stderr, "错误：无法初始化curses屏幕。\n");
+            // 此时curses环境未建立，可以直接使用fprintf
+            return; // 初始化失败
+        }
+
+#ifndef _WIN32 // PDCurses的颜色处理可能略有不同或自动处理
+        if (has_colors())
+        {
+            if (start_color() == ERR)
+            {
+                // 颜色初始化失败，可以忽略或报告
+                // endwin(); // 如果start_color失败，可能需要清理initscr
+                // fprintf(stderr, "警告：无法初始化颜色支持。\n");
+                // return; // 也可以选择退出
+            }
+            else
+            {
+                use_default_colors(); // 使用终端默认颜色
+            }
+        }
+#endif
+        cbreak();             // 行缓冲禁止，字符立即可用
+        noecho();             // 禁止输入回显
+        keypad(stdscr, TRUE); // 允许功能键 (F1,箭头等)
+        curs_set(0);          // 初始隐藏光标 (HexCliView内部会管理)
+        // timeout(-1);        // getch() 阻塞等待输入 (HexCliView会使用，这里设为默认)
+        refresh(); // 刷新stdscr一次
+        initialized_successfully = true;
+    }
+
+    ~CursesManager()
+    {
+        // 确保curses已初始化且endwin()尚未被调用
+        if (initialized_successfully && !isendwin())
+        {
+            endwin(); // 退出curses模式，恢复终端
+        }
+    }
+
+    bool isInitialized() const
+    {
+        return initialized_successfully;
+    }
+
+private:
+    bool initialized_successfully;
+};
 
 int main(int argc, char *argv[])
 {
@@ -34,18 +99,32 @@ int main(int argc, char *argv[])
             std::cout << "Binary Tool Version 1.16" << std::endl;
             return 0;
         }
+        CursesManager cursesMgr;
+        if (!cursesMgr.isInitialized()) {
+            std::cerr << "Error: Failed to initialize curses." << std::endl;
+            return 1;
+        }
+        // 如果只有一个参数且不是帮助或版本，则尝试打开文件
         view.openFile(argv[1], ViewType::HexView);
     } else if (argc == 3) {
+        ViewType type;
         if ((std::string(argv[1]) == "--bios" || std::string(argv[1]) == "-b")) {
-            view.openFile(argv[2], ViewType::BiosView);
+            type = ViewType::BiosView;
         } else if ((std::string(argv[1]) == "--hex" || std::string(argv[1]) == "-x")) {
-            view.openFile(argv[2], ViewType::HexView);
+            type = ViewType::HexView;
         } else if ((std::string(argv[1]) == "--elf" || std::string(argv[1]) == "-e")) {
-            view.openFile(argv[2], ViewType::ElfView);
+            type = ViewType::ElfView;
         } else {
             help();
             return 1;
         }
+        CursesManager cursesMgr;
+        if (!cursesMgr.isInitialized()) {
+            std::cerr << "Error: Failed to initialize curses." << std::endl;
+            return 1;
+        }
+        // 如果有两个参数，且第一个是选项，则尝试打开文件
+        view.openFile(argv[2], type);
     }
     else if (argc > 3) {
         std::cerr << "Error: Too many arguments provided." << std::endl;
