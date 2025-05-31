@@ -1,24 +1,25 @@
-#include <thread>
-#include <filesystem>
-#include <iostream>
-#include <chrono>
-#include <functional>
 #include "BiosCli.h"
+#include <chrono>
+#include <filesystem>
+#include <functional>
+#include <iostream>
+#include <thread>
 #include "BaseLib.h"
-#include "UEFI/GuidDatabase.h"
+#include "IfwiRegion/BiosRegion.h"
 #include "IfwiRegion/EcRegion.h"
+#include "IfwiRegion/FlashDescriptorRegion.h"
 #include "IfwiRegion/GbeRegion.h"
 #include "IfwiRegion/MeRegion.h"
 #include "IfwiRegion/OsseRegion.h"
-#include "IfwiRegion/BiosRegion.h"
-#include "UefiFileSystem/FirmwareVolume.h"
+#include "UEFI/GuidDatabase.h"
 #include "UefiFileSystem/CompressedVolume.h"
-#include "IfwiRegion/FlashDescriptorRegion.h"
+#include "UefiFileSystem/FirmwareVolume.h"
+
 
 using namespace BaseLibrarySpace;
 GuidDatabase *guidData = nullptr;
 
-BiosCliView::BiosCliView(BinaryData *binary):binaryData(binary) {
+BiosCliView::BiosCliView(BinaryData *binary) : binaryData(binary) {
     if (guidData == nullptr) {
         guidData = new GuidDatabase;
     }
@@ -30,8 +31,7 @@ BiosCliView::~BiosCliView() {
     delete BiosData;
 }
 
-void BiosCliView::loadBios()
-{
+void BiosCliView::loadBios() {
     BiosData = new BiosCliData;
     BiosData->OverviewVolume = new Volume(binaryData->InputImage, binaryData->InputImageSize);
     BiosData->OverviewImageModel = new DataModel(BiosData->OverviewVolume, "IFWI Overview", "Image");
@@ -41,17 +41,13 @@ void BiosCliView::loadBios()
 
     setBiosFvData();
     DecodeBiosFileSystem();
-    for (auto fv : BiosData->VolumeDataList)
-    {
+    for (auto fv: BiosData->VolumeDataList) {
         ReorganizeVolume(fv);
-        buildTree(fv, dataRoot.get(), 0);  // 将每个FV挂载到虚拟根节点下
+        buildTree(fv, dataRoot.get(), 0); // 将每个FV挂载到虚拟根节点下
     }
-    if (BiosData->BiosValidFlag && BiosData->BiosImage->isFitValid())
-    {
-        if (!BiosData->IFWI_exist)
-        {
-            for (auto vol : BiosData->VolumeDataList)
-            {
+    if (BiosData->BiosValidFlag && BiosData->BiosImage->isFitValid()) {
+        if (!BiosData->IFWI_exist) {
+            for (auto vol: BiosData->VolumeDataList) {
                 BiosData->BiosImage->ChildVolume.push_back(vol);
             }
         }
@@ -61,12 +57,10 @@ void BiosCliView::loadBios()
     }
 
     string title;
-    if (BiosData->BiosImage->getBiosID() == "")
-    {
+    if (BiosData->BiosImage->getBiosID() == "") {
         filesystem::path filePath(binaryData->OpenedFileName);
         title = filePath.filename().string();
-    }
-    else
+    } else
         title = BiosData->BiosImage->getBiosID();
 
     cout << title << endl;
@@ -97,20 +91,16 @@ bool BiosCliData::isValidBIOS(UINT8 *image, INT64 imageLength) {
     return false;
 }
 
-bool BiosCliView::detectIfwi(INT64 &BiosOffset) const
-{
+bool BiosCliView::detectIfwi(INT64 &BiosOffset) const {
     using namespace std;
 
     INT64 bufferSize = binaryData->InputImageSize;
-    if (bufferSize < 0x4000)
-    {
+    if (bufferSize < 0x4000) {
         return false;
     }
 
-    auto CleanVolumeDataList = [this]()
-    {
-        for (Volume *vol : BiosData->VolumeDataList)
-        {
+    auto CleanVolumeDataList = [this]() {
+        for (Volume *vol: BiosData->VolumeDataList) {
             safeDelete(vol);
         }
         BiosData->VolumeDataList.clear();
@@ -118,8 +108,7 @@ bool BiosCliView::detectIfwi(INT64 &BiosOffset) const
 
     INT64 IfwiOffset = 0;
     auto *flashDescriptor = new FlashDescriptorRegion(binaryData->InputImage, bufferSize, IfwiOffset);
-    if (flashDescriptor->SelfDecode() == 0)
-    {
+    if (flashDescriptor->SelfDecode() == 0) {
         safeDelete(flashDescriptor);
         CleanVolumeDataList();
         return false;
@@ -132,18 +121,15 @@ bool BiosCliView::detectIfwi(INT64 &BiosOffset) const
     FlashRegionBaseArea EcRegionArea = flashDescriptor->RegionList.at(FLASH_REGION_TYPE::FlashRegionEC);
     FlashRegionBaseArea OsseRegionArea = flashDescriptor->RegionList.at(FLASH_REGION_TYPE::FlashRegionIE);
 
-    if (EcRegionArea.getLimit() > bufferSize)
-    {
+    if (EcRegionArea.getLimit() > bufferSize) {
         CleanVolumeDataList();
         return false;
     }
 
-    if (EcRegionArea.limit != 0)
-    {
+    if (EcRegionArea.limit != 0) {
         UINT8 *EcBuffer = binaryData->InputImage + EcRegionArea.getBase();
         auto *EcVolume = new EcRegion(EcBuffer, EcRegionArea.getSize(), EcRegionArea.getBase());
-        if (EcVolume->SelfDecode() == 0)
-        {
+        if (EcVolume->SelfDecode() == 0) {
             safeDelete(EcVolume);
             CleanVolumeDataList();
             return false;
@@ -151,17 +137,14 @@ bool BiosCliView::detectIfwi(INT64 &BiosOffset) const
         BiosData->VolumeDataList.push_back(EcVolume);
     }
 
-    if (GbERegionArea.getLimit() > bufferSize)
-    {
+    if (GbERegionArea.getLimit() > bufferSize) {
         CleanVolumeDataList();
         return false;
     }
-    if (GbERegionArea.limit != 0)
-    {
+    if (GbERegionArea.limit != 0) {
         UINT8 *GbeBuffer = binaryData->InputImage + GbERegionArea.getBase();
         auto *GbEVolume = new GbeRegion(GbeBuffer, GbERegionArea.getSize(), GbERegionArea.getBase());
-        if (GbEVolume->SelfDecode() == 0)
-        {
+        if (GbEVolume->SelfDecode() == 0) {
             safeDelete(GbEVolume);
             CleanVolumeDataList();
             return false;
@@ -169,17 +152,14 @@ bool BiosCliView::detectIfwi(INT64 &BiosOffset) const
         BiosData->VolumeDataList.push_back(GbEVolume);
     }
 
-    if (MeRegionArea.getLimit() > bufferSize)
-    {
+    if (MeRegionArea.getLimit() > bufferSize) {
         CleanVolumeDataList();
         return false;
     }
-    if (MeRegionArea.limit != 0)
-    {
+    if (MeRegionArea.limit != 0) {
         UINT8 *MeBuffer = binaryData->InputImage + MeRegionArea.getBase();
         auto *MeVolume = new MeRegion(MeBuffer, MeRegionArea.getSize(), MeRegionArea.getBase());
-        if (MeVolume->SelfDecode() == 0)
-        {
+        if (MeVolume->SelfDecode() == 0) {
             safeDelete(MeVolume);
             CleanVolumeDataList();
             return false;
@@ -187,17 +167,14 @@ bool BiosCliView::detectIfwi(INT64 &BiosOffset) const
         BiosData->VolumeDataList.push_back(MeVolume);
     }
 
-    if (OsseRegionArea.getLimit() > bufferSize)
-    {
+    if (OsseRegionArea.getLimit() > bufferSize) {
         CleanVolumeDataList();
         return false;
     }
-    if (OsseRegionArea.limit != 0)
-    {
+    if (OsseRegionArea.limit != 0) {
         UINT8 *GbeBuffer = binaryData->InputImage + OsseRegionArea.getBase();
         auto *OsseVolume = new OsseRegion(GbeBuffer, OsseRegionArea.getSize(), OsseRegionArea.getBase());
-        if (OsseVolume->SelfDecode() == 0)
-        {
+        if (OsseVolume->SelfDecode() == 0) {
             safeDelete(OsseVolume);
             CleanVolumeDataList();
             return false;
@@ -205,13 +182,11 @@ bool BiosCliView::detectIfwi(INT64 &BiosOffset) const
         BiosData->VolumeDataList.push_back(OsseVolume);
     }
 
-    if (BiosRegionArea.getLimit() > bufferSize)
-    {
+    if (BiosRegionArea.getLimit() > bufferSize) {
         CleanVolumeDataList();
         return false;
     }
-    if (BiosRegionArea.limit != 0)
-    {
+    if (BiosRegionArea.limit != 0) {
         UINT8 *BiosBuffer = binaryData->InputImage + BiosRegionArea.getBase();
         BiosData->BiosImage = new BiosRegion(BiosBuffer, BiosRegionArea.getSize(), BiosRegionArea.getBase());
         BiosData->VolumeDataList.push_back(BiosData->BiosImage);
@@ -220,72 +195,61 @@ bool BiosCliView::detectIfwi(INT64 &BiosOffset) const
     return true;
 }
 
-void BiosCliView::setBiosFvData()
-{
+void BiosCliView::setBiosFvData() {
     using namespace std;
     INT64 offset = 0;
     INT64 bufferSize = binaryData->InputImageSize;
     BiosData->IFWI_exist = detectIfwi(offset);
 
     Volume *parentVolume = BiosData->BiosImage;
-    if (!BiosData->IFWI_exist)
-    {
+    if (!BiosData->IFWI_exist) {
         parentVolume = nullptr;
         BiosData->BiosImage = new BiosRegion(binaryData->InputImage, bufferSize);
         BiosData->OverviewImageModel->setName("BIOS Image Overview");
     }
     BiosData->BiosImage->SelfDecode();
 
-    while (offset < bufferSize)
-    {
-        if (bufferSize - offset < 0x40)
-        {
+    while (offset < bufferSize) {
+        if (bufferSize - offset < 0x40) {
             AddVolumeList(offset, bufferSize - offset, parentVolume, VolumeType::Empty);
             return;
         }
-        auto fvHeader = (EFI_FIRMWARE_VOLUME_HEADER *)(binaryData->InputImage + offset);
-        INT64 FvLength = (INT64)fvHeader->FvLength;
+        auto fvHeader = (EFI_FIRMWARE_VOLUME_HEADER *) (binaryData->InputImage + offset);
+        INT64 FvLength = (INT64) fvHeader->FvLength;
         bool IsFirmwareVolume = FirmwareVolume::isValidFirmwareVolume(fvHeader);
 
-        auto CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER *)(binaryData->InputImage + offset);
+        auto CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER *) (binaryData->InputImage + offset);
         INT64 CompressedVolumeLength = sizeof(LOADER_COMPRESSED_HEADER) + CompressedVolumeHeader->CompressedSize;
         bool IsCompressedVolume = CompressedVolume::IsCompressedVolume(CompressedVolumeHeader);
 
         INT64 searchInterval = 0x40;
         INT64 EmptyVolumeLength = 0;
-        while (!IsFirmwareVolume && !IsCompressedVolume)
-        {
+        while (!IsFirmwareVolume && !IsCompressedVolume) {
             EmptyVolumeLength += searchInterval;
-            if (offset + EmptyVolumeLength >= bufferSize)
-            {
+            if (offset + EmptyVolumeLength >= bufferSize) {
                 AddVolumeList(offset, bufferSize - offset, parentVolume, VolumeType::Empty);
                 return;
             }
-            fvHeader = (EFI_FIRMWARE_VOLUME_HEADER *)(binaryData->InputImage + offset + EmptyVolumeLength);
-            CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER *)(binaryData->InputImage + offset + EmptyVolumeLength);
+            fvHeader = (EFI_FIRMWARE_VOLUME_HEADER *) (binaryData->InputImage + offset + EmptyVolumeLength);
+            CompressedVolumeHeader = (LOADER_COMPRESSED_HEADER *) (binaryData->InputImage + offset + EmptyVolumeLength);
             IsFirmwareVolume = FirmwareVolume::isValidFirmwareVolume(fvHeader);
             IsCompressedVolume = CompressedVolume::IsCompressedVolume(CompressedVolumeHeader);
         }
 
-        if (offset + EmptyVolumeLength == bufferSize && offset == 0)
-        {
+        if (offset + EmptyVolumeLength == bufferSize && offset == 0) {
             return;
         }
 
-        if (EmptyVolumeLength != 0)
-        {
+        if (EmptyVolumeLength != 0) {
             AddVolumeList(offset, EmptyVolumeLength, parentVolume, VolumeType::Empty);
             offset += EmptyVolumeLength;
             continue;
         }
 
-        if (IsFirmwareVolume)
-        {
+        if (IsFirmwareVolume) {
             AddVolumeList(offset, FvLength, parentVolume, VolumeType::FirmwareVolume);
             offset += FvLength;
-        }
-        else if (IsCompressedVolume)
-        {
+        } else if (IsCompressedVolume) {
             AddVolumeList(offset, CompressedVolumeLength, parentVolume, VolumeType::Compressed);
             offset += CompressedVolumeLength;
             Align(offset, 0, 0x1000);
@@ -293,11 +257,9 @@ void BiosCliView::setBiosFvData()
     }
 }
 
-void BiosCliView::DecodeBiosFileSystem()
-{
+void BiosCliView::DecodeBiosFileSystem() {
     using namespace std;
-    if (BiosData->VolumeDataList.size() == 1 && BiosData->VolumeDataList.at(0)->getVolumeType() == VolumeType::Empty)
-    {
+    if (BiosData->VolumeDataList.size() == 1 && BiosData->VolumeDataList.at(0)->getVolumeType() == VolumeType::Empty) {
         delete BiosData->VolumeDataList.at(0);
         BiosData->VolumeDataList.clear();
         BiosData->BiosValidFlag = false;
@@ -306,17 +268,14 @@ void BiosCliView::DecodeBiosFileSystem()
 
     auto start = chrono::high_resolution_clock::now();
     vector<thread> threadPool;
-    auto FvDecoder = [this](int index)
-    {
+    auto FvDecoder = [this](int index) {
         Volume *volume = BiosData->VolumeDataList.at(index);
         volume->DecodeChildVolume();
     };
-    for (int idx = 0; idx < BiosData->VolumeDataList.size(); ++idx)
-    {
+    for (int idx = 0; idx < BiosData->VolumeDataList.size(); ++idx) {
         threadPool.emplace_back(FvDecoder, idx);
     }
-    for (thread &t : threadPool)
-    {
+    for (thread &t: threadPool) {
         t.join();
     }
     auto end = chrono::high_resolution_clock::now();
@@ -327,7 +286,7 @@ void BiosCliView::DecodeBiosFileSystem()
 
 void BiosCliView::AddVolumeList(INT64 offset, INT64 length, Volume *parent, VolumeType type) const {
     Volume *volume{nullptr};
-    UINT8* volumeData = binaryData->InputImage + offset;
+    UINT8 *volumeData = binaryData->InputImage + offset;
     if (type == VolumeType::Empty) {
         volume = new Volume(volumeData, length, offset, false, parent);
     } else if (type == VolumeType::FirmwareVolume) {
@@ -362,8 +321,7 @@ void BiosCliView::AddVolumeList(INT64 offset, INT64 length, Volume *parent, Volu
 }
 
 // 树形结构构建函数
-void BiosCliView::buildTree(Volume* volume, TreeNode* parent, int depth)
-{
+void BiosCliView::buildTree(Volume *volume, TreeNode *parent, int depth) {
     // 创建数据模型
     DataModel model;
     model.InitFromVolume(volume);
@@ -371,98 +329,86 @@ void BiosCliView::buildTree(Volume* volume, TreeNode* parent, int depth)
 
     // 创建树节点
     auto newNode = make_unique<TreeNode>(model, parent, depth);
-    TreeNode* rawNode = newNode.get();
+    TreeNode *rawNode = newNode.get();
     rawNode->isExpanded = false;
 
     // 递归构建子树
-    for (auto child : volume->ChildVolume)
-    {
+    for (auto child: volume->ChildVolume) {
         buildTree(child, rawNode, depth + 1);
     }
 
     // 挂载到父节点
-    if (parent)
-    {
+    if (parent) {
         parent->children.push_back(std::move(newNode));
     }
 }
 
 // 可见列表重建函数
-void BiosCliView::rebuildVisibleList()
-{
+void BiosCliView::rebuildVisibleList() {
     visibleNodes.clear();
 
-    function<void(TreeNode*)> depthFirstTraversal = [&](TreeNode* node)
-    {
+    function<void(TreeNode *)> depthFirstTraversal = [&](TreeNode *node) {
         visibleNodes.push_back(node);
-        if (node->isExpanded)
-        {
-            for (auto& child : node->children)
-            {
+        if (node->isExpanded) {
+            for (auto &child: node->children) {
                 depthFirstTraversal(child.get());
             }
         }
     };
 
     // 从每个根子节点开始遍历
-    for (auto& child : dataRoot->children)
-    {
+    for (auto &child: dataRoot->children) {
         depthFirstTraversal(child.get());
     }
 }
 
 // 绘制表格框架
-void BiosCliView::drawTable(int startRow)
-{
+void BiosCliView::drawTable(int startRow) {
     // clear();
     werase(left_win);
 
     // 表头
     wattron(left_win, A_BOLD);
-    mvwprintw(left_win, 0, 0, "%-*s | %-*s | %-*s",
-            colWidths[0], "Volume Name",
-            colWidths[1], "Type",
-            colWidths[2], "Subtype");
+    mvwprintw(left_win, 0, 0, "%-*s | %-*s | %-*s", colWidths[0], "Volume Name", colWidths[1], "Type", colWidths[2],
+              "Subtype");
     wattroff(left_win, A_BOLD);
     whline(left_win, '-', leftTableWidth);
 
     // 计算显示范围
-    const int maxDisplayRows = LINES - 4;  // 保留顶部2行 + 底部2行
+    const int maxDisplayRows = LINES - 4; // 保留顶部2行 + 底部2行
 
     // 绘制可见行
-    for (int i = 0; i < maxDisplayRows && (startRow + i) < visibleNodes.size(); ++i)
-    {
+    for (int i = 0; i < maxDisplayRows && (startRow + i) < visibleNodes.size(); ++i) {
         const int actualIndex = startRow + i;
-        TreeNode* node = visibleNodes[actualIndex];
-        const DataModel& item = node->data;
+        TreeNode *node = visibleNodes[actualIndex];
+        const DataModel &item = node->data;
 
         // 准备显示内容
         string displayName = item.getName();
-        if (!node->children.empty())
-        {
+        if (!node->children.empty()) {
             displayName += node->isExpanded ? " <" : " >";
         }
 
         // 处理超长文本
-        const string clippedName = (displayName.length() > (size_t)colWidths[0]) ?
-            displayName.substr(0, colWidths[0]-3) + "..." : displayName;
-        const string clippedType = (item.getType().length() > (size_t)colWidths[1]) ?
-            item.getType().substr(0, colWidths[1]-3) + ".." : item.getType();
-        const string clippedSubtype = (item.getSubType().length() > (size_t)colWidths[2]) ?
-            item.getSubType().substr(0, colWidths[2]-3) + ".." : item.getSubType();
+        const string clippedName = (displayName.length() > (size_t) colWidths[0])
+                                           ? displayName.substr(0, colWidths[0] - 3) + "..."
+                                           : displayName;
+        const string clippedType = (item.getType().length() > (size_t) colWidths[1])
+                                           ? item.getType().substr(0, colWidths[1] - 3) + ".."
+                                           : item.getType();
+        const string clippedSubtype = (item.getSubType().length() > (size_t) colWidths[2])
+                                              ? item.getSubType().substr(0, colWidths[2] - 3) + ".."
+                                              : item.getSubType();
 
         // 高亮当前行
         if (i == selectedRow) {
             wattron(left_win, A_REVERSE);
         }
 
-        mvwprintw(left_win, i + 2, 0, "%-*s | %-*s | %-*s",
-                colWidths[0], clippedName.c_str(),
-                colWidths[1], clippedType.c_str(),
-                colWidths[2], clippedSubtype.c_str());
+        mvwprintw(left_win, i + 2, 0, "%-*s | %-*s | %-*s", colWidths[0], clippedName.c_str(), colWidths[1],
+                  clippedType.c_str(), colWidths[2], clippedSubtype.c_str());
 
-        if (i == selectedRow)
-        {
+        if (i == selectedRow) {
             wattroff(left_win, A_REVERSE);
         }
     }
@@ -470,8 +416,8 @@ void BiosCliView::drawTable(int startRow)
     // 底部UI
     mvwhline(left_win, LINES - 2, 0, '-', leftTableWidth);
     wattron(left_win, A_DIM);
-    mvwprintw(left_win, LINES-1, 2, "Items: %zu | Pos: %d-%d",
-            visibleNodes.size(), scrollOffset, scrollOffset + (LINES-5));
+    mvwprintw(left_win, LINES - 1, 2, "Items: %zu | Pos: %d-%d", visibleNodes.size(), scrollOffset,
+              scrollOffset + (LINES - 5));
     wattroff(left_win, A_DIM);
 
     wrefresh(left_win);
@@ -499,8 +445,8 @@ void BiosCliView::drawPanel() {
         return;
     }
     const int actualIndex = scrollOffset + selectedRow;
-    TreeNode* node = visibleNodes[actualIndex];
-    Volume* vol = node->data.getVolume();
+    TreeNode *node = visibleNodes[actualIndex];
+    Volume *vol = node->data.getVolume();
     vol->setInfoStr();
 
     string info = vol->getInfoText();
@@ -523,7 +469,8 @@ void BiosCliView::drawPanel() {
     while (startPos < info.length() && y < LINES - 4) {
         // 查找换行符或最大宽度
         endPos = info.find('\n', startPos);
-        if (endPos == string::npos) endPos = info.length();
+        if (endPos == string::npos)
+            endPos = info.length();
 
         // 处理单行分段
         while (startPos < endPos) {
@@ -538,7 +485,8 @@ void BiosCliView::drawPanel() {
             currentLine++;
 
             startPos = chunkEnd;
-            if (y >= LINES - 4) break;
+            if (y >= LINES - 4)
+                break;
         }
 
         startPos = endPos + 1; // 跳过换行符
@@ -548,21 +496,7 @@ void BiosCliView::drawPanel() {
     wrefresh(right_win);
 }
 
-void BiosCliView::setTreeData()
-{
-    initscr();
-#ifdef _WIN32
-    // Windows保持原样
-#else
-    setlocale(LC_ALL, ""); // Linux下支持Unicode
-    start_color();         // 必须调用才能使用颜色属性
-    use_default_colors();  // 使用终端默认颜色
-#endif
-    cbreak();
-    noecho();
-    keypad(stdscr, TRUE);
-    refresh();
-
+void BiosCliView::setTreeData() {
     left_win = newwin(LINES, leftTableWidth, 0, 0);
     right_win = newwin(LINES, rightPanelWidth, 0, leftTableWidth);
 
@@ -573,43 +507,33 @@ void BiosCliView::setTreeData()
         drawPanel();
         ch = getch();
 
-        switch(ch)
-        {
+        switch (ch) {
             case KEY_UP:
-                if (selectedRow > 0)
-                {
+                if (selectedRow > 0) {
                     --selectedRow;
-                }
-                else if (scrollOffset > 0)
-                {
+                } else if (scrollOffset > 0) {
                     --scrollOffset;
                 }
-            break;
+                break;
 
             case KEY_DOWN:
-                if (selectedRow < (LINES - 5) &&
-                    (scrollOffset + selectedRow + 1) < visibleNodes.size())
-                {
+                if (selectedRow < (LINES - 5) && (scrollOffset + selectedRow + 1) < visibleNodes.size()) {
                     ++selectedRow;
-                }
-                else
-                {
+                } else {
                     ++scrollOffset;
                 }
-            break;
+                break;
 
-            case '\n':  // Enter键切换展开状态
+            case '\n': // Enter键切换展开状态
             {
                 const int actualIndex = scrollOffset + selectedRow;
-                if (actualIndex >= 0 && actualIndex < visibleNodes.size())
-                {
-                    TreeNode* node = visibleNodes[actualIndex];
-                    if (!node->children.empty())
-                    {
+                if (actualIndex >= 0 && actualIndex < visibleNodes.size()) {
+                    TreeNode *node = visibleNodes[actualIndex];
+                    if (!node->children.empty()) {
                         node->isExpanded = !node->isExpanded;
                         rebuildVisibleList();
                         // 保持滚动位置
-                        selectedRow = std::min(selectedRow, (int)visibleNodes.size() - 1);
+                        selectedRow = std::min(selectedRow, (int) visibleNodes.size() - 1);
                     }
                 }
                 break;
@@ -617,20 +541,17 @@ void BiosCliView::setTreeData()
             case 'Q':
             case 'q':
                 ch = 'q';
-            break;
+                break;
         }
 
         // 边界检查
-        scrollOffset = std::clamp(scrollOffset, 0,
-            std::max(0, (int)visibleNodes.size() - (LINES - 4)));
-        selectedRow = std::clamp(selectedRow, 0,
-            std::min(LINES - 5, (int)visibleNodes.size() - 1));
+        scrollOffset = std::clamp(scrollOffset, 0, std::max(0, (int) visibleNodes.size() - (LINES - 4)));
+        selectedRow = std::clamp(selectedRow, 0, std::min(LINES - 5, (int) visibleNodes.size() - 1));
 
-    } while(ch != 'q');
+    } while (ch != 'q');
 
     delwin(right_win);
     delwin(left_win);
-    endwin();
 }
 
 void BiosCliView::ReorganizeVolume(Volume *volume) {
@@ -638,7 +559,7 @@ void BiosCliView::ReorganizeVolume(Volume *volume) {
         safeDelete(volume);
         volume = newVolume;
     }
-    for (auto childVolume:volume->ChildVolume) {
+    for (auto childVolume: volume->ChildVolume) {
         ReorganizeVolume(childVolume);
     }
 }
@@ -653,5 +574,4 @@ BiosCliData::~BiosCliData() {
         safeDelete(BiosImage);
     }
     delete OverviewImageModel;
-
 }

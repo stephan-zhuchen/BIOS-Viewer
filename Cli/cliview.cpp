@@ -10,8 +10,7 @@ CliView::~CliView() {
     delete binary;
 }
 
-int CliView::openFile(const std::string &path, ViewType type)
-{
+int CliView::openFile(const std::string &path, ViewType type) {
     std::ifstream file(path, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Error: Failed to open file: " << path << std::endl;
@@ -33,7 +32,7 @@ int CliView::openFile(const std::string &path, ViewType type)
 
     // 读取文件内容到 InputImage
     binary->InputImage = new UINT8[binary->InputImageSize]; // 分配内存
-    file.read(reinterpret_cast<char*>(binary->InputImage), binary->InputImageSize);
+    file.read(reinterpret_cast<char *>(binary->InputImage), binary->InputImageSize);
 
 
     if (!file) {
