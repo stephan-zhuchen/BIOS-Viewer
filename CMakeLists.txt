@@ -10,7 +10,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     option(BUILD_GUI "Build GUI version (requires Qt)" OFF)
     option(BUILD_CLI "Build CLI version" ON)
 else()
-    option(BUILD_GUI "Build GUI version (requires Qt)" ON)
+    option(BUILD_GUI "Build GUI version (requires Qt)" OFF)
     option(BUILD_CLI "Build CLI version" ON)
 endif()
 

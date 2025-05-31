@@ -11,6 +11,14 @@
 #include <cctype>
 #include <filesystem>
 
+#ifdef _WIN32
+#define VLINE '|'
+#define HLINE '-'
+#else
+#define VLINE ACS_VLINE
+#define HLINE ACS_HLINE
+#endif
+
 // 辅助函数：将字符转换为十六进制值
 int hexCharToVal(char c)
 {
@@ -150,7 +158,7 @@ void HexCliView::drawHexContent()
     // 顶部分隔线 (从地址列后开始，到ASCII列尾)
     int hline_start_x = sep1_print_x + 1; // 从第一个分隔符后开始
     int hline_len = (ascii_data_print_x + BYTES_PER_LINE - 1) - hline_start_x;
-    mvwhline(hexWin, 1, hline_start_x, ACS_HLINE, hline_len);
+    mvwhline(hexWin, 1, hline_start_x, HLINE, hline_len);
 
     // 计算总数据行数并确保光标可见 (这会调整scrollOffset)
     const int totalDataLines = (currentBinaryData->InputImageSize > 0) ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE)) : 0;
@@ -196,8 +204,7 @@ void HexCliView::drawHexContent()
                                            byte_col_idx == editCursorByteInLine);
 
                 // 绘制十六进制字节 (每个字节XX占2个字符，后跟1个空格)
-                for (int nibble_idx = 0; nibble_idx < 2; ++nibble_idx)
-                { // 0: 高位, 1: 低位
+                for (int nibble_idx = 0; nibble_idx < 2; ++nibble_idx) { // 0: 高位, 1: 低位
                     bool isCursorOnThisNibble = isCursorOnThisByte && (nibble_idx == editCursorNibble);
                     if (isCursorOnThisNibble)
                         wattron(hexWin, A_REVERSE); // 反色显示光标
@@ -234,14 +241,13 @@ void HexCliView::drawHexContent()
     }
 
     // 绘制垂直分隔线 (只在有数据行时绘制)
-    if (totalDataLines > 0)
-    {
+    if (totalDataLines > 0) {
         constexpr int DATA_START_ROW_IN_WINDOW = 2;
         int actual_drawn_data_lines = std::min(VISIBLE_LINES, totalDataLines - scrollOffset);
         if (actual_drawn_data_lines > 0)
         { // 确保至少有一行数据被绘制
-            mvwvline(hexWin, DATA_START_ROW_IN_WINDOW, sep1_print_x, ACS_VLINE, actual_drawn_data_lines);
-            mvwvline(hexWin, DATA_START_ROW_IN_WINDOW, ascii_sep_print_x, ACS_VLINE, actual_drawn_data_lines);
+            mvwvline(hexWin, DATA_START_ROW_IN_WINDOW, sep1_print_x, VLINE, actual_drawn_data_lines);
+            mvwvline(hexWin, DATA_START_ROW_IN_WINDOW, ascii_sep_print_x, VLINE, actual_drawn_data_lines);
         }
     }
     // wrefresh(hexWin); // show() 中的主循环会刷新
