@@ -5,6 +5,12 @@
 #include "BiosView/BiosCli.h"
 #include "HexView/HexCli.h"
 
+enum class ViewType {
+    BiosView,
+    ElfView,
+    HexView
+};
+
 class CliView
 {
 public:
@@ -14,7 +20,7 @@ public:
 
     CliView() = default;
     ~CliView();
-    int openFile(const string &path);
+    int openFile(const string &path, ViewType type);
 };
 
 #endif // CLIVIEW_H

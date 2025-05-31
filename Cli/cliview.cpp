@@ -10,14 +10,12 @@ CliView::~CliView() {
     delete binary;
 }
 
-int CliView::openFile(const std::string &path) {
-    // 打开文件
-    std::cout << "Try open file: " << path << std::endl;
-
+int CliView::openFile(const std::string &path, ViewType type)
+{
     std::ifstream file(path, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Error: Failed to open file: " << path << std::endl;
-        return -1; // 返回错误码
+        return -1;
     }
 
     binary = new BinaryData();
@@ -30,7 +28,7 @@ int CliView::openFile(const std::string &path) {
 
     if (binary->InputImageSize <= 0) {
         std::cerr << "Error: File is empty or invalid: " << path << std::endl;
-        return -1; // 返回错误码
+        return -1;
     }
 
     // 读取文件内容到 InputImage
@@ -40,25 +38,27 @@ int CliView::openFile(const std::string &path) {
 
     if (!file) {
         std::cerr << "Error: Failed to read file: " << path << std::endl;
-        return -1; // 返回错误码
+        return -1;
     }
 
     // 保存文件名
     binary->OpenedFileName = path;
-    std::cout << "Successfully opened file: " << path << std::endl;
 
-    if (BiosCliData::isValidBIOS(binary->InputImage, binary->InputImageSize)) {
-        std::cout << "open Bios view" << std::endl;
-        ui = new BiosCliView(binary);
-        ui->loadBios();
-    } else {
-        std::cout << "open Hex view" << std::endl;
+    if (type == ViewType::BiosView) {
+        if (BiosCliData::isValidBIOS(binary->InputImage, binary->InputImageSize)) {
+            ui = new BiosCliView(binary);
+            ui->loadBios();
+        } else {
+            std::cerr << "Error: Invalid BIOS file: " << path << std::endl;
+            return -1;
+        }
+    } else if (type == ViewType::HexView) {
         hexUi = new HexCliView(binary->InputImage, binary->InputImageSize);
         hexUi->show();
+    } else {
+        std::cerr << "Error: Unsupported view type." << std::endl;
+        return -1;
     }
-
-
-    std::cout << "Successfully loaded Bios" << std::endl;
 
     return 0; // 返回成功
 }
