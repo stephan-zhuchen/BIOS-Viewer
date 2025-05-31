@@ -103,9 +103,9 @@ if(BUILD_CLI)
     # 在Linux下使用系统OpenSSL
     find_package(OpenSSL REQUIRED)
 
-    add_executable(BiosViewerCli ${CLI_SOURCES})
-    target_compile_definitions(BiosViewerCli PRIVATE CLI_BIOS_VIEWER)
-    target_link_libraries(BiosViewerCli 
+    add_executable(binary-tool ${CLI_SOURCES})
+    target_compile_definitions(binary-tool PRIVATE CLI_BIOS_VIEWER)
+    target_link_libraries(binary-tool 
         Decompress 
         OpenSSL::Crypto 
         ${CURSES_LIBRARIES}
@@ -116,12 +116,12 @@ if(BUILD_CLI)
     link_directories(${PDCURSES_LINK_DIR})
     set(LINK_DIR  lib/Openssl/lib/windows)
     link_directories(${LINK_DIR})
-    add_executable(BiosViewerCli ${CLI_SOURCES})
-    target_compile_definitions(BiosViewerCli PRIVATE CLI_BIOS_VIEWER)
-    target_link_libraries(BiosViewerCli libcrypto Decompress pdcurses)
+    add_executable(binary-tool ${CLI_SOURCES})
+    target_compile_definitions(binary-tool PRIVATE CLI_BIOS_VIEWER)
+    target_link_libraries(binary-tool libcrypto Decompress pdcurses)
   endif()
 
-  install(TARGETS BiosViewerCli
+  install(TARGETS binary-tool
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
       COMPONENT cli
   )
