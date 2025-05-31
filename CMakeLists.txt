@@ -111,16 +111,14 @@ if(BUILD_CLI)
         ${CURSES_LIBRARIES}
     )
   else()
-    # 其他平台保留原始配置
     include_directories(lib/PDCurses/include)
-    link_directories(lib/PDCurses)
+    set(PDCURSES_LINK_DIR  lib/PDCurses)
+    link_directories(${PDCURSES_LINK_DIR})
+    set(LINK_DIR  lib/Openssl/lib/windows)
+    link_directories(${LINK_DIR})
     add_executable(BiosViewerCli ${CLI_SOURCES})
     target_compile_definitions(BiosViewerCli PRIVATE CLI_BIOS_VIEWER)
-    target_link_libraries(BiosViewerCli 
-        libcrypto 
-        Decompress 
-        pdcurses
-    )
+    target_link_libraries(BiosViewerCli libcrypto Decompress pdcurses)
   endif()
 
   install(TARGETS BiosViewerCli
