@@ -6,8 +6,13 @@ project(BiosViewerSuite
     DESCRIPTION "BIOS Viewer Suite with GUI and CLI versions"
 )
 
-option(BUILD_GUI "Build GUI version (requires Qt)" ON)
-option(BUILD_CLI "Build CLI version" ON)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    option(BUILD_GUI "Build GUI version (requires Qt)" OFF)
+    option(BUILD_CLI "Build CLI version" ON)
+else()
+    option(BUILD_GUI "Build GUI version (requires Qt)" ON)
+    option(BUILD_CLI "Build CLI version" ON)
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -90,14 +95,33 @@ if(BUILD_CLI)
         Cli/HexView/HexCli.h
         ${COMMON_SOURCES}
   )
-  include_directories(lib/PDCurses/include)
-  set(PDCURSES_LINK_DIR  lib/PDCurses)
-  link_directories(${PDCURSES_LINK_DIR})
-  set(LINK_DIR  lib/Openssl/lib/windows)
-  link_directories(${LINK_DIR})
-  add_executable(BiosViewerCli ${CLI_SOURCES})
-  target_compile_definitions(BiosViewerCli PRIVATE CLI_BIOS_VIEWER)
-  target_link_libraries(BiosViewerCli libcrypto Decompress pdcurses)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # 使用系统ncurses库替代PDCurses
+    find_package(Curses REQUIRED)
+    include_directories(${CURSES_INCLUDE_DIR})
+    
+    # 在Linux下使用系统OpenSSL
+    find_package(OpenSSL REQUIRED)
+
+    add_executable(BiosViewerCli ${CLI_SOURCES})
+    target_compile_definitions(BiosViewerCli PRIVATE CLI_BIOS_VIEWER)
+    target_link_libraries(BiosViewerCli 
+        Decompress 
+        OpenSSL::Crypto 
+        ${CURSES_LIBRARIES}
+    )
+  else()
+    # 其他平台保留原始配置
+    include_directories(lib/PDCurses/include)
+    link_directories(lib/PDCurses)
+    add_executable(BiosViewerCli ${CLI_SOURCES})
+    target_compile_definitions(BiosViewerCli PRIVATE CLI_BIOS_VIEWER)
+    target_link_libraries(BiosViewerCli 
+        libcrypto 
+        Decompress 
+        pdcurses
+    )
+  endif()
 
   install(TARGETS BiosViewerCli
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

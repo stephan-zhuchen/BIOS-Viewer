@@ -4,6 +4,7 @@
 #include "AcmClass.h"
 #include "UEFI/GuidDatabase.h"
 #include <sstream>
+#include <cstring>
 #include <iomanip>
 
 using namespace std;

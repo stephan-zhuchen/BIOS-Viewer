@@ -1,6 +1,7 @@
 #include "BaseLib.h"
 #include "FspBootManifest.h"
 #include <sstream>
+#include <cstring>
 #include <iomanip>
 
 using namespace BaseLibrarySpace;

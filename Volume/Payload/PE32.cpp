@@ -2,6 +2,7 @@
 #include "BaseLib.h"
 #include <sstream>
 #include <iomanip>
+#include <cstring>
 
 using namespace BaseLibrarySpace;
 

@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <cmath>
 #include <filesystem>
 #include <functional>
 
@@ -96,6 +97,13 @@ void HexCliView::drawHex() {
 
 void HexCliView::show() {
     initscr();
+#ifdef _WIN32
+    // Windows保持原样
+#else
+    setlocale(LC_ALL, ""); // Linux下支持Unicode
+    start_color();         // 必须调用才能使用颜色属性
+    use_default_colors();  // 使用终端默认颜色
+#endif
     cbreak();
     noecho();
     curs_set(0);

@@ -7,6 +7,7 @@
 #include <utility>
 #include <iostream>
 #include <sstream>
+#include <cstring>
 #include <iomanip>
 
 using namespace BaseLibrarySpace;

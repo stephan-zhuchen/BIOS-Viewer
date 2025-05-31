@@ -551,6 +551,13 @@ void BiosCliView::drawPanel() {
 void BiosCliView::setTreeData()
 {
     initscr();
+#ifdef _WIN32
+    // Windows保持原样
+#else
+    setlocale(LC_ALL, ""); // Linux下支持Unicode
+    start_color();         // 必须调用才能使用颜色属性
+    use_default_colors();  // 使用终端默认颜色
+#endif
     cbreak();
     noecho();
     keypad(stdscr, TRUE);

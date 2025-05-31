@@ -1,7 +1,11 @@
 #include <memory>
 #include "Volume.h"
 #include "DataModel.h"
-#include "curses.h"
+#ifdef _WIN32
+#include "curses.h" // Windows使用PDCurses
+#else
+#include <ncurses.h> // Linux使用ncurses
+#endif
 #include "IfwiRegion/BiosRegion.h"
 
 using std::unique_ptr;

@@ -6,7 +6,11 @@
 #define HEXCLI_H
 
 #include "BaseLib.h"
-#include <curses.h>
+#ifdef _WIN32
+#include "curses.h" // Windows使用PDCurses
+#else
+#include <ncurses.h> // Linux使用ncurses
+#endif
 
 class HexCliView {
 private:
