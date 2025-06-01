@@ -20,9 +20,9 @@ private:
     string        BiosGuardScript;
     BGUPC_HEADER  BgupCHeader;
     string        Algorithm;
-    INT32         ModulusSize;
+    UINT64        ModulusSize;
     UINT8         *ModulusData{nullptr};
-    INT32         RSAKeySize;
+    UINT64        RSAKeySize;
     UINT8         *UpdatePackageDigest{nullptr};
 public:
     BiosGuardClass()=delete;

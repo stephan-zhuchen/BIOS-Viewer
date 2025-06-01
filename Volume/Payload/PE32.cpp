@@ -103,9 +103,9 @@ void PE32::convert2Pe() {
         convertedPe32Header.OptionalHeader.AddressOfEntryPoint = teHeader.AddressOfEntryPoint;
         convertedPe32Header.OptionalHeader.BaseOfCode = teHeader.BaseOfCode;
         convertedPe32Header.OptionalHeader.ImageBase = (UINT32)teHeader.ImageBase;
-        convertedPe32Header.OptionalHeader.SizeOfImage = size;
+        convertedPe32Header.OptionalHeader.SizeOfImage = (UINT32)size;
 
-        INT64 SectionsSize = convertedPe32Header.FileHeader.NumberOfSections * sizeof(EFI_IMAGE_SECTION_HEADER);
+        UINT32 SectionsSize = convertedPe32Header.FileHeader.NumberOfSections * sizeof(EFI_IMAGE_SECTION_HEADER);
         convertedDosHeader.e_lfanew = teHeader.BaseOfCode - SectionsSize - sizeof(EFI_IMAGE_NT_HEADERS32);
 
         convertedPe32Header.OptionalHeader.SizeOfHeaders = teHeader.BaseOfCode;
@@ -136,9 +136,9 @@ void PE32::convert2Pe() {
         convertedPe64Header.OptionalHeader.AddressOfEntryPoint = teHeader.AddressOfEntryPoint;
         convertedPe64Header.OptionalHeader.BaseOfCode = teHeader.BaseOfCode;
         convertedPe64Header.OptionalHeader.ImageBase = teHeader.ImageBase;
-        convertedPe64Header.OptionalHeader.SizeOfImage = size;
+        convertedPe64Header.OptionalHeader.SizeOfImage = (UINT32)size;
 
-        INT64 SectionsSize = convertedPe64Header.FileHeader.NumberOfSections * sizeof(EFI_IMAGE_SECTION_HEADER);
+        UINT32 SectionsSize = convertedPe64Header.FileHeader.NumberOfSections * sizeof(EFI_IMAGE_SECTION_HEADER);
         convertedDosHeader.e_lfanew = teHeader.BaseOfCode - SectionsSize - sizeof(EFI_IMAGE_NT_HEADERS64);
 
         convertedPe64Header.OptionalHeader.SizeOfHeaders = teHeader.BaseOfCode;

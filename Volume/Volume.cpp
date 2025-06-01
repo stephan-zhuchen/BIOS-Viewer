@@ -176,7 +176,7 @@ std::vector<string> Volume::getUserDefinedName() const {
 void Volume::SearchDecompressedVolume(Volume *volume, std::vector<Decompressed *> &DecompressedVolumeList) {
     for (Volume* childVolume:volume->ChildVolume) {
         if (volume->Type == VolumeType::CommonSection && volume->DecompressedBufferOnHeap != nullptr) {
-            UINT32 DecompressedSectionSize = volume->getHeaderSize() + volume->decompressedSize;
+            UINT32 DecompressedSectionSize = static_cast<UINT32>(volume->getHeaderSize()) + volume->decompressedSize;
 
             vector<UINT8> DecompressedVolume;
             DecompressedVolume.reserve(DecompressedSectionSize);
@@ -186,15 +186,14 @@ void Volume::SearchDecompressedVolume(Volume *volume, std::vector<Decompressed *
 
             Decompressed *decompressed = new Decompressed;
             decompressed->decompressedBuffer = DecompressedVolume;
-            decompressed->decompressedOffset = volume->offsetFromBegin;
-            decompressed->CompressedSize = volume->size;
+            decompressed->decompressedOffset = static_cast<UINT32>(volume->offsetFromBegin);
+            decompressed->CompressedSize = static_cast<UINT32>(volume->size);
             DecompressedVolumeList.push_back(decompressed);
             return;
         } else {
             SearchDecompressedVolume(childVolume, DecompressedVolumeList);
         }
     }
-    return;
 }
 
 bool Volume::GetDecompressedVolume(vector<UINT8> &DecompressedVolume) {
@@ -208,7 +207,7 @@ bool Volume::GetDecompressedVolume(vector<UINT8> &DecompressedVolume) {
     DecompressedVolume = vector<UINT8>(this->data, this->data + size);
     UINT32 OffsetCorrection = 0;
     for (Decompressed *decompressed:DecompressedVolumeList) {
-        UINT32 ReplaceOffset = decompressed->decompressedOffset - this->offsetFromBegin + OffsetCorrection;
+        UINT32 ReplaceOffset = decompressed->decompressedOffset - (UINT32)this->offsetFromBegin + OffsetCorrection;
         DecompressedVolume.erase(DecompressedVolume.begin() + ReplaceOffset, DecompressedVolume.begin() + ReplaceOffset + decompressed->CompressedSize);
         OffsetCorrection += (UINT32)decompressed->decompressedBuffer.size() - decompressed->CompressedSize;
         DecompressedVolume.insert(DecompressedVolume.begin() + ReplaceOffset, decompressed->decompressedBuffer.begin(), decompressed->decompressedBuffer.end());

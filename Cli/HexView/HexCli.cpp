@@ -269,7 +269,7 @@ void HexCliView::drawStatusBar() {
 
     if (currentMode == Mode::COMMAND_LINE) {                      // 命令行模式下
         mvwprintw(statusWin, 0, 0, ":%s", commandString.c_str()); // 显示冒号和用户输入的命令
-        wmove(statusWin, 0, 1 + commandString.length());          // 将光标移动到命令末尾
+        wmove(statusWin, 0, 1 + (int)commandString.length());          // 将光标移动到命令末尾
         curs_set(1);                                              // 显示终端光标
     } else {                                                      // 普通或编辑模式下
         curs_set(0);                                              // 隐藏终端光标 (我们自己绘制编辑光标)
@@ -307,7 +307,7 @@ void HexCliView::drawStatusBar() {
 
         // 如果有临时命令字符串（如保存成功消息），且不是在命令行模式，则在中间显示
         if (!commandString.empty() && currentMode != Mode::COMMAND_LINE) {
-            int mid_pos = (totalWidth - commandString.length()) / 2;    // 计算中间位置
+            int mid_pos = (totalWidth - (int)commandString.length()) / 2;    // 计算中间位置
             mid_pos = std::max((int) statusLeft.length() + 2, mid_pos); // 确保不与左侧状态重叠
             // 确保不与右侧状态重叠
             if (mid_pos + (int) commandString.length() < totalWidth - 1 - (int) rs_str.length() - 2) {

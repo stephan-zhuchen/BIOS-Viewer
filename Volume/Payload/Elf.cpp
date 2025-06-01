@@ -176,8 +176,8 @@ INT64 ELF::SelfDecode() {
 
 void ELF::DecodeChildVolume() {
     for (UINT32 idx = 0; idx < SectionNum; ++idx) {
-        UINT32 SecOff = SectionList.at(idx)->Elf32Shdr->sh_offset;
-        UINT32 SecSize = SectionList.at(idx)->Elf32Shdr->sh_size;
+        UINT64 SecOff = SectionList.at(idx)->Elf32Shdr->sh_offset;
+        UINT64 SecSize = SectionList.at(idx)->Elf32Shdr->sh_size;
         std::string SecName = getStringFromOffset(SectionList.at(idx)->Elf32Shdr->sh_name);
         if (!isElf32) {
             SecOff = SectionList.at(idx)->Elf64Shdr->sh_offset;

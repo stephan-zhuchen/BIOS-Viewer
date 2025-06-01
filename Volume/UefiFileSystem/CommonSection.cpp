@@ -156,7 +156,7 @@ void CommonSection::DecodeChildVolume() {
             HeaderSize += 5;
             if (CompressionType == EFI_STANDARD_COMPRESSION) {
                 ScratchSize = 0;
-                status = UefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
+                status = UefiDecompressGetInfo(data + HeaderSize, (UINT32)size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
                     std::cout << "UEFI Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     return;
@@ -191,7 +191,7 @@ void CommonSection::DecodeChildVolume() {
             if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gEfiCertTypeRsa2048Sha256Guid) {
                 RSA2048SHA256 = *(EFI_CERT_BLOCK_RSA_2048_SHA256*)(data + HeaderSize);
                 HeaderSize += sizeof(EFI_CERT_BLOCK_RSA_2048_SHA256);
-                GuidDefinedSection.DataOffset = HeaderSize;
+                GuidDefinedSection.DataOffset = (UINT16)HeaderSize;
                 offset = HeaderSize;
                 while (offset < size) {
                     auto ChildSection = new CommonSection(data + offset, HeaderSize, offsetFromBegin + offset, Compressed, this);
@@ -211,7 +211,7 @@ void CommonSection::DecodeChildVolume() {
             // Lzma Decompress
             else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gLzmaCustomDecompressGuid) {
                 ScratchSize = 0;
-                status = LzmaUefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
+                status = LzmaUefiDecompressGetInfo(data + HeaderSize, (UINT32)size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
                     std::cout << "Lzma Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     return;
@@ -232,7 +232,7 @@ void CommonSection::DecodeChildVolume() {
             // Brotli Decompress
             else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gBrotliCustomDecompressGuid) {
                 ScratchSize = 0;
-                status = BrotliUefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
+                status = BrotliUefiDecompressGetInfo(data + HeaderSize, (UINT32)size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
                     std::cout << "Brotli Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     return;
@@ -253,7 +253,7 @@ void CommonSection::DecodeChildVolume() {
             // Tiano Decompress
             else if (GuidDefinedSection.SectionDefinitionGuid == GuidDatabase::gTianoCustomDecompressGuid) {
                 ScratchSize = 0;
-                status = UefiDecompressGetInfo(data + HeaderSize, size - HeaderSize, &decompressedSize, &ScratchSize);
+                status = UefiDecompressGetInfo(data + HeaderSize, (UINT32)size - HeaderSize, &decompressedSize, &ScratchSize);
                 if (status != RETURN_SUCCESS) {
                     std::cout << "Tiano Decompress failure, offset = 0x" << std::hex << offsetFromBegin;
                     return;

@@ -33,7 +33,7 @@ private:
     void setFfsModel(Volume *file);
     void setFirmwareVolumeModel(Volume *vol);
     void setCompressedVolumeModel(Volume *vol);
-    void setNvVariableHeaderModel(Volume *var);
+    void setNvVariableHeaderModel();
     void setNvVariableEntryModel(Volume *entry);
 public:
     DataModel()=default;

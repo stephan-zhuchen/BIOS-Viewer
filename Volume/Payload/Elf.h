@@ -18,11 +18,11 @@ public:
         Elf64_Shdr *Elf64Shdr;
     } Shdr;
     vector<SectionHeader*> SectionList;
-    UINT32 SectionListOffset;
-    UINT32 SectionNum;
-    UINT32 SectionHdrSize;
-    UINT32 StrTableOffset;
-    UINT32 StrTableSize;
+    UINT64 SectionListOffset;
+    UINT64 SectionNum;
+    UINT64 SectionHdrSize;
+    UINT64 StrTableOffset;
+    UINT64 StrTableSize;
 public:
     ELF() = delete;
     ELF(UINT8* file, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);

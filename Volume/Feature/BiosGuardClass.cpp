@@ -358,7 +358,7 @@ INT64 BiosGuardClass::SelfDecode() {
             break;
     }
 
-    if (BgupCSize != sizeof(BGUPC_HEADER) + ModulusSize + sizeof(UINT32) + RSAKeySize) {
+    if ((UINT64)BgupCSize != sizeof(BGUPC_HEADER) + ModulusSize + sizeof(UINT32) + RSAKeySize) {
         std::cout << "Invalid BGUPC" << std::endl;
     }
 

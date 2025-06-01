@@ -18,6 +18,39 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(MSVC)
+  set(STRICT_COMPILE_FLAGS "")
+  list(APPEND STRICT_COMPILE_FLAGS "/W4")
+  list(APPEND STRICT_COMPILE_FLAGS "/WX")
+  list(APPEND STRICT_COMPILE_FLAGS "/utf-8")
+else()
+  set(STRICT_COMPILE_FLAGS "-Wall" "-Wextra" "-Wpedantic") # -Wpedantic 遵循ISO C++标准，禁止GNU扩展
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=conversion")         # 危险的隐式转换
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=sign-conversion")    # 有符号/无符号转换可能改变值
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=unused-variable")    # 未使用的局部变量
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=unused-parameter")   # 未使用的函数参数 (如果需要，可设为-Wunused-parameter)
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=unused-function")    # 未使用的静态函数
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=missing-field-initializers") # C风格struct初始化时未指定所有字段
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=shadow")             # 变量隐藏 (shadowing)
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=logical-op")         # 可疑的逻辑运算组合
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=aggressive-loop-optimizations") # 某些循环优化可能产生的警告
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=null-dereference")   # (Clang) 空指针解引用
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=double-promotion")   # float隐式提升到double
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=format=2")           # printf/scanf格式字符串安全检查
+  list(APPEND STRICT_COMPILE_FLAGS "-Werror=format-security")    # 更严格的格式字符串安全
+  # 针对C++的额外警告
+  list(APPEND STRICT_COMPILE_FLAGS "-Wnon-virtual-dtor")  # 基类析构函数不是虚函数且有派生类
+  list(APPEND STRICT_COMPILE_FLAGS "-Wold-style-cast")    # 使用C风格转换而非C++ static_cast/dynamic_cast等
+  list(APPEND STRICT_COMPILE_FLAGS "-Woverloaded-virtual")# 派生类中的虚函数签名不完全匹配基类
+  list(APPEND STRICT_COMPILE_FLAGS "-Wdeprecated")        # 使用了废弃的特性
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    list(APPEND STRICT_COMPILE_FLAGS "-Wimplicit-fallthrough") # switch case缺少break (Clang)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    list(APPEND STRICT_COMPILE_FLAGS "-Wimplicit-fallthrough=5") # switch case缺少break (GCC,级别5最严格)
+  endif()
+endif()
+
 file(GLOB_RECURSE INCLUDE_FILES "include/*")
 include_directories(
         include
@@ -28,14 +61,14 @@ include_directories(
 )
 
 set(DECOMPRESS_LIB
-        lib/BaseUefiDecompress/BaseUefiDecompressLib.h
+#        lib/BaseUefiDecompress/BaseUefiDecompressLib.h
         lib/BaseUefiDecompress/BaseUefiDecompressLib.cpp
         lib/BrotliDecompress/BrotliDecompress.cpp
-        lib/BrotliDecompress/BrotliDecompressLib.h
+#        lib/BrotliDecompress/BrotliDecompressLib.h
         lib/LzmaDecompress/LzmaDecompress.cpp
-        lib/LzmaDecompress/LzmaDecompressLib.h
-        lib/Lz4Decompress/Lz4Decompress.h
-        lib/Lz4Decompress/Lz4.h
+#        lib/LzmaDecompress/LzmaDecompressLib.h
+#        lib/Lz4Decompress/Lz4Decompress.h
+#        lib/Lz4Decompress/Lz4.h
         lib/Lz4Decompress/Lz4DecompressLib.cpp
         lib/Lz4Decompress/Lz4.cpp
 )
@@ -69,18 +102,18 @@ file(GLOB_RECURSE COMPATIBILITY_SOURCES "lib/Compatibility/*")
 set(COMMON_SOURCES
         ${LIBRARY_SOURCES}
         ${VOLUME_SOURCES}
-        ${VOLUME_H_SOURCES}
-        ${LIBRARY_H_SOURCES}
+#        ${VOLUME_H_SOURCES}
+#        ${LIBRARY_H_SOURCES}
         ${COMPATIBILITY_SOURCES}
-        ${FILE_SYSTEM_H_SOURCES}
+#        ${FILE_SYSTEM_H_SOURCES}
         ${FILE_SYSTEM_SOURCES}
         ${PAYLOAD_SOURCES}
-        ${PAYLOAD_H_SOURCES}
-        ${IFWI_REGION_H_SOURCES}
+#        ${PAYLOAD_H_SOURCES}
+#        ${IFWI_REGION_H_SOURCES}
         ${IFWI_REGION_SOURCES}
-        ${CAPSULE_H_SOURCES}
+#        ${CAPSULE_H_SOURCES}
         ${CAPSULE_SOURCES}
-        ${FEATURE_H_SOURCES}
+#        ${FEATURE_H_SOURCES}
         ${FEATURE_SOURCES}
 )
 
@@ -88,11 +121,11 @@ if(BUILD_CLI)
   set(CLI_SOURCES
         Cli/main.cpp
         Cli/cliview.cpp
-        Cli/cliview.h
+#        Cli/cliview.h
         Cli/BiosView/BiosCli.cpp
-        Cli/BiosView/BiosCli.h
+#        Cli/BiosView/BiosCli.h
         Cli/HexView/HexCli.cpp
-        Cli/HexView/HexCli.h
+#        Cli/HexView/HexCli.h
         ${COMMON_SOURCES}
   )
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -105,6 +138,7 @@ if(BUILD_CLI)
 
     add_executable(binary-tool ${CLI_SOURCES})
     target_compile_definitions(binary-tool PRIVATE CLI_BIOS_VIEWER)
+    target_compile_options(binary-tool PRIVATE ${STRICT_COMPILE_FLAGS})
     target_link_libraries(binary-tool 
         Decompress 
         OpenSSL::Crypto 
@@ -118,6 +152,7 @@ if(BUILD_CLI)
     link_directories(${LINK_DIR})
     add_executable(binary-tool ${CLI_SOURCES})
     target_compile_definitions(binary-tool PRIVATE CLI_BIOS_VIEWER)
+    target_compile_options(binary-tool PRIVATE ${STRICT_COMPILE_FLAGS})
     target_link_libraries(binary-tool libcrypto Decompress pdcurses)
   endif()
 
@@ -165,6 +200,7 @@ if(BUILD_GUI)
   endif()
 
   target_compile_definitions(BiosViewer PRIVATE GUI_BIOS_VIEWER)
+  target_compile_options(BiosViewer PRIVATE ${STRICT_COMPILE_FLAGS})
   target_link_libraries(BiosViewer PRIVATE
       Qt${QT_VERSION_MAJOR}::Widgets
       Decompress

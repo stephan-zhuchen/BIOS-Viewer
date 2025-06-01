@@ -47,8 +47,8 @@ public:
     INT64 SelfDecode() override;
     void setInfoStr() override;
     string GetFspComponentFromID(UINT8 ComponentID);
-    string GetRsaAlgFromID(UINT8 RsaAlgID);
-    string GetHashAlgFromID(UINT8 HashAlgID);
+    string GetRsaAlgFromID(UINT32 RsaAlgID);
+    string GetHashAlgFromID(UINT16 HashAlgID);
 
     [[nodiscard]] inline bool isValid() const { return ValidFlag; };
 };

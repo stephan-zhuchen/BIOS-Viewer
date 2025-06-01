@@ -160,7 +160,7 @@ string FspBootManifestClass::GetFspComponentFromID(UINT8 ComponentID) {
     }
 }
 
-string FspBootManifestClass::GetRsaAlgFromID(UINT8 RsaAlgID) {
+string FspBootManifestClass::GetRsaAlgFromID(UINT32 RsaAlgID) {
     switch (RsaAlgID) {
     case TPM_ALG_RSA:
         return "RSA";
@@ -187,7 +187,7 @@ string FspBootManifestClass::GetRsaAlgFromID(UINT8 RsaAlgID) {
     }
 }
 
-string FspBootManifestClass::GetHashAlgFromID(UINT8 HashAlgID) {
+string FspBootManifestClass::GetHashAlgFromID(UINT16 HashAlgID) {
     switch (HashAlgID) {
     case TPM_ALG_SHA1:
         return "SHA1";

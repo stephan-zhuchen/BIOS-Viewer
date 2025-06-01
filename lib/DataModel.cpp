@@ -186,7 +186,7 @@ void DataModel::setCompressedVolumeModel(Volume *vol) {
     type = "Compressed";
 }
 
-void DataModel::setNvVariableHeaderModel(Volume *var) {
+void DataModel::setNvVariableHeaderModel() {
     name = "Nv Storage";
 }
 
