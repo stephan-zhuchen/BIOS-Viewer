@@ -1,5 +1,4 @@
 #include "BiosCli.h"
-#include <chrono>
 #include <filesystem>
 #include <functional>
 #include <iostream>
@@ -41,13 +40,13 @@ void BiosCliView::loadBios() {
 
     setBiosFvData();
     DecodeBiosFileSystem();
-    for (auto fv: BiosData->VolumeDataList) {
+    for (auto fv : BiosData->VolumeDataList) {
         ReorganizeVolume(fv);
         buildTree(fv, dataRoot.get(), 0); // 将每个FV挂载到虚拟根节点下
     }
     if (BiosData->BiosValidFlag && BiosData->BiosImage->isFitValid()) {
         if (!BiosData->IFWI_exist) {
-            for (auto vol: BiosData->VolumeDataList) {
+            for (auto vol : BiosData->VolumeDataList) {
                 BiosData->BiosImage->ChildVolume.push_back(vol);
             }
         }
@@ -100,7 +99,7 @@ bool BiosCliView::detectIfwi(INT64 &BiosOffset) const {
     }
 
     auto CleanVolumeDataList = [this]() {
-        for (Volume *vol: BiosData->VolumeDataList) {
+        for (Volume *vol : BiosData->VolumeDataList) {
             safeDelete(vol);
         }
         BiosData->VolumeDataList.clear();
@@ -266,7 +265,6 @@ void BiosCliView::DecodeBiosFileSystem() {
         return;
     }
 
-    auto start = chrono::high_resolution_clock::now();
     vector<thread> threadPool;
     auto FvDecoder = [this](int index) {
         Volume *volume = BiosData->VolumeDataList.at(index);
@@ -275,13 +273,9 @@ void BiosCliView::DecodeBiosFileSystem() {
     for (int idx = 0; idx < BiosData->VolumeDataList.size(); ++idx) {
         threadPool.emplace_back(FvDecoder, idx);
     }
-    for (thread &t: threadPool) {
+    for (thread &t : threadPool) {
         t.join();
     }
-    auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start);
-    double time_spent = duration.count() / 1000000.0;
-    cout << "setFfsData time = " << time_spent << "ms" << endl;
 }
 
 void BiosCliView::AddVolumeList(INT64 offset, INT64 length, Volume *parent, VolumeType type) const {
@@ -333,7 +327,7 @@ void BiosCliView::buildTree(Volume *volume, TreeNode *parent, int depth) {
     rawNode->isExpanded = false;
 
     // 递归构建子树
-    for (auto child: volume->ChildVolume) {
+    for (auto child : volume->ChildVolume) {
         buildTree(child, rawNode, depth + 1);
     }
 
@@ -350,14 +344,14 @@ void BiosCliView::rebuildVisibleList() {
     function<void(TreeNode *)> depthFirstTraversal = [&](TreeNode *node) {
         visibleNodes.push_back(node);
         if (node->isExpanded) {
-            for (auto &child: node->children) {
+            for (auto &child : node->children) {
                 depthFirstTraversal(child.get());
             }
         }
     };
 
     // 从每个根子节点开始遍历
-    for (auto &child: dataRoot->children) {
+    for (auto &child : dataRoot->children) {
         depthFirstTraversal(child.get());
     }
 }
@@ -369,7 +363,15 @@ void BiosCliView::drawTable(int startRow) {
 
     // 表头
     wattron(left_win, A_BOLD);
-    mvwprintw(left_win, 0, 0, "%-*s | %-*s | %-*s", colWidths[0], "Volume Name", colWidths[1], "Type", colWidths[2],
+    mvwprintw(left_win,
+              0,
+              0,
+              "%-*s | %-*s | %-*s",
+              colWidths[0],
+              "Volume Name",
+              colWidths[1],
+              "Type",
+              colWidths[2],
               "Subtype");
     wattroff(left_win, A_BOLD);
     whline(left_win, '-', leftTableWidth);
@@ -391,22 +393,30 @@ void BiosCliView::drawTable(int startRow) {
 
         // 处理超长文本
         const string clippedName = (displayName.length() > (size_t) colWidths[0])
-                                           ? displayName.substr(0, colWidths[0] - 3) + "..."
-                                           : displayName;
+            ? displayName.substr(0, colWidths[0] - 3) + "..."
+            : displayName;
         const string clippedType = (item.getType().length() > (size_t) colWidths[1])
-                                           ? item.getType().substr(0, colWidths[1] - 3) + ".."
-                                           : item.getType();
+            ? item.getType().substr(0, colWidths[1] - 3) + ".."
+            : item.getType();
         const string clippedSubtype = (item.getSubType().length() > (size_t) colWidths[2])
-                                              ? item.getSubType().substr(0, colWidths[2] - 3) + ".."
-                                              : item.getSubType();
+            ? item.getSubType().substr(0, colWidths[2] - 3) + ".."
+            : item.getSubType();
 
         // 高亮当前行
         if (i == selectedRow) {
             wattron(left_win, A_REVERSE);
         }
 
-        mvwprintw(left_win, i + 2, 0, "%-*s | %-*s | %-*s", colWidths[0], clippedName.c_str(), colWidths[1],
-                  clippedType.c_str(), colWidths[2], clippedSubtype.c_str());
+        mvwprintw(left_win,
+                  i + 2,
+                  0,
+                  "%-*s | %-*s | %-*s",
+                  colWidths[0],
+                  clippedName.c_str(),
+                  colWidths[1],
+                  clippedType.c_str(),
+                  colWidths[2],
+                  clippedSubtype.c_str());
 
         if (i == selectedRow) {
             wattroff(left_win, A_REVERSE);
@@ -416,7 +426,12 @@ void BiosCliView::drawTable(int startRow) {
     // 底部UI
     mvwhline(left_win, LINES - 2, 0, '-', leftTableWidth);
     wattron(left_win, A_DIM);
-    mvwprintw(left_win, LINES - 1, 2, "Items: %zu | Pos: %d-%d", visibleNodes.size(), scrollOffset,
+    mvwprintw(left_win,
+              LINES - 1,
+              2,
+              "Items: %zu | Pos: %d-%d",
+              visibleNodes.size(),
+              scrollOffset,
               scrollOffset + (LINES - 5));
     wattroff(left_win, A_DIM);
 
@@ -431,7 +446,6 @@ void BiosCliView::drawPanel() {
 
     // 标题
     wvline(right_win, '|', LINES - 1);
-
 
     wattron(right_win, A_BOLD);
     mvwprintw(right_win, 0, 2, "Volume Details");
@@ -454,8 +468,8 @@ void BiosCliView::drawPanel() {
     int y = 2;
 
     // 通用信息显示
-    mvwprintw(right_win, y++, 2, "%-6s: 0x%08X", "Offset", vol->getOffset());
-    mvwprintw(right_win, y++, 2, "%-6s: 0x%08X", "Length", vol->getSize());
+    mvwprintw(right_win, y++, 2, "%-6s: 0x%08llX", "Offset", vol->getOffset());
+    mvwprintw(right_win, y++, 2, "%-6s: 0x%08llX", "Length", vol->getSize());
 
     y++; // 信息字段前的空行
 
@@ -490,7 +504,7 @@ void BiosCliView::drawPanel() {
         }
 
         startPos = endPos + 1; // 跳过换行符
-        currentLine = 0; // 重置行计数器
+        currentLine = 0;       // 重置行计数器
     }
 
     wrefresh(right_win);
@@ -508,40 +522,40 @@ void BiosCliView::setTreeData() {
         ch = getch();
 
         switch (ch) {
-            case KEY_UP:
-                if (selectedRow > 0) {
-                    --selectedRow;
-                } else if (scrollOffset > 0) {
-                    --scrollOffset;
-                }
-                break;
-
-            case KEY_DOWN:
-                if (selectedRow < (LINES - 5) && (scrollOffset + selectedRow + 1) < visibleNodes.size()) {
-                    ++selectedRow;
-                } else {
-                    ++scrollOffset;
-                }
-                break;
-
-            case '\n': // Enter键切换展开状态
-            {
-                const int actualIndex = scrollOffset + selectedRow;
-                if (actualIndex >= 0 && actualIndex < visibleNodes.size()) {
-                    TreeNode *node = visibleNodes[actualIndex];
-                    if (!node->children.empty()) {
-                        node->isExpanded = !node->isExpanded;
-                        rebuildVisibleList();
-                        // 保持滚动位置
-                        selectedRow = std::min(selectedRow, (int) visibleNodes.size() - 1);
-                    }
-                }
-                break;
+        case KEY_UP:
+            if (selectedRow > 0) {
+                --selectedRow;
+            } else if (scrollOffset > 0) {
+                --scrollOffset;
             }
-            case 'Q':
-            case 'q':
-                ch = 'q';
-                break;
+            break;
+
+        case KEY_DOWN:
+            if (selectedRow < (LINES - 5) && (scrollOffset + selectedRow + 1) < visibleNodes.size()) {
+                ++selectedRow;
+            } else {
+                ++scrollOffset;
+            }
+            break;
+
+        case '\n': // Enter键切换展开状态
+        {
+            const int actualIndex = scrollOffset + selectedRow;
+            if (actualIndex >= 0 && actualIndex < visibleNodes.size()) {
+                TreeNode *node = visibleNodes[actualIndex];
+                if (!node->children.empty()) {
+                    node->isExpanded = !node->isExpanded;
+                    rebuildVisibleList();
+                    // 保持滚动位置
+                    selectedRow = std::min(selectedRow, (int) visibleNodes.size() - 1);
+                }
+            }
+            break;
+        }
+        case 'Q':
+        case 'q':
+            ch = 'q';
+            break;
         }
 
         // 边界检查
@@ -559,13 +573,13 @@ void BiosCliView::ReorganizeVolume(Volume *volume) {
         safeDelete(volume);
         volume = newVolume;
     }
-    for (auto childVolume: volume->ChildVolume) {
+    for (auto childVolume : volume->ChildVolume) {
         ReorganizeVolume(childVolume);
     }
 }
 
 BiosCliData::~BiosCliData() {
-    for (auto *volume: VolumeDataList) {
+    for (auto *volume : VolumeDataList) {
         safeDelete(volume);
     }
     delete OverviewVolume;

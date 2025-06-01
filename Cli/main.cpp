@@ -4,10 +4,10 @@
 #include "cliview.h"
 
 #ifdef _WIN32
-#include "curses.h"
+    #include "curses.h"
 #else
-#include <clocale>
-#include <ncurses.h>
+    #include <ncurses.h>
+    #include <clocale>
 
 #endif
 // #include "vld.h"
@@ -26,7 +26,7 @@ void help() {
 }
 
 class CursesManager {
-public:
+  public:
     CursesManager() : initialized_successfully(false) {
 #ifndef _WIN32
         setlocale(LC_ALL, ""); // 支持Unicode等
@@ -50,10 +50,10 @@ public:
             }
         }
 #endif
-        cbreak(); // 行缓冲禁止，字符立即可用
-        noecho(); // 禁止输入回显
+        cbreak();             // 行缓冲禁止，字符立即可用
+        noecho();             // 禁止输入回显
         keypad(stdscr, TRUE); // 允许功能键 (F1,箭头等)
-        curs_set(0); // 初始隐藏光标 (HexCliView内部会管理)
+        curs_set(0);          // 初始隐藏光标 (HexCliView内部会管理)
         // timeout(-1);        // getch() 阻塞等待输入 (HexCliView会使用，这里设为默认)
         refresh(); // 刷新stdscr一次
         initialized_successfully = true;
@@ -66,9 +66,11 @@ public:
         }
     }
 
-    bool isInitialized() const { return initialized_successfully; }
+    bool isInitialized() const {
+        return initialized_successfully;
+    }
 
-private:
+  private:
     bool initialized_successfully;
 };
 

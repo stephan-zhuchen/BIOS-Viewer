@@ -293,13 +293,17 @@ struct UEFI_LIST_ENTRY {
 /// Boolean true value.  UEFI Specification defines this value to be 1,
 /// but this form is more portable.
 ///
-#define TRUE  ((BOOLEAN)(1==1))
+#ifndef TRUE
+  #define TRUE  ((BOOLEAN)(1==1))
+#endif
 
 ///
 /// Boolean false value.  UEFI Specification defines this value to be 0,
 /// but this form is more portable.
 ///
-#define FALSE  ((BOOLEAN)(0==1))
+#ifndef FALSE
+  #define FALSE  ((BOOLEAN)(0==1))
+#endif
 
 //
 // Null character

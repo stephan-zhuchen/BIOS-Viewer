@@ -1,0 +1,139 @@
+# Based on GNU style with detailed configurations
+BasedOnStyle: LLVM
+Language: Cpp
+#------------------------------------------------------------------------------
+# 缩进 (Indentation)
+#------------------------------------------------------------------------------
+IndentWidth: 4              # GNU标准：2空格缩进
+TabWidth: 4                 # GNU标准：Tab宽度为8（如果使用Tab的话）
+UseTab: Never               # 推荐：从不使用Tab，总是使用空格，以避免编辑器兼容性问题
+ContinuationIndentWidth: 4  # GNU风格的续行缩进通常与基本缩进一致或稍多，这里设为2
+IndentCaseLabels: false     # switch语句的case标签不相对于switch缩进 (GNU默认)
+IndentWrappedFunctionNames: false # 函数名换行时不额外缩进 (GNU默认)
+NamespaceIndentation: None  # 命名空间内容不缩进 (GNU常见做法)
+
+#------------------------------------------------------------------------------
+# 大括号风格 (Brace Style)
+#------------------------------------------------------------------------------
+# GNU风格对于函数、类等使用K&R（大括号在行尾），
+# 对于控制语句 (if, for, while) 传统GNU内核风格会另起一行（Allman），
+# 但clang-format的GNU风格通常对控制语句也倾向于行尾。
+# 如果需要严格的Linux内核控制语句大括号风格，应考虑 BreakBeforeBraces: Linux 或 Allman
+AllowShortBlocksOnASingleLine: false # 不允许短代码块写在一行 (如 if (c) { foo(); } )
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false             # 类定义的大括号不换行 (GNU默认)
+  AfterControlStatement: false  # 控制语句 (if, for, while) 的大括号不换行 (clang-format GNU默认)
+  AfterEnum: false              # 枚举定义的大括号不换行
+  AfterFunction: false          # 函数定义的大括号不换行 (GNU默认)
+  AfterNamespace: false         # 命名空间的大括号不换行 (GNU默认)
+  AfterStruct: false            # 结构体定义的大括号不换行
+  AfterUnion: false             # 联合体定义的大括号不换行
+  AfterExternBlock: false       # extern "C" {} 块的大括号不换行
+  BeforeCatch: false            # catch关键字前的大括号不换行
+  BeforeElse: false             # else关键字前的大括号不换行
+  IndentBraces: false           # 大括号本身不缩进 (GNU默认)
+  SplitEmptyFunction: true      # 空函数体 {} 是否换行，true表示换行 (如 void foo()\n{\n})
+  SplitEmptyRecord: true        # 空记录体 (class, struct) {} 是否换行
+  SplitEmptyNamespace: true     # 空命名空间 {} 是否换行
+
+#------------------------------------------------------------------------------
+# 空格 (Spaces)
+#------------------------------------------------------------------------------
+SpaceAfterCStyleCast: true              # C风格类型转换后加空格 (如 (int) x)
+SpaceAfterTemplateKeyword: false        # template关键字后不加空格 (如 template<...>) - GNU通常有空格，但clang-format GNU可能不同，按需调整
+SpaceBeforeAssignmentOperators: true    # 赋值运算符前加空格
+SpaceBeforeCpp11BracedList: false     # C++11大括号初始化列表前不加空格 (如 Foo{bar})
+SpaceBeforeCtorInitializerColon: true   # 构造函数初始化列表冒号前加空格
+SpaceBeforeInheritanceColon: true       # 继承冒号前加空格
+SpaceBeforeParens: ControlStatements  #仅在控制语句 (if, for, while, switch) 的括号前加空格
+SpaceBeforeRangeBasedForLoopColon: true #基于范围的for循环冒号前加空格
+SpaceInEmptyParentheses: false          #空括号内不加空格 (如 func() )
+SpacesInAngles: false                   #模板尖括号内不加空格 (如 vector<int> )
+SpacesInCStyleCastParentheses: false    #C风格类型转换的括号内不加空格 (如 (int)x )
+SpacesInContainerLiterals: false        #容器字面量 (如 C++11的 {1, 2, 3}) 的花括号内不加空格
+SpacesInParentheses: false              #普通括号内不加空格 (如 func(a, b) )
+SpacesInSquareBrackets: false           #方括号内不加空格 (如 arr[i] )
+
+#------------------------------------------------------------------------------
+# 换行与包裹 (Line Breaking & Wrapping)
+#------------------------------------------------------------------------------
+ColumnLimit: 120                        # GNU标准：行最大长度80
+AllowShortFunctionsOnASingleLine: None  # 不允许短函数写在一行 (None, Empty, Inline, All)
+AllowShortIfStatementsOnASingleLine: Never # 不允许短if语句写在一行 (除非有注释)
+AllowShortLoopsOnASingleLine: false     # 不允许短循环写在一行
+BinPackArguments: false                 # 函数参数过多时，倾向于每行一个而不是紧密排列
+BinPackParameters: false                # 函数声明参数过多时，倾向于每行一个
+BreakBeforeBinaryOperators: NonAssignment # 在非赋值的二元运算符前换行 (如 +, -)
+BreakBeforeTernaryOperators: true       # 在三元运算符前换行
+BreakConstructorInitializers: BeforeColon # 构造函数初始化列表在冒号前换行（如果需要换行）
+PenaltyExcessCharacter: 1000000         # 超出列限制的惩罚值，使其更倾向于换行
+PenaltyReturnTypeOnItsOwnLine: 60       # 函数返回类型单独成行的惩罚值（值越小越容易单独成行）
+
+#------------------------------------------------------------------------------
+# 指针与引用 (Pointers & References)
+#------------------------------------------------------------------------------
+PointerAlignment: Right     # 指针的*靠近变量名 (如 char *p) - GNU标准
+DerivePointerAlignment: false # 不自动推导指针的对齐方式，严格按PointerAlignment设置
+
+#------------------------------------------------------------------------------
+# #include 指令
+#------------------------------------------------------------------------------
+SortIncludes: true          # 自动排序 #include 指令
+IncludeBlocks: Merge      # Preserve(保持原有块), Merge(合并所有), Regroup(按Categories重新分组排序)
+IncludeCategories:
+  # 1. 当前源文件对应的头文件（优先级最高）
+  - Regex:           '^"<current_file_header>$'  # 匹配当前文件对应的头文件
+    Priority:        1
+  # 2. C系统头文件（.h后缀）
+  - Regex:           '^<[a-zA-Z0-9_]+\.h>$'      # 如 <stdio.h>, <stdlib.h>
+    Priority:        2
+  # 3. C++系统头文件（无后缀）
+  - Regex:           '^<[a-zA-Z0-9_]+>$'         # 如 <vector>, <string>
+    Priority:        3
+  # 4. 带路径的系统头文件
+  - Regex:           '^<[^"]+>$'                 # 如 <sys/types.h>, <linux/kernel.h>
+    Priority:        4
+  # 5. 第三方库头文件
+  - Regex:           '^<[a-zA-Z0-9_]+/[a-zA-Z0-9_]+(\.h)?>$'  # 如 <gtest/gtest.h>
+    Priority:        5
+  # 6. 项目头文件
+  - Regex:           '^"'                        # 所有双引号包含的头文件
+    Priority:        6
+# 优先级数字越小，在#include块中越靠前。
+# 你可以根据你的项目结构调整Regex和Priority。
+
+#------------------------------------------------------------------------------
+# C++ 特定 (C++ Specific)
+#------------------------------------------------------------------------------
+Cpp11BracedListStyle: true      # 对C++11的大括号初始化列表进行格式化 (如 T{a, b} 或 T t{a,b};)
+FixNamespaceComments: true      # 修正命名空间结束时的注释 (如 // namespace MyNamespace)
+QualifierAlignment: Leave       # const, volatile等限定符的对齐方式 (Leave, Right, Left) - Leave通常是安全的
+Standard: Auto                   # 遵循的C++标准 (Auto, Cpp03, Cpp11, Cpp14, Cpp17, Cpp20, Latest)
+
+#------------------------------------------------------------------------------
+# 注释 (Comments)
+#------------------------------------------------------------------------------
+ReflowComments: true            # 尝试重排注释以适应列宽限制
+CommentPragmas: ''              # 不特殊处理的pragma注释正则表达式 (默认不处理以// !或/* !开头的)
+AllowAllParametersOfDeclarationOnNextLine: true # 如果函数声明的参数换行，允许所有参数都在下一行
+
+#------------------------------------------------------------------------------
+# 空行 (Empty Lines)
+#------------------------------------------------------------------------------
+KeepEmptyLinesAtTheStartOfBlocks: false # 不保留块开始处的空行
+MaxEmptyLinesToKeep: 1                  # 最多保留的连续空行数
+
+#------------------------------------------------------------------------------
+# 宏 (Macros)
+#------------------------------------------------------------------------------
+IndentPPDirectives: BeforeHash  # 预处理指令缩进到行首 (#号前)
+AlignEscapedNewlines: Right     # 多行宏定义中，'\'的对齐方式 (Left, Right, DontAlign)
+
+#------------------------------------------------------------------------------
+# 其他 (Miscellaneous)
+#------------------------------------------------------------------------------
+AlignConsecutiveAssignments: false      # 不对齐连续的赋值语句
+AlignConsecutiveBitFields: false        # 不对齐连续的位域声明
+AlignConsecutiveDeclarations: false     # 不对齐连续的声明语句
+AlignOperands: false                    # 不对齐二元或三元运算符的操作数 (Align/DontAlign)

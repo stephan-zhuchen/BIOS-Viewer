@@ -2,8 +2,6 @@
 #include <fstream>
 #include <iostream>
 
-// CliView::CliView() {}
-
 CliView::~CliView() {
     delete ui;
     delete hexUi;
@@ -19,7 +17,6 @@ int CliView::openFile(const std::string &path, ViewType type) {
 
     binary = new BinaryData();
 
-
     // 获取文件大小
     file.seekg(0, std::ios::end);
     binary->InputImageSize = file.tellg();
@@ -33,7 +30,6 @@ int CliView::openFile(const std::string &path, ViewType type) {
     // 读取文件内容到 InputImage
     binary->InputImage = new UINT8[binary->InputImageSize]; // 分配内存
     file.read(reinterpret_cast<char *>(binary->InputImage), binary->InputImageSize);
-
 
     if (!file) {
         std::cerr << "Error: Failed to read file: " << path << std::endl;

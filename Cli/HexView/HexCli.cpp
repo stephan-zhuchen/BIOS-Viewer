@@ -11,13 +11,12 @@
 #include <iostream>
 #include <sstream>
 
-
 #ifdef _WIN32
-#define VLINE '|'
-#define HLINE '-'
+    #define VLINE_CHAR '|'
+    #define HLINE_CHAR '-'
 #else
-#define VLINE ACS_VLINE
-#define HLINE ACS_HLINE
+    #define VLINE_CHAR ACS_VLINE
+    #define HLINE_CHAR ACS_HLINE
 #endif
 
 // 辅助函数：将字符转换为十六进制值
@@ -28,55 +27,56 @@ int hexCharToVal(char c) {
         return c - 'a' + 10;
     if (c >= 'A' && c <= 'F')
         return c - 'A' + 10;
-    return '.'; // 非法字符返回'.'
+    return '.'; // 对于任何其他非法字符，返回ASCII码的点
 }
 
 void HexCliView::calculateLayout() {
     INT64 maxOffset = currentBinaryData->InputImageSize > 0 ? currentBinaryData->InputImageSize - 1 : 0;
-    int hexDigits = 1;
+    int hexDigits = 1; // 默认至少需要1位十六进制数显示偏移
 
     if (maxOffset > 0) {
+        // 根据最大偏移量计算需要的十六进制位数
         hexDigits = static_cast<int>(log2(static_cast<double>(maxOffset)) / 4) + 1;
-        hexDigits = std::clamp(hexDigits, 1, 8); // 限制1-8位
+        hexDigits = std::clamp(hexDigits, 1, 8); // 将位数限制在1到8位之间
     }
 
-    // 地址列宽度："0x" + 数字 + 1空格
+    // 地址列宽度 = "0x" (2个字符) + 十六进制数字位数 + " " (1个空格)
     addressWidth = 2 + hexDigits + 1;
-    addressWidth = std::max(6, addressWidth); // 至少显示 "0x0000 "
+    addressWidth = std::max(6, addressWidth); // 保证地址列至少能显示 "0x0000 "
 
-    // 十六进制数据面板宽度：16字节 * ("XX" + 空格) = 16 * 3 = 48
+    // 十六进制数据面板宽度 = 每行字节数 * 每个字节的显示宽度 ("XX ")
     dataWidth = BYTES_PER_LINE * 3;
 
-    // ASCII数据面板宽度：16字符
+    // ASCII字符面板宽度 = 每行字节数 (每个ASCII字符占1列)
     int asciiPanelWidth = BYTES_PER_LINE;
 
-    // 布局: [地址] | [十六进制数据] | [ASCII字符]
-    // 地址区起始X: 1 (留出边框或空白)
-    // 十六进制数据区起始X: addressWidth + 1 (分隔符) + 1 (空格) = addressWidth + 2 (如果地址后有空格，则是 addressWidth
-    // + 1 + 1) 我们在drawHexContent中具体定位
-    int hex_data_start_x = addressWidth + 3; // "0xAAAA " (addressWidth) + "|" + " " + HexData
-                                             //  1        aw-1         aw aw+1 aw+2 aw+3
-    int ascii_separator_x = hex_data_start_x + dataWidth;
-    int ascii_data_start_x = ascii_separator_x + 2; // ...HexData + " " + "|" + " " + AsciiData
+    // 计算各主要部分的起始X坐标
+    int hex_data_start_x = addressWidth + 3;              // 地址区后，跳过" | "分隔符
+    int ascii_separator_x = hex_data_start_x + dataWidth; // 十六进制数据区之后
+    int ascii_data_start_x = ascii_separator_x + 2;       // ASCII分隔符之后，跳过" | "
 
-    totalWidth = ascii_data_start_x + asciiPanelWidth + 1; // +1 为了右边距
+    // 总宽度 = ASCII数据起始位置 + ASCII面板宽度 + 右边距(1)
+    totalWidth = ascii_data_start_x + asciiPanelWidth + 1;
 }
 
+// 构造函数
 HexCliView::HexCliView(BinaryData *binData) : currentBinaryData(binData) {
     if (!currentBinaryData) {
-        // 应该在调用show之前处理这个错误，或者让show优雅退出
-        // 这里可以抛出异常或设置一个错误状态
-        // 为了简单，假设binData总是有效的
+        // 严重错误：传入了空指针。通常应由调用者确保binData有效，
+        // 或者在这里抛出异常/设置错误状态，并在show()之前检查。
     }
-    calculateLayout();
+    calculateLayout(); // 初始化布局参数
+    // 初始化滚动和光标位置
     scrollOffset = 0;
     editCursorLine = 0;
     editCursorByteInLine = 0;
     editCursorNibble = 0;
-    currentMode = Mode::NORMAL;
-    dataModified = false;
+    currentMode = Mode::NORMAL; // 默认进入普通模式
+    dataModified = false;       // 初始数据未被修改
+    commandString.clear();      // 命令字符串初始为空
 }
 
+// 析构函数，释放curses窗口资源
 HexCliView::~HexCliView() {
     if (hexWin) {
         delwin(hexWin);
@@ -88,6 +88,7 @@ HexCliView::~HexCliView() {
     }
 }
 
+// 保存文件内容到指定路径
 bool HexCliView::saveFile(const std::string &filePathToSave) {
     if (filePathToSave.empty()) {
         commandString = "Error: No file name specified for saving.";
@@ -104,248 +105,276 @@ bool HexCliView::saveFile(const std::string &filePathToSave) {
         return false;
     }
     file.close();
-    dataModified = false;
-    currentBinaryData->OpenedFileName = filePathToSave;
+    dataModified = false;                               // 保存成功后，清除修改标记
+    currentBinaryData->OpenedFileName = filePathToSave; // 更新当前文件名（如果保存到新路径）
     commandString = "File saved to " + filePathToSave;
     return true;
 }
 
+// 绘制十六进制和ASCII内容到hexWin窗口
 void HexCliView::drawHexContent() {
-    // LINES是全局curses变量, 表示终端总行数
-    // -1 为状态栏, -1 为hexWin自己的顶部边框/标题行
-    VISIBLE_LINES = LINES - 1 - 1;
-    if (VISIBLE_LINES < 1)
-        VISIBLE_LINES = 1;
+    // 计算可见数据行数
+    // LINES是终端总行数。hexWin占用了LINES-1行。
+    // hexWin内部：1行标题，1行顶部横线，1行底部横线。所以数据区可用行数为 (LINES-1)-3 = LINES-4。
+    VISIBLE_LINES = std::max(0, LINES - 4);
+    if (LINES < 4)
+        VISIBLE_LINES = 0; // 终端过小时，没有数据行
 
-    werase(hexWin);
+    werase(hexWin); // 清除hexWin内容
 
-    // 定义绘制的起始X坐标 (从1开始，0是边框)
+    // 计算各部分的X坐标
     int addr_text_print_x = 1;
-    // 地址和HEX区隔 "|": addressWidth(含末尾空格) + 1(for '|')
-    int sep1_print_x = addressWidth + 1; // "0x1234 | XX"
-    // HEX数据区起始: addressWidth + 1(分隔符) + 1(空格)
-    int hex_data_print_x = addressWidth + 1 + 1; // "0x1234 | XX"
-    // HEX列头起始: hex_data_print_x -1 (为了对齐 %01X 前的空格)
+    int sep1_print_x = addressWidth + 1;
+    int hex_data_print_x = addressWidth + 1 + 1;
     int hex_col_header_start_x = hex_data_print_x - 1;
+    int ascii_sep_print_x = hex_data_print_x + dataWidth;
+    int ascii_data_print_x = ascii_sep_print_x + 1 + 1;
 
-    // ASCII区隔 "|": hex_data_print_x + dataWidth (hex区总宽度) + 1 (空格)
-    int ascii_sep_print_x = hex_data_print_x + dataWidth; // "XX XX | ASCII"
-    // ASCII数据区起始: ascii_sep_print_x + 1 (空格)
-    int ascii_data_print_x = ascii_sep_print_x + 1 + 1; // "... | ASCII"
-
-    // 列标题
-    wattron(hexWin, A_BOLD);
-    // mvwprintw(hexWin, 0, 7, " "); // 这个旧的偏移可能不再准确
+    // 绘制列标题 (在hexWin的第0行)
+    wattron(hexWin, A_BOLD); // 加粗
     for (int i = 0; i < BYTES_PER_LINE; i += 1) {
-        mvwprintw(hexWin, 0, hex_col_header_start_x + i * 3, " %01X ", i);
+        mvwprintw(hexWin, 0, hex_col_header_start_x + i * 3, " %01X ", i); // 十六进制列号
     }
-    mvwprintw(hexWin, 0, ascii_data_print_x, "Character"); // "Characters" -> "字符"
-    wattroff(hexWin, A_BOLD);
+    mvwprintw(hexWin, 0, ascii_data_print_x, "ASCii"); // ASCII区标题
+    wattroff(hexWin, A_BOLD);                          // 取消加粗
 
-    // 顶部分隔线 (从地址列后开始，到ASCII列尾)
-    int hline_start_x = sep1_print_x + 1; // 从第一个分隔符后开始
-    int hline_len = (ascii_data_print_x + BYTES_PER_LINE - 1) - hline_start_x;
-    mvwhline(hexWin, 1, hline_start_x, HLINE, hline_len);
+    // 绘制顶部水平分隔线 (在hexWin的第1行)
+    int hline_start_x_user = sep1_print_x + 1; // 从第一个垂直分隔符之后开始
+    int hline_len_user = (ascii_data_print_x + BYTES_PER_LINE - 1) - hline_start_x_user;
+    if (hline_len_user < 0)
+        hline_len_user = 0; // 防止长度为负
+    mvwhline(hexWin, 1, hline_start_x_user, HLINE_CHAR, hline_len_user);
 
-    // 计算总数据行数并确保光标可见 (这会调整scrollOffset)
-    const int totalDataLines =
-            (currentBinaryData->InputImageSize > 0)
-                    ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
-                    : 0;
-    if (currentMode == Mode::EDIT) { // 只有编辑模式才强制光标可见
-        ensureCursorVisible();
-    } else { // 普通模式下，clamp scrollOffset
-        scrollOffset = std::clamp(scrollOffset, 0, std::max(0, totalDataLines - VISIBLE_LINES));
+    // 获取总数据行数，并根据模式调整滚动使光标可见
+    const int totalDataLines = (currentBinaryData->InputImageSize > 0)
+        ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
+        : 0;
+    if (currentMode == Mode::EDIT) {
+        ensureCursorVisible(); // 编辑模式下确保光标可见
+    } else {
+        scrollOffset =
+            std::clamp(scrollOffset, 0, std::max(0, totalDataLines - VISIBLE_LINES)); // 普通模式下限制滚动范围
     }
 
-    // 数据行绘制
-    int draw_y_in_win = 0; // 在hexWin中的相对绘制行号 (从0开始)
-    for (int line_idx = scrollOffset; // line_idx 是绝对数据行号
-         line_idx < scrollOffset + VISIBLE_LINES && line_idx < totalDataLines; ++line_idx, ++draw_y_in_win) {
-        constexpr int DATA_START_ROW_IN_WINDOW = 2; // 数据从窗口的第2行开始绘制 (0是列头, 1是分隔线)
-        const INT64 currentFileOffset = static_cast<INT64>(line_idx) * BYTES_PER_LINE;
+    // 绘制数据行 (从hexWin的第2行，即DATA_START_ROW_IN_WINDOW开始)
+    constexpr int DATA_START_ROW_IN_WINDOW = 2;
+    int drawn_data_row_count = 0;     // 记录实际绘制的数据行数
+    for (int line_idx = scrollOffset; // line_idx是当前处理的数据在文件中的绝对行号
+         line_idx < scrollOffset + VISIBLE_LINES && line_idx < totalDataLines;
+         ++line_idx, ++drawn_data_row_count) {
+        const INT64 currentFileOffset = static_cast<INT64>(line_idx) * BYTES_PER_LINE; // 当前行的起始字节偏移
 
-        // 地址显示 (addressWidth 包括 "0x", 数字, 和末尾的一个空格)
-        // setw作用于数字部分
+        // 绘制地址
         std::stringstream addrStrStream;
-        addrStrStream << "0x" << std::hex << std::setw(addressWidth - 2 - 1) << std::setfill('0') << currentFileOffset;
-        mvwprintw(hexWin, DATA_START_ROW_IN_WINDOW + draw_y_in_win, addr_text_print_x, "%s",
+        addrStrStream << "0x" << std::hex << std::setw(addressWidth - 3) << std::setfill('0') << currentFileOffset;
+        mvwprintw(hexWin,
+                  DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
+                  addr_text_print_x,
+                  "%s",
                   addrStrStream.str().c_str());
 
-        std::string asciiDisplayStr;
-        asciiDisplayStr.reserve(BYTES_PER_LINE);
-
-        int validBytesInLine =
-                std::min(static_cast<INT64>(BYTES_PER_LINE), currentBinaryData->InputImageSize - currentFileOffset);
-
+        // 遍历当前行的每个字节位置
         for (int byte_col_idx = 0; byte_col_idx < BYTES_PER_LINE; ++byte_col_idx) {
-            if (byte_col_idx < validBytesInLine) {
-                UINT8 byteValue = currentBinaryData->InputImage[currentFileOffset + byte_col_idx];
+            if (currentFileOffset + byte_col_idx < currentBinaryData->InputImageSize) { // 检查是否在文件数据范围内
+                UINT8 byteValue = currentBinaryData->InputImage[currentFileOffset + byte_col_idx]; // 获取字节值
 
-                bool isCursorOnThisByte = (currentMode == Mode::EDIT && line_idx == editCursorLine &&
-                                           byte_col_idx == editCursorByteInLine);
+                // 检查当前字节是否是编辑光标所在位置
+                bool isCursorOnThisByte =
+                    (currentMode == Mode::EDIT && line_idx == editCursorLine && byte_col_idx == editCursorByteInLine);
 
-                // 绘制十六进制字节 (每个字节XX占2个字符，后跟1个空格)
-                for (int nibble_idx = 0; nibble_idx < 2; ++nibble_idx) { // 0: 高位, 1: 低位
+                // 绘制十六进制表示 (两位，高低半字节)
+                for (int nibble_idx = 0; nibble_idx < 2; ++nibble_idx) {
                     bool isCursorOnThisNibble = isCursorOnThisByte && (nibble_idx == editCursorNibble);
                     if (isCursorOnThisNibble)
-                        wattron(hexWin, A_REVERSE); // 反色显示光标
+                        wattron(hexWin, A_REVERSE); // 高亮光标下的半字节
 
-                    char nibble_char;
-                    if (nibble_idx == 0)
-                        nibble_char = "0123456789ABCDEF"[(byteValue >> 4) & 0xF];
-                    else
-                        nibble_char = "0123456789ABCDEF"[byteValue & 0xF];
+                    char nibble_char = (nibble_idx == 0) ? "0123456789ABCDEF"[(byteValue >> 4) & 0xF] : // 高半字节
+                        "0123456789ABCDEF"[byteValue & 0xF];                                            // 低半字节
 
-                    mvwaddch(hexWin, DATA_START_ROW_IN_WINDOW + draw_y_in_win,
-                             hex_data_print_x + byte_col_idx * 3 + nibble_idx, nibble_char);
+                    mvwaddch(hexWin,
+                             DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
+                             hex_data_print_x + byte_col_idx * 3 + nibble_idx,
+                             nibble_char);
 
                     if (isCursorOnThisNibble)
-                        wattroff(hexWin, A_REVERSE);
+                        wattroff(hexWin, A_REVERSE); // 取消高亮
                 }
-                // 在 "XX" 后打印空格 (除非是最后一个字节且不需要额外空格)
+                // 在每两个十六进制数字后打印一个空格（除非是行尾）
                 if (byte_col_idx < BYTES_PER_LINE - 1) {
-                    mvwaddch(hexWin, DATA_START_ROW_IN_WINDOW + draw_y_in_win, hex_data_print_x + byte_col_idx * 3 + 2,
+                    mvwaddch(hexWin,
+                             DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
+                             hex_data_print_x + byte_col_idx * 3 + 2,
                              ' ');
                 }
 
-                // ASCII 字符
+                // 绘制ASCII字符表示 (可打印字符直接显示，否则显示'.')
                 char displayChar = (isprint(byteValue) ? static_cast<char>(byteValue) : '.');
-                mvwaddch(hexWin, DATA_START_ROW_IN_WINDOW + draw_y_in_win, ascii_data_print_x + byte_col_idx,
+                mvwaddch(hexWin,
+                         DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
+                         ascii_data_print_x + byte_col_idx,
                          displayChar);
-            } else { // 如果行不满，用空格填充剩余部分
-                mvwprintw(hexWin, DATA_START_ROW_IN_WINDOW + draw_y_in_win, hex_data_print_x + byte_col_idx * 3,
-                          "   "); // 3 spaces for "XX "
-                mvwaddch(hexWin, DATA_START_ROW_IN_WINDOW + draw_y_in_win, ascii_data_print_x + byte_col_idx, ' ');
+            } else { // 如果当前位置超出文件数据范围 (行末尾的填充部分)
+                mvwprintw(hexWin,
+                          DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
+                          hex_data_print_x + byte_col_idx * 3,
+                          "   "); // 打印3个空格
+                mvwaddch(hexWin,
+                         DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
+                         ascii_data_print_x + byte_col_idx,
+                         ' '); // 打印1个空格
             }
         }
     }
 
-    // 绘制垂直分隔线 (只在有数据行时绘制)
-    if (totalDataLines > 0) {
-        constexpr int DATA_START_ROW_IN_WINDOW = 2;
-        int actual_drawn_data_lines = std::min(VISIBLE_LINES, totalDataLines - scrollOffset);
-        if (actual_drawn_data_lines > 0) { // 确保至少有一行数据被绘制
-            mvwvline(hexWin, DATA_START_ROW_IN_WINDOW, sep1_print_x, VLINE, actual_drawn_data_lines);
-            mvwvline(hexWin, DATA_START_ROW_IN_WINDOW, ascii_sep_print_x, VLINE, actual_drawn_data_lines);
+    // 绘制状态栏上方的底部水平分隔线
+    // Y坐标 = 数据起始行 + 可见数据行数
+    int bottom_hline_y = DATA_START_ROW_IN_WINDOW + VISIBLE_LINES;
+    // 确保此线绘制在hexWin的有效行内 (hexWin高度为LINES-1, 最大行索引为LINES-2)
+    // 并且终端至少有4行高才能容纳所有界面元素
+    if (bottom_hline_y < (LINES - 1) && LINES >= 4) {
+        mvwhline(hexWin, bottom_hline_y, hline_start_x_user, HLINE_CHAR, hline_len_user);
+    }
+
+    // 绘制垂直分隔线 (仅当有数据且有空间绘制时)
+    if (totalDataLines > 0 && VISIBLE_LINES > 0) {
+        int actual_drawn_data_lines_for_vline = 0;
+        if (scrollOffset < totalDataLines) { // 只有当滚动视图内有真实数据时才计算
+            actual_drawn_data_lines_for_vline = std::min(VISIBLE_LINES, totalDataLines - scrollOffset);
+        }
+
+        if (actual_drawn_data_lines_for_vline > 0) { // 确保有数据行被绘制
+            mvwvline(hexWin, DATA_START_ROW_IN_WINDOW, sep1_print_x, VLINE_CHAR, actual_drawn_data_lines_for_vline);
+            mvwvline(
+                hexWin, DATA_START_ROW_IN_WINDOW, ascii_sep_print_x, VLINE_CHAR, actual_drawn_data_lines_for_vline);
         }
     }
-    // wrefresh(hexWin); // show() 中的主循环会刷新
 }
 
+// 绘制状态栏内容到statusWin窗口
 void HexCliView::drawStatusBar() {
-    werase(statusWin);
-    // box(statusWin,0,0); // 可选的状态栏边框
+    werase(statusWin); // 清除状态栏
 
-    std::string modeStr;
+    std::string modeStr; // 根据当前模式设置模式字符串
     switch (currentMode) {
-        case Mode::NORMAL:
-            modeStr = "-- NORMAL --";
-            break;
-        case Mode::EDIT:
-            modeStr = "-- INSERT --";
-            break;
-        case Mode::COMMAND_LINE:
-            modeStr = ":";
-            break;
+    case Mode::NORMAL:
+        modeStr = "-- NORMAL --";
+        break;
+    case Mode::EDIT:
+        modeStr = "-- INSERT --";
+        break; // 编辑模式在Vim中通常称为INSERT
+    case Mode::COMMAND_LINE:
+        modeStr = ":";
+        break;
     }
 
-    if (currentMode == Mode::COMMAND_LINE) {
-        mvwprintw(statusWin, 0, 0, ":%s", commandString.c_str());
-        wmove(statusWin, 0, 1 + commandString.length()); // 移动光标到冒号后
-        curs_set(1); // 显示终端光标
-    } else {
-        curs_set(0); // 在普通/编辑模式隐藏终端光标 (我们自己绘制编辑光标)
-        std::string modifiedIndicator = dataModified ? "*" : "";
-        std::string statusLeft = modeStr + " " + currentBinaryData->OpenedFileName + modifiedIndicator;
+    if (currentMode == Mode::COMMAND_LINE) {                      // 命令行模式下
+        mvwprintw(statusWin, 0, 0, ":%s", commandString.c_str()); // 显示冒号和用户输入的命令
+        wmove(statusWin, 0, 1 + commandString.length());          // 将光标移动到命令末尾
+        curs_set(1);                                              // 显示终端光标
+    } else {                                                      // 普通或编辑模式下
+        curs_set(0);                                              // 隐藏终端光标 (我们自己绘制编辑光标)
+        std::string modifiedIndicator = dataModified ? "*" : "";  // 如果数据已修改，显示星号
+        std::string statusLeft = modeStr + " " + currentBinaryData->OpenedFileName + modifiedIndicator; // 左侧状态信息
 
+        // 计算右侧状态信息（偏移、行号、大小）
         INT64 currentByteOffsetDisplay = 0;
         int currentLineDisplay = 0;
-        int totalLinesDisplay =
-                (currentBinaryData->InputImageSize > 0)
-                        ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
-                        : 0;
+        int totalLinesDisplay = (currentBinaryData->InputImageSize > 0)
+            ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
+            : 0;
 
         if (currentBinaryData->InputImageSize > 0) {
-            if (currentMode == Mode::EDIT) {
+            if (currentMode == Mode::EDIT) { // 编辑模式下显示光标位置
                 currentByteOffsetDisplay = getCursorAbsoluteOffset();
-                currentLineDisplay = editCursorLine + 1; // 1-based for display
-            } else { // NORMAL mode
+                currentLineDisplay = editCursorLine + 1; // 行号从1开始显示
+            } else {                                     // 普通模式下显示当前视图顶部的偏移和行号
                 currentByteOffsetDisplay = static_cast<INT64>(scrollOffset) * BYTES_PER_LINE;
-                currentLineDisplay = scrollOffset + 1; // Show top of visible screen
+                currentLineDisplay = scrollOffset + 1;
                 if (totalLinesDisplay == 0)
-                    currentLineDisplay = 0;
+                    currentLineDisplay = 0; // 空文件时行号为0
             }
         }
 
         std::stringstream rightStatus;
         rightStatus << "Offset:0x" << std::hex << std::setw(addressWidth - 3) << std::setfill('0')
-                    << currentByteOffsetDisplay << "  line:" << std::dec << currentLineDisplay << "/"
-                    << totalLinesDisplay << "  size:" << currentBinaryData->InputImageSize;
+                    << currentByteOffsetDisplay << "  Line:" << std::dec << currentLineDisplay << "/"
+                    << totalLinesDisplay << "  Size:" << currentBinaryData->InputImageSize;
 
         std::string rs_str = rightStatus.str();
-        mvwprintw(statusWin, 0, 0, "%s", statusLeft.c_str());
-        mvwprintw(statusWin, 0, std::max(0, totalWidth - 1 - (int) rs_str.length()), "%s", rs_str.c_str());
+        mvwprintw(statusWin, 0, 0, "%s", statusLeft.c_str()); // 绘制左侧状态
+        mvwprintw(
+            statusWin, 0, std::max(0, totalWidth - 1 - (int) rs_str.length()), "%s", rs_str.c_str()); // 绘制右侧状态
 
-        // 如果有短时消息 (非错误，非命令输入)
+        // 如果有临时命令字符串（如保存成功消息），且不是在命令行模式，则在中间显示
         if (!commandString.empty() && currentMode != Mode::COMMAND_LINE) {
-            // 确保不覆盖左边或右边的状态
-            int mid_pos = (totalWidth - commandString.length()) / 2;
-            mid_pos = std::max((int) statusLeft.length() + 2, mid_pos);
+            int mid_pos = (totalWidth - commandString.length()) / 2;    // 计算中间位置
+            mid_pos = std::max((int) statusLeft.length() + 2, mid_pos); // 确保不与左侧状态重叠
+            // 确保不与右侧状态重叠
             if (mid_pos + (int) commandString.length() < totalWidth - 1 - (int) rs_str.length() - 2) {
                 mvwprintw(statusWin, 0, mid_pos, "%s", commandString.c_str());
             }
         }
     }
-    // wrefresh(statusWin); // show() 中的主循环会刷新
 }
 
+// 获取编辑光标相对于文件起始的绝对字节偏移
 INT64 HexCliView::getCursorAbsoluteOffset() const {
     if (currentBinaryData->InputImageSize == 0)
-        return 0;
+        return 0; // 空文件偏移为0
     INT64 offset = static_cast<INT64>(editCursorLine) * BYTES_PER_LINE + editCursorByteInLine;
-    return std::min(offset, currentBinaryData->InputImageSize - 1); // 确保不越界
+    // 确保偏移量在有效范围内 [0, InputImageSize - 1]
+    return std::min(offset, std::max((INT64) 0, currentBinaryData->InputImageSize - 1));
 }
 
+// 调整滚动偏移，确保编辑光标在可视区域内
 void HexCliView::ensureCursorVisible() {
     if (currentMode != Mode::EDIT)
-        return; // 只在编辑模式下强制
+        return; // 此逻辑仅用于编辑模式
 
-    // 确保 editCursorLine 在 scrollOffset 和 scrollOffset + VISIBLE_LINES - 1 之间
+    // 如果光标在当前视图上方，向上滚动
     if (editCursorLine < scrollOffset) {
         scrollOffset = editCursorLine;
-    } else if (editCursorLine >= scrollOffset + VISIBLE_LINES) {
+    }
+    // 如果光标在当前视图下方，向下滚动
+    else if (editCursorLine >= scrollOffset + VISIBLE_LINES) {
         scrollOffset = editCursorLine - VISIBLE_LINES + 1;
     }
-    // 再次 clamp scrollOffset 以防万一
-    const int totalDataLines =
-            (currentBinaryData->InputImageSize > 0)
-                    ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
-                    : 0;
+
+    const int totalDataLines = (currentBinaryData->InputImageSize > 0)
+        ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
+        : 0;
+    // 限制滚动偏移在有效范围内
     scrollOffset = std::clamp(scrollOffset, 0, std::max(0, totalDataLines - VISIBLE_LINES));
 }
 
+// 移动编辑光标的逻辑
 void HexCliView::moveEditCursor(int dLine, int dByteOrNibble, bool isNibbleMove) {
-    if (currentBinaryData->InputImageSize == 0 && !(dLine == 0 && dByteOrNibble == 0))
+    // 如果文件为空且在编辑模式，光标不应移动（除非是未来的插入功能）
+    if (currentBinaryData->InputImageSize == 0 && currentMode == Mode::EDIT) {
+        editCursorLine = 0;
+        editCursorByteInLine = 0;
+        editCursorNibble = 0;
         return;
+    }
 
-    if (!isNibbleMove) { // 按字节移动 (通常是方向键)
+    // 根据移动类型（字节或半字节）更新光标位置
+    if (!isNibbleMove) { // 按字节移动
         editCursorByteInLine += dByteOrNibble;
         editCursorLine += dLine;
-        editCursorNibble = 0; // 移动到字节时，默认在高半位
-    } else { // 按半字节移动 (通常是输入十六进制字符后)
-        editCursorNibble += dByteOrNibble; // dByteOrNibble 此时代表半字节的移动 (+1 or -1)
-        if (editCursorNibble > 1) { // 从低半位前进到高半位 (下一字节)
+        editCursorNibble = 0; // 移动到新字节时，默认定位到高半字节
+    } else {                  // 按半字节移动
+        editCursorNibble += dByteOrNibble;
+        if (editCursorNibble > 1) { // 从低半字节前进到下一字节的高半字节
             editCursorNibble = 0;
             editCursorByteInLine++;
-        } else if (editCursorNibble < 0) { // 从高半位后退到低半位 (前一字节)
+        } else if (editCursorNibble < 0) { // 从高半字节后退到前一字节的低半字节
             editCursorNibble = 1;
             editCursorByteInLine--;
         }
-        editCursorLine += dLine; // dLine 仍然是行的变化
+        editCursorLine += dLine; // 行变化独立处理
     }
 
-    // 处理行内字节的溢出/不足
+    // 处理行内字节的换行（前进或后退）
     while (editCursorByteInLine >= BYTES_PER_LINE) {
         editCursorByteInLine -= BYTES_PER_LINE;
         editCursorLine++;
@@ -355,328 +384,333 @@ void HexCliView::moveEditCursor(int dLine, int dByteOrNibble, bool isNibbleMove)
         editCursorLine--;
     }
 
-    const int totalDataLines =
-            (currentBinaryData->InputImageSize > 0)
-                    ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
-                    : 1; // 至少为1行（即使是空文件，逻辑上也有第0行）
+    // 获取总数据行数
+    const int totalDataLines = (currentBinaryData->InputImageSize > 0)
+        ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
+        : 0; // 空文件没有数据行用于光标定位
 
-    // 限制行号
-    editCursorLine = std::clamp(editCursorLine, 0, std::max(0, totalDataLines - 1));
-
-    // 如果在最后一行，限制字节列号
-    if (editCursorLine == totalDataLines - 1 && currentBinaryData->InputImageSize > 0) {
-        int bytesInLastLine = currentBinaryData->InputImageSize % BYTES_PER_LINE;
-        if (bytesInLastLine == 0)
-            bytesInLastLine = BYTES_PER_LINE; // 如果刚好整除
-        editCursorByteInLine = std::clamp(editCursorByteInLine, 0, std::max(0, bytesInLastLine - 1));
-        // 如果光标试图移到最后一个有效字节的低半位之后，则将其移回最后一个有效字节的低半位
-        if (editCursorByteInLine == bytesInLastLine - 1 && editCursorNibble > 1) {
-            editCursorNibble = 1;
-        } else if (editCursorByteInLine >= bytesInLastLine) { // 如果不小心超出了最后一个字节
-            editCursorByteInLine = std::max(0, bytesInLastLine - 1);
-            editCursorNibble = 0; // 或1，取决于你想要的行为
-        }
-    } else if (currentBinaryData->InputImageSize == 0) { // 空文件特殊处理
+    if (currentBinaryData->InputImageSize == 0) { // 如果文件为空，光标固定在(0,0,0)
         editCursorLine = 0;
         editCursorByteInLine = 0;
         editCursorNibble = 0;
+    } else {
+        // 限制行号在有效的数据行范围内 [0, totalDataLines - 1]
+        editCursorLine = std::clamp(editCursorLine, 0, std::max(0, totalDataLines - 1));
+
+        // 限制字节在行内的偏移
+        int bytesInCurrentLine = BYTES_PER_LINE;
+        if (editCursorLine == totalDataLines - 1) { // 如果光标在最后一行数据上
+            bytesInCurrentLine = currentBinaryData->InputImageSize % BYTES_PER_LINE;
+            if (bytesInCurrentLine == 0)
+                bytesInCurrentLine = BYTES_PER_LINE; // 如果文件大小刚好是BYTES_PER_LINE的整数倍
+        }
+        editCursorByteInLine = std::clamp(editCursorByteInLine, 0, std::max(0, bytesInCurrentLine - 1));
+        // editCursorNibble 已经是0或1，由之前的逻辑保证，不需要额外clamp
     }
-    // ensureCursorVisible(); // 调用者通常会调用，或者在drawHexContent中调用
 }
 
+// 处理普通模式下的键盘输入
 void HexCliView::handleNormalModeInput(int ch) {
-    // commandString = ""; // 清除上一条非持久消息
-    int totalDataLines =
-            (currentBinaryData->InputImageSize > 0)
-                    ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
-                    : 0;
-    int max_scroll = std::max(0, totalDataLines - VISIBLE_LINES);
+    int totalDataLines = (currentBinaryData->InputImageSize > 0)
+        ? (static_cast<int>((currentBinaryData->InputImageSize + BYTES_PER_LINE - 1) / BYTES_PER_LINE))
+        : 0;
+    int max_scroll = std::max(0, totalDataLines - VISIBLE_LINES); // 最大滚动偏移
 
     switch (ch) {
-        case KEY_UP:
-            scrollOffset = std::max(0, scrollOffset - 1);
-            break;
-        case KEY_DOWN:
-            scrollOffset = std::min(max_scroll, scrollOffset + 1);
-            break;
-        case KEY_PPAGE:
-            scrollOffset = std::max(0, scrollOffset - VISIBLE_LINES);
-            break;
-        case KEY_NPAGE:
-            scrollOffset = std::min(max_scroll, scrollOffset + VISIBLE_LINES);
-            break;
-        case KEY_HOME:
-            scrollOffset = 0;
-            break;
-        case KEY_END:
-            scrollOffset = max_scroll;
-            break;
-        case 'i':
-            if (currentBinaryData->InputImageSize > 0 || totalDataLines > 0) { // 允许在空文件（逻辑上的第一行）开始编辑
-                currentMode = Mode::EDIT;
-                // 将编辑光标定位到当前屏幕的左上角或合理位置
-                editCursorLine = scrollOffset;
-                editCursorByteInLine = 0;
-                editCursorNibble = 0;
-                ensureCursorVisible(); // 确保光标可见并进行必要的clamp
-            } else {
-                commandString = "File is empty, cannot enter edit mode.";
-            }
-            break;
-        case ':':
-            currentMode = Mode::COMMAND_LINE;
-            commandString.clear(); // 准备接收命令
-            break;
+    // 滚动控制
+    case KEY_UP:
+        scrollOffset = std::max(0, scrollOffset - 1);
+        break;
+    case KEY_DOWN:
+        scrollOffset = std::min(max_scroll, scrollOffset + 1);
+        break;
+    case KEY_PPAGE:
+        scrollOffset = std::max(0, scrollOffset - VISIBLE_LINES);
+        break;
+    case KEY_NPAGE:
+        scrollOffset = std::min(max_scroll, scrollOffset + VISIBLE_LINES);
+        break;
+    case KEY_HOME:
+        scrollOffset = 0;
+        break;
+    case KEY_END:
+        scrollOffset = max_scroll;
+        break;
+    // 模式切换
+    case 'i': // 进入编辑模式
+        currentMode = Mode::EDIT;
+        editCursorLine = scrollOffset;                // 光标初始位置为当前视图顶部
+        if (currentBinaryData->InputImageSize == 0) { // 空文件特殊处理
+            editCursorLine = 0;
+        }
+        editCursorByteInLine = 0;
+        editCursorNibble = 0;
+        ensureCursorVisible(); // 确保光标在屏幕上可见
+        break;
+    case ':': // 进入命令行模式
+        currentMode = Mode::COMMAND_LINE;
+        commandString.clear(); // 清空命令字符串准备接收新命令
+        break;
     }
 }
 
+// 处理编辑模式下的键盘输入
 void HexCliView::handleEditModeInput(int ch) {
-    // commandString = "";
+    // 如果文件为空且不是按ESC键，则提示并阻止编辑
     if (currentBinaryData->InputImageSize == 0 && ch != 27 /* ESC */) {
-        if (ch == 27) {
+        if (ch == 27) { // 如果是ESC，则退出编辑模式
             currentMode = Mode::NORMAL;
             curs_set(0);
+            commandString.clear(); // 清除可能存在的提示消息
+        } else {
+            commandString = "File is empty. Press ESC to exit edit mode.";
         }
-        commandString = "File is empty. Press ESC to exit edit mode.";
         return;
     }
 
     switch (ch) {
-        case 27: // ESC key
-            currentMode = Mode::NORMAL;
-            curs_set(0);
-            break;
-        case KEY_UP:
-            moveEditCursor(-1, 0, false);
-            ensureCursorVisible();
-            break;
-        case KEY_DOWN:
-            moveEditCursor(1, 0, false);
-            ensureCursorVisible();
-            break;
-        case KEY_LEFT:
-            moveEditCursor(0, -1, false);
-            ensureCursorVisible();
-            break; // 移动到前一个字节
-        case KEY_RIGHT:
-            moveEditCursor(0, 1, false);
-            ensureCursorVisible();
-            break; // 移动到后一个字节
-        // 可以增加 Ctrl+Left/Right 来按半字节移动
-        default: {
-            int val = hexCharToVal(static_cast<char>(ch));
-            INT64 offset = getCursorAbsoluteOffset();
-            if (offset < currentBinaryData->InputImageSize) { // 确保在文件范围内
-                UINT8 currentByte = currentBinaryData->InputImage[offset];
-                if (editCursorNibble == 0) { // 修改高半位
+    case 27: // ESC键，退出编辑模式返回普通模式
+        currentMode = Mode::NORMAL;
+        curs_set(0);           // 隐藏终端光标
+        commandString.clear(); // 清除可能存在的提示消息
+        break;
+    // 光标移动键
+    case KEY_UP:
+        moveEditCursor(-1, 0, false);
+        ensureCursorVisible();
+        break;
+    case KEY_DOWN:
+        moveEditCursor(1, 0, false);
+        ensureCursorVisible();
+        break;
+    case KEY_LEFT:
+        moveEditCursor(0, -1, false);
+        ensureCursorVisible();
+        break;
+    case KEY_RIGHT:
+        moveEditCursor(0, 1, false);
+        ensureCursorVisible();
+        break;
+    default: {                                         // 处理十六进制字符输入
+        int val = hexCharToVal(static_cast<char>(ch)); // 获取输入字符的十六进制值
+        if (val != '.') {                              // 检查是否是有效的十六进制输入 (即不是'.')
+            INT64 offset = getCursorAbsoluteOffset();  // 获取当前光标的绝对文件偏移
+            if (offset < currentBinaryData->InputImageSize) {              // 确保在文件数据范围内
+                UINT8 currentByte = currentBinaryData->InputImage[offset]; // 获取当前字节
+                // 根据光标在高/低半字节位置修改对应部分
+                if (editCursorNibble == 0) { // 修改高半字节
                     currentByte = (currentByte & 0x0F) | (static_cast<UINT8>(val) << 4);
-                } else { // 修改低半位
+                } else { // 修改低半字节
                     currentByte = (currentByte & 0xF0) | static_cast<UINT8>(val);
                 }
-                currentBinaryData->InputImage[offset] = currentByte;
-                dataModified = true;
-                moveEditCursor(0, 1, true); // 移动到下一个半字节
-                ensureCursorVisible();
+                currentBinaryData->InputImage[offset] = currentByte; // 更新数据
+                dataModified = true;                                 // 标记数据已修改
+                moveEditCursor(0, 1, true);                          // 将光标移动到下一个半字节
+                ensureCursorVisible();                               // 确保光标可见
             } else {
-                commandString = "End of File";
+                // 此情况理论上不应发生，因为moveEditCursor会限制光标在有效数据内
+                // 但作为防御性编程，可以保留一个提示
+                // commandString = "End of File or empty file.";
             }
-            break;
         }
+        break;
+    }
     }
 }
 
+// 处理命令行模式下的键盘输入
 void HexCliView::handleCommandLineInput(int ch) {
     switch (ch) {
-        case 27: // ESC key
+    case 27: // ESC键，退出命令行模式返回普通模式
+        currentMode = Mode::NORMAL;
+        commandString.clear();
+        curs_set(0); // 隐藏终端光标
+        break;
+    case KEY_ENTER: // 回车键
+    case '\n':      // 换行符 (某些终端可能发送这个)
+    case '\r':      // 回车符 (某些终端可能发送这个)
+        if (!commandString.empty()) {
+            processCommand(); // 处理输入的命令
+        } else {              // 如果只输入了冒号后直接回车，则返回普通模式
             currentMode = Mode::NORMAL;
             commandString.clear();
-            curs_set(0);
-            break;
-        case KEY_ENTER:
-        case '\n':
-        case '\r':
-            if (!commandString.empty()) {
-                processCommand(); // 处理命令, processCommand会更新commandString作为结果/错误信息
-            } else { // 如果只输入了冒号然后回车
-                currentMode = Mode::NORMAL; // 返回普通模式
-                commandString.clear();
-            }
-            // processCommand 可能会改变 currentMode (例如，如果命令是 :q 且成功)
-            // 如果命令执行后仍在COMMAND_LINE模式（通常是出错），状态栏会显示错误
-            // 否则，通常会回到NORMAL模式
-            if (currentMode == Mode::COMMAND_LINE && commandString.find("Error:") == std::string::npos &&
-                commandString.find("Unsaved") == std::string::npos) {
-                // 如果没有特定错误信息阻止，则返回NORMAL模式
-                currentMode = Mode::NORMAL;
-            }
-            break;
-        case KEY_BACKSPACE:
-        case 127: // ASCII backspace
-        case 8: // ASCII backspace
-            if (!commandString.empty()) {
-                commandString.pop_back();
-            }
-            break;
-        default:
-            if (isprint(ch) && commandString.length() < (size_t) totalWidth - 2 - 5) { // -2 for ':', -5 for some margin
-                commandString += static_cast<char>(ch);
-            }
-            break;
+        }
+        // processCommand可能会改变模式（例如:q成功后）或设置错误信息
+        // 如果命令执行后没有错误阻止，并且模式仍是命令行，则切换回普通模式
+        if (currentMode == Mode::COMMAND_LINE && commandString.find("Error:") == std::string::npos
+            && commandString.find("Unsaved changes") == std::string::npos) {
+            currentMode = Mode::NORMAL;
+        }
+        break;
+    case KEY_BACKSPACE: // 退格键
+    case 127:           // ASCII退格 (某些终端)
+    case 8:             // ASCII退格 (另一些终端)
+        if (!commandString.empty()) {
+            commandString.pop_back(); // 删除命令字符串的最后一个字符
+        }
+        break;
+    default:                                                                   // 其他可打印字符
+        if (isprint(ch) && commandString.length() < (size_t) totalWidth - 7) { // 限制命令长度，留出余量
+            commandString += static_cast<char>(ch);                            // 追加到命令字符串
+        }
+        break;
     }
 }
 
+// 解析并执行命令行模式下输入的命令
 void HexCliView::processCommand() {
-    std::string cmd_full = commandString;
-    std::string cmd_main;
-    std::string cmd_arg;
-    size_t first_space = cmd_full.find(' ');
+    std::string cmd_full = commandString;    // 完整命令
+    std::string cmd_main;                    // 命令主体 (如 "q", "w", "wq")
+    std::string cmd_arg;                     // 命令参数 (如文件名)
+    size_t first_space = cmd_full.find(' '); // 查找第一个空格以分离参数
 
-    if (first_space != std::string::npos) {
+    if (first_space != std::string::npos) { // 如果有参数
         cmd_main = cmd_full.substr(0, first_space);
         cmd_arg = cmd_full.substr(first_space + 1);
-        // 清理参数前后的空格
+        // 清理参数字符串两端的空白字符
         cmd_arg.erase(0, cmd_arg.find_first_not_of(" \t\n\r\f\v"));
         cmd_arg.erase(cmd_arg.find_last_not_of(" \t\n\r\f\v") + 1);
-    } else {
+    } else { // 没有参数
         cmd_main = cmd_full;
     }
 
-    bool quit_flag_for_main_loop = false; // 用于通知show()的主循环退出
+    bool quit_flag_for_main_loop = false; // 标记是否需要通知主循环退出
 
-    if (cmd_main == "q") {
-        if (dataModified) {
+    if (cmd_main == "q") {  // 退出命令
+        if (dataModified) { // 如果有未保存的修改
             commandString = "Unsaved changes. Use :q! to force quit, or :w to save.";
-            // currentMode 保持 COMMAND_LINE 以显示此消息
-        } else {
+        } else { // 无修改，可以安全退出
             quit_flag_for_main_loop = true;
         }
-    } else if (cmd_main == "q!") {
+    } else if (cmd_main == "q!") { // 强制退出命令
         quit_flag_for_main_loop = true;
-    } else if (cmd_main == "w") {
-        std::string path_to_save = cmd_arg.empty() ? currentBinaryData->OpenedFileName : cmd_arg;
+    } else if (cmd_main == "w") {                                                                 // 保存命令
+        std::string path_to_save = cmd_arg.empty() ? currentBinaryData->OpenedFileName : cmd_arg; // 获取保存路径
         if (path_to_save.empty()) {
             commandString = "Error: No filename.";
         } else {
-            if (saveFile(path_to_save)) {
-                // commandString 由 saveFile 设置成功消息
-                currentMode = Mode::NORMAL; // 保存成功后返回Normal模式
-            } // else commandString 由 saveFile 设置错误消息, currentMode 保持 COMMAND_LINE
+            if (saveFile(path_to_save)) {   // 调用保存文件方法
+                currentMode = Mode::NORMAL; // 保存成功后返回普通模式
+                // commandString 已被 saveFile 设置为成功消息
+            } // 如果保存失败，commandString 已被 saveFile 设置为错误消息，模式保持COMMAND_LINE
         }
-    } else if (cmd_main == "wq") {
+    } else if (cmd_main == "wq") { // 保存并退出命令
         std::string path_to_save = cmd_arg.empty() ? currentBinaryData->OpenedFileName : cmd_arg;
         if (path_to_save.empty()) {
             commandString = "Error: :wq No filename.";
         } else {
-            if (saveFile(path_to_save)) {
-                quit_flag_for_main_loop = true; // 保存成功，准备退出
-            } // else commandString 由 saveFile 设置错误消息
+            if (saveFile(path_to_save)) {       // 先保存
+                quit_flag_for_main_loop = true; // 保存成功则标记退出
+            } // 如果保存失败，commandString包含错误，不退出
         }
-    } else {
+    } else { // 未知命令
         commandString = "Error: Unknown command: " + cmd_full;
-        // currentMode 保持 COMMAND_LINE
     }
 
+    // 如果需要退出，设置一个特殊的commandString值，由show()的主循环捕获
     if (quit_flag_for_main_loop) {
-        // 如何通知主循环？这是一个问题。
-        // 可以在 HexCliView 中设置一个bool quit_requested = true;
-        // show()的主循环检查这个标志。
-        // 为了简单，我们假设 `show()` 中的 ch 被设置为一个特殊值，或者 `running` 标志被设置。
-        // 这里，我们直接修改 commandString 以便 show() 可以识别并退出。
-        // 这是一个 hacky 的方式，更好的方式是使用一个专门的退出标志。
-        commandString = "__QUIT_REQUESTED__"; // 特殊标记
-    } else if (currentMode != Mode::COMMAND_LINE) { // 如果命令已处理且没有错误阻止模式切换
-                                                    // commandString 可能已被设为成功消息，如 "文件已保存"
-                                                    // 此时应该返回NORMAL模式，状态栏会显示这个消息一小段时间
+        commandString = "__QUIT_REQUESTED__";
     }
+    // 如果命令已处理且没有导致模式保持在COMMAND_LINE（例如出错），
+    // 则在handleCommandLineInput中，如果commandString不包含错误，会自动切回NORMAL模式。
 }
 
+// 显示编辑器界面并处理用户输入的主循环
 void HexCliView::show() {
-    // 创建窗口
-    // Hex 内容窗口高度为终端高度 - 1 (给状态栏)
+    // 创建主内容窗口和状态栏窗口
+    // hexWin高度为终端总高度减1 (给状态栏留出空间)
     hexWin = newwin(LINES - 1, totalWidth, 0, 0);
-    statusWin = newwin(1, totalWidth, LINES - 1, 0);
+    statusWin = newwin(1, totalWidth, LINES - 1, 0); // 状态栏在屏幕最底一行
 
     if (!hexWin || !statusWin) {
-        return; // 通知调用者失败
+        // 创建窗口失败，通常因为终端太小。
+        // 此处应有机制通知调用者（如main函数）发生错误，
+        // 以便可以在curses环境清理后安全地打印错误信息。
+        // 例如，可以设置一个错误状态成员变量或返回错误码。
+        return;
     }
-    keypad(hexWin, TRUE); // 为 hexWin 启用功能键
-    // keypad(statusWin, TRUE); // 状态栏通常不直接接收复杂输入
+    keypad(hexWin, TRUE); // 为hexWin启用功能键（箭头、Home/End等）
 
-    bool running = true;
-    int ch;
-    std::string last_status_message; // 用于临时消息的显示控制
+    bool running = true;                   // 主循环控制标志
+    int ch;                                // 存储用户输入的字符
+    std::string last_status_message_check; // 用于控制状态栏临时消息的显示
 
+    // 初始化时，如果commandString不是来自构造函数中的错误，则清空它
+    if (commandString.find("Error:") == std::string::npos) {
+        commandString.clear();
+    }
+
+    // 主事件循环
     while (running) {
-        // 在绘制前，清除上一帧的临时状态消息 (如果它不是错误消息)
-        if (currentMode != Mode::COMMAND_LINE) {
-            if (!last_status_message.empty() && last_status_message.find("Error:") == std::string::npos &&
-                last_status_message.find("Unsaved") == std::string::npos &&
-                last_status_message.find("__QUIT_REQUESTED__") == std::string::npos) {
-                commandString.clear(); // 清除非持久性消息
-            }
+        // 记录当前状态栏消息，用于判断下一帧是否需要清除它
+        last_status_message_check = commandString;
+
+        // 绘制界面元素
+        drawHexContent();    // 绘制十六进制和ASCII数据区
+        drawStatusBar();     // 绘制状态栏
+        wrefresh(hexWin);    // 刷新主内容窗口到屏幕
+        wrefresh(statusWin); // 刷新状态栏窗口到屏幕
+
+        ch = getch(); // 获取用户输入 (阻塞等待)
+
+        // 在接收到新输入后，如果当前不是命令行模式，
+        // 并且旧的状态栏消息不是错误或重要提示，则清除它。
+        if (currentMode != Mode::COMMAND_LINE && commandString.find("Error:") == std::string::npos
+            && commandString.find("Unsaved changes") == std::string::npos) {
+            commandString.clear();
         }
-        last_status_message = commandString; // 记录当前消息以备下一帧比较
 
-        drawHexContent();
-        drawStatusBar();
-        wrefresh(hexWin); // 单独刷新每个窗口
-        wrefresh(statusWin);
-
-        ch = getch(); // 等待输入
-
+        // 根据当前模式处理输入
         if (currentMode == Mode::NORMAL) {
             handleNormalModeInput(ch);
-            if (ch == 'q' && currentMode == Mode::NORMAL) { // 在普通模式下按 'q'
-                if (!dataModified) {
-                    running = false; // 直接退出
-                } else {
+            if (ch == 'q' && currentMode == Mode::NORMAL) { // 在普通模式下按'q'退出
+                if (!dataModified) {                        // 如果没有未保存的修改
+                    running = false;                        // 直接退出循环
+                } else {                                    // 有未保存的修改，提示用户
                     commandString = "Unsaved changes. Use :q! or :w.";
-                    last_status_message = commandString; // 确保显示
+                    last_status_message_check = commandString; // 确保此提示被记录以显示
                 }
             }
         } else if (currentMode == Mode::EDIT) {
             handleEditModeInput(ch);
         } else if (currentMode == Mode::COMMAND_LINE) {
-            handleCommandLineInput(ch); // 内部会调用 processCommand
-            if (commandString == "__QUIT_REQUESTED__") {
-                running = false;
-                commandString.clear(); // 清理特殊标记
+            handleCommandLineInput(ch);                  // 内部可能会调用processCommand
+            if (commandString == "__QUIT_REQUESTED__") { // 如果命令处理结果是退出
+                running = false;                         // 退出循环
+                commandString.clear();                   // 清理特殊退出标记
             }
         }
 
+        // 处理终端尺寸变化事件
         if (ch == KEY_RESIZE) {
-            // ncurses 通常会自动处理 SIGWINCH 并更新 LINES 和 COLS
-            // 我们需要删除旧窗口，重新计算布局，创建新窗口
+            // 删除旧窗口
+            if (hexWin) {
+                delwin(hexWin);
+                hexWin = nullptr;
+            }
+            if (statusWin) {
+                delwin(statusWin);
+                statusWin = nullptr;
+            }
 
-            delwin(hexWin);
-            hexWin = nullptr;
-            delwin(statusWin);
-            statusWin = nullptr;
+            // ncurses在SIGWINCH后，getch()或refresh()通常会更新LINES和COLS
+            clear();   // 清理stdscr，为重绘做准备
+            refresh(); // 刷新stdscr以应用新的终端尺寸
 
-            // ncurses的refresh()或getch()在SIGWINCH后会更新LINES/COLS
-            // 但有时需要 endwin(), refresh(), 然后重新 initscr() 和窗口。
-            // 为了简单起见，这里假设LINES/COLS已更新。
-            // 如果遇到问题，标准的resize处理是:
-            // endwin(); initscr(); /* re-init colors, cbreak etc. */; clear(); refresh();
-
-            // 重新计算布局
-            calculateLayout();
+            calculateLayout(); // 根据新的LINES/COLS重新计算布局参数
 
             // 重新创建窗口
             hexWin = newwin(LINES - 1, totalWidth, 0, 0);
             statusWin = newwin(1, totalWidth, LINES - 1, 0);
 
-            if (!hexWin || !statusWin) {
-                // 如果调整后窗口还是无法创建，则退出
-                running = false; // 应该通知上层出错了
-                // endwin(); // 如果这里负责initscr
-                // std::cerr << "错误: 终端调整后尺寸过小。" << std::endl;
+            if (!hexWin || !statusWin) { // 如果重创窗口失败
+                running = false;         // 退出循环
+                // 此处也应有机制通知main函数错误
             } else {
-                keypad(hexWin, TRUE);
-                clear(); // 清理屏幕，因为 LINES/COLS 可能变化很大
-                refresh(); // 刷新 stdscr
-                // 下一轮循环会自动重绘所有内容
+                keypad(hexWin, TRUE); // 为新窗口启用功能键
+                // 强制ncurses在下一轮重绘整个屏幕
+                clearok(stdscr, TRUE);
             }
         }
-    }
+    } // 主循环结束
 }

@@ -6,11 +6,10 @@
 #include "HexView/HexCli.h"
 #include "Volume.h"
 
-
 enum class ViewType { BiosView, ElfView, HexView };
 
 class CliView {
-public:
+  public:
     BinaryData *binary{nullptr};
     BiosCliView *ui{nullptr};
     HexCliView *hexUi{nullptr};

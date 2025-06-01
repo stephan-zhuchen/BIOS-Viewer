@@ -3,16 +3,16 @@
 #include "Volume.h"
 
 #ifdef _WIN32
-#include "curses.h"
+    #include "curses.h"
 #else
-#include <ncurses.h>
+    #include <ncurses.h>
 #endif
 #include "IfwiRegion/BiosRegion.h"
 
 using std::unique_ptr;
 
 class BiosCliData {
-public:
+  public:
     vector<Volume *> VolumeDataList{};
     Volume *OverviewVolume{nullptr};
     BiosRegion *BiosImage{nullptr};
@@ -29,19 +29,20 @@ public:
 };
 
 class TreeNode {
-public:
+  public:
     DataModel data;
     TreeNode *parent = nullptr;
     vector<unique_ptr<TreeNode>> children;
     bool isExpanded = false;
     int depth = 0;
 
-    TreeNode(DataModel dm, TreeNode *p = nullptr, int d = 0) : data(std::move(dm)), parent(p), depth(d) {}
+    TreeNode(DataModel dm, TreeNode *p = nullptr, int d = 0) : data(std::move(dm)), parent(p), depth(d) {
+    }
 };
 
 class BiosCliView {
-private:
-    unique_ptr<TreeNode> dataRoot; // 树形数据结构根节点
+  private:
+    unique_ptr<TreeNode> dataRoot;   // 树形数据结构根节点
     vector<TreeNode *> visibleNodes; // 当前可见节点列表
     WINDOW *left_win;
     WINDOW *right_win;
@@ -53,12 +54,12 @@ private:
     void drawTable(int startRow);
     void drawPanel();
 
-public:
+  public:
     // Data
     BinaryData *binaryData{nullptr};
     BiosCliData *BiosData{nullptr};
     vector<DataModel> tableData;
-    int selectedRow = 0; // 当前选中行
+    int selectedRow = 0;  // 当前选中行
     int scrollOffset = 0; // 滚动偏移量
 
     explicit BiosCliView(BinaryData *binary);
