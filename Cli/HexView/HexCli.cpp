@@ -194,7 +194,7 @@ void HexCliView::drawHexContent() {
                     mvwaddch(hexWin,
                              DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
                              hex_data_print_x + byte_col_idx * 3 + nibble_idx,
-                             nibble_char);
+                             (UINT8) nibble_char);
 
                     if (isCursorOnThisNibble)
                         wattroff(hexWin, A_REVERSE); // 取消高亮
@@ -212,7 +212,7 @@ void HexCliView::drawHexContent() {
                 mvwaddch(hexWin,
                          DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
                          ascii_data_print_x + byte_col_idx,
-                         displayChar);
+                         (UINT8) displayChar);
             } else { // 如果当前位置超出文件数据范围 (行末尾的填充部分)
                 mvwprintw(hexWin,
                           DATA_START_ROW_IN_WINDOW + drawn_data_row_count,
@@ -269,7 +269,7 @@ void HexCliView::drawStatusBar() {
 
     if (currentMode == Mode::COMMAND_LINE) {                      // 命令行模式下
         mvwprintw(statusWin, 0, 0, ":%s", commandString.c_str()); // 显示冒号和用户输入的命令
-        wmove(statusWin, 0, 1 + (int)commandString.length());          // 将光标移动到命令末尾
+        wmove(statusWin, 0, 1 + (int) commandString.length());    // 将光标移动到命令末尾
         curs_set(1);                                              // 显示终端光标
     } else {                                                      // 普通或编辑模式下
         curs_set(0);                                              // 隐藏终端光标 (我们自己绘制编辑光标)
@@ -307,8 +307,8 @@ void HexCliView::drawStatusBar() {
 
         // 如果有临时命令字符串（如保存成功消息），且不是在命令行模式，则在中间显示
         if (!commandString.empty() && currentMode != Mode::COMMAND_LINE) {
-            int mid_pos = (totalWidth - (int)commandString.length()) / 2;    // 计算中间位置
-            mid_pos = std::max((int) statusLeft.length() + 2, mid_pos); // 确保不与左侧状态重叠
+            int mid_pos = (totalWidth - (int) commandString.length()) / 2; // 计算中间位置
+            mid_pos = std::max((int) statusLeft.length() + 2, mid_pos);    // 确保不与左侧状态重叠
             // 确保不与右侧状态重叠
             if (mid_pos + (int) commandString.length() < totalWidth - 1 - (int) rs_str.length() - 2) {
                 mvwprintw(statusWin, 0, mid_pos, "%s", commandString.c_str());
@@ -400,7 +400,7 @@ void HexCliView::moveEditCursor(int dLine, int dByteOrNibble, bool isNibbleMove)
         // 限制字节在行内的偏移
         int bytesInCurrentLine = BYTES_PER_LINE;
         if (editCursorLine == totalDataLines - 1) { // 如果光标在最后一行数据上
-            bytesInCurrentLine = currentBinaryData->InputImageSize % BYTES_PER_LINE;
+            bytesInCurrentLine = (int) currentBinaryData->InputImageSize % BYTES_PER_LINE;
             if (bytesInCurrentLine == 0)
                 bytesInCurrentLine = BYTES_PER_LINE; // 如果文件大小刚好是BYTES_PER_LINE的整数倍
         }

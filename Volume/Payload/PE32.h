@@ -20,7 +20,7 @@ public:
     INT64                     convertedPe32Size{0};
 
     PE32()=delete;
-    PE32(UINT8* file, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
+    PE32(UINT8 *file, INT64 length, INT64 offset, bool compressed = false, Volume *parent = nullptr);
     ~PE32() override;
 
     // bool  CheckValidation() override;

@@ -25,7 +25,7 @@ public:
     UINT64 StrTableSize;
 public:
     ELF() = delete;
-    ELF(UINT8* file, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
+    ELF(UINT8 *file, INT64 length, INT64 offset, bool compressed = false, Volume *parent = nullptr);
     ~ELF() override;
     bool isValid() const;
     std::string getStringFromOffset(UINT32 off) const;

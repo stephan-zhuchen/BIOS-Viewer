@@ -1,13 +1,14 @@
 #include "PE32.h"
-#include "BaseLib.h"
-#include <sstream>
-#include <iomanip>
 #include <cstring>
+#include <iomanip>
+#include <sstream>
+#include "BaseLib.h"
 
 using namespace BaseLibrarySpace;
 
-PE32::PE32(UINT8* file, INT64 length, INT64 offset, bool Compressed, Volume* parent):
-        Volume(file, length, offset, Compressed, parent) {}
+PE32::PE32(UINT8 *file, INT64 length, INT64 offset, bool compressed, Volume *parent)
+    : Volume(file, length, offset, compressed, parent) {
+}
 
 PE32::~PE32() {
     if (convertedPe32Data != nullptr) {
@@ -18,17 +19,17 @@ PE32::~PE32() {
 
 INT64 PE32::SelfDecode() {
     Type = VolumeType::PE32;
-    UINT16 magic = *(UINT16*)data;
+    UINT16 magic = *(UINT16 *) data;
     if (magic == EFI_IMAGE_DOS_SIGNATURE) {
-        dosHeader = *(EFI_IMAGE_DOS_HEADER*)data;
-        pe32Header = *(EFI_IMAGE_NT_HEADERS32*)(data + dosHeader.e_lfanew);
+        dosHeader = *(EFI_IMAGE_DOS_HEADER *) data;
+        pe32Header = *(EFI_IMAGE_NT_HEADERS32 *) (data + dosHeader.e_lfanew);
         if (pe32Header.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
             isPe32Plus = true;
-            pe32plusHeader = *(EFI_IMAGE_NT_HEADERS64*)(data + dosHeader.e_lfanew);
+            pe32plusHeader = *(EFI_IMAGE_NT_HEADERS64 *) (data + dosHeader.e_lfanew);
         }
     } else if (magic == EFI_TE_IMAGE_HEADER_SIGNATURE) {
         isTE = true;
-        teHeader = *(EFI_TE_IMAGE_HEADER*)data;
+        teHeader = *(EFI_TE_IMAGE_HEADER *) data;
     } else {
         isValid = false;
         return 0;
@@ -51,17 +52,24 @@ void PE32::setInfoStr() {
         peSignature = pe32Header.Signature;
         SubSystem = pe32Header.OptionalHeader.Subsystem;
 
-        ss << setw(width) << "DOS signature:" << hex << uppercase << e_magic << "h (" << charToString((CHAR8*)&e_magic, sizeof(UINT16), false) << ")\n"
-           << setw(width) << "PE signature:" << hex << uppercase << peSignature << "h (" << charToString((CHAR8*)&peSignature, sizeof(UINT32), false) << ")\n"
+        ss << setw(width) << "DOS signature:" << hex << uppercase << e_magic << "h ("
+           << charToString((CHAR8 *) &e_magic, sizeof(UINT16), false) << ")\n"
+           << setw(width) << "PE signature:" << hex << uppercase << peSignature << "h ("
+           << charToString((CHAR8 *) &peSignature, sizeof(UINT32), false) << ")\n"
            << setw(width) << "Machine type:" << getMachineType() << "\n"
-           << setw(width) << "Number of sections:" << hex << uppercase << pe32Header.FileHeader.NumberOfSections << "h\n"
+           << setw(width) << "Number of sections:" << hex << uppercase << pe32Header.FileHeader.NumberOfSections
+           << "h\n"
            << setw(width) << "Characteristics:" << hex << uppercase << pe32Header.FileHeader.Characteristics << "h\n"
-           << setw(width) << "Optional Header Signature:" << hex << uppercase << pe32Header.OptionalHeader.Magic << "h\n"
+           << setw(width) << "Optional Header Signature:" << hex << uppercase << pe32Header.OptionalHeader.Magic
+           << "h\n"
            << setw(width) << "Size of image:" << hex << uppercase << pe32Header.OptionalHeader.SizeOfImage << "h\n"
            << setw(width) << "Size of header:" << hex << uppercase << pe32Header.OptionalHeader.SizeOfHeaders << "h\n"
-           << setw(width) << "NumberOfRvaAndSizes:" << hex << uppercase << pe32Header.OptionalHeader.NumberOfRvaAndSizes << "h\n"
-           << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << getSubsystemName(SubSystem) << ")\n"
-           << setw(width) << "EntryPoint Address:" << hex << uppercase << pe32Header.OptionalHeader.AddressOfEntryPoint << "h\n"
+           << setw(width) << "NumberOfRvaAndSizes:" << hex << uppercase << pe32Header.OptionalHeader.NumberOfRvaAndSizes
+           << "h\n"
+           << setw(width) << "Subsystem:" << hex << uppercase << SubSystem << "h (" << getSubsystemName(SubSystem)
+           << ")\n"
+           << setw(width) << "EntryPoint Address:" << hex << uppercase << pe32Header.OptionalHeader.AddressOfEntryPoint
+           << "h\n"
            << setw(width) << "Size of code:" << hex << uppercase << pe32Header.OptionalHeader.SizeOfCode << "h\n"
            << setw(width) << "Base of code:" << hex << uppercase << pe32Header.OptionalHeader.BaseOfCode << "h\n"
            << setw(width) << "Base of data:" << hex << uppercase << pe32Header.OptionalHeader.BaseOfData << "h\n";
@@ -69,12 +77,13 @@ void PE32::setInfoStr() {
             ss << setw(width) << "Image base:" << hex << uppercase << pe32plusHeader.OptionalHeader.ImageBase << "h\n";
         else
             ss << setw(width) << "Image base:" << hex << uppercase << pe32Header.OptionalHeader.ImageBase << "h\n";
-    }
-    else {
-        ss << setw(width) << "TE signature:" << hex << uppercase << teHeader.Signature << "h (" << charToString((CHAR8*)&teHeader.Signature, sizeof(UINT16), false) << ")\n"
+    } else {
+        ss << setw(width) << "TE signature:" << hex << uppercase << teHeader.Signature << "h ("
+           << charToString((CHAR8 *) &teHeader.Signature, sizeof(UINT16), false) << ")\n"
            << setw(width) << "Machine type:" << getMachineType() << "\n"
-           << setw(width) << "Number of sections:" << hex << uppercase << (UINT32)teHeader.NumberOfSections << "h\n"
-           << setw(width) << "Subsystem:" << hex << uppercase << (UINT16)teHeader.Subsystem << "h (" << getSubsystemName(teHeader.Subsystem) << ")\n"
+           << setw(width) << "Number of sections:" << hex << uppercase << (UINT32) teHeader.NumberOfSections << "h\n"
+           << setw(width) << "Subsystem:" << hex << uppercase << (UINT16) teHeader.Subsystem << "h ("
+           << getSubsystemName(teHeader.Subsystem) << ")\n"
            << setw(width) << "Stripped size:" << hex << uppercase << teHeader.StrippedSize << "h\n"
            << setw(width) << "Base of code:" << hex << uppercase << teHeader.BaseOfCode << "h\n"
            << setw(width) << "EntryPoint Address:" << hex << uppercase << teHeader.AddressOfEntryPoint << "h\n"
@@ -102,22 +111,26 @@ void PE32::convert2Pe() {
         convertedPe32Header.OptionalHeader.Magic = EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC;
         convertedPe32Header.OptionalHeader.AddressOfEntryPoint = teHeader.AddressOfEntryPoint;
         convertedPe32Header.OptionalHeader.BaseOfCode = teHeader.BaseOfCode;
-        convertedPe32Header.OptionalHeader.ImageBase = (UINT32)teHeader.ImageBase;
-        convertedPe32Header.OptionalHeader.SizeOfImage = (UINT32)size;
+        convertedPe32Header.OptionalHeader.ImageBase = (UINT32) teHeader.ImageBase;
+        convertedPe32Header.OptionalHeader.SizeOfImage = (UINT32) size;
 
         UINT32 SectionsSize = convertedPe32Header.FileHeader.NumberOfSections * sizeof(EFI_IMAGE_SECTION_HEADER);
-        convertedDosHeader.e_lfanew = teHeader.BaseOfCode - SectionsSize - sizeof(EFI_IMAGE_NT_HEADERS32);
+        convertedDosHeader.e_lfanew = teHeader.BaseOfCode - SectionsSize - (UINT32) sizeof(EFI_IMAGE_NT_HEADERS32);
 
         convertedPe32Header.OptionalHeader.SizeOfHeaders = teHeader.BaseOfCode;
         convertedPe32Header.OptionalHeader.NumberOfRvaAndSizes = 0x10;
         convertedPe32Header.OptionalHeader.SectionAlignment = 0x20;
         convertedPe32Header.OptionalHeader.FileAlignment = 0x20;
-        convertedPe32Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress = teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress;
-        convertedPe32Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC].Size = teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
-        convertedPe32Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress = teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress;
-        convertedPe32Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG].Size = teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_DEBUG].Size;
+        convertedPe32Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress =
+            teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress;
+        convertedPe32Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC].Size =
+            teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
+        convertedPe32Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress =
+            teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress;
+        convertedPe32Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG].Size =
+            teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_DEBUG].Size;
 
-        UINT8* codeData = data + sizeof(EFI_TE_IMAGE_HEADER);
+        UINT8 *codeData = data + sizeof(EFI_TE_IMAGE_HEADER);
         INT64 sizeOfCode = size - sizeof(EFI_TE_IMAGE_HEADER);
         convertedPe32Size = convertedDosHeader.e_lfanew + sizeof(EFI_IMAGE_NT_HEADERS32) + sizeOfCode;
         convertedPe32Data = new UINT8[convertedPe32Size];
@@ -136,21 +149,25 @@ void PE32::convert2Pe() {
         convertedPe64Header.OptionalHeader.AddressOfEntryPoint = teHeader.AddressOfEntryPoint;
         convertedPe64Header.OptionalHeader.BaseOfCode = teHeader.BaseOfCode;
         convertedPe64Header.OptionalHeader.ImageBase = teHeader.ImageBase;
-        convertedPe64Header.OptionalHeader.SizeOfImage = (UINT32)size;
+        convertedPe64Header.OptionalHeader.SizeOfImage = (UINT32) size;
 
         UINT32 SectionsSize = convertedPe64Header.FileHeader.NumberOfSections * sizeof(EFI_IMAGE_SECTION_HEADER);
-        convertedDosHeader.e_lfanew = teHeader.BaseOfCode - SectionsSize - sizeof(EFI_IMAGE_NT_HEADERS64);
+        convertedDosHeader.e_lfanew = teHeader.BaseOfCode - SectionsSize - (UINT32) sizeof(EFI_IMAGE_NT_HEADERS64);
 
         convertedPe64Header.OptionalHeader.SizeOfHeaders = teHeader.BaseOfCode;
         convertedPe64Header.OptionalHeader.NumberOfRvaAndSizes = 0x10;
         convertedPe64Header.OptionalHeader.SectionAlignment = 0x20;
         convertedPe64Header.OptionalHeader.FileAlignment = 0x20;
-        convertedPe64Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress = teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress;
-        convertedPe64Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC].Size = teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
-        convertedPe64Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress = teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress;
-        convertedPe64Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG].Size = teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_DEBUG].Size;
+        convertedPe64Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress =
+            teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress;
+        convertedPe64Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC].Size =
+            teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
+        convertedPe64Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress =
+            teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress;
+        convertedPe64Header.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_DEBUG].Size =
+            teHeader.DataDirectory[EFI_TE_IMAGE_DIRECTORY_ENTRY_DEBUG].Size;
 
-        UINT8* codeData = data + sizeof(EFI_TE_IMAGE_HEADER);
+        UINT8 *codeData = data + sizeof(EFI_TE_IMAGE_HEADER);
         INT64 sizeOfCode = size - sizeof(EFI_TE_IMAGE_HEADER);
         convertedPe32Size = convertedDosHeader.e_lfanew + sizeof(EFI_IMAGE_NT_HEADERS64) + sizeOfCode;
         convertedPe32Data = new UINT8[convertedPe32Size];
@@ -231,8 +248,8 @@ string PE32::getSubsystemName(UINT16 subsystem) {
     return SubSystemName;
 }
 
-bool PE32::IsPe32Format(const UINT8* ImageBase) {
-    UINT16 magic = *(UINT16*)ImageBase;
+bool PE32::IsPe32Format(const UINT8 *ImageBase) {
+    UINT16 magic = *(UINT16 *) ImageBase;
     if (magic == EFI_IMAGE_DOS_SIGNATURE) {
         return true;
     } else if (magic == EFI_TE_IMAGE_HEADER_SIGNATURE) {

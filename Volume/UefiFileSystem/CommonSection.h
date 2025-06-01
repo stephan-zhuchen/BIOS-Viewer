@@ -50,7 +50,7 @@ public:
     Depex                     *Dependency{nullptr};
 
     CommonSection()=delete;
-    CommonSection(UINT8* file, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
+    CommonSection(UINT8 *file, INT64 length, INT64 offset, bool compressed = false, Volume *parent = nullptr);
     ~CommonSection() override;
 
     bool  CheckValidation() override;

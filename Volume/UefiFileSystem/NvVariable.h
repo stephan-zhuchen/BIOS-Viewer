@@ -36,7 +36,7 @@ public:
     bool                        AuthFlag;
 
     NvStorageVariable() = delete;
-    NvStorageVariable(UINT8* buffer, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
+    NvStorageVariable(UINT8 *buffer, INT64 length, INT64 offset, bool compressed = false, Volume *parent = nullptr);
     ~NvStorageVariable() override;
 
     bool  CheckValidation() override;
@@ -50,7 +50,7 @@ public:
     EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER TolerantHeader;
 
     FaultTolerantBlock() = delete;
-    FaultTolerantBlock(UINT8* buffer, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
+    FaultTolerantBlock(UINT8 *buffer, INT64 length, INT64 offset, bool compressed = false, Volume *parent = nullptr);
     ~FaultTolerantBlock() override;
 
     bool  CheckValidation() override;

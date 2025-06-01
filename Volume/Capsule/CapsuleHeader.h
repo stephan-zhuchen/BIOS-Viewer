@@ -46,8 +46,8 @@ public:
 
 struct BgupConfig {
     string      BgupContent;
-    UINT32      BgupOffset;
-    UINT32      BgupSize;
+    UINT64      BgupOffset;
+    UINT64      BgupSize;
 };
 
 class IniConfigFile: public Volume {

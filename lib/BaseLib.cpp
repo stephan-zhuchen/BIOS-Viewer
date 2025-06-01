@@ -221,7 +221,7 @@ namespace BaseLibrarySpace {
         return (INT32)*(UINT32*)address & 0xFFFFFF;
     }
 
-    string DumpHex(UINT8* HexData, INT64 length, INT64 ColumeSize, bool SingleLine, INT64 indent) {
+    string DumpHex(UINT8 *HexData, INT64 length, INT64 ColumeSize, bool SingleLine, INT32 indent) {
         auto InternalDumpData = [](stringstream &ss, UINT8* Data, INT64 Size) {
             for (INT64 Index = 0; Index < Size; Index++) {
                 ss << setw(2) << setfill('0') << hex << (UINT16)Data[Index] << " ";

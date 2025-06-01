@@ -2,27 +2,28 @@
 // Created by stephan on 8/29/2023.
 //
 
-#include <thread>
-#include <mutex>
-#include <algorithm>
-#include "BaseLib.h"
 #include "FirmwareVolume.h"
+#include <algorithm>
+#include <iomanip>
+#include <mutex>
+#include <sstream>
+#include <thread>
+#include "BaseLib.h"
 #include "FfsFile.h"
+#include "NvVariable.h"
 #include "UEFI/GuidDatabase.h"
 #include "UEFI/PiFirmwareFile.h"
-#include "NvVariable.h"
-#include <sstream>
-#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
-FirmwareVolume::FirmwareVolume(UINT8 *buffer, INT64 length, INT64 offset, bool Compressed, Volume* parent):
-    Volume(buffer, length, offset, Compressed, parent) {}
+FirmwareVolume::FirmwareVolume(UINT8 *buffer, INT64 length, INT64 offset, bool compressed, Volume *parent)
+    : Volume(buffer, length, offset, compressed, parent) {
+}
 
 bool FirmwareVolume::CheckValidation() {
-    if (size < sizeof(EFI_FIRMWARE_VOLUME_HEADER))
+    if (size < (INT64) sizeof(EFI_FIRMWARE_VOLUME_HEADER))
         return false;
-    auto* address = (EFI_FIRMWARE_VOLUME_HEADER*)data;
+    auto *address = (EFI_FIRMWARE_VOLUME_HEADER *) data;
     if (address->Signature != 0x4856465F)
         return false;
 
@@ -35,8 +36,8 @@ bool FirmwareVolume::CheckValidation() {
     }
 
     // Skip caculating ZeroVector checksum
-    UINT16 sumValue = CalculateSum16((UINT16 *) ((UINT8*)address + 16),
-                                     (sizeof(EFI_FIRMWARE_VOLUME_HEADER) - 16) / sizeof(UINT16));
+    UINT16 sumValue =
+        CalculateSum16((UINT16 *) ((UINT8 *) address + 16), (sizeof(EFI_FIRMWARE_VOLUME_HEADER) - 16) / sizeof(UINT16));
     if (sumValue != 0)
         return false;
     return true;
@@ -47,27 +48,27 @@ INT64 FirmwareVolume::SelfDecode() {
         return 0;
 
     Type = VolumeType::FirmwareVolume;
-    FirmwareVolumeHeader = *(EFI_FIRMWARE_VOLUME_HEADER*)data;
+    FirmwareVolumeHeader = *(EFI_FIRMWARE_VOLUME_HEADER *) data;
 
     // Check that the firmware volume is not longer than the volume
-    if (FirmwareVolumeHeader.FvLength > (UINT64)size) {
+    if (FirmwareVolumeHeader.FvLength > (UINT64) size) {
         Corrupted = true;
         return 0;
     }
-    size = (INT64)FirmwareVolumeHeader.FvLength;
+    size = (INT64) FirmwareVolumeHeader.FvLength;
 
     // Check if the firmware volume has an extended header
     if (FirmwareVolumeHeader.ExtHeaderOffset == 0) {
         FirmwareVolumeHeaderSize = 0x48;
         isExt = false;
     } else {
-        auto *ExtFvFfs = (EFI_FFS_FILE_HEADER*)(data + 0x48);
+        auto *ExtFvFfs = (EFI_FFS_FILE_HEADER *) (data + 0x48);
         FirmwareVolumeHeaderSize = 0x48 + FFS_FILE_SIZE(ExtFvFfs);
         if (size < FirmwareVolumeHeader.ExtHeaderOffset) {
             Corrupted = true;
             return 0;
         }
-        FirmwareVolumeExtHeader = *(EFI_FIRMWARE_VOLUME_EXT_HEADER*)(data + FirmwareVolumeHeader.ExtHeaderOffset);
+        FirmwareVolumeExtHeader = *(EFI_FIRMWARE_VOLUME_EXT_HEADER *) (data + FirmwareVolumeHeader.ExtHeaderOffset);
         isExt = true;
     }
 
@@ -89,26 +90,26 @@ void FirmwareVolume::DecodeChildVolume() {
 
         // The following file types have sections that can be decoded:
         switch (Ffs->getType()) {
-            case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
-            case EFI_FV_FILETYPE_FREEFORM:
-            case EFI_FV_FILETYPE_SECURITY_CORE:
-            case EFI_FV_FILETYPE_PEI_CORE:
-            case EFI_FV_FILETYPE_DXE_CORE:
-            case EFI_FV_FILETYPE_MM_CORE:
-            case EFI_FV_FILETYPE_PEIM:
-            case EFI_FV_FILETYPE_DRIVER:
-            case EFI_FV_FILETYPE_APPLICATION:
-            case EFI_FV_FILETYPE_MM:
-            case EFI_FV_FILETYPE_RAW:
-                Ffs->DecodeChildVolume();
-                break;
-            default:
-                break;
+        case EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE:
+        case EFI_FV_FILETYPE_FREEFORM:
+        case EFI_FV_FILETYPE_SECURITY_CORE:
+        case EFI_FV_FILETYPE_PEI_CORE:
+        case EFI_FV_FILETYPE_DXE_CORE:
+        case EFI_FV_FILETYPE_MM_CORE:
+        case EFI_FV_FILETYPE_PEIM:
+        case EFI_FV_FILETYPE_DRIVER:
+        case EFI_FV_FILETYPE_APPLICATION:
+        case EFI_FV_FILETYPE_MM:
+        case EFI_FV_FILETYPE_RAW:
+            Ffs->DecodeChildVolume();
+            break;
+        default:
+            break;
         }
         ChildVolume.push_back(Ffs);
     };
     while (offset < size) {
-        EFI_FFS_FILE_HEADER  FfsHeader = *(EFI_FFS_FILE_HEADER*)(data + offset);
+        EFI_FFS_FILE_HEADER FfsHeader = *(EFI_FFS_FILE_HEADER *) (data + offset);
         INT64 FfsSize = FFS_FILE_SIZE(&FfsHeader);
 
         // If the size of the current FFS file is 0xFFFFFF and the file is marked as deleted (0xFF),
@@ -121,10 +122,12 @@ void FirmwareVolume::DecodeChildVolume() {
 
         if (isNv) {
             isNv = false;
-            auto NvStorage = new NvStorageVariable(data + offset, size - offset, offsetFromBegin + offset, Compressed, this);
+            auto NvStorage =
+                new NvStorageVariable(data + offset, size - offset, offsetFromBegin + offset, Compressed, this);
             INT64 NvSize = NvStorage->SelfDecode();
             NvStorage->DecodeChildVolume();
-            auto FaultTolerant = new FaultTolerantBlock(data + offset + NvSize, size - offset - NvSize, offsetFromBegin + offset + NvSize, Compressed, this);
+            auto FaultTolerant = new FaultTolerantBlock(
+                data + offset + NvSize, size - offset - NvSize, offsetFromBegin + offset + NvSize, Compressed, this);
             INT64 TolerantSize = FaultTolerant->SelfDecode();
             FaultTolerant->DecodeChildVolume();
             ChildVolume.push_back(NvStorage);
@@ -135,7 +138,7 @@ void FirmwareVolume::DecodeChildVolume() {
         }
 
         // If the current FFS file size is valid, then update the offset to point to the next FFS file.
-        if (offset + FfsSize > offset){
+        if (offset + FfsSize > offset) {
             offset += FfsSize;
             Align(offset, 0, 0x8);
         } else {
@@ -156,23 +159,27 @@ void FirmwareVolume::setInfoStr() {
     stringstream ss;
     ss.setf(ios::left);
 
-    ss << "FileSystem GUID:\n" << FirmwareVolumeHeader.FileSystemGuid.str(true) << "\n"
-       << setw(width) << "Signature:" << charToString((CHAR8*)(&FirmwareVolumeHeader.Signature), sizeof(UINT32)) << "\n"
+    ss << "FileSystem GUID:\n"
+       << FirmwareVolumeHeader.FileSystemGuid.str(true) << "\n"
+       << setw(width) << "Signature:" << charToString((CHAR8 *) (&FirmwareVolumeHeader.Signature), sizeof(UINT32))
+       << "\n"
        << setw(width) << "Full size:" << hex << uppercase << FirmwareVolumeHeader.FvLength << "h\n"
        << setw(width) << "Header size:" << hex << uppercase << FirmwareVolumeHeaderSize << "h\n"
-       << setw(width) << "Body size:" << hex << uppercase << FirmwareVolumeHeader.FvLength - FirmwareVolumeHeaderSize << "h\n"
-       << setw(width) << "Revision:"    << hex << (UINT32)FirmwareVolumeHeader.Revision << "\n"
-       << setw(width) << "Attributes:"  << hex << uppercase << FirmwareVolumeHeader.Attributes << "h\n"
-       << setw(width) << "Checksum:"    << hex << uppercase << FirmwareVolumeHeader.Checksum << "h (valid)\n";
+       << setw(width) << "Body size:" << hex << uppercase << FirmwareVolumeHeader.FvLength - FirmwareVolumeHeaderSize
+       << "h\n"
+       << setw(width) << "Revision:" << hex << (UINT32) FirmwareVolumeHeader.Revision << "\n"
+       << setw(width) << "Attributes:" << hex << uppercase << FirmwareVolumeHeader.Attributes << "h\n"
+       << setw(width) << "Checksum:" << hex << uppercase << FirmwareVolumeHeader.Checksum << "h (valid)\n";
 
     if (isExt) {
         ss << "Extended header size:" << hex << FirmwareVolumeExtHeader.ExtHeaderSize << "h\n"
-           << "Volume GUID:\n" << FirmwareVolumeExtHeader.FvName.str(true) << "\n";
+           << "Volume GUID:\n"
+           << FirmwareVolumeExtHeader.FvName.str(true) << "\n";
     }
 
     INT64 FreeSpaceSize = GetFreeSpaceSize();
     if (FreeSpaceSize != 0) {
-        float rate = (float)FreeSpaceSize / (float)this->size;
+        float rate = (float) FreeSpaceSize / (float) this->size;
         ss << setprecision(4) << setw(width) << "FV Space:" << (1 - rate) * 100 << "% Full\n";
     }
 
@@ -220,7 +227,8 @@ bool FirmwareVolume::isValidFirmwareVolume(EFI_FIRMWARE_VOLUME_HEADER *address) 
     }
 
     // Skip caculating ZeroVector checksum
-    UINT16 sumValue = CalculateSum16((UINT16 *) ((UINT8*)address + 16), (sizeof(EFI_FIRMWARE_VOLUME_HEADER) - 16) / sizeof(UINT16));
+    UINT16 sumValue =
+        CalculateSum16((UINT16 *) ((UINT8 *) address + 16), (sizeof(EFI_FIRMWARE_VOLUME_HEADER) - 16) / sizeof(UINT16));
     if (sumValue != 0)
         return false;
     return true;

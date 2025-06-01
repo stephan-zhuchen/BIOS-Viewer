@@ -15,7 +15,7 @@ private:
     VARIABLE_STORE_HEADER               VariableStoreHeader;
 public:
     Vpd()=delete;
-    Vpd(UINT8* buffer, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
+    Vpd(UINT8 *buffer, INT64 length, INT64 offset, bool compressed = false, Volume *parent = nullptr);
     ~Vpd() override;
 
     bool  CheckValidation() override;

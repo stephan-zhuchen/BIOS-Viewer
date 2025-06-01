@@ -4,8 +4,8 @@
 
 #include "PdtRegion.h"
 
-PdtRegion::PdtRegion(UINT8 *buffer, INT64 length, INT64 offset):
-    Volume(buffer, length, offset, false, nullptr) {}
+PdtRegion::PdtRegion(UINT8 *buffer, INT64 length, INT64 offset) : Volume(buffer, length, offset, false, nullptr) {
+}
 
 bool PdtRegion::CheckValidation() {
     return Volume::CheckValidation();
@@ -25,4 +25,3 @@ void PdtRegion::setInfoStr() {
 }
 
 PdtRegion::~PdtRegion() = default;
-

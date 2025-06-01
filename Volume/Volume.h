@@ -75,7 +75,7 @@ public:
     vector<Volume*>      ChildVolume;
 
     Volume() = default;
-    Volume(UINT8* buffer, INT64 length, INT64 offset=0, bool Compressed=false, Volume* parent= nullptr);
+    Volume(UINT8* buffer, INT64 length, INT64 offset=0, bool compressed=false, Volume* parent= nullptr);
     virtual ~Volume();
 
     // Data Getter

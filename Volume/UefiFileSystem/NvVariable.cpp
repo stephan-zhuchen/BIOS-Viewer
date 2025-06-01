@@ -73,8 +73,8 @@ std::vector<string> NvVariableEntry::getUserDefinedName() const {
 
 NvVariableEntry::~NvVariableEntry() = default;
 
-NvStorageVariable::NvStorageVariable(UINT8 *buffer, INT64 length, INT64 offset, bool Compressed, Volume *parent):
-    Volume(buffer, length, offset, Compressed, parent), AuthFlag(false) { }
+NvStorageVariable::NvStorageVariable(UINT8 *buffer, INT64 length, INT64 offset, bool compressed, Volume *parent):
+    Volume(buffer, length, offset, compressed, parent), AuthFlag(false) { }
 
 bool NvStorageVariable::CheckValidation() {
     return Volume::CheckValidation();
@@ -122,8 +122,9 @@ void NvStorageVariable::setInfoStr() {
 
 NvStorageVariable::~NvStorageVariable() = default;
 
-FaultTolerantBlock::FaultTolerantBlock(UINT8 *buffer, INT64 length, INT64 offset, bool Compressed, Volume *parent)
-        : Volume(buffer, length, offset, Compressed, parent) {}
+FaultTolerantBlock::FaultTolerantBlock(UINT8 *buffer, INT64 length, INT64 offset, bool compressed, Volume *parent)
+    : Volume(buffer, length, offset, compressed, parent) {
+}
 
 bool FaultTolerantBlock::CheckValidation() {
     return Volume::CheckValidation();

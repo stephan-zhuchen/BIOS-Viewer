@@ -16,7 +16,7 @@ private:
     bool                   dataChecksumValid{false};
 public:
     FfsFile() = delete;
-    FfsFile(UINT8* file, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
+    FfsFile(UINT8 *file, INT64 offset, bool compressed = false, Volume *parent = nullptr);
     ~FfsFile() override;
 
     bool   CheckValidation() override;

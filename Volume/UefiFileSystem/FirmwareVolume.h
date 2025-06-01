@@ -16,7 +16,7 @@ private:
 
 public:
     FirmwareVolume() = delete;
-    FirmwareVolume(UINT8* buffer, INT64 length, INT64 offset, bool Compressed=false, Volume* parent= nullptr);
+    FirmwareVolume(UINT8 *buffer, INT64 length, INT64 offset, bool compressed = false, Volume *parent = nullptr);
     ~FirmwareVolume() override;
 
     bool  CheckValidation() override;

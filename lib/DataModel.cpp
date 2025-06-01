@@ -234,6 +234,11 @@ void DataModel::InitFromVolume(Volume *vol) {
         type = "File";
         subtype = "Raw";
         break;
+    case VolumeType::FspBootManifest:
+        name = "FSP Boot Manifest";
+        type = "File";
+        subtype = "Raw";
+        break;
     case VolumeType::AcpiTable:
         name = "ACPI Table";
         type = "Section";

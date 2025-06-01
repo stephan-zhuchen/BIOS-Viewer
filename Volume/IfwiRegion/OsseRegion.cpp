@@ -4,8 +4,8 @@
 
 #include "OsseRegion.h"
 
-OsseRegion::OsseRegion(UINT8 *buffer, INT64 length, INT64 offset):
-    Volume(buffer, length, offset, false, nullptr) {}
+OsseRegion::OsseRegion(UINT8 *buffer, INT64 length, INT64 offset) : Volume(buffer, length, offset, false, nullptr) {
+}
 
 bool OsseRegion::CheckValidation() {
     return Volume::CheckValidation();

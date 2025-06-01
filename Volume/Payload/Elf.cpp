@@ -1,52 +1,49 @@
 //
 // Created by stephan on 9/3/2023.
 //
-#include <sstream>
-#include <iomanip>
-#include "C/Base.h"
-#include "BaseLib.h"
 #include "Elf.h"
+#include <iomanip>
+#include <sstream>
+#include "BaseLib.h"
+#include "C/Base.h"
 #include "UefiFileSystem/FirmwareVolume.h"
 
 using namespace BaseLibrarySpace;
 
-ELF::ELF(UINT8 *file, INT64 length, INT64 offset, bool Compressed, Volume *parent):
-    Volume(file, length, offset, Compressed, parent) {}
+ELF::ELF(UINT8 *file, INT64 length, INT64 offset, bool compressed, Volume *parent)
+    : Volume(file, length, offset, compressed, parent) {
+}
 
 bool ELF::isValid() const {
     return ValidFlag;
 }
 
 std::string ELF::getStringFromOffset(UINT32 off) const {
-    UINT8* StrOff =  data + StrTableOffset + off;
+    UINT8 *StrOff = data + StrTableOffset + off;
     UINT32 StrSize = 0;
     for (UINT32 idx = 0; idx < StrTableSize; ++idx) {
-        UINT8* val = StrOff + idx;
+        UINT8 *val = StrOff + idx;
         if (*val == 0x0) {
             break;
         }
         StrSize += 1;
     }
-    return charToString((CHAR8*)StrOff, (INT64)StrSize);
+    return charToString((CHAR8 *) StrOff, (INT64) StrSize);
 }
 
 bool ELF::IsElfFormat(const UINT8 *ImageBase) {
-    Elf32_Ehdr  *Elf32Hdr;
-    Elf64_Ehdr  *Elf64Hdr;
+    Elf32_Ehdr *Elf32Hdr;
+    Elf64_Ehdr *Elf64Hdr;
 
-    ASSERT (ImageBase != NULL);
+    ASSERT(ImageBase != NULL);
 
-    Elf32Hdr = (Elf32_Ehdr *)ImageBase;
+    Elf32Hdr = (Elf32_Ehdr *) ImageBase;
 
     //
     // Start with correct signature "\7fELF"
     //
-    if ((Elf32Hdr->e_ident[EI_MAG0] != ELFMAG0) ||
-        (Elf32Hdr->e_ident[EI_MAG1] != ELFMAG1) ||
-        (Elf32Hdr->e_ident[EI_MAG1] != ELFMAG1) ||
-        (Elf32Hdr->e_ident[EI_MAG2] != ELFMAG2)
-            )
-    {
+    if ((Elf32Hdr->e_ident[EI_MAG0] != ELFMAG0) || (Elf32Hdr->e_ident[EI_MAG1] != ELFMAG1)
+        || (Elf32Hdr->e_ident[EI_MAG1] != ELFMAG1) || (Elf32Hdr->e_ident[EI_MAG2] != ELFMAG2)) {
         return FALSE;
     }
 
@@ -61,7 +58,7 @@ bool ELF::IsElfFormat(const UINT8 *ImageBase) {
     // Check 32/64-bit architecture
     //
     if (Elf32Hdr->e_ident[EI_CLASS] == ELFCLASS64) {
-        Elf64Hdr = (Elf64_Ehdr *)Elf32Hdr;
+        Elf64Hdr = (Elf64_Ehdr *) Elf32Hdr;
         Elf32Hdr = nullptr;
     } else if (Elf32Hdr->e_ident[EI_CLASS] == ELFCLASS32) {
         Elf64Hdr = NULL;
@@ -129,15 +126,15 @@ INT64 ELF::SelfDecode() {
         return 0;
     }
     Type = VolumeType::ELF;
-    Ehdr.Elf32Hdr = (Elf32_Ehdr *)data;
-    Shdr.Elf32Shdr = (Elf32_Shdr *)(data + Ehdr.Elf32Hdr->e_shoff);
+    Ehdr.Elf32Hdr = (Elf32_Ehdr *) data;
+    Shdr.Elf32Shdr = (Elf32_Shdr *) (data + Ehdr.Elf32Hdr->e_shoff);
     SectionListOffset = Ehdr.Elf32Hdr->e_shoff;
     SectionNum = Ehdr.Elf32Hdr->e_shnum;
     SectionHdrSize = sizeof(Elf32_Shdr);
     if (Ehdr.Elf32Hdr->e_ident[EI_CLASS] == ELFCLASS64) {
         isElf32 = false;
-        Ehdr.Elf64Hdr = (Elf64_Ehdr *)data;
-        Shdr.Elf64Shdr = (Elf64_Shdr *)(data + Ehdr.Elf64Hdr->e_shoff);
+        Ehdr.Elf64Hdr = (Elf64_Ehdr *) data;
+        Shdr.Elf64Shdr = (Elf64_Shdr *) (data + Ehdr.Elf64Hdr->e_shoff);
         SectionListOffset = Ehdr.Elf64Hdr->e_shoff;
         SectionNum = Ehdr.Elf64Hdr->e_shnum;
         SectionHdrSize = sizeof(Elf64_Shdr);
@@ -146,18 +143,17 @@ INT64 ELF::SelfDecode() {
     for (UINT32 idx = 0; idx < SectionNum; ++idx) {
         auto *sec = new SectionHeader;
         if (isElf32) {
-            sec->Elf32Shdr = (Elf32_Shdr*)(data + Ehdr.Elf32Hdr->e_shoff + idx * SectionHdrSize);
-        }
-        else {
-            sec->Elf64Shdr = (Elf64_Shdr*)(data + Ehdr.Elf64Hdr->e_shoff + idx * SectionHdrSize);
+            sec->Elf32Shdr = (Elf32_Shdr *) (data + Ehdr.Elf32Hdr->e_shoff + idx * SectionHdrSize);
+        } else {
+            sec->Elf64Shdr = (Elf64_Shdr *) (data + Ehdr.Elf64Hdr->e_shoff + idx * SectionHdrSize);
         }
         SectionList.push_back(sec);
     }
 
-    if (isElf32 && SectionList.size() < Ehdr.Elf32Hdr->e_shstrndx + 1) {
+    if (isElf32 && SectionList.size() < (size_t) Ehdr.Elf32Hdr->e_shstrndx + 1) {
         ValidFlag = false;
         return 0;
-    } else if (!isElf32 && SectionList.size() < Ehdr.Elf64Hdr->e_shstrndx + 1) {
+    } else if (!isElf32 && SectionList.size() < (size_t) Ehdr.Elf64Hdr->e_shstrndx + 1) {
         ValidFlag = false;
         return 0;
     }
@@ -251,8 +247,7 @@ INT64 ELF::getHeaderSize() const {
 }
 
 ELF::~ELF() {
-    for (SectionHeader *sec:SectionList) {
+    for (SectionHeader *sec : SectionList) {
         safeDelete(sec);
     }
 }
-

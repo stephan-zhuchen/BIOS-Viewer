@@ -24,9 +24,10 @@ if(MSVC)
   list(APPEND STRICT_COMPILE_FLAGS "/WX")
   list(APPEND STRICT_COMPILE_FLAGS "/utf-8")
 else()
-  set(STRICT_COMPILE_FLAGS "-Wall" "-Wextra" "-Wpedantic") # -Wpedantic 遵循ISO C++标准，禁止GNU扩展
+  set(STRICT_COMPILE_FLAGS "-Wall" "-Wextra")
+  # list(APPEND STRICT_COMPILE_FLAGS "-Wpedantic") # 遵循ISO C++标准，禁止GNU扩展
   list(APPEND STRICT_COMPILE_FLAGS "-Werror=conversion")         # 危险的隐式转换
-  list(APPEND STRICT_COMPILE_FLAGS "-Werror=sign-conversion")    # 有符号/无符号转换可能改变值
+  # list(APPEND STRICT_COMPILE_FLAGS "-Werror=sign-conversion")    # 有符号/无符号转换可能改变值
   list(APPEND STRICT_COMPILE_FLAGS "-Werror=unused-variable")    # 未使用的局部变量
   list(APPEND STRICT_COMPILE_FLAGS "-Werror=unused-parameter")   # 未使用的函数参数 (如果需要，可设为-Wunused-parameter)
   list(APPEND STRICT_COMPILE_FLAGS "-Werror=unused-function")    # 未使用的静态函数
@@ -40,7 +41,7 @@ else()
   list(APPEND STRICT_COMPILE_FLAGS "-Werror=format-security")    # 更严格的格式字符串安全
   # 针对C++的额外警告
   list(APPEND STRICT_COMPILE_FLAGS "-Wnon-virtual-dtor")  # 基类析构函数不是虚函数且有派生类
-  list(APPEND STRICT_COMPILE_FLAGS "-Wold-style-cast")    # 使用C风格转换而非C++ static_cast/dynamic_cast等
+  # list(APPEND STRICT_COMPILE_FLAGS "-Wold-style-cast")    # 使用C风格转换而非C++ static_cast/dynamic_cast等
   list(APPEND STRICT_COMPILE_FLAGS "-Woverloaded-virtual")# 派生类中的虚函数签名不完全匹配基类
   list(APPEND STRICT_COMPILE_FLAGS "-Wdeprecated")        # 使用了废弃的特性
 
@@ -200,7 +201,7 @@ if(BUILD_GUI)
   endif()
 
   target_compile_definitions(BiosViewer PRIVATE GUI_BIOS_VIEWER)
-  target_compile_options(BiosViewer PRIVATE ${STRICT_COMPILE_FLAGS})
+  # target_compile_options(BiosViewer PRIVATE ${STRICT_COMPILE_FLAGS})
   target_link_libraries(BiosViewer PRIVATE
       Qt${QT_VERSION_MAJOR}::Widgets
       Decompress

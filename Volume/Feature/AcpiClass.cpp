@@ -9,11 +9,12 @@
 using namespace std;
 using namespace BaseLibrarySpace;
 
-AcpiClass::AcpiClass(UINT8 *buffer, INT64 length, INT64 offset, bool needValidation):
-        Volume(buffer, length, offset, needValidation, nullptr), needValidation(needValidation) { }
+AcpiClass::AcpiClass(UINT8 *buffer, INT64 length, INT64 offset, bool check)
+    : Volume(buffer, length, offset, false, nullptr), needValidation(check) {
+}
 
 bool AcpiClass::CheckValidation() {
-    if (needValidation && size < sizeof(EFI_ACPI_DESCRIPTION_HEADER)) {
+    if (needValidation && size < (INT64) sizeof(EFI_ACPI_DESCRIPTION_HEADER)) {
         ValidFlag = false;
         return false;
     }
@@ -46,7 +47,7 @@ bool AcpiClass::isValid() const {
 }
 
 bool AcpiClass::isAcpiHeader(const UINT8 *ImageBase, INT64 length) {
-    if (length < sizeof(EFI_ACPI_DESCRIPTION_HEADER)) {
+    if (length < (INT64) sizeof(EFI_ACPI_DESCRIPTION_HEADER)) {
         return false;
     }
     UINT32 size = *(UINT32*) (ImageBase + sizeof(UINT32));

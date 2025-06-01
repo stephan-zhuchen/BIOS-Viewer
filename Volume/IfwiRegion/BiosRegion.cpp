@@ -1,19 +1,19 @@
 //
 // Created by stephan on 9/2/2023.
 //
-#include "BaseLib.h"
 #include "BiosRegion.h"
+#include <iomanip>
+#include <sstream>
+#include <thread>
+#include "BaseLib.h"
 #include "UEFI/GuidDatabase.h"
 #include "UEFI/PiFirmwareFile.h"
 #include "UefiFileSystem/CommonSection.h"
-#include <thread>
-#include <sstream>
-#include <iomanip>
 
 using namespace BaseLibrarySpace;
 
-BiosRegion::BiosRegion(UINT8 *buffer, INT64 length, INT64 offset):
-        Volume(buffer, length, offset, false, nullptr) { }
+BiosRegion::BiosRegion(UINT8 *buffer, INT64 length, INT64 offset) : Volume(buffer, length, offset, false, nullptr) {
+}
 
 bool BiosRegion::CheckValidation() {
     return Volume::CheckValidation();
@@ -47,14 +47,14 @@ INT64 BiosRegion::SelfDecode() {
 
 void BiosRegion::DecodeChildVolume() {
     vector<thread> threadPool;
-    auto FvDecoder = [this](int index) {
+    auto FvDecoder = [this](size_t index) {
         Volume *volume = this->ChildVolume.at(index);
         volume->DecodeChildVolume();
     };
-    for (int idx = 0; idx < this->ChildVolume.size(); ++idx) {
+    for (size_t idx = 0; idx < this->ChildVolume.size(); ++idx) {
         threadPool.emplace_back(FvDecoder, idx);
     }
-    for (class thread& t:threadPool) {
+    for (class thread &t : threadPool) {
         t.join();
     }
 }
@@ -84,12 +84,12 @@ BiosRegion::~BiosRegion() {
 void BiosRegion::setBiosID() {
     for (INT64 idx = ChildVolume.size(); idx > 0; --idx) {
         Volume *volume = ChildVolume.at(idx - 1);
-        for (auto file:volume->ChildVolume) {
+        for (auto file : volume->ChildVolume) {
             if (file->getVolumeGuid() == GuidDatabase::gBiosIdGuid) {
                 if (file->ChildVolume.size() == 0)
                     return;
                 Volume *sec = file->ChildVolume.at(0);
-                auto *biosIdStr = (CHAR16*)(sec->getData() + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
+                auto *biosIdStr = (CHAR16 *) (sec->getData() + sizeof(EFI_COMMON_SECTION_HEADER) + 8);
                 BiosID = wstringToString(biosIdStr);
                 foundBiosID = true;
                 setDebugFlag();
@@ -100,12 +100,11 @@ void BiosRegion::setBiosID() {
 }
 
 void BiosRegion::setDebugFlag() {
-    INT64 pos = BiosID.find('.');
-    if (pos != string::npos && pos + 1 < (INT64)BiosID.size()) {
+    size_t pos = BiosID.find('.');
+    if (pos != string::npos && pos + 1 < BiosID.size()) {
         if (BiosID[pos + 1] == 'R') {
             DebugFlag = false;
-        }
-        else if (BiosID[pos + 1] == 'D') {
+        } else if (BiosID[pos + 1] == 'D') {
             DebugFlag = true;
         }
     }
@@ -115,12 +114,12 @@ void BiosRegion::collectAcpiTable(Volume *parent) {
     if (parent == nullptr) {
         parent = this;
     }
-    for (Volume *vol:parent->ChildVolume) {
+    for (Volume *vol : parent->ChildVolume) {
         if (vol->getVolumeType() == VolumeType::AcpiTable) {
-            AcpiTables.push_back((AcpiClass*)vol);
+            AcpiTables.push_back((AcpiClass *) vol);
         }
     }
-    for (Volume *vol:parent->ChildVolume) {
+    for (Volume *vol : parent->ChildVolume) {
         collectAcpiTable(vol);
     }
 }

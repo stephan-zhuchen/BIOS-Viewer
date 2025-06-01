@@ -3,11 +3,11 @@
 //
 
 #include "EcRegion.h"
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
-EcRegion::EcRegion(UINT8 *buffer, INT64 length, INT64 offset):
-    Volume(buffer, length, offset, false, nullptr) {}
+EcRegion::EcRegion(UINT8 *buffer, INT64 length, INT64 offset) : Volume(buffer, length, offset, false, nullptr) {
+}
 
 bool EcRegion::CheckValidation() {
     return Volume::CheckValidation();
@@ -41,10 +41,10 @@ void EcRegion::setInfoStr() {
     stringstream ss;
     ss.setf(ios::left);
 
-    ss << setw(width) << "EC signature:"  << Signature << "\n"
-       << setw(width) << "Plat ID:"       << hex << (INT32)PlatId << "h\n"
-       << setw(width) << "Build Version:" << hex << (INT32)BuildVer << "h\n"
-       << setw(width) << "EC Version:"    << hex << (INT32)MajorVer << "." << hex << (INT32)MinorVer << "\n";
+    ss << setw(width) << "EC signature:" << Signature << "\n"
+       << setw(width) << "Plat ID:" << hex << (INT32) PlatId << "h\n"
+       << setw(width) << "Build Version:" << hex << (INT32) BuildVer << "h\n"
+       << setw(width) << "EC Version:" << hex << (INT32) MajorVer << "." << hex << (INT32) MinorVer << "\n";
 
     InfoStr = ss.str();
 }

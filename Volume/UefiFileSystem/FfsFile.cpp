@@ -2,19 +2,20 @@
 // Created by stephan on 8/29/2023.
 //
 
-#include "BaseLib.h"
 #include "FfsFile.h"
+#include <iomanip>
+#include <sstream>
+#include "BaseLib.h"
 #include "CommonSection.h"
-#include "UEFI/GuidDatabase.h"
+#include "Feature/AcmClass.h"
 #include "Feature/FspHeader.h"
 #include "Feature/MicrocodeClass.h"
-#include "Feature/AcmClass.h"
-#include <sstream>
-#include <iomanip>
+#include "UEFI/GuidDatabase.h"
 using namespace BaseLibrarySpace;
 
-FfsFile::FfsFile(UINT8 *file, INT64 offset, bool Compressed, Volume* parent):
-    Volume(file, 0, offset, Compressed, parent) {}
+FfsFile::FfsFile(UINT8 *file, INT64 offset, bool compressed, Volume *parent)
+    : Volume(file, 0, offset, compressed, parent) {
+}
 
 bool FfsFile::CheckValidation() {
     return Volume::CheckValidation();
@@ -24,14 +25,14 @@ INT64 FfsFile::SelfDecode() {
     Type = VolumeType::FfsFile;
 
     // The FFS file header is the first part of the file
-    FfsHeader = *(EFI_FFS_FILE_HEADER*)data;
+    FfsHeader = *(EFI_FFS_FILE_HEADER *) data;
     FfsSize = FFS_FILE_SIZE(&FfsHeader);
 
     // If the FFS file header's size is zero, then it's an extended header
     if (FfsSize == 0) {
         isExtended = true;
-        FfsExtHeader = *(EFI_FFS_FILE_HEADER2*)data;
-        FfsSize = (INT64)FfsExtHeader.ExtendedSize;
+        FfsExtHeader = *(EFI_FFS_FILE_HEADER2 *) data;
+        FfsSize = (INT64) FfsExtHeader.ExtendedSize;
     }
 
     size = FfsSize;
@@ -40,10 +41,10 @@ INT64 FfsFile::SelfDecode() {
     UINT8 headerSumValue = 0;
     if (isExtended) {
         headerSumValue = CalculateSum8((UINT8 *) &FfsExtHeader, sizeof(EFI_FFS_FILE_HEADER2));
-        headerSumValue = headerSumValue + FfsExtHeader.State + FfsExtHeader.IntegrityCheck.Checksum.File;
+        headerSumValue = (UINT8) (headerSumValue + FfsExtHeader.State + FfsExtHeader.IntegrityCheck.Checksum.File);
     } else {
         headerSumValue = CalculateSum8((UINT8 *) &FfsHeader, sizeof(EFI_FFS_FILE_HEADER));
-        headerSumValue = headerSumValue + FfsHeader.State + FfsHeader.IntegrityCheck.Checksum.File;
+        headerSumValue = (UINT8) (headerSumValue + FfsHeader.State + FfsHeader.IntegrityCheck.Checksum.File);
     }
     if (headerSumValue == 0)
         headerChecksumValid = true;
@@ -53,7 +54,8 @@ INT64 FfsFile::SelfDecode() {
         dataChecksumValid = true;
 
     // Check if the file is an Apriori file
-    if (FfsHeader.Name.Data1 == GuidDatabase::gPeiAprioriFileNameGuid.Data1 || FfsHeader.Name.Data1 == GuidDatabase::gAprioriGuid.Data1) {
+    if (FfsHeader.Name.Data1 == GuidDatabase::gPeiAprioriFileNameGuid.Data1
+        || FfsHeader.Name.Data1 == GuidDatabase::gAprioriGuid.Data1) {
         SubType = VolumeType::Apriori;
     }
     return size;
@@ -68,15 +70,15 @@ void FfsFile::DecodeChildVolume() {
     }
 
     while (offset < size) {
-        auto *SecHeader = (EFI_COMMON_SECTION_HEADER*)(data + offset);
-        INT64 SecSize = (INT64)SECTION_SIZE(SecHeader);
+        auto *SecHeader = (EFI_COMMON_SECTION_HEADER *) (data + offset);
+        INT64 SecSize = (INT64) SECTION_SIZE(SecHeader);
         if (SecSize == 0xFFFFFF) {
             SecSize = this->getUINT32(offset + sizeof(EFI_COMMON_SECTION_HEADER));
         }
 
         if (SecSize + offset > size) {
             // Invalid Section, clear all sections under this FFS
-            for(auto section:ChildVolume) {
+            for (auto section : ChildVolume) {
                 safeDelete(section);
             }
             ChildVolume.clear();
@@ -91,7 +93,7 @@ void FfsFile::DecodeChildVolume() {
         if (Sec->SelfDecode() == 0) {
             // Invalid Section, clear all sections under this FFS
             safeDelete(Sec);
-            for(auto section:ChildVolume) {
+            for (auto section : ChildVolume) {
                 safeDelete(section);
             }
             ChildVolume.clear();
@@ -113,15 +115,18 @@ void FfsFile::setInfoStr() {
     stringstream ss;
     ss.setf(ios::left);
 
-    ss << "File GUID:\n" << FfsHeader.Name.str(true) << "\n"
-       << setw(width) << "Type:"        << hex << (UINT32)FfsHeader.Type << "h\n"
-       << setw(width) << "Attributes:"  << hex << uppercase << (UINT32)FfsHeader.Attributes << "h\n"
-       << setw(width) << "Full size:"   << hex << uppercase << getSize() << "h\n"
+    ss << "File GUID:\n"
+       << FfsHeader.Name.str(true) << "\n"
+       << setw(width) << "Type:" << hex << (UINT32) FfsHeader.Type << "h\n"
+       << setw(width) << "Attributes:" << hex << uppercase << (UINT32) FfsHeader.Attributes << "h\n"
+       << setw(width) << "Full size:" << hex << uppercase << getSize() << "h\n"
        << setw(width) << "Header size:" << hex << uppercase << getHeaderSize() << "h\n"
-       << setw(width) << "Body size:"   << hex << uppercase << getSize() - getHeaderSize() << "h\n"
-       << setw(width) << "State:"       << hex << (UINT32)FfsHeader.State << "h\n"
-       << setw(width) << "Header Checksum:" << hex << uppercase << (UINT32)FfsHeader.IntegrityCheck.Checksum.Header << "h" << (headerChecksumValid ? ", valid":", not valid") << "\n"
-       << setw(width) << "Data Checksum:"   << hex << uppercase << (UINT32)FfsHeader.IntegrityCheck.Checksum.File << "h" << (headerChecksumValid ? ", valid":", not valid") << "\n";
+       << setw(width) << "Body size:" << hex << uppercase << getSize() - getHeaderSize() << "h\n"
+       << setw(width) << "State:" << hex << (UINT32) FfsHeader.State << "h\n"
+       << setw(width) << "Header Checksum:" << hex << uppercase << (UINT32) FfsHeader.IntegrityCheck.Checksum.Header
+       << "h" << (headerChecksumValid ? ", valid" : ", not valid") << "\n"
+       << setw(width) << "Data Checksum:" << hex << uppercase << (UINT32) FfsHeader.IntegrityCheck.Checksum.File << "h"
+       << (headerChecksumValid ? ", valid" : ", not valid") << "\n";
 
     string compressed = "No";
     if (isCompressed())
@@ -131,9 +136,9 @@ void FfsFile::setInfoStr() {
     InfoStr = ss.str();
 }
 
-Volume* FfsFile::Reorganize() {
+Volume *FfsFile::Reorganize() {
     Volume *newVolume = nullptr;
-    bool   RemainChild = true;
+    bool RemainChild = true;
     EFI_GUID guid = this->getFfsGuid();
 
     if (guid == GuidDatabase::gIntelMicrocodeArrayFfsBinGuid) {
@@ -141,12 +146,14 @@ Volume* FfsFile::Reorganize() {
         INT64 SecondMicrocodeEntryOffset = 0x1000;
         INT64 SlotSize = 0;
         while (SecondMicrocodeEntryOffset < MicrocodeArraySize) {
-            CPU_MICROCODE_HEADER *MicrocodeBuffer = (CPU_MICROCODE_HEADER*)(data + this->getHeaderSize() + SecondMicrocodeEntryOffset);
+            CPU_MICROCODE_HEADER *MicrocodeBuffer =
+                (CPU_MICROCODE_HEADER *) (data + this->getHeaderSize() + SecondMicrocodeEntryOffset);
             if (MicrocodeBuffer->HeaderVersion != 0x1) {
                 SecondMicrocodeEntryOffset += 0x1000;
                 continue;
             } else {
-                UINT32 CheckSum = CalculateSum32((UINT32 *)MicrocodeBuffer, MicrocodeBuffer->DataSize + sizeof(CPU_MICROCODE_HEADER));
+                UINT32 CheckSum = CalculateSum32((UINT32 *) MicrocodeBuffer,
+                                                 MicrocodeBuffer->DataSize + sizeof(CPU_MICROCODE_HEADER));
                 if (CheckSum != 0) {
                     SecondMicrocodeEntryOffset += 0x1000;
                     continue;
@@ -162,23 +169,25 @@ Volume* FfsFile::Reorganize() {
         }
 
         if (SlotSize == 0) {
-            auto microcode = new MicrocodeHeaderClass(data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
+            auto microcode = new MicrocodeHeaderClass(
+                data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
             microcode->SelfDecode();
             this->ChildVolume.push_back(microcode);
         } else {
             INT64 EntryNum = MicrocodeArraySize / SlotSize;
             for (INT64 idx = 0; idx < EntryNum; ++idx) {
-                auto microcode = new MicrocodeHeaderClass(data + this->getHeaderSize() + SlotSize * idx, SlotSize, offsetFromBegin + this->getHeaderSize() + SlotSize * idx);
+                auto microcode = new MicrocodeHeaderClass(data + this->getHeaderSize() + SlotSize * idx,
+                                                          SlotSize,
+                                                          offsetFromBegin + this->getHeaderSize() + SlotSize * idx);
                 microcode->SelfDecode();
                 this->ChildVolume.push_back(microcode);
             }
         }
-    }
-    else if (guid == GuidDatabase::gStartupAcmPeiBinGuid) {
-        newVolume = new AcmHeaderClass(data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
+    } else if (guid == GuidDatabase::gStartupAcmPeiBinGuid) {
+        newVolume = new AcmHeaderClass(
+            data + this->getHeaderSize(), size - this->getHeaderSize(), offsetFromBegin + this->getHeaderSize());
         newVolume->SelfDecode();
-    }
-    else if (FspHeader::isFspHeader(data + getHeaderSize() + sizeof(EFI_COMMON_SECTION_HEADER))) {
+    } else if (FspHeader::isFspHeader(data + getHeaderSize() + sizeof(EFI_COMMON_SECTION_HEADER))) {
         INT64 FspOffset = getHeaderSize() + sizeof(EFI_COMMON_SECTION_HEADER);
         FspHeader *fspVolume = new FspHeader(data + FspOffset, size - FspOffset, offsetFromBegin + FspOffset);
         if (fspVolume->SelfDecode() != 0) {
@@ -192,18 +201,18 @@ Volume* FfsFile::Reorganize() {
     if (newVolume != nullptr) {
         newVolume->setCompressedFlag(this->Compressed);
         newVolume->ParentVolume = this->ParentVolume;
-        for(int i = 0; i < this->ParentVolume->ChildVolume.size(); ++i) {
+        for (size_t i = 0; i < this->ParentVolume->ChildVolume.size(); ++i) {
             if (this->ParentVolume->ChildVolume[i] == this) {
                 this->ParentVolume->ChildVolume[i] = newVolume;
             }
         }
         if (RemainChild) {
-            for (auto child:this->ChildVolume) {
+            for (auto child : this->ChildVolume) {
                 newVolume->ChildVolume.push_back(child);
                 child->ParentVolume = newVolume;
             }
         } else {
-            for (auto child:this->ChildVolume) {
+            for (auto child : this->ChildVolume) {
                 safeDelete(child);
             }
         }

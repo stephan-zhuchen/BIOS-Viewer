@@ -1,22 +1,23 @@
 //
 // Created by stephan on 9/4/2023.
 //
-#include "BaseLib.h"
 #include "CapsuleHeader.h"
-#include "UEFI/GuidDatabase.h"
-#include <sstream>
-#include <iomanip>
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
+#include "BaseLib.h"
+#include "UEFI/GuidDatabase.h"
 
 using namespace BaseLibrarySpace;
 
-CapsuleCommonHeader::CapsuleCommonHeader(UINT8* buffer, INT64 length, INT64 offset):
-    Volume(buffer, length, offset, false, nullptr) {}
+CapsuleCommonHeader::CapsuleCommonHeader(UINT8 *buffer, INT64 length, INT64 offset)
+    : Volume(buffer, length, offset, false, nullptr) {
+}
 
 CapsuleCommonHeader::~CapsuleCommonHeader() = default;
 
 bool CapsuleCommonHeader::CheckValidation() {
-    CapsuleHeader = *(EFI_CAPSULE_HEADER*)data;
+    CapsuleHeader = *(EFI_CAPSULE_HEADER *) data;
     if (CapsuleHeader.CapsuleGuid != GuidDatabase::gEfiFmpCapsuleGuid) {
         return false;
     }
@@ -28,14 +29,14 @@ INT64 CapsuleCommonHeader::SelfDecode() {
         return 0;
     }
     Type = VolumeType::CapsuleCommonHeader;
-    PersistAcrossReset  = (CapsuleHeader.Flags & CAPSULE_FLAGS_PERSIST_ACROSS_RESET) != 0;
+    PersistAcrossReset = (CapsuleHeader.Flags & CAPSULE_FLAGS_PERSIST_ACROSS_RESET) != 0;
     PopulateSystemTable = (CapsuleHeader.Flags & CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE) != 0;
-    InitiateReset       = (CapsuleHeader.Flags & CAPSULE_FLAGS_INITIATE_RESET) != 0;
+    InitiateReset = (CapsuleHeader.Flags & CAPSULE_FLAGS_INITIATE_RESET) != 0;
 
     INT64 offset = sizeof(EFI_CAPSULE_HEADER);
     Align(offset, 0, 0x8);
 
-    FmpHeader = *(EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER*)(data + offset);
+    FmpHeader = *(EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER *) (data + offset);
     ItemOffsetVector.resize(FmpHeader.EmbeddedDriverCount + FmpHeader.PayloadItemCount);
     offset += sizeof(EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER);
     for (int index = 0; index < FmpHeader.EmbeddedDriverCount + FmpHeader.PayloadItemCount; index++) {
@@ -57,25 +58,32 @@ void CapsuleCommonHeader::setInfoStr() {
     stringstream ss;
     ss.setf(ios::left);
 
-    ss << setw(width) << "CapsuleGuid:"        << CapsuleHeader.CapsuleGuid.str(true) << "\n"
-       << setw(width) << "HeaderSize:"         << hex << uppercase << CapsuleHeader.HeaderSize << "h\n"
-       << setw(width) << "Flags:"              << hex << uppercase << CapsuleHeader.Flags << "h\n"
-       << setw(width) << "CapsuleImageSize:"   << hex << uppercase << CapsuleHeader.CapsuleImageSize << "h\n";
+    ss << setw(width) << "CapsuleGuid:" << CapsuleHeader.CapsuleGuid.str(true) << "\n"
+       << setw(width) << "HeaderSize:" << hex << uppercase << CapsuleHeader.HeaderSize << "h\n"
+       << setw(width) << "Flags:" << hex << uppercase << CapsuleHeader.Flags << "h\n"
+       << setw(width) << "CapsuleImageSize:" << hex << uppercase << CapsuleHeader.CapsuleImageSize << "h\n";
 
     ss << "\nFlag:\n";
-    if (PersistAcrossReset) {ss << "PersistAcrossReset\n";}
-    if (PopulateSystemTable) {ss << "PopulateSystemTable\n";}
-    if (InitiateReset) {ss << "InitiateReset\n\n";}
+    if (PersistAcrossReset) {
+        ss << "PersistAcrossReset\n";
+    }
+    if (PopulateSystemTable) {
+        ss << "PopulateSystemTable\n";
+    }
+    if (InitiateReset) {
+        ss << "InitiateReset\n\n";
+    }
 
-    ss << setw(width) << "Version:"              << hex << uppercase << FmpHeader.Version << "h\n"
-       << setw(width) << "EmbeddedDriverCount:"  << hex << uppercase << FmpHeader.EmbeddedDriverCount << "h\n"
-       << setw(width) << "PayloadItemCount:"     << hex << uppercase << FmpHeader.PayloadItemCount << "h\n";
+    ss << setw(width) << "Version:" << hex << uppercase << FmpHeader.Version << "h\n"
+       << setw(width) << "EmbeddedDriverCount:" << hex << uppercase << FmpHeader.EmbeddedDriverCount << "h\n"
+       << setw(width) << "PayloadItemCount:" << hex << uppercase << FmpHeader.PayloadItemCount << "h\n";
 
     InfoStr = ss.str();
 }
 
-FirmwareManagementHeader::FirmwareManagementHeader(UINT8* buffer, INT64 length, INT64 offset):
-    Volume(buffer, length, offset, false, nullptr) {}
+FirmwareManagementHeader::FirmwareManagementHeader(UINT8 *buffer, INT64 length, INT64 offset)
+    : Volume(buffer, length, offset, false, nullptr) {
+}
 
 FirmwareManagementHeader::~FirmwareManagementHeader() = default;
 
@@ -85,7 +93,7 @@ bool FirmwareManagementHeader::CheckValidation() {
 
 INT64 FirmwareManagementHeader::SelfDecode() {
     Type = VolumeType::FirmwareManagementHeader;
-    FmpCapsuleImageHeader = *(EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER*)data;
+    FmpCapsuleImageHeader = *(EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER *) data;
     INT64 offset = 0;
     if (FmpCapsuleImageHeader.Version <= 2) {
         offset = sizeof(EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER) - sizeof(UINT64);
@@ -95,12 +103,12 @@ INT64 FirmwareManagementHeader::SelfDecode() {
 
     CapsuleType = getCapsuleTypeFromGuid(FmpCapsuleImageHeader.UpdateImageTypeId);
 
-    FmpAuthHeader = *(EFI_FIRMWARE_IMAGE_AUTHENTICATION*)(data + offset);
+    FmpAuthHeader = *(EFI_FIRMWARE_IMAGE_AUTHENTICATION *) (data + offset);
 
     INT64 MonotonicCountSize = 8;
     offset += FmpAuthHeader.AuthInfo.Hdr.dwLength + MonotonicCountSize;
-    FmpPayloadHeader = *(FMP_PAYLOAD_HEADER*)(data + offset);
-    string Signature = charToString((CHAR8*)&FmpPayloadHeader.Signature, sizeof(FmpPayloadHeader.Signature), false);
+    FmpPayloadHeader = *(FMP_PAYLOAD_HEADER *) (data + offset);
+    string Signature = charToString((CHAR8 *) &FmpPayloadHeader.Signature, sizeof(FmpPayloadHeader.Signature), false);
     if (Signature != "MSS1")
         return 0;
 
@@ -114,68 +122,67 @@ void FirmwareManagementHeader::setInfoStr() {
     stringstream ss;
     ss.setf(ios::left);
 
-    ss << setw(width) << "Version:"              << hex << uppercase << FmpCapsuleImageHeader.Version << "h\n"
-       << setw(width) << "UpdateImageTypeId:"    << FmpCapsuleImageHeader.UpdateImageTypeId.str(true) << "\n"
-       << setw(width) << "UpdateImageIndex:"     << hex << uppercase << (UINT32)FmpCapsuleImageHeader.UpdateImageIndex << "h\n"
-       << setw(width) << "UpdateImageSize:"      << hex << uppercase << FmpCapsuleImageHeader.UpdateImageSize << "h\n"
-       << setw(width) << "UpdateVendorCodeSize:" << hex << uppercase << FmpCapsuleImageHeader.UpdateVendorCodeSize << "h\n";
+    ss << setw(width) << "Version:" << hex << uppercase << FmpCapsuleImageHeader.Version << "h\n"
+       << setw(width) << "UpdateImageTypeId:" << FmpCapsuleImageHeader.UpdateImageTypeId.str(true) << "\n"
+       << setw(width) << "UpdateImageIndex:" << hex << uppercase << (UINT32) FmpCapsuleImageHeader.UpdateImageIndex
+       << "h\n"
+       << setw(width) << "UpdateImageSize:" << hex << uppercase << FmpCapsuleImageHeader.UpdateImageSize << "h\n"
+       << setw(width) << "UpdateVendorCodeSize:" << hex << uppercase << FmpCapsuleImageHeader.UpdateVendorCodeSize
+       << "h\n";
 
     if (FmpCapsuleImageHeader.Version >= 2) {
-        ss << setw(width) << "UpdateHardwareInstance:" << hex << uppercase << FmpCapsuleImageHeader.UpdateHardwareInstance << "h\n";
+        ss << setw(width) << "UpdateHardwareInstance:" << hex << uppercase
+           << FmpCapsuleImageHeader.UpdateHardwareInstance << "h\n";
     }
     if (FmpCapsuleImageHeader.Version >= 3) {
-        ss << setw(width) << "ImageCapsuleSupport:" << hex << uppercase << FmpCapsuleImageHeader.ImageCapsuleSupport << "h\n";
+        ss << setw(width) << "ImageCapsuleSupport:" << hex << uppercase << FmpCapsuleImageHeader.ImageCapsuleSupport
+           << "h\n";
     }
 
-    ss << setw(width) << "MonotonicCount:"     << hex << uppercase << FmpAuthHeader.MonotonicCount << "h\n"
-       << setw(width) << "dwLength:"           << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.dwLength << "h\n"
-       << setw(width) << "wRevision:"          << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.wRevision << "h\n"
-       << setw(width) << "wCertificateType:"   << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.wCertificateType << "h\n"
-       << setw(width) << "CertType:"           << hex << uppercase << FmpAuthHeader.AuthInfo.CertType.str(true) << "h\n\n";
+    ss << setw(width) << "MonotonicCount:" << hex << uppercase << FmpAuthHeader.MonotonicCount << "h\n"
+       << setw(width) << "dwLength:" << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.dwLength << "h\n"
+       << setw(width) << "wRevision:" << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.wRevision << "h\n"
+       << setw(width) << "wCertificateType:" << hex << uppercase << FmpAuthHeader.AuthInfo.Hdr.wCertificateType << "h\n"
+       << setw(width) << "CertType:" << hex << uppercase << FmpAuthHeader.AuthInfo.CertType.str(true) << "h\n\n";
 
-    ss << setw(width) << "Signature:"              << charToString((CHAR8*)&FmpPayloadHeader.Signature, sizeof(FmpPayloadHeader.Signature), false) << "\n"
-       << setw(width) << "HeaderSize:"             << hex << uppercase << FmpPayloadHeader.HeaderSize << "h\n"
-       << setw(width) << "FwVersion:"              << hex << uppercase << FmpPayloadHeader.FwVersion << "h\n"
-       << setw(width) << "LowestSupportedVersion:" << hex << uppercase << FmpPayloadHeader.LowestSupportedVersion << "h\n";
+    ss << setw(width)
+       << "Signature:" << charToString((CHAR8 *) &FmpPayloadHeader.Signature, sizeof(FmpPayloadHeader.Signature), false)
+       << "\n"
+       << setw(width) << "HeaderSize:" << hex << uppercase << FmpPayloadHeader.HeaderSize << "h\n"
+       << setw(width) << "FwVersion:" << hex << uppercase << FmpPayloadHeader.FwVersion << "h\n"
+       << setw(width) << "LowestSupportedVersion:" << hex << uppercase << FmpPayloadHeader.LowestSupportedVersion
+       << "h\n";
 
     InfoStr = ss.str();
 }
 
-string FirmwareManagementHeader::getCapsuleTypeFromGuid(EFI_GUID& guid) {
+string FirmwareManagementHeader::getCapsuleTypeFromGuid(EFI_GUID &guid) {
     if (guid == GuidDatabase::gFmpDeviceMonolithicDefaultGuid) {
         return "Monolithic";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceBiosDefaultGuid) {
+    } else if (guid == GuidDatabase::gFmpDeviceBiosDefaultGuid) {
         return "BIOS";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceExtendedBiosDefaultGuid) {
+    } else if (guid == GuidDatabase::gFmpDeviceExtendedBiosDefaultGuid) {
         return "Extended BIOS";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceIfwiDefaultGuid) {
+    } else if (guid == GuidDatabase::gFmpDeviceIfwiDefaultGuid) {
         return "IFWI";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceBtGAcmDefaultGuid) {
+    } else if (guid == GuidDatabase::gFmpDeviceBtGAcmDefaultGuid) {
         return "BtgAcm";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceMicrocodeDefaultGuid) {
+    } else if (guid == GuidDatabase::gFmpDeviceMicrocodeDefaultGuid) {
         return "uCode";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceMeDefaultGuid) {
+    } else if (guid == GuidDatabase::gFmpDeviceMeDefaultGuid) {
         return "ME";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceEcDefaultGuid) {
+    } else if (guid == GuidDatabase::gFmpDeviceEcDefaultGuid) {
         return "EC";
-    }
-    else if (guid == GuidDatabase::gFmpDeviceFspDefaultGuid) {
+    } else if (guid == GuidDatabase::gFmpDeviceFspDefaultGuid) {
         return "FSP";
-    }
-    else {
+    } else {
         return "Unknown";
     }
 }
 
-IniConfigFile::IniConfigFile(UINT8 *buffer, INT64 length, INT64 offset):
-    Volume(buffer, length, offset, false, nullptr) {}
+IniConfigFile::IniConfigFile(UINT8 *buffer, INT64 length, INT64 offset)
+    : Volume(buffer, length, offset, false, nullptr) {
+}
 
 bool IniConfigFile::CheckValidation() {
     return Volume::CheckValidation();
@@ -183,14 +190,13 @@ bool IniConfigFile::CheckValidation() {
 
 INT64 IniConfigFile::SelfDecode() {
     Type = VolumeType::IniConfig;
-    iniContext = charToString((CHAR8*)data, size, false);
+    iniContext = charToString((CHAR8 *) data, size, false);
 
     std::stringstream ss(iniContext);
     std::string currentSection;
 
     std::string line;
-    while (std::getline(ss, line))
-    {
+    while (std::getline(ss, line)) {
         if (!line.empty() && line[line.length() - 1] == '\r') {
             line = line.substr(0, line.length() - 1);
         }
@@ -218,12 +224,14 @@ INT64 IniConfigFile::SelfDecode() {
         string UpdateIdx = "Update" + std::to_string(idx);
         string SecionName = GetIniValue("Head", UpdateIdx);
         // todo: assert
-        UINT32 BgupOffset = std::stoul(GetIniValue(SecionName, "HelperOffset"), nullptr, 16);
-        UINT32 BgupSize = std::stoul(GetIniValue(SecionName, "HelperLength"), nullptr, 16);
+        UINT64 BgupOffset = std::stoul(GetIniValue(SecionName, "HelperOffset"), nullptr, 16);
+        UINT64 BgupSize = std::stoul(GetIniValue(SecionName, "HelperLength"), nullptr, 16);
         BgupList.push_back({SecionName, BgupOffset, BgupSize});
     }
 
-    std::sort(BgupList.begin(), BgupList.end(), [](BgupConfig &config1, BgupConfig &config2) { return config1.BgupOffset < config2.BgupOffset; });
+    std::sort(BgupList.begin(), BgupList.end(), [](BgupConfig &config1, BgupConfig &config2) {
+        return config1.BgupOffset < config2.BgupOffset;
+    });
 
     return size;
 }

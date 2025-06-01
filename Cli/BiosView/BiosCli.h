@@ -49,9 +49,9 @@ class BiosCliView {
     int leftTableWidth = 0;
     int rightPanelWidth = 0;
     int colWidths[3] = {36, 10, 15};
-    void buildTree(Volume *volume, TreeNode *parent, int depth);
+    void buildTree(Volume *volume, TreeNode *parent, UINT64 depth);
     void rebuildVisibleList();
-    void drawTable(int startRow);
+    void drawTable(UINT64 startRow);
     void drawPanel();
 
   public:

@@ -14,7 +14,6 @@
 #include "UefiFileSystem/CompressedVolume.h"
 #include "UefiFileSystem/FirmwareVolume.h"
 
-
 using namespace BaseLibrarySpace;
 GuidDatabase *guidData = nullptr;
 
@@ -266,11 +265,11 @@ void BiosCliView::DecodeBiosFileSystem() {
     }
 
     vector<thread> threadPool;
-    auto FvDecoder = [this](int index) {
+    auto FvDecoder = [this](size_t index) {
         Volume *volume = BiosData->VolumeDataList.at(index);
         volume->DecodeChildVolume();
     };
-    for (int idx = 0; idx < BiosData->VolumeDataList.size(); ++idx) {
+    for (size_t idx = 0; idx < BiosData->VolumeDataList.size(); ++idx) {
         threadPool.emplace_back(FvDecoder, idx);
     }
     for (thread &t : threadPool) {
@@ -315,7 +314,7 @@ void BiosCliView::AddVolumeList(INT64 offset, INT64 length, Volume *parent, Volu
 }
 
 // 树形结构构建函数
-void BiosCliView::buildTree(Volume *volume, TreeNode *parent, int depth) {
+void BiosCliView::buildTree(Volume *volume, TreeNode *parent, UINT64 depth) {
     // 创建数据模型
     DataModel model;
     model.InitFromVolume(volume);
@@ -357,7 +356,7 @@ void BiosCliView::rebuildVisibleList() {
 }
 
 // 绘制表格框架
-void BiosCliView::drawTable(int startRow) {
+void BiosCliView::drawTable(UINT64 startRow) {
     // clear();
     werase(left_win);
 
@@ -377,11 +376,11 @@ void BiosCliView::drawTable(int startRow) {
     whline(left_win, '-', leftTableWidth);
 
     // 计算显示范围
-    const int maxDisplayRows = LINES - 4; // 保留顶部2行 + 底部2行
+    INT32 maxDisplayRows = LINES - 4; // 保留顶部2行 + 底部2行
 
     // 绘制可见行
-    for (int i = 0; i < maxDisplayRows && (startRow + i) < visibleNodes.size(); ++i) {
-        const int actualIndex = startRow + i;
+    for (size_t i = 0; i < (size_t) maxDisplayRows && (startRow + i) < visibleNodes.size(); ++i) {
+        size_t actualIndex = startRow + i;
         TreeNode *node = visibleNodes[actualIndex];
         const DataModel &item = node->data;
 
@@ -393,22 +392,22 @@ void BiosCliView::drawTable(int startRow) {
 
         // 处理超长文本
         const string clippedName = (displayName.length() > (size_t) colWidths[0])
-            ? displayName.substr(0, colWidths[0] - 3) + "..."
+            ? displayName.substr(0, (size_t) colWidths[0] - 3) + "..."
             : displayName;
         const string clippedType = (item.getType().length() > (size_t) colWidths[1])
-            ? item.getType().substr(0, colWidths[1] - 3) + ".."
+            ? item.getType().substr(0, (size_t) colWidths[1] - 3) + ".."
             : item.getType();
         const string clippedSubtype = (item.getSubType().length() > (size_t) colWidths[2])
-            ? item.getSubType().substr(0, colWidths[2] - 3) + ".."
+            ? item.getSubType().substr(0, (size_t) colWidths[2] - 3) + ".."
             : item.getSubType();
 
         // 高亮当前行
-        if (i == selectedRow) {
+        if (i == (size_t) selectedRow) {
             wattron(left_win, A_REVERSE);
         }
 
         mvwprintw(left_win,
-                  i + 2,
+                  (int) i + 2,
                   0,
                   "%-*s | %-*s | %-*s",
                   colWidths[0],
@@ -418,7 +417,7 @@ void BiosCliView::drawTable(int startRow) {
                   colWidths[2],
                   clippedSubtype.c_str());
 
-        if (i == selectedRow) {
+        if (i == (size_t) selectedRow) {
             wattroff(left_win, A_REVERSE);
         }
     }
@@ -458,7 +457,7 @@ void BiosCliView::drawPanel() {
         wrefresh(right_win);
         return;
     }
-    const int actualIndex = scrollOffset + selectedRow;
+    size_t actualIndex = (size_t) (scrollOffset + selectedRow);
     TreeNode *node = visibleNodes[actualIndex];
     Volume *vol = node->data.getVolume();
     vol->setInfoStr();
@@ -488,7 +487,7 @@ void BiosCliView::drawPanel() {
 
         // 处理单行分段
         while (startPos < endPos) {
-            size_t chunkEnd = startPos + maxLineWidth;
+            size_t chunkEnd = startPos + (size_t) maxLineWidth;
             chunkEnd = std::min(chunkEnd, endPos);
 
             // 添加缩进（首行缩进2列，后续行缩进4列）
@@ -517,7 +516,7 @@ void BiosCliView::setTreeData() {
     int ch;
     do {
         rebuildVisibleList(); // 刷新可见列表
-        drawTable(scrollOffset);
+        drawTable((UINT64) scrollOffset);
         drawPanel();
         ch = getch();
 
@@ -531,7 +530,7 @@ void BiosCliView::setTreeData() {
             break;
 
         case KEY_DOWN:
-            if (selectedRow < (LINES - 5) && (scrollOffset + selectedRow + 1) < visibleNodes.size()) {
+            if (selectedRow < (LINES - 5) && (size_t) (scrollOffset + selectedRow + 1) < visibleNodes.size()) {
                 ++selectedRow;
             } else {
                 ++scrollOffset;
@@ -541,8 +540,8 @@ void BiosCliView::setTreeData() {
         case '\n': // Enter键切换展开状态
         {
             const int actualIndex = scrollOffset + selectedRow;
-            if (actualIndex >= 0 && actualIndex < visibleNodes.size()) {
-                TreeNode *node = visibleNodes[actualIndex];
+            if (actualIndex >= 0 && (size_t) actualIndex < visibleNodes.size()) {
+                TreeNode *node = visibleNodes[(size_t) actualIndex];
                 if (!node->children.empty()) {
                     node->isExpanded = !node->isExpanded;
                     rebuildVisibleList();
