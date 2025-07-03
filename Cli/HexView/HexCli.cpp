@@ -499,9 +499,9 @@ void HexCliView::handleEditModeInput(int ch) {
                 UINT8 currentByte = currentBinaryData->InputImage[offset]; // 获取当前字节
                 // 根据光标在高/低半字节位置修改对应部分
                 if (editCursorNibble == 0) { // 修改高半字节
-                    currentByte = (currentByte & 0x0F) | (static_cast<UINT8>(val) << 4);
+                    currentByte = (UINT8) (currentByte & 0x0F) | (static_cast<UINT8>(val) << 4);
                 } else { // 修改低半字节
-                    currentByte = (currentByte & 0xF0) | static_cast<UINT8>(val);
+                    currentByte = (UINT8) (currentByte & 0xF0) | static_cast<UINT8>(val);
                 }
                 currentBinaryData->InputImage[offset] = currentByte; // 更新数据
                 dataModified = true;                                 // 标记数据已修改

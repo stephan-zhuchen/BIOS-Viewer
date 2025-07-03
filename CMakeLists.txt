@@ -62,14 +62,9 @@ include_directories(
 )
 
 set(DECOMPRESS_LIB
-#        lib/BaseUefiDecompress/BaseUefiDecompressLib.h
         lib/BaseUefiDecompress/BaseUefiDecompressLib.cpp
         lib/BrotliDecompress/BrotliDecompress.cpp
-#        lib/BrotliDecompress/BrotliDecompressLib.h
         lib/LzmaDecompress/LzmaDecompress.cpp
-#        lib/LzmaDecompress/LzmaDecompressLib.h
-#        lib/Lz4Decompress/Lz4Decompress.h
-#        lib/Lz4Decompress/Lz4.h
         lib/Lz4Decompress/Lz4DecompressLib.cpp
         lib/Lz4Decompress/Lz4.cpp
 )
@@ -103,18 +98,11 @@ file(GLOB_RECURSE COMPATIBILITY_SOURCES "lib/Compatibility/*")
 set(COMMON_SOURCES
         ${LIBRARY_SOURCES}
         ${VOLUME_SOURCES}
-#        ${VOLUME_H_SOURCES}
-#        ${LIBRARY_H_SOURCES}
         ${COMPATIBILITY_SOURCES}
-#        ${FILE_SYSTEM_H_SOURCES}
         ${FILE_SYSTEM_SOURCES}
         ${PAYLOAD_SOURCES}
-#        ${PAYLOAD_H_SOURCES}
-#        ${IFWI_REGION_H_SOURCES}
         ${IFWI_REGION_SOURCES}
-#        ${CAPSULE_H_SOURCES}
         ${CAPSULE_SOURCES}
-#        ${FEATURE_H_SOURCES}
         ${FEATURE_SOURCES}
 )
 
@@ -122,18 +110,18 @@ if(BUILD_CLI)
   set(CLI_SOURCES
         Cli/main.cpp
         Cli/cliview.cpp
-#        Cli/cliview.h
         Cli/BiosView/BiosCli.cpp
-#        Cli/BiosView/BiosCli.h
         Cli/HexView/HexCli.cpp
-#        Cli/HexView/HexCli.h
         ${COMMON_SOURCES}
   )
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # 使用系统ncurses库替代PDCurses
-    find_package(Curses REQUIRED)
-    include_directories(${CURSES_INCLUDE_DIR})
-    
+    #find_package(Curses REQUIRED)
+    #include_directories(${CURSES_INCLUDE_DIR})
+    include_directories(lib/ncurses/include)
+    set(NCURSES_LINK_DIR  lib/ncurses)
+    link_directories(${NCURSES_LINK_DIR})
+
     # 在Linux下使用系统OpenSSL
     find_package(OpenSSL REQUIRED)
 
@@ -143,7 +131,8 @@ if(BUILD_CLI)
     target_link_libraries(binary-tool 
         Decompress 
         OpenSSL::Crypto 
-        ${CURSES_LIBRARIES}
+        #${CURSES_LIBRARIES}
+        ncurses
     )
   else()
     include_directories(lib/PDCurses/include)

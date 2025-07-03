@@ -5,7 +5,7 @@
 #ifdef _WIN32
     #include "curses.h"
 #else
-    #include <ncurses.h>
+    #include <ncurses/ncurses.h>
 #endif
 #include "IfwiRegion/BiosRegion.h"
 
