@@ -29,6 +29,7 @@ using namespace BaseLibrarySpace;
 
 GuidDatabase *guidData = nullptr;
 UINT32       OpenedWindow = 0;
+QString      BiosViewerVersion = "1.16";
 
 StartWindow::StartWindow(QString appPath, QWidget *parent) :
     QMainWindow(parent),
@@ -92,8 +93,7 @@ StartWindow::~StartWindow() {
 
 void StartWindow::initSettings() {
     bool ResetSettings = false;
-    QString BiosViewerVersion = "1.15";
-    DefaultSettings = {
+        DefaultSettings = {
         {"Version",             BiosViewerVersion},
         {"Theme",               "Light"},
         {"BiosViewerFontSize",  "12"},
@@ -483,13 +483,6 @@ void StartWindow::ActionAboutQtTriggered() {
 }
 
 void StartWindow::ActionAboutBiosViewerTriggered() {
-    auto xorLambda = [](const QString& str, char key) -> QString {
-        QByteArray ba = QByteArray::fromHex(str.toLatin1());
-        for (int i = 0; i < ba.size(); i++)
-            ba[i] = ba[i] ^ key;
-        return QString(ba);
-    };
-
     QString SelfDescription = "BIOS Viewer is a software tool designed for the reverse<br>"
                               "engineering of UEFI binaries. It offers a range of features<br>"
                               "including the ability to view the UEFI file system, inspect<br>"
@@ -510,15 +503,13 @@ void StartWindow::ActionAboutBiosViewerTriggered() {
     QString AboutText= QString("<html>"
                              "<head/>"
                              "<body>"
-                             "<p><span style=' font-size:14pt; font-weight:700;'>%1</span></p>"
+                             "<p><span style=' font-size:14pt; font-weight:700;'>BIOS Viewer %1</span></p>"
                              "<p><br>%2<br></p>"
-                             "<p>Built on %3 by <span style=' font-weight:700; color:#00aaff;'>%4</p>"
+                             "<p>Built on %3 by <span style=' font-weight:700; color:#00aaff;'>Zhu Chen</p>"
                              "</body>"
-                             "</html>").arg(
-                                            xorLambda("181315097a0c333f2d3f287a6b746b6f", 0x5A),
+                             "</html>").arg(BiosViewerVersion,
                                             SelfDescription,
-                                            __DATE__,
-                                            xorLambda("00322f767a19323f34", 0x5A));
+                                            __DATE__);
     QMessageBox::about(this, tr("About BIOS Viewer"), AboutText);
 }
 

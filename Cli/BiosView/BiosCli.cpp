@@ -321,7 +321,7 @@ void BiosCliView::buildTree(Volume *volume, TreeNode *parent, UINT64 depth) {
     model.setName(string(depth, ' ') + model.getName());
 
     // 创建树节点
-    auto newNode = make_unique<TreeNode>(model, parent, depth);
+    auto newNode = make_unique<TreeNode>(model, parent, (int)depth);
     TreeNode *rawNode = newNode.get();
     rawNode->isExpanded = false;
 
