@@ -9,7 +9,7 @@ project(BiosViewerSuite
 message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "CMAKE_HOST_SYSTEM_PROCESSOR: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64|AMD64|amd64)")
     set(ARCH_X86_64 TRUE)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(ARM64)")
     set(ARCH_ARM64 TRUE)
@@ -213,11 +213,6 @@ if(BUILD_GUI)
       add_executable(BiosViewer ${GUI_SOURCES})
   endif()
 
-  set_target_properties(BiosViewer PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    LINK_FLAGS "/SUBSYSTEM:WINDOWS"
-  )
-
   target_compile_definitions(BiosViewer PRIVATE GUI_BIOS_VIEWER)
   # target_compile_options(BiosViewer PRIVATE ${STRICT_COMPILE_FLAGS})
   target_link_libraries(BiosViewer PRIVATE
@@ -235,6 +230,10 @@ if(BUILD_GUI)
       target_compile_options(BiosViewer PRIVATE -Wno-deprecated)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
       message("Using MSVC compiler")
+      set_target_properties(BiosViewer PROPERTIES
+        WIN32_EXECUTABLE TRUE
+        LINK_FLAGS "/SUBSYSTEM:WINDOWS"
+      )
   endif()
 
   if(QT_VERSION_MAJOR EQUAL 6)
