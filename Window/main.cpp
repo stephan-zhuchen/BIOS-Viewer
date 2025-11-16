@@ -1,6 +1,6 @@
 #include "Start/StartWindow.h"
 #include <QApplication>
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && defined(Q_PROCESSOR_X86_64)
 #include "vld.h"
 #endif
 

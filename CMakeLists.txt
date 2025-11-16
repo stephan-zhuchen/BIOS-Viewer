@@ -6,11 +6,22 @@ project(BiosViewerSuite
     DESCRIPTION "BIOS Viewer Suite with GUI and CLI versions"
 )
 
+message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "CMAKE_HOST_SYSTEM_PROCESSOR: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)")
+    set(ARCH_X86_64 TRUE)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(ARM64)")
+    set(ARCH_ARM64 TRUE)
+else()
+    message(STATUS "Unsupported arch: ${CMAKE_SYSTEM_PROCESSOR}")
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     option(BUILD_GUI "Build GUI version (requires Qt)" OFF)
     option(BUILD_CLI "Build CLI version" ON)
 else()
-    option(BUILD_GUI "Build GUI version (requires Qt)" OFF)
+    option(BUILD_GUI "Build GUI version (requires Qt)" ON)
     option(BUILD_CLI "Build CLI version" ON)
 endif()
 
@@ -56,6 +67,7 @@ file(GLOB_RECURSE INCLUDE_FILES "include/*")
 include_directories(
         include
         lib
+        lib/Openssl/include
         lib/BrotliDecompress/brotli/include
         Volume
         Window
@@ -161,8 +173,14 @@ if(BUILD_GUI)
   find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
   find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
   get_filename_component(QT_INSTALL_PREFIX "${CMAKE_PREFIX_PATH}/../.." ABSOLUTE)
-  set(OPENSSL_ROOT_DIR "${QT_INSTALL_PREFIX}/Tools/OpenSSLv3/Win_x64")
-  find_package(OpenSSL REQUIRED)
+  if(ARCH_X86_64)
+    set(OPENSSL_LINK_DIR  lib/Openssl/lib/windows/x64)
+    link_directories(${OPENSSL_LINK_DIR})
+  else()
+    set(OPENSSL_LINK_DIR  lib/Openssl/lib/windows/arm64)
+    link_directories(${OPENSSL_LINK_DIR})
+    message(STATUS "OPENSSL_ROOT_DIR: $ENV{OPENSSL_ROOT_DIR}")
+  endif()
   set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/logo/BIOS Viewer.rc")
   file(GLOB UI_SOURCES "Window/*.ui")
   file(GLOB_RECURSE WINDOW_SOURCES "Window/*")
@@ -177,7 +195,7 @@ if(BUILD_GUI)
       ${UI_SOURCES}
   )
 
-  if(WIN32)
+  if(WIN32 AND ARCH_X86_64)
     include_directories(lib/VisualLeakDetector/include)
     set(VLD_LINK_DIR  lib/VisualLeakDetector/lib/Win64)
     link_directories(${VLD_LINK_DIR})
@@ -194,9 +212,9 @@ if(BUILD_GUI)
   target_link_libraries(BiosViewer PRIVATE
       Qt${QT_VERSION_MAJOR}::Widgets
       Decompress
-      OpenSSL::Crypto
+      libcrypto
   )
-  if(WIN32)
+  if(WIN32 AND ARCH_X86_64)
     target_link_libraries(BiosViewer PRIVATE vld)
   endif()
 
